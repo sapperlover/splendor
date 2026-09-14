@@ -16,6 +16,14 @@ from .actions import (
     TakeDistinct,
     TakePair,
 )
+from .actor_critic import (
+    ActorCritic,
+    ActorCriticConfig,
+    CardEncoder,
+    NobleEncoder,
+    TorchDecisionBatch,
+    tensorize_batch,
+)
 from .contracts import DecisionRequest, Observation, Policy
 from .engine import GameEngine, IllegalActionError, UnsupportedRuleError
 from .evaluation import EvaluationResult, PolicySpec, baseline_policy_spec, evaluate_policies
@@ -35,8 +43,11 @@ from .runner import GameRun, MatchOutcome, MatchResult, RunStatus, run_match, ru
 
 __all__ = [
     "Action",
+    "ActorCritic",
+    "ActorCriticConfig",
     "BuyMarket",
     "BuyReserved",
+    "CardEncoder",
     "ClaimNoble",
     "Color",
     "DecisionPhase",
@@ -51,6 +62,7 @@ __all__ = [
     "GameEngine",
     "IllegalActionError",
     "Observation",
+    "NobleEncoder",
     "Pay",
     "Policy",
     "PolicySpec",
@@ -65,6 +77,7 @@ __all__ = [
     "TerminalReason",
     "Tier",
     "TokenVector",
+    "TorchDecisionBatch",
     "UnsupportedRuleError",
     "GameRun",
     "MatchOutcome",
@@ -77,4 +90,5 @@ __all__ = [
     "evaluate_policies",
     "run_match",
     "run_random_game",
+    "tensorize_batch",
 ]
