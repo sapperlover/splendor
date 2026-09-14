@@ -9,9 +9,12 @@
 - 工作包 2B 购买与支付切片：[`docs/work_package_2b_zh-CN.md`](docs/work_package_2b_zh-CN.md)
 - 工作包 2C 贵族、完整回合与终局：[`docs/work_package_2c_zh-CN.md`](docs/work_package_2c_zh-CN.md)
 - 工作包 2D 引擎集成验证报告：[`docs/work_package_2d_engine_validation_zh-CN.md`](docs/work_package_2d_engine_validation_zh-CN.md)
+- 工作包 3A 基线策略与评测框架：[`docs/work_package_3a_zh-CN.md`](docs/work_package_3a_zh-CN.md)
 
-当前代码已完成工作包 1 和工作包 2A～2D。双人本地规则已正式补充无合法主行动时的引擎 forced skip 及双边连续 forced-skip 平局，不存在玩家可选的 pass。seed `0..9999` 的 10,000 局压力验证全部正式结束，IllegalAction、invariant、replay 和 save/restore mismatch 均为 0；详见上述报告。启发式策略、模型和训练仍未实现。
+当前代码已完成工作包 1、2A～2D 和 3A。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline 及成对换先手评测已可用。模型、神经网络编码和训练仍未实现。
 
 运行测试：`python -m pytest`
+
+从仓库根目录运行基线评测：`PYTHONPATH=src python -m splendor.evaluate --player-a score --player-b development --seed-start 0 --seed-count 100`
 
 数据范围仅限 2–4 人基础标准版，不含扩展、《璀璨宝石：对决》或漫威版。

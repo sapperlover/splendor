@@ -34,6 +34,12 @@ class RunStatus(str, Enum):
     ERROR = "error"
 
 
+class MatchOutcome(str, Enum):
+    A_WIN = "a_win"
+    DRAW = "draw"
+    A_LOSS = "a_loss"
+
+
 _MAIN_ACTION_NAMES: tuple[tuple[type[object], str], ...] = (
     (TakeDistinct, "TakeDistinct"),
     (TakePair, "TakePair"),
@@ -62,6 +68,35 @@ class GameRun:
     forced_skip_draw: bool
     coverage_tags: frozenset[str]
     checkpoint_indices: dict[str, int]
+    final_state_digest: str
+    failure_scene: Path | None = None
+    error_type: str | None = None
+    error_detail: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class MatchResult:
+    """One formal game with policy A fixed to seat 0 and policy B to seat 1."""
+
+    pair_id: int | None
+    game_in_pair: int | None
+    game_seed: int
+    policy_names: tuple[str, str]
+    policy_seeds: tuple[int, int]
+    first_player: int
+    status: RunStatus
+    normal_end: bool
+    terminal_result: TerminalResult | None
+    outcome_for_a: MatchOutcome | None
+    winner_id: int | None
+    draw: bool
+    scores: tuple[int, int] | None
+    purchased_card_counts: tuple[int, int] | None
+    completed_turns: tuple[int, int]
+    completed_player_turns: int
+    decision_count: int
+    forced_skips: int
+    replay: ReplayRecord
     final_state_digest: str
     failure_scene: Path | None = None
     error_type: str | None = None
@@ -145,6 +180,7 @@ def run_random_game(
     catalog: Catalog | None = None,
     failure_dir: Path | None = None,
     policies: Sequence[Policy] | None = None,
+    policy_seeds: tuple[int, int] | None = None,
     raise_on_error: bool = True,
 ) -> GameRun:
     """Run one complete game or return an explicitly classified truncation.
@@ -157,7 +193,10 @@ def run_random_game(
         raise ValueError("max_completed_turns must be positive")
     catalog = catalog or load_default_catalog()
     failure_dir = failure_dir or Path.cwd() / "validation_failures"
-    policy_seeds = (_policy_seed(seed, 0), _policy_seed(seed, 1))
+    if policy_seeds is None:
+        policy_seeds = (_policy_seed(seed, 0), _policy_seed(seed, 1))
+    elif len(policy_seeds) != 2 or not all(type(value) is int for value in policy_seeds):
+        raise ValueError("policy_seeds must contain exactly two integers")
     if policies is None:
         policy_objects: tuple[Policy, Policy] = (
             RandomPolicy(policy_seeds[0]),
@@ -185,13 +224,11 @@ def run_random_game(
     checkpoint_rng = DeterministicRng(_policy_seed(seed, 2))
     checkpoint_seen: Counter[str] = Counter()
 
-    def snapshots() -> tuple[object, object] | None:
-        if all(isinstance(policy, RandomPolicy) for policy in policy_objects):
-            return (
-                policy_objects[0].rng_snapshot(),  # type: ignore[union-attr]
-                policy_objects[1].rng_snapshot(),  # type: ignore[union-attr]
-            )
-        return None
+    def snapshots() -> tuple[object, object]:
+        return tuple(
+            policy.rng_snapshot() if isinstance(policy, RandomPolicy) else None
+            for policy in policy_objects
+        )  # type: ignore[return-value]
 
     def result_for(
         status: RunStatus,
@@ -311,3 +348,72 @@ def terminal_branch(result: TerminalResult) -> str:
     if result.purchased_card_counts[0] != result.purchased_card_counts[1]:
         return "fewer_development_cards"
     return "draw"
+
+
+def run_match(
+    policy_a: Policy,
+    policy_b: Policy,
+    *,
+    game_seed: int,
+    policy_seeds: tuple[int, int],
+    first_player: int,
+    policy_names: tuple[str, str] = ("A", "B"),
+    pair_id: int | None = None,
+    game_in_pair: int | None = None,
+    max_completed_turns: int = 400,
+    catalog: Catalog | None = None,
+    failure_dir: Path | None = None,
+    raise_on_error: bool = True,
+) -> MatchResult:
+    """Run one game through the same engine path used by every policy."""
+
+    if first_player not in (0, 1):
+        raise ValueError("first_player must be 0 or 1")
+    if len(policy_names) != 2:
+        raise ValueError("policy_names must contain exactly two names")
+    run = run_random_game(
+        game_seed,
+        first_player=first_player,
+        max_completed_turns=max_completed_turns,
+        catalog=catalog,
+        failure_dir=failure_dir,
+        policies=(policy_a, policy_b),
+        policy_seeds=policy_seeds,
+        raise_on_error=raise_on_error,
+    )
+    terminal = run.result
+    outcome = None
+    winner_id = None
+    draw = False
+    if terminal is not None:
+        if len(terminal.winner_ids) == 2:
+            outcome = MatchOutcome.DRAW
+            draw = True
+        else:
+            winner_id = terminal.winner_ids[0]
+            outcome = MatchOutcome.A_WIN if winner_id == 0 else MatchOutcome.A_LOSS
+    return MatchResult(
+        pair_id=pair_id,
+        game_in_pair=game_in_pair,
+        game_seed=game_seed,
+        policy_names=policy_names,
+        policy_seeds=policy_seeds,
+        first_player=run.first_player,
+        status=run.status,
+        normal_end=run.status is RunStatus.NATURAL_TERMINAL,
+        terminal_result=terminal,
+        outcome_for_a=outcome,
+        winner_id=winner_id,
+        draw=draw,
+        scores=None if terminal is None else terminal.scores,
+        purchased_card_counts=None if terminal is None else terminal.purchased_card_counts,
+        completed_turns=run.completed_turns,
+        completed_player_turns=sum(run.completed_turns),
+        decision_count=run.decision_count,
+        forced_skips=run.forced_skips,
+        replay=run.replay,
+        final_state_digest=run.final_state_digest,
+        failure_scene=run.failure_scene,
+        error_type=run.error_type,
+        error_detail=run.error_detail,
+    )

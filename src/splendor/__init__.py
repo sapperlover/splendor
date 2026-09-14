@@ -18,10 +18,12 @@ from .actions import (
 )
 from .contracts import DecisionRequest, Observation, Policy
 from .engine import GameEngine, IllegalActionError, UnsupportedRuleError
+from .evaluation import EvaluationResult, PolicySpec, baseline_policy_spec, evaluate_policies
+from .heuristic_policy import DevelopmentPolicy, ScorePolicy
 from .model import Color, DecisionPhase, GemVector, ReservationSource, Tier, TokenVector
 from .result import TerminalReason, TerminalResult
 from .random_policy import RandomPolicy
-from .runner import GameRun, RunStatus, run_random_game
+from .runner import GameRun, MatchOutcome, MatchResult, RunStatus, run_match, run_random_game
 
 __all__ = [
     "Action",
@@ -31,12 +33,15 @@ __all__ = [
     "Color",
     "DecisionPhase",
     "DecisionRequest",
+    "DevelopmentPolicy",
+    "EvaluationResult",
     "GemVector",
     "GameEngine",
     "IllegalActionError",
     "Observation",
     "Pay",
     "Policy",
+    "PolicySpec",
     "RandomPolicy",
     "ReserveDeck",
     "ReserveMarket",
@@ -50,6 +55,12 @@ __all__ = [
     "TokenVector",
     "UnsupportedRuleError",
     "GameRun",
+    "MatchOutcome",
+    "MatchResult",
     "RunStatus",
+    "ScorePolicy",
+    "baseline_policy_spec",
+    "evaluate_policies",
+    "run_match",
     "run_random_game",
 ]
