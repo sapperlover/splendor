@@ -10,8 +10,9 @@
 - 工作包 2C 贵族、完整回合与终局：[`docs/work_package_2c_zh-CN.md`](docs/work_package_2c_zh-CN.md)
 - 工作包 2D 引擎集成验证报告：[`docs/work_package_2d_engine_validation_zh-CN.md`](docs/work_package_2d_engine_validation_zh-CN.md)
 - 工作包 3A 基线策略与评测框架：[`docs/work_package_3a_zh-CN.md`](docs/work_package_3a_zh-CN.md)
+- 工作包 3B Observation 与合法候选数值编码：[`docs/work_package_3b_zh-CN.md`](docs/work_package_3b_zh-CN.md)
 
-当前代码已完成工作包 1、2A～2D 和 3A。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline 及成对换先手评测已可用。模型、神经网络编码和训练仍未实现。
+当前代码已完成工作包 1、2A～2D、3A 和 3B。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline、成对换先手评测和纯 NumPy Observation/action feature 编码已可用。PyTorch 模型与训练仍未实现。
 
 运行测试：`python -m pytest`
 

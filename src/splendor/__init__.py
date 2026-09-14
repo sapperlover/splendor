@@ -19,6 +19,14 @@ from .actions import (
 from .contracts import DecisionRequest, Observation, Policy
 from .engine import GameEngine, IllegalActionError, UnsupportedRuleError
 from .evaluation import EvaluationResult, PolicySpec, baseline_policy_spec, evaluate_policies
+from .features import (
+    FEATURE_SCHEMA,
+    FEATURE_SCHEMA_VERSION,
+    EncodedDecision,
+    EncodedDecisionBatch,
+    collate_encoded_decisions,
+    encode_decision,
+)
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
 from .model import Color, DecisionPhase, GemVector, ReservationSource, Tier, TokenVector
 from .result import TerminalReason, TerminalResult
@@ -35,6 +43,10 @@ __all__ = [
     "DecisionRequest",
     "DevelopmentPolicy",
     "EvaluationResult",
+    "EncodedDecision",
+    "EncodedDecisionBatch",
+    "FEATURE_SCHEMA",
+    "FEATURE_SCHEMA_VERSION",
     "GemVector",
     "GameEngine",
     "IllegalActionError",
@@ -60,6 +72,8 @@ __all__ = [
     "RunStatus",
     "ScorePolicy",
     "baseline_policy_spec",
+    "collate_encoded_decisions",
+    "encode_decision",
     "evaluate_policies",
     "run_match",
     "run_random_game",
