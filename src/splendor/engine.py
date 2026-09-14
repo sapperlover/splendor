@@ -1,0 +1,322 @@
+from __future__ import annotations
+
+from dataclasses import replace
+from pathlib import Path
+
+from ._state import DeckState, GameState, MarketState, PlayerState
+from .actions import Action
+from .catalog import Catalog, load_default_catalog
+from .contracts import DecisionRequest
+from .invariants import assert_game_state
+from .model import DecisionPhase, Tier, TokenVector
+from .observation import build_observation
+from .replay import (
+    ActionEvent,
+    ForcedSkipEvent,
+    InvariantGuard,
+    REPLAY_SCHEMA_VERSION,
+    RULESET_ID,
+    ReplayRecord,
+    load_game,
+    new_replay,
+    save_game,
+    state_digest,
+)
+from .rng import DeterministicRng, RNG_ALGORITHM
+from .rules import apply_forced_skip, apply_legal_action, legal_actions
+from .result import TerminalResult
+from .state_machine import assert_phase_transition
+
+
+class EngineError(RuntimeError):
+    code = "engine_error"
+
+
+class IllegalActionError(EngineError):
+    code = "illegal_action"
+
+
+class UnsupportedRuleError(EngineError):
+    code = "unsupported_rule"
+
+
+class ReplayMismatchError(EngineError):
+    code = "replay_mismatch"
+
+
+class GameEngine:
+    """Complete two-player base-game engine with private authoritative state."""
+
+    def __init__(
+        self,
+        state: GameState,
+        catalog: Catalog,
+        replay: ReplayRecord,
+        failure_dir: Path,
+    ) -> None:
+        self.__state = state
+        self.catalog = catalog
+        self.__replay = replay
+        self.__guard = InvariantGuard(catalog, replay, failure_dir)
+        self.__guard.check(state)
+
+    @classmethod
+    def new(
+        cls,
+        seed: int,
+        first_player: int | None = None,
+        *,
+        catalog: Catalog | None = None,
+        failure_dir: Path | None = None,
+    ) -> GameEngine:
+        catalog = catalog or load_default_catalog()
+        rng = DeterministicRng(seed)
+
+        # Always consume this draw so explicit and random-first-player games
+        # with the same seed have identical shuffle streams and can replay from
+        # the actual first player recorded in the header.
+        sampled_first = rng.randbelow(2)
+        if first_player is None:
+            first_player = sampled_first
+        elif first_player not in (0, 1):
+            raise ValueError("first_player must be 0, 1, or None")
+
+        decks: dict[Tier, tuple[str, ...]] = {}
+        markets: dict[Tier, tuple[str, ...]] = {}
+        for tier in Tier:
+            cards = [card.card_id for card in catalog.cards if card.tier is tier]
+            rng.shuffle(cards)
+            face_up = tuple(cards.pop() for _ in range(catalog.constants.face_up_per_tier))
+            decks[tier] = tuple(cards)
+            markets[tier] = face_up
+
+        nobles = [noble.noble_id for noble in catalog.nobles]
+        rng.shuffle(nobles)
+        selected_nobles = tuple(nobles.pop() for _ in range(catalog.constants.nobles_in_play))
+        state = GameState(
+            supply=catalog.constants.initial_tokens,
+            decks=DeckState(decks[Tier.ONE], decks[Tier.TWO], decks[Tier.THREE]),
+            market=MarketState(markets[Tier.ONE], markets[Tier.TWO], markets[Tier.THREE]),
+            players=(PlayerState(TokenVector()), PlayerState(TokenVector())),
+            nobles_in_play=selected_nobles,
+            nobles_out_of_game=tuple(nobles),
+            first_player=first_player,
+            current_player=first_player,
+            completed_turns=(0, 0),
+            consecutive_forced_skips=0,
+            phase=DecisionPhase.MAIN_ACTION,
+            pending=None,
+            final_round_triggered_by=None,
+            result=None,
+            rng=rng.snapshot(),
+        )
+        replay = new_replay(catalog, seed, first_player)
+        return cls(state, catalog, replay, failure_dir or Path.cwd() / "failures")
+
+    @classmethod
+    def restore(
+        cls,
+        path: Path,
+        *,
+        catalog: Catalog | None = None,
+        failure_dir: Path | None = None,
+    ) -> GameEngine:
+        catalog = catalog or load_default_catalog()
+        state, replay = load_game(path, catalog)
+        if state.first_player != replay.header.first_player:
+            raise ValueError("save state and replay disagree about first player")
+        return cls(state, catalog, replay, failure_dir or path.parent / "failures")
+
+    @property
+    def replay_record(self) -> ReplayRecord:
+        return self.__replay
+
+    @property
+    def current_player(self) -> int:
+        """Seat whose policy must answer the next decision request."""
+
+        return self.__state.current_player
+
+    def decision(self) -> DecisionRequest | TerminalResult:
+        self._advance_automatic_transitions()
+        if self.__state.phase is DecisionPhase.TERMINAL:
+            if self.__state.result is None:
+                self.__guard.fail(self.__state, EngineError("terminal state has no result"))
+            return self.__state.result
+
+        actions = legal_actions(self.__state, self.catalog)
+        if self.__state.phase not in (
+            DecisionPhase.MAIN_ACTION,
+            DecisionPhase.PAYMENT,
+            DecisionPhase.RETURN_TOKENS,
+            DecisionPhase.CHOOSE_NOBLE,
+        ):
+            self.__guard.fail(
+                self.__state,
+                UnsupportedRuleError(f"phase {self.__state.phase.value} has no policy decision"),
+            )
+        if not actions:
+            self.__guard.fail(
+                self.__state,
+                EngineError("a non-terminal state has no legal action"),
+            )
+        return DecisionRequest(
+            observation=build_observation(self.__state, self.__state.current_player, self.catalog),
+            legal_actions=actions,
+        )
+
+    def apply(self, action: Action) -> DecisionRequest | TerminalResult:
+        self._commit_action(action, automatic=False)
+        self._advance_automatic_transitions()
+
+        if self.__state.phase is DecisionPhase.TERMINAL:
+            if self.__state.result is None:
+                self.__guard.fail(self.__state, EngineError("terminal state has no result"))
+            return self.__state.result
+        actions = legal_actions(self.__state, self.catalog)
+        if not actions:
+            self.__guard.fail(
+                self.__state,
+                EngineError("a non-terminal decision phase has no legal action"),
+            )
+        return DecisionRequest(
+            observation=build_observation(self.__state, self.__state.current_player, self.catalog),
+            legal_actions=actions,
+        )
+
+    def _advance_automatic_transitions(self) -> None:
+        while True:
+            if self.__state.phase is DecisionPhase.CHOOSE_NOBLE:
+                candidates = legal_actions(self.__state, self.catalog)
+                if len(candidates) == 1:
+                    self._commit_action(candidates[0], automatic=True)
+                    continue
+                return
+            if self.__state.phase is DecisionPhase.MAIN_ACTION:
+                if legal_actions(self.__state, self.catalog):
+                    return
+                self._commit_forced_skip()
+                continue
+            return
+
+    def _commit_action(self, action: Action, *, automatic: bool) -> None:
+        candidates = legal_actions(self.__state, self.catalog)
+        if action not in candidates:
+            self.__guard.fail(
+                self.__state,
+                IllegalActionError(f"action is not legal in {self.__state.phase.value}: {action!r}"),
+                action,
+            )
+
+        before = self.__state
+        try:
+            after = apply_legal_action(before, action, self.catalog)
+            assert_phase_transition(before.phase, after.phase)
+        except Exception as error:
+            self.__guard.fail(before, error, action)
+        self.__guard.check(after, action)
+
+        event = ActionEvent(
+            sequence=len(self.__replay.events),
+            actor=before.current_player,
+            phase=before.phase,
+            action=action,
+            automatic=automatic,
+            state_digest_before=state_digest(before),
+            state_digest_after=state_digest(after),
+        )
+        self.__state = after
+        self.__replay = replace(
+            self.__replay,
+            events=self.__replay.events + (event,),
+            result=after.result,
+        )
+        self.__guard.replay = self.__replay
+
+    def _commit_forced_skip(self) -> None:
+        before = self.__state
+        try:
+            after = apply_forced_skip(before, self.catalog)
+            assert_phase_transition(before.phase, after.phase)
+        except Exception as error:
+            self.__guard.fail(before, error)
+        self.__guard.check(after)
+        event = ForcedSkipEvent(
+            sequence=len(self.__replay.events),
+            actor=before.current_player,
+            state_digest_before=state_digest(before),
+            state_digest_after=state_digest(after),
+        )
+        self.__state = after
+        self.__replay = replace(
+            self.__replay,
+            events=self.__replay.events + (event,),
+            result=after.result,
+        )
+        self.__guard.replay = self.__replay
+
+    def save(self, path: Path) -> None:
+        self.__guard.check(self.__state)
+        save_game(path, self.__state, self.__replay)
+
+    def _fail(self, error: Exception, attempted_action: Action | None = None) -> None:
+        self.__guard.fail(self.__state, error, attempted_action)
+
+    def _debug_state(self) -> GameState:
+        """Tests and full debug replay only; never pass this value to a policy."""
+
+        return self.__state
+
+
+def replay_game(
+    record: ReplayRecord,
+    *,
+    catalog: Catalog | None = None,
+    failure_dir: Path | None = None,
+) -> GameEngine:
+    catalog = catalog or load_default_catalog()
+    header = record.header
+    if header.schema_version != REPLAY_SCHEMA_VERSION:
+        raise ValueError(f"unsupported replay schema: {header.schema_version}")
+    if header.ruleset_id != RULESET_ID:
+        raise ValueError(f"wrong ruleset: {header.ruleset_id}")
+    if header.data_fingerprint != catalog.data_fingerprint:
+        raise ValueError("replay uses different normative data")
+    if header.rng_algorithm != RNG_ALGORITHM:
+        raise ValueError(f"unsupported replay RNG: {header.rng_algorithm}")
+    engine = GameEngine.new(
+        record.header.game_seed,
+        record.header.first_player,
+        catalog=catalog,
+        failure_dir=failure_dir,
+    )
+    cursor = 0
+    while cursor < len(record.events):
+        expected = record.events[cursor]
+        if expected.action is None:
+            before_count = len(engine.replay_record.events)
+            engine.decision()
+            produced = engine.replay_record.events[before_count:]
+            expected_group = record.events[cursor : cursor + len(produced)]
+            if not produced or produced != expected_group:
+                engine._fail(ReplayMismatchError(f"event {expected.sequence} diverged"))
+            cursor += len(produced)
+            continue
+        if expected.automatic:
+            engine._fail(
+                ReplayMismatchError("automatic event has no preceding player decision"),
+                expected.action,
+            )
+        before_count = len(engine.replay_record.events)
+        engine.apply(expected.action)
+        produced = engine.replay_record.events[before_count:]
+        expected_group = record.events[cursor : cursor + len(produced)]
+        if produced != expected_group:
+            engine._fail(
+                ReplayMismatchError(f"event {expected.sequence} diverged"),
+                expected.action,
+            )
+        cursor += len(produced)
+    if engine.replay_record.result != record.result:
+        engine._fail(ReplayMismatchError("terminal result diverged"))
+    return engine
