@@ -37,8 +37,10 @@ from .features import (
 )
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
 from .model import Color, DecisionPhase, GemVector, ReservationSource, Tier, TokenVector
-from .neural_policy import GreedyActorCriticPolicy
+from .neural_policy import GreedyActorCriticPolicy, frozen_actor_critic_copy
+from .opponent_pool import OpponentChoice, OpponentEntry, OpponentPool
 from .ppo import (
+    BatchedRolloutCollector,
     PPOConfig,
     PPOTrainer,
     PPOUpdateStats,
@@ -51,6 +53,7 @@ from .ppo import (
     clipped_policy_loss,
     compute_gae,
     explained_variance,
+    group_rollout_by_episode,
     normalize_advantages,
 )
 from .result import TerminalReason, TerminalResult
@@ -71,6 +74,7 @@ __all__ = [
     "Action",
     "ActorCritic",
     "ActorCriticConfig",
+    "BatchedRolloutCollector",
     "BuyMarket",
     "BuyReserved",
     "CardEncoder",
@@ -95,6 +99,9 @@ __all__ = [
     "LearningEpisodeRun",
     "LearningTransition",
     "Observation",
+    "OpponentChoice",
+    "OpponentEntry",
+    "OpponentPool",
     "NobleEncoder",
     "PPOConfig",
     "PPOTrainer",
@@ -134,6 +141,8 @@ __all__ = [
     "encode_decision",
     "evaluate_policies",
     "explained_variance",
+    "frozen_actor_critic_copy",
+    "group_rollout_by_episode",
     "normalize_advantages",
     "run_match",
     "run_learning_episode",

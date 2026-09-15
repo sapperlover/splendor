@@ -15,8 +15,11 @@
 - 工作包 4B 单学习方环境与 transition：[`docs/work_package_4b_zh-CN.md`](docs/work_package_4b_zh-CN.md)
 - 工作包 4C Rollout、GAE 与 PPO 学习闭环：[`docs/work_package_4c_zh-CN.md`](docs/work_package_4c_zh-CN.md)
 - 工作包 5A 固定 Random 对手短训练与学习验证：[`docs/work_package_5a_zh-CN.md`](docs/work_package_5a_zh-CN.md)
+- 工作包 5B Stage 1–3 验收：[`docs/work_package_5b_zh-CN.md`](docs/work_package_5b_zh-CN.md)
+- 工作包 5B Stage 2 batched collector：[`docs/work_package_5b_stage2_zh-CN.md`](docs/work_package_5b_stage2_zh-CN.md)
+- 工作包 5B Stage 3 opponent pool：[`docs/work_package_5b_stage3_zh-CN.md`](docs/work_package_5b_stage3_zh-CN.md)
 
-当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C 和 5A。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline、成对换先手评测、纯 NumPy Observation/action feature 编码、小型 PyTorch Deep-Sets Actor–Critic、固定单学习方环境、rollout/GAE/PPO/checkpoint 学习闭环，以及固定 Random 对手的可恢复短训练入口已可用。5A 的 100k 决策实验已验证 PPO 对 Random 有明确学习趋势。历史对手池、正式 self-play 和百万级长训练尚未实现。
+当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A，以及 5B Stage 1–3。固定混合启发式对手的 500k 实验已完成；PPO 对 Score/Development 有明确提升，对 Random 未发生灾难性遗忘。multi-env batched collector 和可恢复 historical opponent pool 已可用。Stage 4 self-play 尚未启动，等待人工确认起始 checkpoint 和训练配置。
 
 在项目 Conda 环境运行测试：`conda run -n splendor python -m pytest`
 

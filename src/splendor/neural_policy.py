@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+
 import torch
 
 from .actor_critic import ActorCritic
@@ -32,3 +34,16 @@ class GreedyActorCriticPolicy:
             chosen = int(torch.argmax(logits[0]).item())
         self.model.train(was_training)
         return request.legal_actions[chosen]
+
+
+def frozen_actor_critic_copy(
+    model: ActorCritic,
+    *,
+    device: torch.device | str = "cpu",
+) -> ActorCritic:
+    """Create a parameter-independent inference snapshot of a learning model."""
+
+    snapshot = copy.deepcopy(model).to(device)
+    snapshot.eval()
+    snapshot.requires_grad_(False)
+    return snapshot

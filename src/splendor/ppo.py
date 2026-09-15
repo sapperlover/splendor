@@ -91,6 +91,7 @@ class PolicySampler:
         self._generator.manual_seed(seed)
         self.inference_seconds = 0.0
         self.inference_calls = 0
+        self.inference_items = 0
 
     def sample(self, encoded: EncodedDecision) -> PolicySample:
         started = time.perf_counter()
@@ -113,7 +114,59 @@ class PolicySampler:
         self.model.train(was_training)
         self.inference_seconds += time.perf_counter() - started
         self.inference_calls += 1
+        self.inference_items += 1
         return PolicySample(chosen, logprob, value)
+
+    def sample_batch(
+        self,
+        encoded_decisions: Sequence[EncodedDecision],
+        *,
+        generators: Sequence[torch.Generator] | None = None,
+    ) -> tuple[PolicySample, ...]:
+        """Sample one action per decision with one ragged GPU forward."""
+
+        decisions = tuple(encoded_decisions)
+        if not decisions:
+            raise ValueError("cannot sample an empty decision batch")
+        if generators is None:
+            rngs = (self._generator,) * len(decisions)
+        else:
+            rngs = tuple(generators)
+            if len(rngs) != len(decisions):
+                raise ValueError("one policy RNG is required per batched decision")
+
+        started = time.perf_counter()
+        batch = collate_encoded_decisions(decisions)
+        was_training = self.model.training
+        self.model.eval()
+        with torch.inference_mode():
+            distribution, values = self.model.distribution(batch)
+            probabilities = distribution.probs.detach().cpu()
+            chosen = tuple(
+                int(
+                    torch.multinomial(
+                        probabilities[index],
+                        num_samples=1,
+                        generator=rng,
+                    ).item()
+                )
+                for index, rng in enumerate(rngs)
+            )
+            actions = torch.as_tensor(chosen, dtype=torch.long, device=self.device)
+            logprob = distribution.log_prob(actions).detach().cpu()
+            cpu_values = values.detach().cpu()
+        self.model.train(was_training)
+        self.inference_seconds += time.perf_counter() - started
+        self.inference_calls += 1
+        self.inference_items += len(decisions)
+        return tuple(
+            PolicySample(
+                chosen_candidate_index=chosen[index],
+                old_logprob=float(logprob[index].item()),
+                old_value=float(cpu_values[index].item()),
+            )
+            for index in range(len(decisions))
+        )
 
     def value(self, encoded: EncodedDecision) -> float:
         started = time.perf_counter()
@@ -126,11 +179,42 @@ class PolicySampler:
         self.model.train(was_training)
         self.inference_seconds += time.perf_counter() - started
         self.inference_calls += 1
+        self.inference_items += 1
         return value
+
+    def value_batch(
+        self, encoded_decisions: Sequence[EncodedDecision]
+    ) -> tuple[float, ...]:
+        """Predict successor values with one ragged GPU forward."""
+
+        decisions = tuple(encoded_decisions)
+        if not decisions:
+            return ()
+        started = time.perf_counter()
+        batch = collate_encoded_decisions(decisions)
+        was_training = self.model.training
+        self.model.eval()
+        with torch.inference_mode():
+            _, values = self.model(batch)
+            cpu_values = values.detach().cpu()
+        self.model.train(was_training)
+        self.inference_seconds += time.perf_counter() - started
+        self.inference_calls += 1
+        self.inference_items += len(decisions)
+        return tuple(float(value.item()) for value in cpu_values)
 
     def reset_timing(self) -> None:
         self.inference_seconds = 0.0
         self.inference_calls = 0
+        self.inference_items = 0
+
+    @property
+    def mean_inference_batch_size(self) -> float:
+        return (
+            self.inference_items / self.inference_calls
+            if self.inference_calls
+            else 0.0
+        )
 
     def rng_state(self) -> Tensor:
         return self._generator.get_state().clone()
@@ -164,6 +248,19 @@ class RolloutBatch:
 
     def __len__(self) -> int:
         return len(self.samples)
+
+
+def group_rollout_by_episode(
+    samples: Sequence[RolloutSample],
+) -> RolloutBatch:
+    """Keep each episode contiguous so the unchanged GAE scan can link it."""
+
+    grouped: dict[str, list[RolloutSample]] = {}
+    for sample in samples:
+        grouped.setdefault(sample.episode_id, []).append(sample)
+    return RolloutBatch(
+        tuple(sample for episode in grouped.values() for sample in episode)
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -260,7 +357,164 @@ class RolloutCollector:
                 self._completed_environments.append(environment)
                 self._environment = None
 
-        return RolloutBatch(tuple(samples))
+        return group_rollout_by_episode(samples)
+
+
+BatchedEnvironmentFactory = Callable[[int], tuple[LearningEnvironment, int]]
+
+
+@dataclass(slots=True)
+class _BatchedEnvironmentSlot:
+    environment: LearningEnvironment
+    policy_rng: torch.Generator
+
+
+class BatchedRolloutCollector:
+    """Interleave logical games and batch their waiting neural decisions."""
+
+    def __init__(
+        self,
+        sampler: PolicySampler,
+        environment_factory: BatchedEnvironmentFactory,
+        *,
+        active_envs: int,
+        start_episode_index: int = 0,
+    ) -> None:
+        if active_envs <= 0:
+            raise ValueError("active_envs must be positive")
+        if start_episode_index < 0:
+            raise ValueError("start_episode_index must be non-negative")
+        self.sampler = sampler
+        self.environment_factory = environment_factory
+        self.active_envs = active_envs
+        self._next_episode_index = start_episode_index
+        self._slots: list[_BatchedEnvironmentSlot] = []
+        self._completed_environments: list[LearningEnvironment] = []
+
+    @property
+    def next_episode_index(self) -> int:
+        return self._next_episode_index
+
+    @property
+    def active_environment_count(self) -> int:
+        return len(self._slots)
+
+    @property
+    def active_environments(self) -> tuple[LearningEnvironment, ...]:
+        return tuple(slot.environment for slot in self._slots)
+
+    @property
+    def active_policy_rng_states(self) -> tuple[tuple[str, Tensor], ...]:
+        return tuple(
+            (
+                slot.environment.episode_id,
+                slot.policy_rng.get_state().clone(),
+            )
+            for slot in self._slots
+        )
+
+    def take_completed_environments(self) -> tuple[LearningEnvironment, ...]:
+        completed = tuple(self._completed_environments)
+        self._completed_environments.clear()
+        return completed
+
+    def collect(self, steps: int) -> RolloutBatch:
+        if steps <= 0:
+            raise ValueError("rollout steps must be positive")
+        samples: list[RolloutSample] = []
+        while len(samples) < steps:
+            self._fill_slots()
+            remaining = steps - len(samples)
+            selected = tuple(self._slots[:remaining])
+            samples.extend(self._step(selected))
+        return group_rollout_by_episode(samples)
+
+    def drain_active_environments(self) -> RolloutBatch:
+        """Finish current games without starting replacements."""
+
+        samples: list[RolloutSample] = []
+        while self._slots:
+            samples.extend(self._step(tuple(self._slots)))
+        return group_rollout_by_episode(samples)
+
+    def _fill_slots(self) -> None:
+        while len(self._slots) < self.active_envs:
+            environment, policy_seed = self.environment_factory(
+                self._next_episode_index
+            )
+            self._next_episode_index += 1
+            generator = torch.Generator(device="cpu")
+            generator.manual_seed(policy_seed)
+            self._slots.append(_BatchedEnvironmentSlot(environment, generator))
+
+    def _step(
+        self, selected: tuple[_BatchedEnvironmentSlot, ...]
+    ) -> list[RolloutSample]:
+        if not selected:
+            return []
+        decisions = tuple(slot.environment.current_decision() for slot in selected)
+        policy_samples = self.sampler.sample_batch(
+            tuple(decision.encoded for decision in decisions),
+            generators=tuple(slot.policy_rng for slot in selected),
+        )
+        transitions = tuple(
+            slot.environment.step_learning_action(
+                policy_sample.chosen_candidate_index,
+                decision_id=decision.decision_id,
+            )
+            for slot, decision, policy_sample in zip(
+                selected, decisions, policy_samples, strict=True
+            )
+        )
+
+        successor_indices = tuple(
+            index
+            for index, transition in enumerate(transitions)
+            if not transition.terminated
+        )
+        successor_values = self.sampler.value_batch(
+            tuple(
+                transitions[index].next_decision.encoded
+                for index in successor_indices
+                if transitions[index].next_decision is not None
+            )
+        )
+        if len(successor_values) != len(successor_indices):
+            raise AssertionError("non-terminal batched transition has no real successor")
+        bootstrap_by_index = dict(zip(successor_indices, successor_values, strict=True))
+
+        samples = [
+            RolloutSample(
+                encoded=decision.encoded,
+                chosen_candidate_index=policy_sample.chosen_candidate_index,
+                old_logprob=policy_sample.old_logprob,
+                old_value=policy_sample.old_value,
+                reward=transition.reward,
+                terminated=transition.terminated,
+                truncated=transition.truncated,
+                episode_id=transition.episode_id,
+                learning_player=transition.learning_player,
+                bootstrap_value=(
+                    0.0 if transition.terminated else bootstrap_by_index[index]
+                ),
+            )
+            for index, (decision, policy_sample, transition) in enumerate(
+                zip(decisions, policy_samples, transitions, strict=True)
+            )
+        ]
+        completed_slots = {
+            id(slot)
+            for slot, transition in zip(selected, transitions, strict=True)
+            if transition.terminated or transition.truncated
+        }
+        if completed_slots:
+            for slot in selected:
+                if id(slot) in completed_slots:
+                    self._completed_environments.append(slot.environment)
+            self._slots = [
+                slot for slot in self._slots if id(slot) not in completed_slots
+            ]
+        return samples
 
 
 def compute_gae(
