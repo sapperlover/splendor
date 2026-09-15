@@ -13,8 +13,9 @@
 - 工作包 3B Observation 与合法候选数值编码：[`docs/work_package_3b_zh-CN.md`](docs/work_package_3b_zh-CN.md)
 - 工作包 4A PyTorch Deep-Sets Actor–Critic：[`docs/work_package_4a_zh-CN.md`](docs/work_package_4a_zh-CN.md)
 - 工作包 4B 单学习方环境与 transition：[`docs/work_package_4b_zh-CN.md`](docs/work_package_4b_zh-CN.md)
+- 工作包 4C Rollout、GAE 与 PPO 学习闭环：[`docs/work_package_4c_zh-CN.md`](docs/work_package_4c_zh-CN.md)
 
-当前代码已完成工作包 1、2A～2D、3A、3B、4A 和 4B。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline、成对换先手评测、纯 NumPy Observation/action feature 编码、小型 PyTorch Deep-Sets Actor–Critic，以及固定单学习方的 episode/transition 适配已可用。GAE、PPO 和训练仍未实现。
+当前代码已完成工作包 1、2A～2D、3A、3B 和 4A～4C。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline、成对换先手评测、纯 NumPy Observation/action feature 编码、小型 PyTorch Deep-Sets Actor–Critic、固定单学习方环境，以及 rollout/GAE/PPO/checkpoint 的最小训练闭环已可用。历史对手池和正式长期训练尚未实现。
 
 在项目 Conda 环境运行测试：`conda run -n splendor python -m pytest`
 

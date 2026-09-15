@@ -37,6 +37,21 @@ from .features import (
 )
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
 from .model import Color, DecisionPhase, GemVector, ReservationSource, Tier, TokenVector
+from .ppo import (
+    PPOConfig,
+    PPOTrainer,
+    PPOUpdateStats,
+    PolicySample,
+    PolicySampler,
+    PreparedRollout,
+    RolloutBatch,
+    RolloutCollector,
+    RolloutSample,
+    clipped_policy_loss,
+    compute_gae,
+    explained_variance,
+    normalize_advantages,
+)
 from .result import TerminalReason, TerminalResult
 from .random_policy import RandomPolicy
 from .runner import GameRun, MatchOutcome, MatchResult, RunStatus, run_match, run_random_game
@@ -79,9 +94,15 @@ __all__ = [
     "LearningTransition",
     "Observation",
     "NobleEncoder",
+    "PPOConfig",
+    "PPOTrainer",
+    "PPOUpdateStats",
     "Pay",
     "Policy",
+    "PolicySample",
+    "PolicySampler",
     "PolicySpec",
+    "PreparedRollout",
     "RandomPolicy",
     "ReserveDeck",
     "ReserveMarket",
@@ -101,10 +122,17 @@ __all__ = [
     "RunStatus",
     "ScorePolicy",
     "StaleLearningDecisionError",
+    "RolloutBatch",
+    "RolloutCollector",
+    "RolloutSample",
     "baseline_policy_spec",
     "collate_encoded_decisions",
+    "clipped_policy_loss",
+    "compute_gae",
     "encode_decision",
     "evaluate_policies",
+    "explained_variance",
+    "normalize_advantages",
     "run_match",
     "run_learning_episode",
     "run_random_game",
