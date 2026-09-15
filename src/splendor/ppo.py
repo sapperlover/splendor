@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import random
+import time
 from dataclasses import asdict, dataclass
 from os import PathLike
 from pathlib import Path
@@ -88,8 +89,11 @@ class PolicySampler:
         self.device = torch.device(device)
         self._generator = torch.Generator(device="cpu")
         self._generator.manual_seed(seed)
+        self.inference_seconds = 0.0
+        self.inference_calls = 0
 
     def sample(self, encoded: EncodedDecision) -> PolicySample:
+        started = time.perf_counter()
         batch = collate_encoded_decisions((encoded,))
         was_training = self.model.training
         self.model.eval()
@@ -107,9 +111,12 @@ class PolicySampler:
             logprob = float(distribution.log_prob(chosen_tensor.unsqueeze(0))[0].item())
             value = float(values[0].item())
         self.model.train(was_training)
+        self.inference_seconds += time.perf_counter() - started
+        self.inference_calls += 1
         return PolicySample(chosen, logprob, value)
 
     def value(self, encoded: EncodedDecision) -> float:
+        started = time.perf_counter()
         batch = collate_encoded_decisions((encoded,))
         was_training = self.model.training
         self.model.eval()
@@ -117,10 +124,19 @@ class PolicySampler:
             _, values = self.model(batch)
             value = float(values[0].item())
         self.model.train(was_training)
+        self.inference_seconds += time.perf_counter() - started
+        self.inference_calls += 1
         return value
+
+    def reset_timing(self) -> None:
+        self.inference_seconds = 0.0
+        self.inference_calls = 0
 
     def rng_state(self) -> Tensor:
         return self._generator.get_state().clone()
+
+    def manual_seed(self, seed: int) -> None:
+        self._generator.manual_seed(seed)
 
     def set_rng_state(self, state: Tensor) -> None:
         self._generator.set_state(state.cpu())
@@ -171,12 +187,17 @@ class RolloutCollector:
         sampler: PolicySampler,
         environment_factory: EnvironmentFactory,
         config: PPOConfig | None = None,
+        *,
+        start_episode_index: int = 0,
     ) -> None:
+        if start_episode_index < 0:
+            raise ValueError("start_episode_index must be non-negative")
         self.sampler = sampler
         self.environment_factory = environment_factory
         self.config = config or PPOConfig()
         self._environment: LearningEnvironment | None = None
-        self._next_episode_index = 0
+        self._next_episode_index = start_episode_index
+        self._completed_environments: list[LearningEnvironment] = []
 
     @property
     def active_environment(self) -> LearningEnvironment | None:
@@ -185,6 +206,13 @@ class RolloutCollector:
     @property
     def next_episode_index(self) -> int:
         return self._next_episode_index
+
+    def take_completed_environments(self) -> tuple[LearningEnvironment, ...]:
+        """Return newly completed/truncated games once for experiment metrics."""
+
+        completed = tuple(self._completed_environments)
+        self._completed_environments.clear()
+        return completed
 
     def collect(self, steps: int | None = None) -> RolloutBatch:
         target = steps if steps is not None else self.config.rollout_steps
@@ -229,6 +257,7 @@ class RolloutCollector:
                 )
             )
             if transition.terminated or transition.truncated:
+                self._completed_environments.append(environment)
                 self._environment = None
 
         return RolloutBatch(tuple(samples))

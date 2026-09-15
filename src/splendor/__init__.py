@@ -37,6 +37,7 @@ from .features import (
 )
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
 from .model import Color, DecisionPhase, GemVector, ReservationSource, Tier, TokenVector
+from .neural_policy import GreedyActorCriticPolicy
 from .ppo import (
     PPOConfig,
     PPOTrainer,
@@ -85,6 +86,7 @@ __all__ = [
     "FEATURE_SCHEMA_VERSION",
     "GemVector",
     "GameEngine",
+    "GreedyActorCriticPolicy",
     "IllegalActionError",
     "InvalidCandidateIndexError",
     "LearningDecision",

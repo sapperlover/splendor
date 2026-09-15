@@ -14,11 +14,22 @@
 - 工作包 4A PyTorch Deep-Sets Actor–Critic：[`docs/work_package_4a_zh-CN.md`](docs/work_package_4a_zh-CN.md)
 - 工作包 4B 单学习方环境与 transition：[`docs/work_package_4b_zh-CN.md`](docs/work_package_4b_zh-CN.md)
 - 工作包 4C Rollout、GAE 与 PPO 学习闭环：[`docs/work_package_4c_zh-CN.md`](docs/work_package_4c_zh-CN.md)
+- 工作包 5A 固定 Random 对手短训练与学习验证：[`docs/work_package_5a_zh-CN.md`](docs/work_package_5a_zh-CN.md)
 
-当前代码已完成工作包 1、2A～2D、3A、3B 和 4A～4C。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline、成对换先手评测、纯 NumPy Observation/action feature 编码、小型 PyTorch Deep-Sets Actor–Critic、固定单学习方环境，以及 rollout/GAE/PPO/checkpoint 的最小训练闭环已可用。历史对手池和正式长期训练尚未实现。
+当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C 和 5A。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline、成对换先手评测、纯 NumPy Observation/action feature 编码、小型 PyTorch Deep-Sets Actor–Critic、固定单学习方环境、rollout/GAE/PPO/checkpoint 学习闭环，以及固定 Random 对手的可恢复短训练入口已可用。5A 的 100k 决策实验已验证 PPO 对 Random 有明确学习趋势。历史对手池、正式 self-play 和百万级长训练尚未实现。
 
 在项目 Conda 环境运行测试：`conda run -n splendor python -m pytest`
 
 从仓库根目录运行基线评测：`PYTHONPATH=src python -m splendor.evaluate --player-a score --player-b development --seed-start 0 --seed-count 100`
+
+运行 5A 固定 Random 对手训练：
+
+```bash
+conda run -n splendor env PYTHONPATH=src python -m splendor.train_5a \
+  --opponent random --reward terminal --total-learning-steps 100000 \
+  --device cuda --training-seed 1 --output-dir runs/5a_random_seed_001
+```
+
+查看 TensorBoard：`conda run -n splendor tensorboard --logdir runs`
 
 数据范围仅限 2–4 人基础标准版，不含扩展、《璀璨宝石：对决》或漫威版。
