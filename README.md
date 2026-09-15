@@ -12,8 +12,9 @@
 - 工作包 3A 基线策略与评测框架：[`docs/work_package_3a_zh-CN.md`](docs/work_package_3a_zh-CN.md)
 - 工作包 3B Observation 与合法候选数值编码：[`docs/work_package_3b_zh-CN.md`](docs/work_package_3b_zh-CN.md)
 - 工作包 4A PyTorch Deep-Sets Actor–Critic：[`docs/work_package_4a_zh-CN.md`](docs/work_package_4a_zh-CN.md)
+- 工作包 4B 单学习方环境与 transition：[`docs/work_package_4b_zh-CN.md`](docs/work_package_4b_zh-CN.md)
 
-当前代码已完成工作包 1、2A～2D、3A、3B 和 4A。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline、成对换先手评测、纯 NumPy Observation/action feature 编码，以及小型 PyTorch Deep-Sets Actor–Critic 已可用。rollout、PPO 和训练仍未实现。
+当前代码已完成工作包 1、2A～2D、3A、3B、4A 和 4B。完整双人规则引擎已通过 10,000 局压力验收；Random、Score 和 Development 三种 baseline、成对换先手评测、纯 NumPy Observation/action feature 编码、小型 PyTorch Deep-Sets Actor–Critic，以及固定单学习方的 episode/transition 适配已可用。GAE、PPO 和训练仍未实现。
 
 在项目 Conda 环境运行测试：`conda run -n splendor python -m pytest`
 

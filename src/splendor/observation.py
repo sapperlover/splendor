@@ -13,7 +13,7 @@ from .contracts import (
     PlayerPublicState,
     PublicReservedCard,
 )
-from .model import ReservationSource, Tier
+from .model import DecisionPhase, ReservationSource, Tier
 from .rules import player_bonuses, player_score
 
 
@@ -79,7 +79,9 @@ def build_observation(state: GameState, observer: int, catalog: Catalog) -> Obse
     pending = None
     if state.pending is not None:
         payment_target = None
-        if isinstance(state.pending.main_action, (BuyMarket, BuyReserved)):
+        if state.phase is DecisionPhase.PAYMENT and isinstance(
+            state.pending.main_action, (BuyMarket, BuyReserved)
+        ):
             payment_target = _card_view(catalog.card(state.pending.main_action.card_id))
         pending = PendingObservation(
             main_action=state.pending.main_action,

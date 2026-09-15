@@ -40,6 +40,16 @@ from .model import Color, DecisionPhase, GemVector, ReservationSource, Tier, Tok
 from .result import TerminalReason, TerminalResult
 from .random_policy import RandomPolicy
 from .runner import GameRun, MatchOutcome, MatchResult, RunStatus, run_match, run_random_game
+from .training_env import (
+    InvalidCandidateIndexError,
+    LearningDecision,
+    LearningEnvironment,
+    LearningEnvironmentError,
+    LearningEpisodeRun,
+    LearningTransition,
+    StaleLearningDecisionError,
+    run_learning_episode,
+)
 
 __all__ = [
     "Action",
@@ -61,6 +71,12 @@ __all__ = [
     "GemVector",
     "GameEngine",
     "IllegalActionError",
+    "InvalidCandidateIndexError",
+    "LearningDecision",
+    "LearningEnvironment",
+    "LearningEnvironmentError",
+    "LearningEpisodeRun",
+    "LearningTransition",
     "Observation",
     "NobleEncoder",
     "Pay",
@@ -84,11 +100,13 @@ __all__ = [
     "MatchResult",
     "RunStatus",
     "ScorePolicy",
+    "StaleLearningDecisionError",
     "baseline_policy_spec",
     "collate_encoded_decisions",
     "encode_decision",
     "evaluate_policies",
     "run_match",
+    "run_learning_episode",
     "run_random_game",
     "tensorize_batch",
 ]
