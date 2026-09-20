@@ -116,7 +116,7 @@ class FiveCConfig:
     envs_per_worker: int = 4
     rollout_steps: int = 8_192
     checkpoint_interval: int = 100_000
-    quick_eval_interval: int = 100_000
+    quick_eval_interval: int = 50_000
     quick_eval_pairs: int = 50
     formal_eval_interval: int = 250_000
     formal_eval_pairs: int = 200
@@ -177,7 +177,7 @@ class FiveCConfig:
         if (
             self.rollout_steps != 8_192
             or self.checkpoint_interval != 100_000
-            or self.quick_eval_interval != 100_000
+            or self.quick_eval_interval != 50_000
             or self.quick_eval_pairs != 50
             or self.formal_eval_interval != 250_000
             or self.formal_eval_pairs != 200
@@ -461,6 +461,28 @@ def load_five_c_config(path: Path) -> FiveCConfig:
     return FiveCConfig(**values)
 
 
+def _resume_config_matches(
+    saved_values: dict[str, Any], current: FiveCConfig
+) -> bool:
+    """Allow only the authorized in-run Quick cadence amendment.
+
+    Checkpoints written before the amendment contain 100k.  The live config
+    and every checkpoint written after a successful resume contain 50k.  No
+    other frozen setting is normalized or ignored.
+    """
+
+    normalized = dict(saved_values)
+    normalized["fixed_historical_checkpoints"] = tuple(
+        normalized["fixed_historical_checkpoints"]
+    )
+    if (
+        normalized.get("quick_eval_interval") == 100_000
+        and current.quick_eval_interval == 50_000
+    ):
+        normalized["quick_eval_interval"] = 50_000
+    return FiveCConfig(**normalized) == current
+
+
 def _validate_checkpoint_set(config: FiveCConfig) -> dict[str, Any]:
     source_path = Path(config.source_checkpoint)
     if not source_path.is_file():
@@ -589,10 +611,20 @@ def prepare_five_c_run(config: FiveCConfig, *, run_root: Path) -> dict[str, Any]
             "training_neural_opponent": "stochastic categorical sampling",
             "quick_formal_promotion_historical_final": "greedy argmax",
         },
+        "deterministic_evaluation_cycle_adjudication": {
+            "enabled": True,
+            "outcome": "policy_cycle_draw",
+            "trigger": "second occurrence of the complete canonical state signature",
+            "excluded": [
+                "completed_turns",
+                "rng.draws",
+                "replay/logging counters",
+            ],
+        },
         "budget_boundary": (
             "exactly 5,000,000 decisions included in PPO rollouts; decisions in "
             "event-boundary drain tails finish active games but are excluded from "
-            "PPO update, the 5M budget, LR/entropy schedules, and 100k/250k counters"
+            "PPO update, the 5M budget, LR/entropy schedules, and 50k/250k counters"
         ),
     }
     _write_json(run_root / "metadata.json", metadata)
@@ -608,6 +640,7 @@ def prepare_five_c_run(config: FiveCConfig, *, run_root: Path) -> dict[str, Any]
             "best_heuristic_score": None,
             "nan_or_inf": 0,
             "engineering_truncations": 0,
+            "policy_cycle_draws": 0,
         },
     )
     (run_root / "logs" / "train.log").write_text("", encoding="utf-8")
@@ -644,6 +677,7 @@ class FiveCMetricWriter:
         "single_candidate_fraction",
         "games_completed",
         "engineering_truncations",
+        "policy_cycle_draws",
         "forced_skips",
         "mean_completed_player_turns",
         "TakeDistinct_fraction",
@@ -792,6 +826,7 @@ def evaluate_five_c_panel(
             max_completed_turns=max_completed_turns,
             failure_dir=failure_dir / name,
             progress_callback=pair_progress,
+            adjudicate_deterministic_policy_cycles=True,
         )
         results[name] = result
         if progress_callback is not None:
@@ -829,6 +864,9 @@ def _panel_record(
         "evaluation_seconds": elapsed_seconds,
         "engineering_truncations": sum(
             result.engineering_truncations for result in results.values()
+        ),
+        "policy_cycle_draws": sum(
+            result.policy_cycle_draws for result in results.values()
         ),
         "illegal_actions": sum(result.illegal_actions for result in results.values()),
         "invariant_failures": sum(
@@ -902,6 +940,9 @@ def _tensorboard_panel(
         if key in record:
             writer.add_scalar(f"eval/{tag}", record[key], run_local_step)
     writer.add_scalar("system/eval_seconds", record["evaluation_seconds"], run_local_step)
+    writer.add_scalar(
+        "system/policy_cycle_draws", record["policy_cycle_draws"], run_local_step
+    )
 
 
 def _run_local_step(trainer: PPOTrainer, progress: FiveCProgress) -> int:
@@ -1419,10 +1460,7 @@ def run_five_c_training(
         if metadata.get("stage") != FIVE_C_STAGE:
             raise ValueError("resume checkpoint has the wrong 5C stage")
         saved_values = dict(metadata["training_config"])
-        saved_values["fixed_historical_checkpoints"] = tuple(
-            saved_values["fixed_historical_checkpoints"]
-        )
-        if FiveCConfig(**saved_values) != config:
+        if not _resume_config_matches(saved_values, config):
             raise ValueError("resume configuration changes a frozen 5C setting")
         if not metadata.get("collector_at_episode_boundary"):
             raise ValueError("5C resume checkpoint is not at an episode boundary")
@@ -1649,6 +1687,7 @@ def run_five_c_training(
                         "score_rate": result.win_rate_score,
                         "valid_games": result.valid_games,
                         "total_games": result.total_games,
+                        "policy_cycle_draws": result.policy_cycle_draws,
                     }
                 )
             print(json.dumps(payload, sort_keys=True), flush=True)

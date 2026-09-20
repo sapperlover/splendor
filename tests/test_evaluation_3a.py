@@ -1,12 +1,25 @@
 from __future__ import annotations
 
+from dataclasses import replace
+import json
 from pathlib import Path
 
+from splendor._state import PlayerState
+from splendor.actions import ReturnTokens, TakeDistinct
+from splendor.catalog import load_default_catalog
 from splendor.engine import replay_game
-from splendor.evaluation import baseline_policy_spec, evaluate_policies
+from splendor.evaluation import PolicySpec, baseline_policy_spec, evaluate_policies
+from splendor.model import Color, DecisionPhase, TokenVector
+from splendor.paired_statistics import pair_scores, serialized_pair_scores
 from splendor.random_policy import RandomPolicy
-from splendor.replay import state_digest
-from splendor.runner import MatchOutcome, RunStatus, run_match
+from splendor.replay import new_replay, state_digest
+from splendor.runner import (
+    MatchOutcome,
+    RunStatus,
+    canonical_state_signature,
+    run_match,
+)
+import splendor.runner as runner_module
 
 
 def test_match_result_is_structured_reproducible_and_replayable(tmp_path: Path) -> None:
@@ -114,3 +127,145 @@ def test_evaluation_watchdog_is_reported_not_scored(tmp_path: Path) -> None:
     assert result.win_rate_score is None
     assert result.a_first.win_rate_score is None
     assert result.a_second.win_rate_score is None
+
+
+class _DeterministicTokenCyclePolicy:
+    def choose(self, request):  # type: ignore[no-untyped-def]
+        if request.observation.phase is DecisionPhase.MAIN_ACTION:
+            return next(
+                action
+                for action in request.legal_actions
+                if isinstance(action, TakeDistinct)
+            )
+        if request.observation.phase is DecisionPhase.RETURN_TOKENS:
+            return next(
+                action
+                for action in request.legal_actions
+                if isinstance(action, ReturnTokens)
+                and action.tokens == TokenVector(red=1)
+            )
+        return request.legal_actions[0]
+
+
+def test_canonical_signature_excludes_only_record_counters(tmp_path: Path) -> None:
+    catalog = load_default_catalog()
+    state = runner_module.GameEngine.new(91, catalog=catalog, failure_dir=tmp_path)._debug_state()
+    signature = canonical_state_signature(state, catalog)
+
+    assert canonical_state_signature(
+        replace(state, completed_turns=(12, 12)), catalog
+    ) == signature
+    assert canonical_state_signature(
+        replace(state, rng=replace(state.rng, draws=state.rng.draws + 99)), catalog
+    ) == signature
+    assert canonical_state_signature(
+        replace(state, current_player=1 - state.current_player), catalog
+    ) != signature
+    first, second, *rest = state.decks.tier_one
+    moved_deck = replace(state.decks, tier_one=(second, first, *rest))
+    assert canonical_state_signature(replace(state, decks=moved_deck), catalog) != signature
+
+    payload = json.loads(signature)
+    assert payload["current_player"] == state.current_player
+    assert "completed_turns" not in payload
+    assert set(payload["rng"]) == {"algorithm", "state"}
+    assert payload["derived_players"] == [
+        {
+            "bonuses": {
+                "__type__": "GemVector",
+                "black": 0,
+                "blue": 0,
+                "green": 0,
+                "red": 0,
+                "white": 0,
+            },
+            "purchased_card_count": 0,
+            "score": 0,
+        },
+        {
+            "bonuses": {
+                "__type__": "GemVector",
+                "black": 0,
+                "blue": 0,
+                "green": 0,
+                "red": 0,
+                "white": 0,
+            },
+            "purchased_card_count": 0,
+            "score": 0,
+        },
+    ]
+
+
+def test_deterministic_evaluation_scores_repeated_complete_state_as_draw(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    catalog = load_default_catalog()
+    initial = runner_module.GameEngine.new(
+        123, first_player=0, catalog=catalog, failure_dir=tmp_path / "initial"
+    )._debug_state()
+
+    def cycle_engine_new(
+        cls,
+        seed,
+        first_player=None,
+        *,
+        catalog=None,
+        failure_dir=None,
+    ):  # type: ignore[no-untyped-def]
+        del cls
+        selected_catalog = catalog or load_default_catalog()
+        actor = 0 if first_player is None else first_player
+        state = replace(
+            initial,
+            supply=TokenVector(red=1, gold=4),
+            players=(
+                PlayerState(TokenVector(white=4, blue=4, green=2)),
+                PlayerState(TokenVector(green=2, red=3, black=4, gold=1)),
+            ),
+            first_player=actor,
+            current_player=actor,
+            completed_turns=(0, 0),
+        )
+        return runner_module.GameEngine(
+            state,
+            selected_catalog,
+            new_replay(selected_catalog, seed, actor),
+            failure_dir or tmp_path / "failures",
+        )
+
+    monkeypatch.setattr(
+        runner_module.GameEngine,
+        "new",
+        classmethod(cycle_engine_new),
+    )
+    spec = PolicySpec("cycle", lambda seed: _DeterministicTokenCyclePolicy())
+    result = evaluate_policies(
+        spec,
+        spec,
+        (77,),
+        max_completed_turns=20,
+        failure_dir=tmp_path / "evaluation",
+        adjudicate_deterministic_policy_cycles=True,
+    )
+
+    assert result.passed
+    assert result.valid_games == result.total_games == 2
+    assert result.policy_cycle_draws == result.draws == 2
+    assert result.engineering_truncations == 0
+    assert result.win_rate_score == 0.5
+    assert all(match.status is RunStatus.POLICY_CYCLE_DRAW for match in result.matches)
+    assert all(match.terminal_result is None for match in result.matches)
+    assert all(match.replay.result is None for match in result.matches)
+    assert all(match.failure_scene is not None for match in result.matches)
+    for match in result.matches:
+        scene = json.loads(match.failure_scene.read_text(encoding="utf-8"))
+        assert scene["reason"] == "policy-cycle-draw"
+        assert scene["context"]["first_seen_decision"] == 0
+        assert scene["context"]["repeated_at_decision"] == 4
+
+    _, scores = pair_scores(result)
+    assert scores.tolist() == [0.5]
+    _, serialized_scores = serialized_pair_scores(result.to_dict())
+    assert serialized_scores.tolist() == [0.5]

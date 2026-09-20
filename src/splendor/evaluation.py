@@ -57,6 +57,7 @@ class EvaluationResult:
     illegal_actions: int
     invariant_failures: int
     matches: tuple[MatchResult, ...]
+    policy_cycle_draws: int = 0
 
     @property
     def passed(self) -> bool:
@@ -87,6 +88,7 @@ class EvaluationResult:
             "mean_decisions": self.mean_decisions,
             "forced_skips": self.forced_skips,
             "engineering_truncations": self.engineering_truncations,
+            "policy_cycle_draws": self.policy_cycle_draws,
             "exceptions": self.exceptions,
             "illegal_actions": self.illegal_actions,
             "invariant_failures": self.invariant_failures,
@@ -152,6 +154,7 @@ def evaluate_policies(
     max_completed_turns: int = 400,
     failure_dir: Path | None = None,
     progress_callback: Callable[[int, int], None] | None = None,
+    adjudicate_deterministic_policy_cycles: bool = False,
 ) -> EvaluationResult:
     """Evaluate paired games: A starts once and B starts once per game seed."""
 
@@ -183,6 +186,9 @@ def evaluate_policies(
                     game_in_pair=game_in_pair,
                     max_completed_turns=max_completed_turns,
                     failure_dir=failure_dir / f"pair-{pair_id:06d}-game-{game_in_pair}",
+                    adjudicate_deterministic_policy_cycles=(
+                        adjudicate_deterministic_policy_cycles
+                    ),
                     raise_on_error=False,
                 )
             )
@@ -193,7 +199,14 @@ def evaluate_policies(
     valid = tuple(
         match
         for match in frozen_matches
-        if match.status is RunStatus.NATURAL_TERMINAL and match.terminal_result is not None
+        if (
+            match.status is RunStatus.NATURAL_TERMINAL
+            and match.terminal_result is not None
+        )
+        or (
+            match.status is RunStatus.POLICY_CYCLE_DRAW
+            and match.outcome_for_a is MatchOutcome.DRAW
+        )
     )
     a_wins = sum(match.outcome_for_a is MatchOutcome.A_WIN for match in valid)
     draws = sum(match.outcome_for_a is MatchOutcome.DRAW for match in valid)
@@ -228,6 +241,9 @@ def evaluate_policies(
         illegal_actions=sum(match.error_type == "IllegalActionError" for match in frozen_matches),
         invariant_failures=sum(match.error_type == "InvariantViolation" for match in frozen_matches),
         matches=frozen_matches,
+        policy_cycle_draws=sum(
+            match.status is RunStatus.POLICY_CYCLE_DRAW for match in frozen_matches
+        ),
     )
 
 
@@ -251,7 +267,8 @@ def _outcome_breakdown(matches: tuple[MatchResult, ...]) -> OutcomeBreakdown:
     valid = tuple(
         match
         for match in matches
-        if match.status is RunStatus.NATURAL_TERMINAL and match.outcome_for_a is not None
+        if match.status in (RunStatus.NATURAL_TERMINAL, RunStatus.POLICY_CYCLE_DRAW)
+        and match.outcome_for_a is not None
     )
     wins = sum(match.outcome_for_a is MatchOutcome.A_WIN for match in valid)
     draws = sum(match.outcome_for_a is MatchOutcome.DRAW for match in valid)

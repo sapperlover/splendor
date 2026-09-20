@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import replace
+from dataclasses import asdict, replace
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -45,6 +45,7 @@ from splendor.train_5c import (
     _PROMOTION_GAME_RNG_OFFSET,
     _promotion_threshold,
     _rank_formal_candidate_results,
+    _resume_config_matches,
     _select_formal_candidate_paths,
     _QUICK_GAME_RNG_OFFSET,
     build_five_c_eval_opponents,
@@ -174,7 +175,8 @@ def test_five_c_train_dev_final_domains_and_event_cadence_are_disjoint() -> None
         for index, left in enumerate(domains)
         for right in domains[index + 1 :]
     )
-    assert _next_multiple_after(0, 100_000) == 100_000
+    assert _next_multiple_after(0, 50_000) == 50_000
+    assert _next_multiple_after(50_001, 50_000) == 100_000
     assert _next_multiple_after(100_001, 100_000) == 200_000
     assert _next_multiple_after(249_999, 250_000) == 250_000
 
@@ -438,6 +440,9 @@ def test_dynamic_pool_adds_spaced_winner_and_always_adds_promoted_best(
 def test_resume_detects_unfinished_quick_and_formal_boundaries(tmp_path: Path) -> None:
     config = _config(tmp_path / "checkpoints")
     progress = FiveCProgress()
+    assert _pending_evaluation_kind(50_000, progress, config) == "quick"
+    progress.quick_evaluation_steps.append(50_000)
+    assert _pending_evaluation_kind(50_000, progress, config) is None
     assert _pending_evaluation_kind(100_000, progress, config) == "quick"
     progress.quick_evaluation_steps.append(100_000)
     assert _pending_evaluation_kind(100_000, progress, config) is None
@@ -445,6 +450,19 @@ def test_resume_detects_unfinished_quick_and_formal_boundaries(tmp_path: Path) -
     progress.evaluation_steps.append(250_000)
     assert _pending_evaluation_kind(250_000, progress, config) is None
     assert _pending_evaluation_kind(500_000, progress, config) == "formal"
+
+
+def test_resume_allows_only_legacy_100k_to_current_50k_quick_migration(
+    tmp_path: Path,
+) -> None:
+    config = _config(tmp_path / "checkpoints")
+    values = asdict(config)
+    values["quick_eval_interval"] = 100_000
+    assert _resume_config_matches(values, config)
+
+    values["formal_eval_interval"] = 500_000
+    with pytest.raises(ValueError, match="cadence is frozen"):
+        _resume_config_matches(values, config)
 
 
 def test_five_c_panel_reports_each_opponent_progress(

@@ -43,14 +43,14 @@ Preflight 原始结果保存在 `runs/5c_main_seed1/preflight.json`。
 | reward | 纯 terminal `+1/-1/0`，shaping alpha `0` |
 | LR | run-local `0..5M`：`1e-4 -> 3e-5` 线性下降 |
 | entropy | run-local `0..5M`：`0.01 -> 0.002` 线性下降 |
-| checkpoint / quick DEV | 每 `100k` |
+| 常规 checkpoint / quick DEV | 每 `100k` / `50k` |
 | formal DEV | 每 `250k` |
 | quick / formal pairs | `50 / 200` |
 | FINAL minimum pairs | `500` |
 
 LR 和 entropy 的自变量是 **run-local learning-decision samples**，checkpoint 保存当前 schedule position 和值。resume 会从该 position 继续，不会重置为起点。
 
-正式样本预算精确为 5,000,000。为使 checkpoint 仍保持在完整 episode 边界，checkpoint/eval 时已开始的对局会运行至结束，但边界尾段不加入 PPO rollout，不计入 5M、LR/entropy schedule 或 100k/250k 计数器，并以 `boundary_drain_decisions_not_trained` 显式记录。
+正式样本预算精确为 5,000,000。为使 checkpoint 仍保持在完整 episode 边界，checkpoint/eval 时已开始的对局会运行至结束，但边界尾段不加入 PPO rollout，不计入 5M、LR/entropy schedule 或 50k/250k 计数器，并以 `boundary_drain_decisions_not_trained` 显式记录。
 
 ## 3. Opponent schedule、历史池与评测协议
 

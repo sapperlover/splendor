@@ -11,6 +11,11 @@ from .evaluation import EvaluationResult
 from .runner import MatchOutcome, RunStatus
 
 
+_SCORED_STATUSES = frozenset(
+    (RunStatus.NATURAL_TERMINAL, RunStatus.POLICY_CYCLE_DRAW)
+)
+
+
 @dataclass(frozen=True, slots=True)
 class BootstrapInterval:
     estimate: float
@@ -46,7 +51,7 @@ def pair_scores(result: EvaluationResult) -> tuple[tuple[int, ...], np.ndarray]:
         if (
             match.pair_id is None
             or match.game_in_pair is None
-            or match.status is not RunStatus.NATURAL_TERMINAL
+            or match.status not in _SCORED_STATUSES
             or match.outcome_for_a is None
         ):
             raise ValueError("evaluation contains an incomplete paired match")
@@ -87,7 +92,10 @@ def serialized_pair_scores(
         if (
             len(ordered) != 2
             or [game["game_in_pair"] for game in ordered] != [0, 1]
-            or any(game.get("status") != RunStatus.NATURAL_TERMINAL.value for game in ordered)
+            or any(
+                game.get("status") not in {status.value for status in _SCORED_STATUSES}
+                for game in ordered
+            )
             or any(game.get("game_seed") != game_seed for game in ordered)
         ):
             raise ValueError(f"seed {game_seed} does not contain both valid seat swaps")

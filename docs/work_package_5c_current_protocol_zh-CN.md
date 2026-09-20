@@ -10,8 +10,8 @@
 - rollout 上限 8,192 decisions，minibatch 512，PPO epochs 4；
 - reward 为纯 terminal `+1/0/-1`，`gamma=1`，`lambda=0.95`；
 - LR 从 `1e-4` 线性降至 `3e-5`，entropy coefficient 从 `0.01` 线性降至 `0.002`；
-- checkpoint 正常每 100k decisions 保存，Formal 所在的 250k 边界也保存；
-- 到达 checkpoint/评测边界时会先完成已开始的 episode；边界 drain tail 中 learner 实际执行的决策只用于完成这些对局，不进入 PPO update，不计入 5M 预算，不推进 LR/entropy schedule，也不推进 100k/250k 计数器；它们单独记录为 `boundary_drain_decisions_not_trained`。
+- 常规 checkpoint interval 保持 100k；Quick 的 50k 边界和 Formal 的 250k 边界也保存当前候选 checkpoint；
+- 到达 checkpoint/评测边界时会先完成已开始的 episode；边界 drain tail 中 learner 实际执行的决策只用于完成这些对局，不进入 PPO update，不计入 5M 预算，不推进 LR/entropy schedule，也不推进 50k/250k 计数器；它们单独记录为 `boundary_drain_decisions_not_trained`。
 
 神经网络动作模式固定为：
 
@@ -21,7 +21,7 @@
 
 ## 2. Quick DEV
 
-Quick 约每 100k run-local decisions 执行，但与 Formal 同一 step 时只执行 Formal。
+Quick 约每 50k run-local decisions 执行，但与 Formal 同一 step 时只执行 Formal。
 
 固定对手：
 
@@ -35,6 +35,18 @@ Quick 记录：
 `quick_heuristic_score = 0.5 * ScorePolicy score_rate + 0.5 * DevelopmentPolicy score_rate`
 
 Quick 只用于 TensorBoard 曲线、健康检查和下一个 Formal 周期的候选预筛。Quick 不能直接更新 global best-dev。RandomPolicy 和 neural checkpoint 不进入 Quick。
+
+## 2.1 确定性评测的策略循环判平
+
+Quick、Formal、Promotion、Historical 和 FINAL 的双方策略在单局内都是固定的确定性策略。在这些评测中，每个决策边界计算完整 `canonical_state_signature`：
+
+- 包含当前玩家、phase、双方 token、已购买卡/保留卡/贵族及由其重算的 score/bonus、公开市场、公共贵族、完整有序牌堆、pending context、forced-skip/final-round 状态、会影响后续转移的 RNG 实际状态，以及其他权威 `GameState` 字段；
+- 排除 `completed_turns`、`rng.draws`、replay index 和 logging counters 等纯记录字段；
+- 同一局、同一固定策略配置下，完整 signature 第二次出现时，评测立即记为 `policy_cycle_draw`，按平局计分；
+- `policy_cycle_draw` 不是 `GameEngine` 的 terminal result，不改变正式规则、forced skip 或训练 reward；普通 engineering truncation 仍然是评测失败；
+- 每次判平都单独记录状态、replay prefix、首次/重复决策位置和 signature digest。
+
+该判定不会在随机策略评测、训练 rollout、压力测试或正式引擎中隐式启用。
 
 ## 3. Formal 候选生成与固定主评测
 
@@ -184,6 +196,8 @@ TRAIN、Quick、Formal、Promotion、Historical、FINAL 和 preflight 使用互�
 ## 10. Resume 语义
 
 checkpoint 只在 episode boundary 保存，包含 model、Adam、sampler RNG、mixture RNG、historical pool RNG/manifest、dynamic member ids、Quick 候选列表、评测完成 step 和 collector next episode index。
+
+本轮 run 在 250k 中断后将 Quick 间隔从 100k 明确修订为 50k。Resume 只允许将旧 checkpoint 中该一个字段从 100k 迁移为当前 50k，其他冻结配置仍必须逐项相同；不回填修订前已经越过的 50k/150k Quick 边界。
 
 如果在 step-0 Formal、Quick 或 Formal/Promotion/Historical 评测中断，边界 checkpoint 中没有对应的“已完成”标记。`resume` 会重新执行该边界的完整评测，成功后再原子性覆写同一边界 checkpoint。它不会跳过未完成评测，也不会重复将同一 checkpoint 加入 checkpoint manifest。
 

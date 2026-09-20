@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import Enum
 from pathlib import Path
 from typing import Sequence
@@ -25,11 +26,12 @@ from .random_policy import RandomPolicy
 from .replay import ForcedSkipEvent, ReplayRecord, state_digest, to_primitive
 from .result import TerminalReason, TerminalResult
 from .rng import DeterministicRng
-from .rules import legal_actions
+from .rules import legal_actions, player_bonuses, player_score
 
 
 class RunStatus(str, Enum):
     NATURAL_TERMINAL = "natural_terminal"
+    POLICY_CYCLE_DRAW = "policy_cycle_draw"
     ENGINEERING_TRUNCATION = "engineering_truncation"
     ERROR = "error"
 
@@ -116,6 +118,52 @@ def _action_name(action: Action) -> str | None:
     return None
 
 
+def canonical_state_signature(state: object, catalog: Catalog) -> str:
+    """Canonical future-relevant state used only for deterministic evaluation.
+
+    ``completed_turns`` is deliberately excluded by the 5C evaluation
+    protocol.  Replay positions and logging counters do not live in
+    ``GameState``.  RNG ``draws`` is likewise only an audit counter; the RNG
+    algorithm and actual stream state remain part of the signature.
+
+    Iterating the dataclass fields and excluding one named field makes new
+    authoritative state fail closed: a future field is included unless the
+    protocol explicitly classifies it as record-only.
+    """
+
+    from ._state import GameState
+
+    if not isinstance(state, GameState):
+        raise TypeError("canonical state signatures require a GameState")
+    authoritative: dict[str, object] = {}
+    for field in fields(state):
+        if field.name == "completed_turns":
+            continue
+        value = getattr(state, field.name)
+        if field.name == "rng":
+            authoritative[field.name] = {
+                "algorithm": value.algorithm,
+                "state": value.state,
+            }
+        else:
+            authoritative[field.name] = to_primitive(value)
+    authoritative["catalog_data_fingerprint"] = catalog.data_fingerprint
+    authoritative["derived_players"] = [
+        {
+            "score": player_score(player, catalog),
+            "bonuses": to_primitive(player_bonuses(player, catalog)),
+            "purchased_card_count": len(player.purchased_card_ids),
+        }
+        for player in state.players
+    ]
+    return json.dumps(
+        authoritative,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
 def _checkpoint_tags(engine: GameEngine, request: DecisionRequest) -> tuple[str, ...]:
     tags = [request.observation.phase.value]
     if engine._debug_state().consecutive_forced_skips:
@@ -133,6 +181,7 @@ def _write_failure_scene(
     policy_seeds: tuple[int, int],
     policy_snapshots: tuple[object, object] | None,
     error: Exception | None = None,
+    context: dict[str, object] | None = None,
 ) -> Path:
     state = engine._debug_state()
     base = directory / (
@@ -161,6 +210,7 @@ def _write_failure_scene(
         "state_digest": state_digest(state),
         "state": to_primitive(state),
         "replay_prefix": to_primitive(engine.replay_record),
+        "context": context,
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -181,12 +231,17 @@ def run_random_game(
     failure_dir: Path | None = None,
     policies: Sequence[Policy] | None = None,
     policy_seeds: tuple[int, int] | None = None,
+    adjudicate_deterministic_policy_cycles: bool = False,
     raise_on_error: bool = True,
 ) -> GameRun:
     """Run one complete game or return an explicitly classified truncation.
 
     ``max_completed_turns`` is an engineering watchdog only.  Reaching it does
     not mutate the engine and never creates a ``TerminalResult``.
+
+    Deterministic policy-cycle adjudication is opt-in because the proof only
+    holds when both policies are fixed, stateless functions of their
+    ``DecisionRequest``.  It is an evaluation result, never an engine result.
     """
 
     if max_completed_turns <= 0:
@@ -223,6 +278,7 @@ def run_random_game(
     forced_skips = 0
     checkpoint_rng = DeterministicRng(_policy_seed(seed, 2))
     checkpoint_seen: Counter[str] = Counter()
+    seen_signatures: dict[str, int] = {}
 
     def snapshots() -> tuple[object, object]:
         return tuple(
@@ -291,6 +347,30 @@ def run_random_game(
                 coverage.add("terminal")
                 return result_for(RunStatus.NATURAL_TERMINAL, decision_or_result)
             request = decision_or_result
+            if adjudicate_deterministic_policy_cycles:
+                signature = canonical_state_signature(engine._debug_state(), catalog)
+                first_decision = seen_signatures.get(signature)
+                if first_decision is not None:
+                    signature_digest = hashlib.sha256(signature.encode("utf-8")).hexdigest()
+                    scene = _write_failure_scene(
+                        failure_dir,
+                        reason="policy-cycle-draw",
+                        engine=engine,
+                        policy_seeds=policy_seeds,
+                        policy_snapshots=snapshots(),
+                        context={
+                            "canonical_state_signature_sha256": signature_digest,
+                            "first_seen_decision": first_decision,
+                            "repeated_at_decision": decision_count,
+                            "excluded_fields": [
+                                "completed_turns",
+                                "rng.draws",
+                                "replay/logging counters",
+                            ],
+                        },
+                    )
+                    return result_for(RunStatus.POLICY_CYCLE_DRAW, None, scene=scene)
+                seen_signatures[signature] = decision_count
             completed = sum(engine._debug_state().completed_turns)
             if completed >= max_completed_turns:
                 scene = _write_failure_scene(
@@ -363,6 +443,7 @@ def run_match(
     max_completed_turns: int = 400,
     catalog: Catalog | None = None,
     failure_dir: Path | None = None,
+    adjudicate_deterministic_policy_cycles: bool = False,
     raise_on_error: bool = True,
 ) -> MatchResult:
     """Run one game through the same engine path used by every policy."""
@@ -379,6 +460,7 @@ def run_match(
         failure_dir=failure_dir,
         policies=(policy_a, policy_b),
         policy_seeds=policy_seeds,
+        adjudicate_deterministic_policy_cycles=adjudicate_deterministic_policy_cycles,
         raise_on_error=raise_on_error,
     )
     terminal = run.result
@@ -392,6 +474,9 @@ def run_match(
         else:
             winner_id = terminal.winner_ids[0]
             outcome = MatchOutcome.A_WIN if winner_id == 0 else MatchOutcome.A_LOSS
+    elif run.status is RunStatus.POLICY_CYCLE_DRAW:
+        outcome = MatchOutcome.DRAW
+        draw = True
     return MatchResult(
         pair_id=pair_id,
         game_in_pair=game_in_pair,
