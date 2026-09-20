@@ -16,6 +16,27 @@ def test_paired_bootstrap_constant_sample_has_exact_interval() -> None:
     assert interval.pair_count == 8
 
 
+def test_paired_bootstrap_exposes_requested_10th_and_90th_percentiles() -> None:
+    values = np.asarray((0.0, 0.25, 0.5, 0.75, 1.0))
+    interval = paired_bootstrap_mean(
+        values,
+        confidence=0.80,
+        resamples=4_000,
+        seed=71,
+        batch_size=4_000,
+    )
+    generator = np.random.default_rng(71)
+    indices = generator.integers(0, len(values), size=(4_000, len(values)))
+    expected_lower, expected_upper = np.quantile(
+        values[indices].mean(axis=1),
+        (0.10, 0.90),
+    )
+
+    assert interval.confidence == 0.80
+    assert interval.lower == expected_lower
+    assert interval.upper == expected_upper
+
+
 def test_paired_difference_resamples_whole_seed_differences() -> None:
     seeds = (10, 11, 12, 13)
     left = np.asarray((1.0, 0.5, 0.5, 0.0))

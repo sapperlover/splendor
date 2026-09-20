@@ -8,7 +8,7 @@
 
 随后完成了正式训练前的 multiprocessing collector preflight。`8 workers × 4 envs` 是多进程方案中最快的拓扑，但平均 `315.94 decisions/s` 低于原单进程的 `341.63 decisions/s`（`0.925x`），所以正式配置保持单进程 32 logical env。完整结果见 `docs/work_package_5c_multiprocessing_preflight_zh-CN.md`。5M 仍未启动。
 
-GPU preflight 在 RTX 4050 Laptop GPU 上使用 32 个逻辑环境，完成 32 局 latest/historical neural-opponent 对局和 1,512 个学习样本，做了一次小型 PPO update。验证了：
+run-format v4 GPU preflight 在 RTX 4050 Laptop GPU 上使用 32 个逻辑环境，完成 32 局 latest/historical neural-opponent 对局和 1,492 个学习样本，做了一次小型 PPO update。验证了：
 
 - `step_000512112.pt` 存在，feature schema、rules version、model config 匹配；
 - Adam 有 20 组可恢复 state，checkpoint 可完整加载；
@@ -17,10 +17,10 @@ GPU preflight 在 RTX 4050 Laptop GPU 上使用 32 个逻辑环境，完成 32 �
 - run-local `1,234,567` 处 LR 为 `8.2716062e-5`，entropy coefficient 为 `0.0080246928`；
 - 完整 5C checkpoint 恢复了 model、Adam、schedule position、sampler RNG、mixture RNG、pool manifest/RNG 和 collector next-episode index；
 - TensorBoard writer 可正常生成 event；
-- TRAIN / DEV / FINAL / preflight 四个 seed domain 不相交。
+- TRAIN / Quick / Formal / Promotion / Historical / FINAL / preflight seed domains 不相交。
 
 Preflight 原始结果保存在 `runs/5c_main_seed1/preflight.json`。
-最终全量回归为 `202 passed, 2 skipped`，Python 编译检查和 `git diff --check` 通过。两个 skip 是普通工具沙箱不可见 CUDA 时的条件跳过；上述宿主 GPU preflight 已实际运行 CUDA 路径。
+全量回归、Python 编译检查和 `git diff --check` 作为每次协议更新的验收项。两个 CUDA 条件测试在普通工具沙箱中会跳过；宿主 GPU preflight 需要实际运行 CUDA 路径。
 
 ## 2. 冻结的正式配置
 
@@ -50,39 +50,31 @@ Preflight 原始结果保存在 `runs/5c_main_seed1/preflight.json`。
 
 LR 和 entropy 的自变量是 **run-local learning-decision samples**，checkpoint 保存当前 schedule position 和值。resume 会从该 position 继续，不会重置为起点。
 
-正式样本预算精确为 5,000,000。为使 checkpoint 仍保持在完整 episode 边界，checkpoint/eval 时已开始的对局会运行至结束，但边界尾段不加入 PPO rollout，并以 `boundary_drain_decisions_not_trained` 显式记录。
+正式样本预算精确为 5,000,000。为使 checkpoint 仍保持在完整 episode 边界，checkpoint/eval 时已开始的对局会运行至结束，但边界尾段不加入 PPO rollout，不计入 5M、LR/entropy schedule 或 100k/250k 计数器，并以 `boundary_drain_decisions_not_trained` 显式记录。
 
-## 3. Opponent schedule 和历史池
+## 3. Opponent schedule、历史池与评测协议
 
-Phase A（run-local `0..<1,000,000`）：
+现行 5C run-format v4 的完整协议见 [work_package_5c_current_protocol_zh-CN.md](work_package_5c_current_protocol_zh-CN.md)。本报告只保留运行与 preflight 说明。
 
-- latest 30%
-- historical 20%
-- ScorePolicy 25%
-- DevelopmentPolicy 25%
+训练总体比例仍为：
 
-Phase B（run-local `1,000,000..5,000,000`）：
+- Phase A（0～1M）：30% latest、20% historical、25% Score、25% Development；
+- Phase B（1M～5M）：50% latest、30% historical、10% Score、10% Development。
 
-- latest 50%
-- historical 30%
-- ScorePolicy 10%
-- DevelopmentPolicy 10%
+active historical pool 改为 2 个 fixed anchors（157351、512112）加 10 个 dynamic slots。dynamic 非空时，historical bucket 内按 1/3 fixed、2/3 dynamic 抽样；为空时全部从 fixed 抽样。新 global best 必定进入 dynamic pool；Formal winner 与现存所有 dynamic checkpoint 都相距至少 500k 时也进入。满池使用确定性时间间距淘汰规则。
 
-切换边界会先结束现有 episode；旧 episode 不会中途更换对手。RandomPolicy 只出现在 DEV/FINAL，不进入训练 mixture。
+## 4. DEV、promotion 与 best-dev
 
-初始历史池固定 8 个时期分散的模型：`100005`、`157351`、`206542`、`255701`、`304858`、`354015`、`403183`、`512112`。容量为 12，均匀抽样。每次 formal DEV 会考虑新 best-dev，仅在至少间隔 250k 且真正更新 best-dev 时加入，不会机械地每 250k 添加。初始 8 个快照始终受保护；池满后只在 4 个动态 best-dev 槽内轮换，不会 FIFO 丢掉早期覆盖。
+- Quick：ScorePolicy、DevelopmentPolicy，各 50 paired seeds，不更新 best；
+- Formal fixed：周期内 Quick Top 2 加末尾 checkpoint；每个候选对 Score、Development、512112 各跑 200 paired seeds；
+- 主指标：`0.5 * Score + 0.5 * Development`；
+- promotion：Formal candidates 按主指标降序，所有不低于 incumbent Formal 分数 0.01 以上的候选按序挑战，首个成功者晋升；每次先 200 pairs，bootstrap 10th/90th percentile 跨阈值时扩至总计 500 pairs；
+- paired bootstrap 固定 100,000 次，使用按 cycle/candidate/stage 派生并写入结果的确定性 seed；
+- Secondary Historical：Formal winner 对当前 active pool 全成员各跑 50 pairs，只作遗忘/cycling 诊断；
+- Quick、Formal、Promotion、Historical、FINAL 使用互不相交的 seed domain。
+- 所有 neural 评测策略使用 greedy argmax；训练 learner 和 neural opponent 使用 stochastic categorical sampling。
 
-## 4. DEV 与 best-dev
-
-Quick DEV 使用固定 50 paired DEV seeds，对手为 Random、Score、Development、403183 和 512112，只记录健康状态，不更新 best-dev。
-
-Formal DEV 使用固定 200 paired DEV seeds，在 quick panel 上加入 historical 157351 和 304858。best-dev 主依据仍为：
-
-`0.2 * Random + 0.4 * Score + 0.4 * Development`
-
-当 composite 直接提高至少 0.01 时更新；当增益在 `(0, 0.01)` 内时，使用同 seed 的 100,000 次 paired bootstrap，只有 95% CI 下界大于 0 才更新。每次考虑都写入 `best_dev_history.jsonl`。
-
-FINAL 使用与 TRAIN/DEV 不重叠的独立 seed domain，CLI 拒绝少于 500 paired seeds。训练过程不自动运行 FINAL。
+FINAL 在训练过程中不会自动运行。
 
 ## 5. 直接复制的命令
 
@@ -117,7 +109,7 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src python -u -m splend
   2>&1 | tee -a runs/5c_main_seed1/logs/train.log
 ```
 
-`train` 会先对 step 0 运行 formal DEV：7 个对手 × 200 paired seeds × 2 个先后手，共 2,800 局。这期间 learning-decision step 仍为 0，但不是死锁。标准输出会立即写入 `training_process_started`、`evaluation_panel_started` 和每个对手的 started/completed 事件，并在每个对手内大约每 10% paired seeds 输出一次 progress；`status.json` 会同步显示 `phase=formal_evaluation` 及当前对手/已完成 paired seeds，TensorBoard 会立即写入 `system/process_alive` 和 `system/formal_evaluation_progress`。
+`train` 会先对 step 0 运行初始 Formal fixed baseline：3 个对手 × 200 paired seeds × 2 个先后手，共 1,200 局；随后对初始两个 active historical anchors 各跑 50 pairs，共 200 局。这期间 learning-decision step 仍为 0，但不是死锁。标准输出会立即写入 `training_process_started`、`evaluation_panel_started` 和每个对手的 started/completed 事件，并在每个对手内大约每 10% paired seeds 输出一次 progress。
 
 ### D. 从 latest 恢复
 
@@ -185,6 +177,8 @@ conda run -n splendor tensorboard --logdir runs/5c_main_seed1/tensorboard --port
 | Checkpoint 清单 | `runs/5c_main_seed1/checkpoints/manifest.jsonl` |
 | Quick DEV | `runs/5c_main_seed1/eval/quick/` |
 | Formal DEV | `runs/5c_main_seed1/eval/formal/` |
+| Promotion | `runs/5c_main_seed1/eval/promotion/` |
+| Historical diagnostic | `runs/5c_main_seed1/eval/historical/` |
 | FINAL | `runs/5c_main_seed1/final/best_dev_final_500_pairs.json` |
 | 初始历史池 | `runs/5c_main_seed1/historical_pool/initial.json` |
 | 各 checkpoint 历史池 | `runs/5c_main_seed1/historical_pool/local_*_lifetime_*.json` |

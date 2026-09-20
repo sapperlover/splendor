@@ -27,6 +27,7 @@ from .rng import DeterministicRng, RngState
 
 
 OpponentKind = Literal["latest", "historical", "score", "development", "random"]
+HistoricalBucket = Literal["fixed", "dynamic"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +42,7 @@ class OpponentEntry:
     reason: str
     added_at_step: int
     added_at_utc: str
+    historical_bucket: HistoricalBucket | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,6 +110,22 @@ class OpponentPool:
         return tuple(self._historical)
 
     @property
+    def fixed_historical_entries(self) -> tuple[OpponentEntry, ...]:
+        return tuple(
+            entry
+            for entry in self._historical
+            if entry.historical_bucket == "fixed"
+        )
+
+    @property
+    def dynamic_historical_entries(self) -> tuple[OpponentEntry, ...]:
+        return tuple(
+            entry
+            for entry in self._historical
+            if entry.historical_bucket == "dynamic"
+        )
+
+    @property
     def latest_entry(self) -> OpponentEntry | None:
         return self._latest
 
@@ -134,6 +152,7 @@ class OpponentPool:
             reason=reason,
             added_at_step=training_step,
             added_at_utc=_now_utc(),
+            historical_bucket=None,
         )
         if self._latest is not None:
             self._models.pop(self._latest.opponent_id, None)
@@ -149,7 +168,10 @@ class OpponentPool:
         *,
         reason: str,
         added_at_step: int,
+        bucket: HistoricalBucket = "dynamic",
     ) -> OpponentEntry:
+        if bucket not in ("fixed", "dynamic"):
+            raise ValueError("historical bucket must be fixed or dynamic")
         path = checkpoint_path.resolve()
         payload = _checkpoint_payload(path, self.device)
         training_step = int(payload["global_learning_decision_step"])
@@ -169,6 +191,7 @@ class OpponentPool:
             reason=reason,
             added_at_step=added_at_step,
             added_at_utc=_now_utc(),
+            historical_bucket=bucket,
         )
         self._historical.append(entry)
         self._models[opponent_id] = _model_from_payload(payload, self.device)
@@ -221,6 +244,7 @@ class OpponentPool:
         *,
         policy_seed: int,
         timing: NeuralInferenceTiming | None = None,
+        dynamic_historical_probability: float | None = None,
     ) -> OpponentChoice:
         """Choose one whole-game opponent; neural policies sample, not greedily act."""
 
@@ -233,7 +257,34 @@ class OpponentPool:
         elif kind == "historical":
             if not self._historical:
                 raise ValueError("historical opponent pool is empty")
-            entry = self._historical[self._rng.randbelow(len(self._historical))]
+            if dynamic_historical_probability is None:
+                candidates = self._historical
+            else:
+                if not 0.0 <= dynamic_historical_probability <= 1.0:
+                    raise ValueError(
+                        "dynamic historical probability must be between zero and one"
+                    )
+                fixed = [
+                    entry
+                    for entry in self._historical
+                    if entry.historical_bucket == "fixed"
+                ]
+                dynamic = [
+                    entry
+                    for entry in self._historical
+                    if entry.historical_bucket == "dynamic"
+                ]
+                if not fixed:
+                    raise ValueError("bucketed historical sampling requires fixed anchors")
+                if not dynamic:
+                    candidates = fixed
+                else:
+                    scale = 1_000_000
+                    choose_dynamic = self._rng.randbelow(scale) < int(
+                        dynamic_historical_probability * scale
+                    )
+                    candidates = dynamic if choose_dynamic else fixed
+            entry = candidates[self._rng.randbelow(len(candidates))]
         else:
             raise ValueError(f"unsupported opponent kind: {kind}")
         return OpponentChoice(
@@ -264,7 +315,7 @@ class OpponentPool:
 
     def save_manifest(self, path: Path) -> None:
         payload = {
-            "format_version": 1,
+            "format_version": 2,
             "max_historical": self.max_historical,
             "rules_version": RULESET_ID,
             "feature_schema_version": FEATURE_SCHEMA_VERSION,
@@ -289,7 +340,7 @@ class OpponentPool:
         latest_model: ActorCritic | None = None,
     ) -> OpponentPool:
         payload = json.loads(path.read_text(encoding="utf-8"))
-        if payload.get("format_version") != 1:
+        if payload.get("format_version") not in (1, 2):
             raise ValueError("unsupported opponent-pool manifest format")
         if payload.get("rules_version") != RULESET_ID:
             raise ValueError("opponent-pool rules version mismatch")
@@ -298,6 +349,8 @@ class OpponentPool:
         pool = cls(device=device, max_historical=int(payload["max_historical"]))
         pool._rng = DeterministicRng.restore(RngState(**payload["rng"]))
         for values in payload["historical"]:
+            values = dict(values)
+            values.setdefault("historical_bucket", "dynamic")
             entry = OpponentEntry(**values)
             if entry.kind != "historical" or entry.checkpoint_path is None:
                 raise ValueError("invalid historical opponent entry")
@@ -318,6 +371,8 @@ class OpponentPool:
             )
         latest_values = payload.get("latest")
         if latest_values is not None and latest_model is not None:
+            latest_values = dict(latest_values)
+            latest_values.setdefault("historical_bucket", None)
             latest = OpponentEntry(**latest_values)
             if latest.kind != "latest" or latest.model_config != asdict(
                 latest_model.config
@@ -341,4 +396,5 @@ class OpponentPool:
             reason="fixed policy",
             added_at_step=0,
             added_at_utc="",
+            historical_bucket=None,
         )

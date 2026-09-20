@@ -92,6 +92,70 @@ def test_historical_pool_manifest_round_trip_and_deterministic_sampling(
     assert restored.choose("historical", seed=45).entry in (first, second)
 
 
+def test_bucketed_historical_sampling_and_rng_resume(tmp_path: Path) -> None:
+    _, fixed_checkpoint = _checkpoint(tmp_path, step=100)
+    _, dynamic_a = _checkpoint(tmp_path, step=200)
+    _, dynamic_b = _checkpoint(tmp_path, step=300)
+    pool = OpponentPool(max_historical=3, seed=91)
+    fixed = pool.add_historical(
+        fixed_checkpoint,
+        reason="fixed anchor",
+        added_at_step=0,
+        bucket="fixed",
+    )
+    pool.add_historical(
+        dynamic_a,
+        reason="promoted best",
+        added_at_step=200,
+        bucket="dynamic",
+    )
+    pool.add_historical(
+        dynamic_b,
+        reason="promoted best",
+        added_at_step=300,
+        bucket="dynamic",
+    )
+
+    manifest = tmp_path / "bucketed.json"
+    pool.save_manifest(manifest)
+    restored = OpponentPool.load_manifest(manifest)
+    expected = tuple(
+        pool.choose_for_training(
+            "historical",
+            policy_seed=index,
+            dynamic_historical_probability=2.0 / 3.0,
+        ).entry.opponent_id
+        for index in range(200)
+    )
+    actual = tuple(
+        restored.choose_for_training(
+            "historical",
+            policy_seed=index,
+            dynamic_historical_probability=2.0 / 3.0,
+        ).entry.opponent_id
+        for index in range(200)
+    )
+    assert actual == expected
+    fixed_count = sum(opponent_id == fixed.opponent_id for opponent_id in actual)
+    assert fixed_count / len(actual) == pytest.approx(1.0 / 3.0, abs=0.08)
+
+    fixed_only = OpponentPool(max_historical=1, seed=92)
+    fixed_only.add_historical(
+        fixed_checkpoint,
+        reason="fixed anchor",
+        added_at_step=0,
+        bucket="fixed",
+    )
+    assert {
+        fixed_only.choose_for_training(
+            "historical",
+            policy_seed=index,
+            dynamic_historical_probability=2.0 / 3.0,
+        ).entry.historical_bucket
+        for index in range(20)
+    } == {"fixed"}
+
+
 def test_historical_removal_is_explicit_and_manifest_persistent(tmp_path: Path) -> None:
     _, checkpoint_a = _checkpoint(tmp_path, step=100)
     _, checkpoint_b = _checkpoint(tmp_path, step=200)

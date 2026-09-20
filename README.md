@@ -21,6 +21,7 @@
 - 工作包 5B Stage 4 短历史池 self-play：[`docs/work_package_5b_stage4_zh-CN.md`](docs/work_package_5b_stage4_zh-CN.md)
 - Stage 4 扩展成对评测与 bootstrap CI：[`docs/work_package_5b_stage4_paired_ci_zh-CN.md`](docs/work_package_5b_stage4_paired_ci_zh-CN.md)
 - 工作包 5C 5M 主训练配置与 preflight：[`docs/work_package_5c_preflight_zh-CN.md`](docs/work_package_5c_preflight_zh-CN.md)
+- 5C 现行评测、promotion、训练对手与历史池协议：[`docs/work_package_5c_current_protocol_zh-CN.md`](docs/work_package_5c_current_protocol_zh-CN.md)
 
 当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A，以及 5B Stage 1–4。Stage 4 best-dev checkpoint 为 `step_000512112.pt`。5C 的 5M 主训练配置、真实 CLI、独立实验目录与 GPU preflight 已完成；正式 5M 训练尚未启动，等待人工执行冻结命令。
 

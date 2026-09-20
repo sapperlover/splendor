@@ -32,7 +32,7 @@ from .multiprocess_collector import (
     restored_worker_rng_states,
 )
 from .opponent_pool import OpponentChoice, OpponentPool, load_frozen_actor_critic_checkpoint
-from .paired_statistics import pair_scores, paired_bootstrap_difference
+from .paired_statistics import pair_scores, paired_bootstrap_mean
 from .ppo import (
     BatchedRolloutCollector,
     PPOConfig,
@@ -50,16 +50,14 @@ from .train_5a import (
     _tensorboard_rollout,
     _update_progress,
     _write_json,
-    dev_eval_game_seeds,
     episode_plan,
     runtime_metadata,
     summarize_rollout,
 )
-from .train_5b import COMPOSITE_WEIGHTS
 from .training_env import LearningEnvironment
 
 
-FIVE_C_RUN_FORMAT_VERSION = 1
+FIVE_C_RUN_FORMAT_VERSION = 4
 FIVE_C_STAGE = "5c_main_5m_self_play"
 RUN_LOCAL_TARGET = 5_000_000
 PHASE_B_START = 1_000_000
@@ -82,23 +80,33 @@ PHASE_B_MIX = {
 _OPPONENT_KINDS = tuple(PHASE_A_MIX)
 _MIXTURE_RNG_OFFSET = 7_100_000_000_000_000
 _POOL_RNG_OFFSET = 8_100_000_000_000_000
-_DEV_POLICY_RNG_OFFSET = 6_000_000_000_000_000
+_QUICK_GAME_RNG_OFFSET = 6_100_000_000_000_000
+_QUICK_POLICY_RNG_OFFSET = 6_200_000_000_000_000
+_FORMAL_GAME_RNG_OFFSET = 6_300_000_000_000_000
+_FORMAL_POLICY_RNG_OFFSET = 6_400_000_000_000_000
+_PROMOTION_GAME_RNG_OFFSET = 6_500_000_000_000_000
+_PROMOTION_POLICY_RNG_OFFSET = 6_600_000_000_000_000
+_HISTORICAL_GAME_RNG_OFFSET = 6_700_000_000_000_000
+_HISTORICAL_POLICY_RNG_OFFSET = 6_800_000_000_000_000
 _FINAL_GAME_RNG_OFFSET = 9_000_000_000_000_000
 _FINAL_POLICY_RNG_OFFSET = 9_500_000_000_000_000
 _PREFLIGHT_GAME_RNG_OFFSET = 8_500_000_000_000_000
 _PREFLIGHT_POLICY_RNG_OFFSET = 8_600_000_000_000_000
-_BEST_DIRECT_THRESHOLD = 0.01
-_BEST_BOOTSTRAP_RESAMPLES = 100_000
+_PROMOTION_HEURISTIC_TOLERANCE = 0.01
+_PROMOTION_BOOTSTRAP_RESAMPLES = 100_000
+_PROMOTION_BOOTSTRAP_CONFIDENCE = 0.80
+_PROMOTION_BOOTSTRAP_INITIAL_OFFSET = 5_200_000_000_000_000
+_PROMOTION_BOOTSTRAP_EXPANDED_OFFSET = 5_300_000_000_000_000
+_DYNAMIC_HISTORICAL_PROBABILITY = 2.0 / 3.0
+_DYNAMIC_REPRESENTATIVE_MIN_DISTANCE = 500_000
 
 
 @dataclass(frozen=True, slots=True)
 class FiveCConfig:
     run_id: str
     source_checkpoint: str
-    historical_checkpoints: tuple[str, ...]
-    anchor_403183_checkpoint: str
+    fixed_historical_checkpoints: tuple[str, ...]
     anchor_512112_checkpoint: str
-    historical_eval_steps: tuple[int, ...] = (157_351, 304_858)
     run_local_learning_decisions: int = RUN_LOCAL_TARGET
     training_seed: int = 1
     device: str = "cuda"
@@ -112,7 +120,15 @@ class FiveCConfig:
     quick_eval_pairs: int = 50
     formal_eval_interval: int = 250_000
     formal_eval_pairs: int = 200
-    dev_panel_seed: int = 2
+    historical_eval_pairs: int = 50
+    promotion_initial_pairs: int = 200
+    promotion_max_pairs: int = 500
+    promotion_bootstrap_resamples: int = _PROMOTION_BOOTSTRAP_RESAMPLES
+    promotion_bootstrap_confidence: float = _PROMOTION_BOOTSTRAP_CONFIDENCE
+    quick_panel_seed: int = 2
+    formal_panel_seed: int = 2
+    promotion_panel_seed: int = 2
+    historical_panel_seed: int = 2
     final_panel_seed: int = 1
     final_eval_min_pairs: int = 500
     max_completed_turns: int = 400
@@ -124,7 +140,9 @@ class FiveCConfig:
     phase_a_mix: dict[str, float] = field(default_factory=lambda: dict(PHASE_A_MIX))
     phase_b_mix: dict[str, float] = field(default_factory=lambda: dict(PHASE_B_MIX))
     historical_capacity: int = 12
-    dynamic_history_min_interval: int = 250_000
+    fixed_historical_capacity: int = 2
+    dynamic_historical_capacity: int = 10
+    dynamic_representative_min_distance: int = _DYNAMIC_REPRESENTATIVE_MIN_DISTANCE
     reward: str = "terminal"
     reward_shaping_alpha: float = 0.0
     gamma: float = 1.0
@@ -163,6 +181,12 @@ class FiveCConfig:
             or self.quick_eval_pairs != 50
             or self.formal_eval_interval != 250_000
             or self.formal_eval_pairs != 200
+            or self.historical_eval_pairs != 50
+            or self.promotion_initial_pairs != 200
+            or self.promotion_max_pairs != 500
+            or self.promotion_bootstrap_resamples != _PROMOTION_BOOTSTRAP_RESAMPLES
+            or self.promotion_bootstrap_confidence
+            != _PROMOTION_BOOTSTRAP_CONFIDENCE
             or self.final_eval_min_pairs != 500
         ):
             raise ValueError("5C rollout/checkpoint/evaluation cadence is frozen")
@@ -195,14 +219,23 @@ class FiveCConfig:
             or self.weight_decay != 0.0
         ):
             raise ValueError("5C PPO/reward/precision configuration is frozen")
-        if not 8 <= len(self.historical_checkpoints) <= self.historical_capacity <= 12:
-            raise ValueError("5C requires 8-12 historical checkpoints and capacity <= 12")
-        if len(set(self.historical_checkpoints)) != len(self.historical_checkpoints):
-            raise ValueError("5C historical checkpoints must be unique")
-        if len(set(self.historical_eval_steps)) != len(self.historical_eval_steps):
-            raise ValueError("5C historical evaluation anchors must be unique")
-        if self.max_completed_turns <= 0 or self.dynamic_history_min_interval <= 0:
-            raise ValueError("5C watchdog and historical interval must be positive")
+        if (
+            len(self.fixed_historical_checkpoints) != 2
+            or len(set(self.fixed_historical_checkpoints)) != 2
+            or self.fixed_historical_capacity != 2
+            or self.dynamic_historical_capacity != 10
+            or self.historical_capacity != 12
+            or self.fixed_historical_capacity + self.dynamic_historical_capacity
+            != self.historical_capacity
+            or self.dynamic_representative_min_distance
+            != _DYNAMIC_REPRESENTATIVE_MIN_DISTANCE
+        ):
+            raise ValueError(
+                "5C requires 2 fixed and 10 dynamic historical slots with the "
+                "frozen representative-distance rule"
+            )
+        if self.max_completed_turns <= 0:
+            raise ValueError("5C watchdog must be positive")
 
 
 @dataclass(slots=True)
@@ -213,7 +246,7 @@ class FiveCProgress:
     source_update_count: int = 0
     evaluation_steps: list[int] = field(default_factory=list)
     quick_evaluation_steps: list[int] = field(default_factory=list)
-    best_heuristic_composite: float | None = None
+    best_heuristic_score: float | None = None
     best_checkpoint: str | None = None
     best_formal_eval_path: str | None = None
     opponent_games: dict[str, int] = field(
@@ -221,7 +254,7 @@ class FiveCProgress:
     )
     historical_games: dict[str, int] = field(default_factory=dict)
     dynamic_historical_ids: list[str] = field(default_factory=list)
-    last_historical_add_local_step: int = 0
+    quick_candidates: list[dict[str, Any]] = field(default_factory=list)
     elapsed_seconds: float = 0.0
     resume_count: int = 0
 
@@ -237,15 +270,13 @@ class FiveCProgress:
             source_update_count=int(values["source_update_count"]),
             evaluation_steps=list(values["evaluation_steps"]),
             quick_evaluation_steps=list(values["quick_evaluation_steps"]),
-            best_heuristic_composite=values.get("best_heuristic_composite"),
+            best_heuristic_score=values.get("best_heuristic_score"),
             best_checkpoint=values.get("best_checkpoint"),
             best_formal_eval_path=values.get("best_formal_eval_path"),
             opponent_games=dict(values["opponent_games"]),
             historical_games=dict(values["historical_games"]),
             dynamic_historical_ids=list(values.get("dynamic_historical_ids", [])),
-            last_historical_add_local_step=int(
-                values.get("last_historical_add_local_step", 0)
-            ),
+            quick_candidates=list(values.get("quick_candidates", [])),
             elapsed_seconds=float(values.get("elapsed_seconds", 0.0)),
             resume_count=int(values.get("resume_count", 0)),
         )
@@ -290,6 +321,7 @@ class FiveCOpponentSelector:
 class _EpisodeOpponent:
     kind: str
     opponent_id: str
+    historical_bucket: str | None
 
 
 def final_eval_game_seeds(final_panel_seed: int, count: int) -> tuple[int, ...]:
@@ -299,6 +331,16 @@ def final_eval_game_seeds(final_panel_seed: int, count: int) -> tuple[int, ...]:
         -(_FINAL_GAME_RNG_OFFSET + final_panel_seed * 10_000_000 + index + 1)
         for index in range(count)
     )
+
+
+def _evaluation_game_seeds(
+    offset: int,
+    panel_seed: int,
+    count: int,
+) -> tuple[int, ...]:
+    if offset <= 0 or panel_seed < 0 or count <= 0:
+        raise ValueError("evaluation seed parameters must be positive")
+    return tuple(-(offset + panel_seed * 1_000_000 + index + 1) for index in range(count))
 
 
 def linear_schedule(
@@ -413,8 +455,9 @@ def load_five_c_config(path: Path) -> FiveCConfig:
     if payload.get("stage") != FIVE_C_STAGE:
         raise ValueError("config is not a 5C main run")
     values = dict(payload["training"])
-    values["historical_checkpoints"] = tuple(values["historical_checkpoints"])
-    values["historical_eval_steps"] = tuple(values["historical_eval_steps"])
+    values["fixed_historical_checkpoints"] = tuple(
+        values["fixed_historical_checkpoints"]
+    )
     return FiveCConfig(**values)
 
 
@@ -432,8 +475,7 @@ def _validate_checkpoint_set(config: FiveCConfig) -> dict[str, Any]:
     if optimizer_state_entries == 0:
         raise ValueError("5C source checkpoint has no recoverable Adam state")
     checkpoints = (
-        *config.historical_checkpoints,
-        config.anchor_403183_checkpoint,
+        *config.fixed_historical_checkpoints,
         config.anchor_512112_checkpoint,
     )
     seen_steps: dict[int, str] = {}
@@ -449,11 +491,13 @@ def _validate_checkpoint_set(config: FiveCConfig) -> dict[str, Any]:
         if dict(payload["model_config"]) != model_config:
             raise ValueError(f"model config mismatch: {path}")
         seen_steps[int(payload["global_learning_decision_step"])] = str(path)
-    if 403_183 not in seen_steps or 512_112 not in seen_steps:
-        raise ValueError("5C fixed anchors are not the required 403183 and 512112 models")
-    historical_steps = {_checkpoint_step(Path(path)) for path in config.historical_checkpoints}
-    if not set(config.historical_eval_steps).issubset(historical_steps):
-        raise ValueError("historical DEV anchors are absent from the initial pool")
+    if 512_112 not in seen_steps:
+        raise ValueError("5C start anchor is not step_000512112.pt")
+    historical_steps = {
+        _checkpoint_step(Path(path)) for path in config.fixed_historical_checkpoints
+    }
+    if historical_steps != {157_351, 512_112}:
+        raise ValueError("5C fixed historical anchors must be 157351 and 512112")
     return {
         "source_lifetime_step": trainer.global_learning_decision_step,
         "source_update_count": trainer.update_count,
@@ -475,6 +519,8 @@ def prepare_five_c_run(config: FiveCConfig, *, run_root: Path) -> dict[str, Any]
         "checkpoints",
         "eval/quick",
         "eval/formal",
+        "eval/promotion",
+        "eval/historical",
         "eval/failures",
         "final",
         "failures",
@@ -491,11 +537,12 @@ def prepare_five_c_run(config: FiveCConfig, *, run_root: Path) -> dict[str, Any]
         max_historical=config.historical_capacity,
         seed=_POOL_RNG_OFFSET + config.training_seed,
     )
-    for checkpoint in config.historical_checkpoints:
+    for checkpoint in config.fixed_historical_checkpoints:
         pool.add_historical(
             Path(checkpoint),
-            reason="5C initial protected time-spaced snapshot",
+            reason="5C fixed historical anchor",
             added_at_step=0,
+            bucket="fixed",
         )
     initial_manifest = run_root / "historical_pool" / "initial.json"
     pool.save_manifest(initial_manifest)
@@ -515,14 +562,37 @@ def prepare_five_c_run(config: FiveCConfig, *, run_root: Path) -> dict[str, Any]
         "rng_algorithm": RNG_ALGORITHM,
         "seed_domains": {
             "train": "episode_plan(seed=1): non-negative 10,000,000 + episode_index",
-            "dev": "fixed negative Stage-1-compatible domain -20,000,001...",
+            "quick": f"negative offset {_QUICK_GAME_RNG_OFFSET}",
+            "formal": f"negative offset {_FORMAL_GAME_RNG_OFFSET}",
+            "promotion": f"negative offset {_PROMOTION_GAME_RNG_OFFSET}",
+            "historical": f"negative offset {_HISTORICAL_GAME_RNG_OFFSET}",
             "final": f"negative offset {_FINAL_GAME_RNG_OFFSET} + final panel seed",
             "preflight": f"positive offset {_PREFLIGHT_GAME_RNG_OFFSET}; never used by TRAIN/DEV/FINAL",
         },
+        "promotion_bootstrap": {
+            "algorithm": "numpy.default_rng(PCG64)",
+            "resamples": config.promotion_bootstrap_resamples,
+            "confidence": config.promotion_bootstrap_confidence,
+            "lower_quantile": 0.10,
+            "upper_quantile": 0.90,
+            "initial_seed_formula": (
+                f"{_PROMOTION_BOOTSTRAP_INITIAL_OFFSET} + cycle_run_local_step * "
+                f"{RUN_LOCAL_TARGET + 1} + candidate_run_local_step"
+            ),
+            "expanded_seed_formula": (
+                f"{_PROMOTION_BOOTSTRAP_EXPANDED_OFFSET} + cycle_run_local_step * "
+                f"{RUN_LOCAL_TARGET + 1} + candidate_run_local_step"
+            ),
+        },
+        "neural_action_modes": {
+            "training_learner": "stochastic categorical sampling",
+            "training_neural_opponent": "stochastic categorical sampling",
+            "quick_formal_promotion_historical_final": "greedy argmax",
+        },
         "budget_boundary": (
-            "exactly 5,000,000 PPO learning-decision samples; active games are "
-            "finished at event boundaries and their untrained drain tails are "
-            "reported separately"
+            "exactly 5,000,000 decisions included in PPO rollouts; decisions in "
+            "event-boundary drain tails finish active games but are excluded from "
+            "PPO update, the 5M budget, LR/entropy schedules, and 100k/250k counters"
         ),
     }
     _write_json(run_root / "metadata.json", metadata)
@@ -535,7 +605,7 @@ def prepare_five_c_run(config: FiveCConfig, *, run_root: Path) -> dict[str, Any]
             "lifetime_step": validation["source_lifetime_step"],
             "last_quick_eval": None,
             "last_formal_eval": None,
-            "best_composite": None,
+            "best_heuristic_score": None,
             "nan_or_inf": 0,
             "engineering_truncations": 0,
         },
@@ -588,6 +658,8 @@ class FiveCMetricWriter:
         "opponent_phase",
         "opponent_latest_fraction",
         "opponent_historical_fraction",
+        "opponent_fixed_historical_fraction",
+        "opponent_dynamic_historical_fraction",
         "opponent_score_fraction",
         "opponent_development_fraction",
         "learning_decisions_per_second",
@@ -606,12 +678,19 @@ class FiveCMetricWriter:
         "cpu_max_rss_mib",
         "boundary_drain_decisions_not_trained",
         "panel_pairs",
-        "random_score_rate",
         "score_policy_score_rate",
         "development_policy_score_rate",
-        "heuristic_composite",
-        "vs_403183_score_rate",
-        "vs_512112_score_rate",
+        "heuristic_score",
+        "vs_start_512112",
+        "historical_pool_mean_score",
+        "historical_pool_median_score",
+        "historical_pool_min_score",
+        "promotion_threshold",
+        "promotion_estimate",
+        "promotion_lcb90",
+        "promotion_ucb90",
+        "promotion_pairs",
+        "promoted",
         "evaluation_seconds",
         "illegal_actions",
         "invariant_failures",
@@ -637,27 +716,18 @@ def build_five_c_eval_opponents(
     config: FiveCConfig,
     *,
     device: str,
-    include_historical: bool,
+    kind: str,
 ) -> dict[str, PolicySpec]:
+    if kind not in ("quick", "formal", "final"):
+        raise ValueError(f"unsupported 5C evaluation panel kind: {kind}")
     opponents: dict[str, PolicySpec] = {
         name: baseline_policy_spec(name)
-        for name in ("random", "score", "development")
+        for name in ("score", "development")
     }
-    anchors = {
-        "anchor_403183": Path(config.anchor_403183_checkpoint),
-        "anchor_512112": Path(config.anchor_512112_checkpoint),
-    }
-    historical_paths = {
-        _checkpoint_step(Path(path)): Path(path)
-        for path in config.historical_checkpoints
-    }
-    if include_historical:
-        anchors.update(
-            {
-                f"historical_{step}": historical_paths[step]
-                for step in config.historical_eval_steps
-            }
-        )
+    if kind in ("formal", "final"):
+        anchors = {"anchor_512112": Path(config.anchor_512112_checkpoint)}
+    else:
+        anchors = {}
     for name, path in anchors.items():
         model = load_frozen_actor_critic_checkpoint(path, device=device)
         opponents[name] = PolicySpec(
@@ -685,15 +755,8 @@ def evaluate_five_c_panel(
     pair_progress_callback: Callable[[str, int, int, int, int], None]
     | None = None,
 ) -> tuple[dict[str, EvaluationResult], float]:
-    required = {
-        "random",
-        "score",
-        "development",
-        "anchor_403183",
-        "anchor_512112",
-    }
-    if not required.issubset(opponents):
-        raise ValueError("5C evaluation panel is missing a required fixed opponent")
+    if not opponents:
+        raise ValueError("5C evaluation panel must contain at least one opponent")
     parameters_before = tuple(parameter.detach().clone() for parameter in model.parameters())
     was_training = model.training
     model.eval()
@@ -786,15 +849,16 @@ def _panel_record(
                 f"{prefix}_mean_turns": result.mean_completed_player_turns,
             }
         )
-    record["random_score_rate"] = results["random"].win_rate_score
-    record["score_policy_score_rate"] = results["score"].win_rate_score
-    record["development_policy_score_rate"] = results["development"].win_rate_score
-    record["vs_403183_score_rate"] = results["anchor_403183"].win_rate_score
-    record["vs_512112_score_rate"] = results["anchor_512112"].win_rate_score
-    record["heuristic_composite"] = sum(
-        COMPOSITE_WEIGHTS[name] * float(results[name].win_rate_score)
-        for name in ("random", "score", "development")
-    )
+    if "score" in results and "development" in results:
+        record["score_policy_score_rate"] = results["score"].win_rate_score
+        record["development_policy_score_rate"] = results[
+            "development"
+        ].win_rate_score
+        record["heuristic_score"] = 0.5 * float(
+            results["score"].win_rate_score
+        ) + 0.5 * float(results["development"].win_rate_score)
+    if "anchor_512112" in results:
+        record["vs_start_512112"] = results["anchor_512112"].win_rate_score
     return record
 
 
@@ -830,94 +894,14 @@ def _tensorboard_panel(
     writer: SummaryWriter, record: dict[str, Any], run_local_step: int
 ) -> None:
     for tag, key in (
-        ("random_score_rate", "random_score_rate"),
         ("score_policy_score_rate", "score_policy_score_rate"),
         ("development_policy_score_rate", "development_policy_score_rate"),
-        ("heuristic_composite", "heuristic_composite"),
-        ("vs_403183_score_rate", "vs_403183_score_rate"),
-        ("vs_512112_score_rate", "vs_512112_score_rate"),
+        ("heuristic_score", "heuristic_score"),
+        ("vs_start_512112", "vs_start_512112"),
     ):
-        writer.add_scalar(f"eval/{tag}", record[key], run_local_step)
+        if key in record:
+            writer.add_scalar(f"eval/{tag}", record[key], run_local_step)
     writer.add_scalar("system/eval_seconds", record["evaluation_seconds"], run_local_step)
-
-
-def _weighted_pair_scores(
-    results: dict[str, EvaluationResult],
-) -> tuple[tuple[int, ...], np.ndarray]:
-    shared_seeds: tuple[int, ...] | None = None
-    weighted: np.ndarray | None = None
-    for name in ("random", "score", "development"):
-        seeds, scores = pair_scores(results[name])
-        if shared_seeds is None:
-            shared_seeds = seeds
-            weighted = np.zeros_like(scores)
-        elif seeds != shared_seeds:
-            raise ValueError("formal DEV heuristic panels do not share ordered seeds")
-        weighted += COMPOSITE_WEIGHTS[name] * scores
-    if shared_seeds is None or weighted is None:
-        raise AssertionError("formal DEV panel has no heuristic results")
-    return shared_seeds, weighted
-
-
-def _serialized_weighted_pair_scores(
-    path: Path,
-) -> tuple[tuple[int, ...], np.ndarray]:
-    from .paired_statistics import serialized_pair_scores
-
-    payload = json.loads(path.read_text(encoding="utf-8"))["evaluations"]
-    shared_seeds: tuple[int, ...] | None = None
-    weighted: np.ndarray | None = None
-    for name in ("random", "score", "development"):
-        seeds, scores = serialized_pair_scores(payload[name])
-        if shared_seeds is None:
-            shared_seeds = seeds
-            weighted = np.zeros_like(scores)
-        elif seeds != shared_seeds:
-            raise ValueError("stored formal DEV heuristic panels do not share seeds")
-        weighted += COMPOSITE_WEIGHTS[name] * scores
-    if shared_seeds is None or weighted is None:
-        raise AssertionError("stored formal DEV panel has no heuristic results")
-    return shared_seeds, weighted
-
-
-def _best_dev_decision(
-    progress: FiveCProgress,
-    results: dict[str, EvaluationResult],
-    composite: float,
-    *,
-    run_local_step: int,
-) -> tuple[bool, dict[str, Any]]:
-    if progress.best_heuristic_composite is None:
-        return True, {"reason": "initial formal DEV baseline", "delta": None, "ci": None}
-    delta = composite - progress.best_heuristic_composite
-    if delta >= _BEST_DIRECT_THRESHOLD:
-        return True, {"reason": "composite improved by at least 0.01", "delta": delta, "ci": None}
-    if delta <= 0.0:
-        return False, {"reason": "composite did not improve", "delta": delta, "ci": None}
-    if progress.best_formal_eval_path is None:
-        raise AssertionError("best DEV score has no stored formal panel")
-    candidate_seeds, candidate_scores = _weighted_pair_scores(results)
-    best_seeds, best_scores = _serialized_weighted_pair_scores(
-        Path(progress.best_formal_eval_path)
-    )
-    interval = paired_bootstrap_difference(
-        candidate_seeds,
-        candidate_scores,
-        best_seeds,
-        best_scores,
-        resamples=_BEST_BOOTSTRAP_RESAMPLES,
-        seed=5_000_000_000 + run_local_step,
-    )
-    selected = interval.lower > 0.0
-    return selected, {
-        "reason": (
-            "close composite improvement confirmed by paired bootstrap"
-            if selected
-            else "close composite improvement not confirmed by paired bootstrap"
-        ),
-        "delta": delta,
-        "ci": interval.to_dict(),
-    }
 
 
 def _run_local_step(trainer: PPOTrainer, progress: FiveCProgress) -> int:
@@ -1119,7 +1103,7 @@ def _write_status(
             "last_formal_eval": (
                 progress.evaluation_steps[-1] if progress.evaluation_steps else None
             ),
-            "best_composite": progress.best_heuristic_composite,
+            "best_heuristic_score": progress.best_heuristic_score,
             "best_checkpoint": progress.best_checkpoint,
             "nan_or_inf": int(isinstance(error, FloatingPointError)),
             "engineering_truncations": progress.training.engineering_truncations,
@@ -1137,57 +1121,240 @@ def _append_jsonl(path: Path, value: dict[str, Any]) -> None:
         stream.write(json.dumps(value, ensure_ascii=False, sort_keys=True) + "\n")
 
 
-def _maybe_add_historical_best(
+def _add_dynamic_historical_checkpoint(
     *,
-    selected: bool,
     checkpoint_path: Path,
-    run_local_step: int,
-    lifetime_step: int,
+    cycle_run_local_step: int,
+    formal_lifetime_step: int,
+    reason: str,
+    force: bool,
     config: FiveCConfig,
     progress: FiveCProgress,
     pool: OpponentPool,
     run_root: Path,
 ) -> bool:
+    candidate_training_step = _checkpoint_step(checkpoint_path)
+    candidate_run_local_step = candidate_training_step - progress.source_lifetime_step
     event: dict[str, Any] = {
-        "considered_at_run_local_step": run_local_step,
-        "lifetime_step": lifetime_step,
+        "considered_at_run_local_step": cycle_run_local_step,
+        "lifetime_step": formal_lifetime_step,
         "checkpoint": str(checkpoint_path.resolve()),
-        "selected_as_best_dev": selected,
+        "candidate_training_step": candidate_training_step,
+        "candidate_run_local_step": candidate_run_local_step,
+        "forced_by_global_best_promotion": force,
         "decision": "not_added",
-        "reason": "candidate was not selected as best-dev",
+        "reason": reason,
     }
-    if selected and run_local_step > 0:
-        gap = run_local_step - progress.last_historical_add_local_step
-        if gap < config.dynamic_history_min_interval:
-            event["reason"] = "minimum 250k run-local spacing not reached"
-        else:
-            if len(pool.historical_entries) >= pool.max_historical:
-                if not progress.dynamic_historical_ids:
-                    event["reason"] = "pool full and all entries are protected initial snapshots"
-                    _append_jsonl(run_root / "historical_pool" / "events.jsonl", event)
-                    return False
-                removed_id = progress.dynamic_historical_ids.pop(0)
-                removed = pool.remove_historical(removed_id)
-                event["removed"] = asdict(removed)
-            entry = pool.add_historical(
-                checkpoint_path,
-                reason="5C formal best-dev snapshot",
-                added_at_step=lifetime_step,
-            )
-            progress.dynamic_historical_ids.append(entry.opponent_id)
-            progress.historical_games.setdefault(entry.opponent_id, 0)
-            progress.last_historical_add_local_step = run_local_step
-            event["decision"] = "added"
-            event["reason"] = "new formal best-dev with required spacing"
-            event["entry"] = asdict(entry)
-            _append_jsonl(run_root / "historical_pool" / "events.jsonl", event)
-            return True
+    if force and candidate_run_local_step == 0:
+        event["reason"] = "initial global best already occupies a fixed anchor slot"
+        _append_jsonl(run_root / "historical_pool" / "events.jsonl", event)
+        return False
+
+    resolved = str(checkpoint_path.resolve())
+    if any(entry.checkpoint_path == resolved for entry in pool.historical_entries):
+        event["reason"] = "checkpoint is already active"
+        _append_jsonl(run_root / "historical_pool" / "events.jsonl", event)
+        return False
+
+    dynamic = list(pool.dynamic_historical_entries)
+    if not force and not _dynamic_representative_is_spaced(
+        candidate_training_step,
+        dynamic,
+        minimum_distance=config.dynamic_representative_min_distance,
+    ):
+        event["reason"] = (
+            "formal winner is less than 500k run-local decisions from an active "
+            "dynamic checkpoint"
+        )
+        _append_jsonl(run_root / "historical_pool" / "events.jsonl", event)
+        return False
+
+    if len(dynamic) >= config.dynamic_historical_capacity:
+        removed_id = _dynamic_history_eviction_id(
+            dynamic,
+            new_training_step=candidate_training_step,
+        )
+        removed = pool.remove_historical(removed_id)
+        progress.dynamic_historical_ids.remove(removed.opponent_id)
+        event["removed"] = asdict(removed)
+        event["retention_rule"] = (
+            "evict the older deterministic member with the smallest nearest-step "
+            "distance; retain the newly admitted checkpoint"
+        )
+    entry = pool.add_historical(
+        checkpoint_path,
+        reason=reason,
+        added_at_step=formal_lifetime_step,
+        bucket="dynamic",
+    )
+    progress.dynamic_historical_ids.append(entry.opponent_id)
+    progress.historical_games.setdefault(entry.opponent_id, 0)
+    event["decision"] = "added"
+    event["entry"] = asdict(entry)
     _append_jsonl(run_root / "historical_pool" / "events.jsonl", event)
-    return False
+    return True
 
 
 def _next_multiple_after(current: int, interval: int) -> int:
     return (current // interval + 1) * interval
+
+
+def _select_formal_candidate_paths(
+    quick_candidates: Sequence[dict[str, Any]],
+    last_checkpoint: Path,
+) -> tuple[Path, ...]:
+    ranked = sorted(
+        quick_candidates,
+        key=lambda item: (
+            -float(item["quick_heuristic_score"]),
+            -int(item["run_local_step"]),
+            str(item["checkpoint"]),
+        ),
+    )[:2]
+    ordered = [Path(item["checkpoint"]) for item in ranked]
+    ordered.append(last_checkpoint)
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for path in ordered:
+        resolved = str(path.resolve())
+        if resolved not in seen:
+            seen.add(resolved)
+            unique.append(path.resolve())
+    return tuple(unique)
+
+
+def _rank_formal_candidate_results(
+    candidates: Sequence[tuple[Path, Path, dict[str, Any]]],
+) -> tuple[tuple[Path, Path, dict[str, Any]], ...]:
+    """Rank Formal results by score, then the frozen deterministic tie-break."""
+
+    return tuple(
+        sorted(
+            candidates,
+            key=lambda item: (
+                float(item[2]["heuristic_score"]),
+                int(item[2]["run_local_step"]),
+                str(item[0]),
+            ),
+            reverse=True,
+        )
+    )
+
+
+def _eligible_formal_candidate_results(
+    candidates: Sequence[tuple[Path, Path, dict[str, Any]]],
+    *,
+    incumbent_score: float,
+) -> tuple[tuple[Path, Path, dict[str, Any]], ...]:
+    return tuple(
+        candidate
+        for candidate in _rank_formal_candidate_results(candidates)
+        if _promotion_eligible(
+            float(candidate[2]["heuristic_score"]),
+            incumbent_score,
+        )
+    )
+
+
+def _promotion_threshold(candidate_score: float, incumbent_score: float) -> float:
+    return 0.5 + max(0.0, incumbent_score - candidate_score)
+
+
+def _promotion_eligible(candidate_score: float, incumbent_score: float) -> bool:
+    return candidate_score >= incumbent_score - _PROMOTION_HEURISTIC_TOLERANCE
+
+
+def _promotion_bootstrap_seed(
+    *,
+    cycle_run_local_step: int,
+    candidate_run_local_step: int,
+    expanded: bool,
+) -> int:
+    if cycle_run_local_step < 0 or candidate_run_local_step < 0:
+        raise ValueError("promotion bootstrap steps must be non-negative")
+    offset = (
+        _PROMOTION_BOOTSTRAP_EXPANDED_OFFSET
+        if expanded
+        else _PROMOTION_BOOTSTRAP_INITIAL_OFFSET
+    )
+    return (
+        offset
+        + cycle_run_local_step * (RUN_LOCAL_TARGET + 1)
+        + candidate_run_local_step
+    )
+
+
+def _promotion_ci_action(
+    *,
+    lower: float,
+    upper: float,
+    threshold: float,
+    allow_expand: bool,
+) -> str:
+    if lower > threshold:
+        return "promote"
+    if allow_expand and lower <= threshold < upper:
+        return "expand"
+    return "retain"
+
+
+def _dynamic_history_eviction_id(
+    entries: Sequence[Any],
+    *,
+    new_training_step: int,
+) -> str:
+    if not entries:
+        raise ValueError("dynamic history eviction requires existing entries")
+
+    def eviction_key(entry: Any) -> tuple[int, int, str]:
+        if entry.training_step is None:
+            raise ValueError("dynamic historical entry has no training step")
+        other_steps = [
+            int(other.training_step)
+            for other in entries
+            if other.opponent_id != entry.opponent_id
+            and other.training_step is not None
+        ] + [new_training_step]
+        nearest = min(abs(int(entry.training_step) - step) for step in other_steps)
+        return nearest, int(entry.training_step), entry.opponent_id
+
+    return min(entries, key=eviction_key).opponent_id
+
+
+def _dynamic_representative_is_spaced(
+    candidate_training_step: int,
+    entries: Sequence[Any],
+    *,
+    minimum_distance: int = _DYNAMIC_REPRESENTATIVE_MIN_DISTANCE,
+) -> bool:
+    if minimum_distance <= 0:
+        raise ValueError("dynamic representative minimum distance must be positive")
+    return all(
+        entry.training_step is not None
+        and abs(candidate_training_step - int(entry.training_step)) >= minimum_distance
+        for entry in entries
+    )
+
+
+def _pending_evaluation_kind(
+    run_local_step: int,
+    progress: FiveCProgress,
+    config: FiveCConfig,
+) -> str | None:
+    if run_local_step <= 0:
+        return None
+    if (
+        run_local_step % config.formal_eval_interval == 0
+        and run_local_step not in progress.evaluation_steps
+    ):
+        return "formal"
+    if (
+        run_local_step % config.quick_eval_interval == 0
+        and run_local_step % config.formal_eval_interval != 0
+        and run_local_step not in progress.quick_evaluation_steps
+    ):
+        return "quick"
+    return None
 
 
 def _initial_formal_dev_required(
@@ -1199,7 +1366,7 @@ def _initial_formal_dev_required(
     return (
         _run_local_step(trainer, progress) == 0
         and 0 not in progress.evaluation_steps
-        and progress.best_heuristic_composite is None
+        and progress.best_heuristic_score is None
         and progress.best_checkpoint is None
     )
 
@@ -1252,11 +1419,8 @@ def run_five_c_training(
         if metadata.get("stage") != FIVE_C_STAGE:
             raise ValueError("resume checkpoint has the wrong 5C stage")
         saved_values = dict(metadata["training_config"])
-        saved_values["historical_checkpoints"] = tuple(
-            saved_values["historical_checkpoints"]
-        )
-        saved_values["historical_eval_steps"] = tuple(
-            saved_values["historical_eval_steps"]
+        saved_values["fixed_historical_checkpoints"] = tuple(
+            saved_values["fixed_historical_checkpoints"]
         )
         if FiveCConfig(**saved_values) != config:
             raise ValueError("resume configuration changes a frozen 5C setting")
@@ -1292,11 +1456,18 @@ def run_five_c_training(
         progress.resume_count += 1
         previous_elapsed = progress.elapsed_seconds
 
+    if len(pool.fixed_historical_entries) != config.fixed_historical_capacity:
+        raise ValueError("5C pool does not contain exactly two fixed anchors")
+    if {
+        entry.opponent_id for entry in pool.dynamic_historical_entries
+    } != set(progress.dynamic_historical_ids):
+        raise ValueError("5C progress and manifest disagree on dynamic history")
+
     evaluation_opponents_quick = build_five_c_eval_opponents(
-        config, device=config.device, include_historical=False
+        config, device=config.device, kind="quick"
     )
     evaluation_opponents_formal = build_five_c_eval_opponents(
-        config, device=config.device, include_historical=True
+        config, device=config.device, kind="formal"
     )
     opponent_timing = NeuralInferenceTiming()
     episode_opponents: dict[str, _EpisodeOpponent] = {}
@@ -1309,11 +1480,17 @@ def run_five_c_training(
             kind,
             policy_seed=plan.opponent_seed,
             timing=opponent_timing,
+            dynamic_historical_probability=(
+                _DYNAMIC_HISTORICAL_PROBABILITY
+                if kind == "historical"
+                else None
+            ),
         )
         episode_id = f"5c-{config.training_seed}-{index:09d}"
         episode_opponents[episode_id] = _EpisodeOpponent(
             kind=kind,
             opponent_id=choice.entry.opponent_id,
+            historical_bucket=choice.entry.historical_bucket,
         )
         return plan, choice, episode_id
 
@@ -1399,27 +1576,36 @@ def run_five_c_training(
             append_manifest=append_manifest,
         )
 
-    def perform_panel(kind: str, checkpoint_path: Path) -> tuple[dict[str, Any], bool]:
-        local = _run_local_step(trainer, progress)
-        if kind == "quick":
-            pairs = config.quick_eval_pairs
-            opponents = evaluation_opponents_quick
-        elif kind == "formal":
-            pairs = config.formal_eval_pairs
-            opponents = evaluation_opponents_formal
-        else:
-            raise ValueError(f"unknown in-training 5C evaluation kind: {kind}")
-        seeds = dev_eval_game_seeds(config.dev_panel_seed, pairs)
+    def run_panel(
+        *,
+        kind: str,
+        checkpoint_path: Path,
+        opponents: dict[str, PolicySpec],
+        seeds: tuple[int, ...],
+        policy_seed_base: int,
+        output_path: Path,
+        cycle_local_step: int,
+    ) -> tuple[dict[str, Any], dict[str, EvaluationResult]]:
+        checkpoint_path = checkpoint_path.resolve()
+        payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+        lifetime_step = int(payload["global_learning_decision_step"])
+        candidate_local_step = lifetime_step - progress.source_lifetime_step
+        candidate_update_count = int(payload["update_count"])
+        candidate_model = load_frozen_actor_critic_checkpoint(
+            checkpoint_path, device=config.device
+        )
         panel_started = time.perf_counter()
         print(
             json.dumps(
                 {
                     "event": "evaluation_panel_started",
                     "kind": kind,
-                    "run_local_step": local,
+                    "cycle_run_local_step": cycle_local_step,
+                    "candidate_run_local_step": candidate_local_step,
+                    "checkpoint": str(checkpoint_path),
                     "opponents": len(opponents),
-                    "paired_seeds_per_opponent": pairs,
-                    "total_games": len(opponents) * pairs * 2,
+                    "paired_seeds_per_opponent": len(seeds),
+                    "total_games": len(opponents) * len(seeds) * 2,
                 },
                 sort_keys=True,
             ),
@@ -1432,9 +1618,10 @@ def run_five_c_training(
             progress=progress,
             phase=f"{kind}_evaluation",
             phase_detail={
+                "candidate": str(checkpoint_path),
                 "completed_opponents": 0,
                 "total_opponents": len(opponents),
-                "paired_seeds_per_opponent": pairs,
+                "paired_seeds_per_opponent": len(seeds),
             },
         )
 
@@ -1445,14 +1632,16 @@ def run_five_c_training(
             event: str,
             result: EvaluationResult | None,
         ) -> None:
+            elapsed = time.perf_counter() - panel_started
             payload: dict[str, Any] = {
                 "event": f"evaluation_opponent_{event}",
                 "kind": kind,
-                "run_local_step": local,
+                "cycle_run_local_step": cycle_local_step,
+                "candidate_run_local_step": candidate_local_step,
                 "opponent": opponent_name,
                 "opponent_index": opponent_index,
                 "opponent_total": opponent_total,
-                "elapsed_seconds": time.perf_counter() - panel_started,
+                "elapsed_seconds": elapsed,
             }
             if result is not None:
                 payload.update(
@@ -1471,19 +1660,20 @@ def run_five_c_training(
                 progress=progress,
                 phase=f"{kind}_evaluation",
                 phase_detail={
+                    "candidate": str(checkpoint_path),
                     "opponent": opponent_name,
                     "opponent_index": opponent_index,
                     "completed_opponents": completed,
                     "total_opponents": opponent_total,
-                    "paired_seeds_per_opponent": pairs,
+                    "paired_seeds_per_opponent": len(seeds),
                     "event": event,
-                    "elapsed_seconds": time.perf_counter() - panel_started,
+                    "elapsed_seconds": elapsed,
                 },
             )
             tensorboard.add_scalar(
                 f"system/{kind}_evaluation_progress",
                 completed / opponent_total,
-                local,
+                cycle_local_step,
             )
             tensorboard.flush()
 
@@ -1500,7 +1690,8 @@ def run_five_c_training(
                     {
                         "event": "evaluation_opponent_progress",
                         "kind": kind,
-                        "run_local_step": local,
+                        "cycle_run_local_step": cycle_local_step,
+                        "candidate_run_local_step": candidate_local_step,
                         "opponent": opponent_name,
                         "opponent_index": opponent_index,
                         "opponent_total": opponent_total,
@@ -1519,6 +1710,7 @@ def run_five_c_training(
                 progress=progress,
                 phase=f"{kind}_evaluation",
                 phase_detail={
+                    "candidate": str(checkpoint_path),
                     "opponent": opponent_name,
                     "opponent_index": opponent_index,
                     "completed_opponents": opponent_index - 1,
@@ -1529,30 +1721,27 @@ def run_five_c_training(
                     "elapsed_seconds": elapsed,
                 },
             )
-            overall_progress = (
-                opponent_index - 1 + completed_pairs / total_pairs
-            ) / opponent_total
             tensorboard.add_scalar(
                 f"system/{kind}_evaluation_progress",
-                overall_progress,
-                local,
+                (
+                    opponent_index - 1 + completed_pairs / total_pairs
+                ) / opponent_total,
+                cycle_local_step,
             )
             tensorboard.flush()
 
         results, elapsed = evaluate_five_c_panel(
-            trainer.model,
+            candidate_model,
             opponents=opponents,
             seeds=seeds,
-            policy_seed_base=-(
-                _DEV_POLICY_RNG_OFFSET + config.dev_panel_seed * 10_000_000
-            ),
+            policy_seed_base=policy_seed_base,
             device=config.device,
             max_completed_turns=config.max_completed_turns,
             failure_dir=(
                 run_root
                 / "eval"
                 / "failures"
-                / f"{kind}-local-{local:09d}"
+                / f"{kind}-cycle-{cycle_local_step:09d}-candidate-{candidate_local_step:09d}"
             ),
             progress_callback=evaluation_progress,
             pair_progress_callback=evaluation_pair_progress,
@@ -1560,106 +1749,654 @@ def run_five_c_training(
         record = _panel_record(
             results,
             kind=kind,
-            run_local_step=local,
-            lifetime_step=trainer.global_learning_decision_step,
-            run_local_update_count=trainer.update_count - progress.source_update_count,
-            lifetime_update_count=trainer.update_count,
+            run_local_step=candidate_local_step,
+            lifetime_step=lifetime_step,
+            run_local_update_count=candidate_update_count - progress.source_update_count,
+            lifetime_update_count=candidate_update_count,
             elapsed_seconds=elapsed,
         )
-        path = run_root / "eval" / kind / f"local_{local:09d}_{kind}.json"
+        record["evaluation_cycle_run_local_step"] = cycle_local_step
+        record["candidate_checkpoint"] = str(checkpoint_path)
         _write_panel(
-            path,
+            output_path,
             results=results,
             record=record,
             config=config,
-            seed_domain="DEV",
+            seed_domain=kind.upper(),
             checkpoint_path=checkpoint_path,
+        )
+        return record, results
+
+    def run_quick_panel(checkpoint_path: Path) -> dict[str, Any]:
+        local = _run_local_step(trainer, progress)
+        path = run_root / "eval" / "quick" / f"local_{local:09d}_quick.json"
+        record, _ = run_panel(
+            kind="quick",
+            checkpoint_path=checkpoint_path,
+            opponents=evaluation_opponents_quick,
+            seeds=_evaluation_game_seeds(
+                _QUICK_GAME_RNG_OFFSET,
+                config.quick_panel_seed,
+                config.quick_eval_pairs,
+            ),
+            policy_seed_base=-(
+                _QUICK_POLICY_RNG_OFFSET + config.quick_panel_seed * 1_000_000
+            ),
+            output_path=path,
+            cycle_local_step=local,
         )
         metrics.append(record)
         _tensorboard_panel(tensorboard, record, local)
-        for name in results:
-            if name.startswith("historical_"):
-                tensorboard.add_scalar(
-                    f"eval/{name}_score_rate",
-                    record[f"{_safe_id(name)}_score_rate"],
-                    local,
-                )
-        selected = False
-        if kind == "quick":
-            if local not in progress.quick_evaluation_steps:
-                progress.quick_evaluation_steps.append(local)
-        else:
-            composite = float(record["heuristic_composite"])
-            old_best = progress.best_checkpoint
-            old_score = progress.best_heuristic_composite
-            selected, rationale = _best_dev_decision(
-                progress,
-                results,
-                composite,
-                run_local_step=local,
-            )
-            if selected:
-                progress.best_heuristic_composite = composite
-                progress.best_checkpoint = str(checkpoint_path.resolve())
-                progress.best_formal_eval_path = str(path.resolve())
-                _write_json(
-                    run_root / "checkpoints" / "best_dev.json",
-                    {
-                        "old_best_checkpoint": old_best,
-                        "old_best_composite": old_score,
-                        "new_best_checkpoint": str(checkpoint_path.resolve()),
-                        "new_best_composite": composite,
-                        "run_local_step": local,
-                        "lifetime_step": trainer.global_learning_decision_step,
-                        "formal_eval_path": str(path.resolve()),
-                        "eval_seed_set": {
-                            "version": "stage1-compatible-dev-v1",
-                            "panel_seed": config.dev_panel_seed,
-                            "paired_seeds": config.formal_eval_pairs,
-                        },
-                        "panel_summary": record,
-                        "selection": rationale,
-                    },
-                )
-                _append_jsonl(
-                    run_root / "checkpoints" / "best_dev_history.jsonl",
-                    json.loads(
-                        (run_root / "checkpoints" / "best_dev.json").read_text(
-                            encoding="utf-8"
-                        )
-                    ),
-                )
-            else:
-                _append_jsonl(
-                    run_root / "checkpoints" / "best_dev_history.jsonl",
-                    {
-                        "old_best_checkpoint": old_best,
-                        "old_best_composite": old_score,
-                        "candidate_checkpoint": str(checkpoint_path.resolve()),
-                        "candidate_composite": composite,
-                        "run_local_step": local,
-                        "lifetime_step": trainer.global_learning_decision_step,
-                        "formal_eval_path": str(path.resolve()),
-                        "selection": rationale,
-                    },
-                )
-            if local not in progress.evaluation_steps:
-                progress.evaluation_steps.append(local)
+        progress.quick_candidates.append(
+            {
+                "checkpoint": str(checkpoint_path.resolve()),
+                "run_local_step": local,
+                "lifetime_step": trainer.global_learning_decision_step,
+                "quick_heuristic_score": float(record["heuristic_score"]),
+                "eval_path": str(path.resolve()),
+            }
+        )
+        if local not in progress.quick_evaluation_steps:
+            progress.quick_evaluation_steps.append(local)
         tensorboard.flush()
         print(
             json.dumps(
                 {
-                    "event": f"{kind}_dev",
+                    "event": "quick_dev",
                     "run_local_step": local,
-                    "lifetime_step": trainer.global_learning_decision_step,
-                    "heuristic_composite": record["heuristic_composite"],
-                    "selected_best_dev": selected,
+                    "heuristic_score": record["heuristic_score"],
+                    "checkpoint": str(checkpoint_path.resolve()),
                 },
                 sort_keys=True,
             ),
             flush=True,
         )
-        return record, selected
+        return record
+
+    def historical_opponents() -> dict[str, PolicySpec]:
+        return {
+            entry.opponent_id: PolicySpec(
+                entry.opponent_id,
+                lambda seed, opponent_id=entry.opponent_id: pool.policy_for(
+                    opponent_id, seed=seed
+                ).policy,
+            )
+            for entry in pool.historical_entries
+        }
+
+    def run_historical_diagnostic(
+        checkpoint_path: Path,
+        *,
+        cycle_local_step: int,
+    ) -> dict[str, Any]:
+        path = (
+            run_root
+            / "eval"
+            / "historical"
+            / f"local_{cycle_local_step:09d}_historical.json"
+        )
+        record, results = run_panel(
+            kind="historical",
+            checkpoint_path=checkpoint_path,
+            opponents=historical_opponents(),
+            seeds=_evaluation_game_seeds(
+                _HISTORICAL_GAME_RNG_OFFSET,
+                config.historical_panel_seed,
+                config.historical_eval_pairs,
+            ),
+            policy_seed_base=-(
+                _HISTORICAL_POLICY_RNG_OFFSET
+                + config.historical_panel_seed * 1_000_000
+            ),
+            output_path=path,
+            cycle_local_step=cycle_local_step,
+        )
+        scores = [float(result.win_rate_score) for result in results.values()]
+        record.update(
+            {
+                "historical_pool_mean_score": float(np.mean(scores)),
+                "historical_pool_median_score": float(np.median(scores)),
+                "historical_pool_min_score": min(scores),
+                "active_historical_count": len(scores),
+            }
+        )
+        stored = json.loads(path.read_text(encoding="utf-8"))
+        stored["panel_summary"] = record
+        _write_json(path, stored)
+        metrics.append(record)
+        for tag in (
+            "historical_pool_mean_score",
+            "historical_pool_median_score",
+            "historical_pool_min_score",
+        ):
+            tensorboard.add_scalar(f"eval/{tag}", record[tag], cycle_local_step)
+        for name, result in results.items():
+            tensorboard.add_scalar(
+                f"eval/historical/{_safe_id(name)}_score_rate",
+                float(result.win_rate_score),
+                cycle_local_step,
+            )
+        tensorboard.flush()
+        return record
+
+    def promotion_match(
+        candidate_checkpoint: Path,
+        *,
+        candidate_heuristic_score: float,
+        cycle_local_step: int,
+    ) -> tuple[bool, dict[str, Any]]:
+        if progress.best_checkpoint is None or progress.best_heuristic_score is None:
+            raise AssertionError("promotion requires an initialized global best")
+        incumbent_checkpoint = Path(progress.best_checkpoint).resolve()
+        candidate_checkpoint = candidate_checkpoint.resolve()
+        candidate_run_local_step = (
+            _checkpoint_step(candidate_checkpoint) - progress.source_lifetime_step
+        )
+        threshold = _promotion_threshold(
+            candidate_heuristic_score,
+            progress.best_heuristic_score,
+        )
+        rationale: dict[str, Any] = {
+            "candidate_checkpoint": str(candidate_checkpoint),
+            "incumbent_checkpoint": str(incumbent_checkpoint),
+            "candidate_heuristic_score": candidate_heuristic_score,
+            "incumbent_heuristic_score": progress.best_heuristic_score,
+            "promotion_threshold": threshold,
+            "initial_pairs": config.promotion_initial_pairs,
+            "maximum_pairs": config.promotion_max_pairs,
+            "bootstrap_resamples": config.promotion_bootstrap_resamples,
+            "bootstrap_confidence": config.promotion_bootstrap_confidence,
+            "bootstrap_quantiles": [0.10, 0.90],
+            "bootstrap_rng": "numpy.default_rng(PCG64)",
+        }
+        if not _promotion_eligible(
+            candidate_heuristic_score,
+            progress.best_heuristic_score,
+        ):
+            rationale.update(
+                {
+                    "promoted": False,
+                    "reason": "formal heuristic score is more than 0.01 below incumbent",
+                    "stage": "heuristic_gate",
+                }
+            )
+            return False, rationale
+        if candidate_checkpoint == incumbent_checkpoint:
+            rationale.update(
+                {
+                    "promoted": False,
+                    "reason": "promotion candidate is already the global best",
+                    "stage": "identity_gate",
+                }
+            )
+            return False, rationale
+
+        incumbent_model = load_frozen_actor_critic_checkpoint(
+            incumbent_checkpoint, device=config.device
+        )
+        incumbent = PolicySpec(
+            "current_global_best",
+            lambda seed: GreedyActorCriticPolicy(
+                incumbent_model, device=config.device
+            ),
+        )
+        all_seeds = _evaluation_game_seeds(
+            _PROMOTION_GAME_RNG_OFFSET,
+            config.promotion_panel_seed,
+            config.promotion_max_pairs,
+        )
+        initial_path = (
+            run_root
+            / "eval"
+            / "promotion"
+            / (
+                f"local_{cycle_local_step:09d}_candidate_"
+                f"{candidate_run_local_step:09d}_initial.json"
+            )
+        )
+        _, initial_results = run_panel(
+            kind="promotion",
+            checkpoint_path=candidate_checkpoint,
+            opponents={"current_global_best": incumbent},
+            seeds=all_seeds[: config.promotion_initial_pairs],
+            policy_seed_base=-(
+                _PROMOTION_POLICY_RNG_OFFSET
+                + config.promotion_panel_seed * 1_000_000
+            ),
+            output_path=initial_path,
+            cycle_local_step=cycle_local_step,
+        )
+        initial_seeds, initial_scores = pair_scores(
+            initial_results["current_global_best"]
+        )
+        initial_bootstrap_seed = _promotion_bootstrap_seed(
+            cycle_run_local_step=cycle_local_step,
+            candidate_run_local_step=candidate_run_local_step,
+            expanded=False,
+        )
+        initial_interval = paired_bootstrap_mean(
+            initial_scores,
+            confidence=config.promotion_bootstrap_confidence,
+            resamples=config.promotion_bootstrap_resamples,
+            seed=initial_bootstrap_seed,
+        )
+        rationale["initial_bootstrap_10_90"] = initial_interval.to_dict()
+        rationale["initial_bootstrap_seed"] = initial_bootstrap_seed
+        rationale["initial_eval_path"] = str(initial_path.resolve())
+        initial_action = _promotion_ci_action(
+            lower=initial_interval.lower,
+            upper=initial_interval.upper,
+            threshold=threshold,
+            allow_expand=True,
+        )
+        if initial_action == "promote":
+            rationale.update(
+                {
+                    "promoted": True,
+                    "reason": "200-pair promotion LCB90 clears threshold",
+                    "stage": "initial_200",
+                }
+            )
+            return True, rationale
+        if initial_action == "retain":
+            rationale.update(
+                {
+                    "promoted": False,
+                    "reason": "200-pair promotion UCB90 does not clear threshold",
+                    "stage": "initial_200",
+                }
+            )
+            return False, rationale
+
+        extension_path = (
+            run_root
+            / "eval"
+            / "promotion"
+            / (
+                f"local_{cycle_local_step:09d}_candidate_"
+                f"{candidate_run_local_step:09d}_extension.json"
+            )
+        )
+        _, extension_results = run_panel(
+            kind="promotion_extension",
+            checkpoint_path=candidate_checkpoint,
+            opponents={"current_global_best": incumbent},
+            seeds=all_seeds[config.promotion_initial_pairs :],
+            policy_seed_base=-(
+                _PROMOTION_POLICY_RNG_OFFSET
+                + config.promotion_panel_seed * 1_000_000
+                - config.promotion_initial_pairs * 2
+            ),
+            output_path=extension_path,
+            cycle_local_step=cycle_local_step,
+        )
+        extension_seeds, extension_scores = pair_scores(
+            extension_results["current_global_best"]
+        )
+        combined_seeds = initial_seeds + extension_seeds
+        if combined_seeds != all_seeds:
+            raise AssertionError("promotion extension did not use the reserved seed suffix")
+        combined_scores = np.concatenate((initial_scores, extension_scores))
+        expanded_bootstrap_seed = _promotion_bootstrap_seed(
+            cycle_run_local_step=cycle_local_step,
+            candidate_run_local_step=candidate_run_local_step,
+            expanded=True,
+        )
+        expanded_interval = paired_bootstrap_mean(
+            combined_scores,
+            confidence=config.promotion_bootstrap_confidence,
+            resamples=config.promotion_bootstrap_resamples,
+            seed=expanded_bootstrap_seed,
+        )
+        promoted = _promotion_ci_action(
+            lower=expanded_interval.lower,
+            upper=expanded_interval.upper,
+            threshold=threshold,
+            allow_expand=False,
+        ) == "promote"
+        rationale.update(
+            {
+                "promoted": promoted,
+                "reason": (
+                    "500-pair promotion LCB90 clears threshold"
+                    if promoted
+                    else "500-pair promotion LCB90 does not clear threshold"
+                ),
+                "stage": "expanded_500",
+                "expanded_bootstrap_10_90": expanded_interval.to_dict(),
+                "expanded_bootstrap_seed": expanded_bootstrap_seed,
+                "extension_eval_path": str(extension_path.resolve()),
+            }
+        )
+        return promoted, rationale
+
+    def write_best_dev(
+        *,
+        checkpoint_path: Path,
+        heuristic_score: float,
+        formal_eval_path: Path,
+        formal_record: dict[str, Any],
+        selection: dict[str, Any],
+        cycle_local_step: int,
+    ) -> None:
+        old_checkpoint = progress.best_checkpoint
+        old_score = progress.best_heuristic_score
+        progress.best_checkpoint = str(checkpoint_path.resolve())
+        progress.best_heuristic_score = heuristic_score
+        progress.best_formal_eval_path = str(formal_eval_path.resolve())
+        payload = {
+            "old_best_checkpoint": old_checkpoint,
+            "old_best_heuristic_score": old_score,
+            "new_best_checkpoint": progress.best_checkpoint,
+            "new_best_heuristic_score": heuristic_score,
+            "run_local_step": cycle_local_step,
+            "lifetime_step": trainer.global_learning_decision_step,
+            "formal_eval_path": progress.best_formal_eval_path,
+            "formal_seed_set": {
+                "domain": "FORMAL",
+                "panel_seed": config.formal_panel_seed,
+                "paired_seeds": config.formal_eval_pairs,
+            },
+            "panel_summary": formal_record,
+            "selection": selection,
+        }
+        _write_json(run_root / "checkpoints" / "best_dev.json", payload)
+        _append_jsonl(run_root / "checkpoints" / "best_dev_history.jsonl", payload)
+
+    def run_formal_cycle(
+        current_checkpoint: Path,
+        *,
+        initial: bool = False,
+    ) -> tuple[dict[str, Any], bool]:
+        cycle_local = _run_local_step(trainer, progress)
+        if initial:
+            candidate_paths = (current_checkpoint.resolve(),)
+        else:
+            candidate_paths = _select_formal_candidate_paths(
+                progress.quick_candidates,
+                current_checkpoint,
+            )
+        fixed_seeds = _evaluation_game_seeds(
+            _FORMAL_GAME_RNG_OFFSET,
+            config.formal_panel_seed,
+            config.formal_eval_pairs,
+        )
+        candidate_results: list[tuple[Path, Path, dict[str, Any]]] = []
+        for candidate_path in candidate_paths:
+            lifetime = _checkpoint_step(candidate_path)
+            candidate_local = lifetime - progress.source_lifetime_step
+            output_path = (
+                run_root
+                / "eval"
+                / "formal"
+                / f"local_{cycle_local:09d}"
+                / f"candidate_{candidate_local:09d}.json"
+            )
+            record, _ = run_panel(
+                kind="formal",
+                checkpoint_path=candidate_path,
+                opponents=evaluation_opponents_formal,
+                seeds=fixed_seeds,
+                policy_seed_base=-(
+                    _FORMAL_POLICY_RNG_OFFSET
+                    + config.formal_panel_seed * 1_000_000
+                ),
+                output_path=output_path,
+                cycle_local_step=cycle_local,
+            )
+            candidate_results.append((candidate_path.resolve(), output_path, record))
+        ranked_results = _rank_formal_candidate_results(candidate_results)
+        winner_path, winner_eval_path, winner_record = ranked_results[0]
+        winner_score = float(winner_record["heuristic_score"])
+        formal_metric = dict(winner_record)
+        formal_metric.update(
+            {
+                "eval_kind": "formal",
+                "run_local_step": cycle_local,
+                "formal_winner_checkpoint": str(winner_path),
+                "formal_candidate_count": len(candidate_results),
+            }
+        )
+        metrics.append(formal_metric)
+        _tensorboard_panel(tensorboard, formal_metric, cycle_local)
+
+        promotion_attempts: list[dict[str, Any]] = []
+        promoted_path: Path | None = None
+        promoted_eval_path: Path | None = None
+        promoted_record: dict[str, Any] | None = None
+        promoted_score: float | None = None
+        if initial:
+            if winner_path != Path(config.source_checkpoint).resolve():
+                raise AssertionError("initial global best must be the 512112 source")
+            promoted = True
+            promoted_path = winner_path
+            promoted_eval_path = winner_eval_path
+            promoted_record = winner_record
+            promoted_score = winner_score
+            selection = {
+                "promoted": True,
+                "reason": "initial 512112 global-best baseline",
+                "stage": "initial_baseline",
+                "attempts": [],
+            }
+        else:
+            if progress.best_heuristic_score is None:
+                raise AssertionError("Formal cycle requires initialized global best")
+            incumbent_score = progress.best_heuristic_score
+            eligible_results = _eligible_formal_candidate_results(
+                ranked_results,
+                incumbent_score=incumbent_score,
+            )
+            for rank, (candidate_path, candidate_eval_path, candidate_record) in enumerate(
+                eligible_results, start=1
+            ):
+                candidate_score = float(candidate_record["heuristic_score"])
+                candidate_promoted, attempt = promotion_match(
+                    candidate_path,
+                    candidate_heuristic_score=candidate_score,
+                    cycle_local_step=cycle_local,
+                )
+                attempt.update(
+                    {
+                        "formal_rank": rank,
+                        "formal_eval_path": str(candidate_eval_path.resolve()),
+                    }
+                )
+                promotion_attempts.append(attempt)
+                final_interval = attempt.get(
+                    "expanded_bootstrap_10_90",
+                    attempt.get("initial_bootstrap_10_90"),
+                )
+                attempt_metric: dict[str, Any] = {
+                    "record_type": "promotion",
+                    "eval_kind": "promotion",
+                    "run_local_step": cycle_local,
+                    "lifetime_step": trainer.global_learning_decision_step,
+                    "formal_rank": rank,
+                    "candidate_checkpoint": str(candidate_path),
+                    "candidate_heuristic_score": candidate_score,
+                    "promotion_threshold": attempt["promotion_threshold"],
+                    "promoted": int(candidate_promoted),
+                }
+                if final_interval is not None:
+                    attempt_metric.update(
+                        {
+                            "promotion_estimate": final_interval["estimate"],
+                            "promotion_lcb90": final_interval["lower"],
+                            "promotion_ucb90": final_interval["upper"],
+                            "promotion_pairs": final_interval["pair_count"],
+                        }
+                    )
+                    for tag, key in (
+                        ("score", "promotion_estimate"),
+                        ("lcb90", "promotion_lcb90"),
+                        ("ucb90", "promotion_ucb90"),
+                        ("threshold", "promotion_threshold"),
+                    ):
+                        tensorboard.add_scalar(
+                            f"eval/promotion_rank_{rank}_{tag}",
+                            attempt_metric[key],
+                            cycle_local,
+                        )
+                tensorboard.add_scalar(
+                    f"eval/promotion_rank_{rank}_promoted",
+                    int(candidate_promoted),
+                    cycle_local,
+                )
+                metrics.append(attempt_metric)
+                if candidate_promoted:
+                    promoted_path = candidate_path
+                    promoted_eval_path = candidate_eval_path
+                    promoted_record = candidate_record
+                    promoted_score = candidate_score
+                    break
+            promoted = promoted_path is not None
+            selection = {
+                "promoted": promoted,
+                "reason": (
+                    "first successful eligible candidate promoted"
+                    if promoted
+                    else "all eligible candidates failed promotion"
+                ),
+                "stage": "sequential_formal_challenges",
+                "incumbent_heuristic_score": incumbent_score,
+                "attempts": promotion_attempts,
+            }
+
+        historical_record = run_historical_diagnostic(
+            winner_path,
+            cycle_local_step=cycle_local,
+        )
+        cycle_summary_path = (
+            run_root
+            / "eval"
+            / "formal"
+            / f"local_{cycle_local:09d}"
+            / "cycle_summary.json"
+        )
+        cycle_summary = {
+            "run_format_version": FIVE_C_RUN_FORMAT_VERSION,
+            "stage": FIVE_C_STAGE,
+            "cycle_run_local_step": cycle_local,
+            "formal_candidates_ranked": [
+                {
+                    "formal_rank": rank,
+                    "checkpoint": str(candidate_path),
+                    "formal_eval_path": str(candidate_eval_path.resolve()),
+                    "heuristic_score": float(candidate_record["heuristic_score"]),
+                    "promotion_eligible": (
+                        True
+                        if initial
+                        else _promotion_eligible(
+                            float(candidate_record["heuristic_score"]),
+                            float(progress.best_heuristic_score),
+                        )
+                    ),
+                    "panel_summary": candidate_record,
+                }
+                for rank, (candidate_path, candidate_eval_path, candidate_record)
+                in enumerate(ranked_results, start=1)
+            ],
+            "formal_winner_checkpoint": str(winner_path),
+            "formal_winner_heuristic_score": winner_score,
+            "promoted_checkpoint": (
+                None if promoted_path is None else str(promoted_path)
+            ),
+            "selection": selection,
+            "historical_diagnostic": historical_record,
+        }
+        _write_json(cycle_summary_path, cycle_summary)
+
+        if promoted:
+            if (
+                promoted_path is None
+                or promoted_eval_path is None
+                or promoted_record is None
+                or promoted_score is None
+            ):
+                raise AssertionError("promoted Formal cycle lost candidate context")
+            write_best_dev(
+                checkpoint_path=promoted_path,
+                heuristic_score=promoted_score,
+                formal_eval_path=promoted_eval_path,
+                formal_record=promoted_record,
+                selection=selection,
+                cycle_local_step=cycle_local,
+            )
+        else:
+            _append_jsonl(
+                run_root / "checkpoints" / "best_dev_history.jsonl",
+                {
+                    "incumbent_checkpoint": progress.best_checkpoint,
+                    "incumbent_heuristic_score": progress.best_heuristic_score,
+                    "formal_winner_checkpoint": str(winner_path),
+                    "formal_winner_heuristic_score": winner_score,
+                    "run_local_step": cycle_local,
+                    "formal_eval_path": str(winner_eval_path.resolve()),
+                    "selection": selection,
+                },
+            )
+
+        if initial:
+            _add_dynamic_historical_checkpoint(
+                checkpoint_path=winner_path,
+                cycle_run_local_step=cycle_local,
+                formal_lifetime_step=trainer.global_learning_decision_step,
+                reason="5C initial global best-dev snapshot",
+                force=True,
+                config=config,
+                progress=progress,
+                pool=pool,
+                run_root=run_root,
+            )
+        else:
+            if promoted_path is None or promoted_path != winner_path:
+                _add_dynamic_historical_checkpoint(
+                    checkpoint_path=winner_path,
+                    cycle_run_local_step=cycle_local,
+                    formal_lifetime_step=trainer.global_learning_decision_step,
+                    reason="5C time-spaced Formal winner",
+                    force=False,
+                    config=config,
+                    progress=progress,
+                    pool=pool,
+                    run_root=run_root,
+                )
+            if promoted_path is not None:
+                _add_dynamic_historical_checkpoint(
+                    checkpoint_path=promoted_path,
+                    cycle_run_local_step=cycle_local,
+                    formal_lifetime_step=trainer.global_learning_decision_step,
+                    reason="5C promoted global best-dev snapshot",
+                    force=True,
+                    config=config,
+                    progress=progress,
+                    pool=pool,
+                    run_root=run_root,
+                )
+        progress.quick_candidates.clear()
+        if cycle_local not in progress.evaluation_steps:
+            progress.evaluation_steps.append(cycle_local)
+        tensorboard.flush()
+        print(
+            json.dumps(
+                {
+                    "event": "formal_dev",
+                    "run_local_step": cycle_local,
+                    "candidate_count": len(candidate_results),
+                    "formal_winner": str(winner_path),
+                    "formal_winner_heuristic_score": winner_score,
+                    "promotion_attempt_count": len(promotion_attempts),
+                    "promoted_checkpoint": (
+                        None if promoted_path is None else str(promoted_path)
+                    ),
+                    "promoted_best_dev": promoted,
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+        return formal_metric, promoted
 
     try:
         _write_status(
@@ -1715,24 +2452,14 @@ def run_five_c_training(
                 ),
                 flush=True,
             )
-            _, selected = perform_panel("formal", initial_path)
-            _maybe_add_historical_best(
-                selected=selected,
-                checkpoint_path=initial_path,
-                run_local_step=0,
-                lifetime_step=trainer.global_learning_decision_step,
-                config=config,
-                progress=progress,
-                pool=pool,
-                run_root=run_root,
-            )
+            run_formal_cycle(Path(config.source_checkpoint), initial=True)
             checkpoint_now(append_manifest=False)
             print(
                 json.dumps(
                     {
                         "event": "initial_formal_dev_complete",
                         "run_local_step": 0,
-                        "best_composite": progress.best_heuristic_composite,
+                        "best_heuristic_score": progress.best_heuristic_score,
                     },
                     sort_keys=True,
                 ),
@@ -1740,6 +2467,35 @@ def run_five_c_training(
             )
 
         local = _run_local_step(trainer, progress)
+        if resume_checkpoint is not None and local > 0:
+            pending_evaluation = _pending_evaluation_kind(local, progress, config)
+            if pending_evaluation == "formal":
+                print(
+                    json.dumps(
+                        {
+                            "event": "resume_pending_formal_dev",
+                            "run_local_step": local,
+                        },
+                        sort_keys=True,
+                    ),
+                    flush=True,
+                )
+                run_formal_cycle(resume_checkpoint)
+                checkpoint_now(append_manifest=False)
+            elif pending_evaluation == "quick":
+                print(
+                    json.dumps(
+                        {
+                            "event": "resume_pending_quick_dev",
+                            "run_local_step": local,
+                        },
+                        sort_keys=True,
+                    ),
+                    flush=True,
+                )
+                run_quick_panel(resume_checkpoint)
+                checkpoint_now(append_manifest=False)
+
         next_checkpoint = _next_multiple_after(local, config.checkpoint_interval)
         next_quick = _next_multiple_after(local, config.quick_eval_interval)
         next_formal = _next_multiple_after(local, config.formal_eval_interval)
@@ -1828,6 +2584,11 @@ def run_five_c_training(
                 for environment in completed
                 if completed_contexts[environment.episode_id].kind == "historical"
             )
+            historical_bucket_counts = Counter(
+                completed_contexts[environment.episode_id].historical_bucket
+                for environment in completed
+                if completed_contexts[environment.episode_id].kind == "historical"
+            )
             completed_total = len(completed)
             for kind in _OPPONENT_KINDS:
                 progress.opponent_games[kind] += kind_counts[kind]
@@ -1838,6 +2599,15 @@ def run_five_c_training(
             for opponent_id, count in historical_counts.items():
                 progress.historical_games[opponent_id] = (
                     progress.historical_games.get(opponent_id, 0) + count
+                )
+            for bucket in ("fixed", "dynamic"):
+                rollout_metrics[f"opponent_{bucket}_historical_count"] = (
+                    historical_bucket_counts[bucket]
+                )
+                rollout_metrics[f"opponent_{bucket}_historical_fraction"] = (
+                    historical_bucket_counts[bucket] / completed_total
+                    if completed_total
+                    else 0.0
                 )
 
             gae_started = time.perf_counter()
@@ -2006,6 +2776,12 @@ def run_five_c_training(
                     record[f"opponent_{kind}_fraction"],
                     new_local,
                 )
+            for bucket in ("fixed", "dynamic"):
+                tensorboard.add_scalar(
+                    f"opponent/{bucket}_historical_fraction",
+                    record[f"opponent_{bucket}_historical_fraction"],
+                    new_local,
+                )
             for tag, key in (
                 ("decisions_per_sec", "learning_decisions_per_second"),
                 ("games_per_sec", "games_per_second"),
@@ -2064,24 +2840,14 @@ def run_five_c_training(
             if formal_due:
                 if checkpoint_path is None:
                     raise AssertionError("formal DEV has no candidate checkpoint")
-                _, selected = perform_panel("formal", checkpoint_path)
-                _maybe_add_historical_best(
-                    selected=selected,
-                    checkpoint_path=checkpoint_path,
-                    run_local_step=local,
-                    lifetime_step=trainer.global_learning_decision_step,
-                    config=config,
-                    progress=progress,
-                    pool=pool,
-                    run_root=run_root,
-                )
+                _, selected = run_formal_cycle(checkpoint_path)
                 checkpoint_now(append_manifest=False)
                 while next_formal <= local:
                     next_formal += config.formal_eval_interval
             elif quick_due:
                 if checkpoint_path is None:
                     raise AssertionError("quick DEV has no candidate checkpoint")
-                perform_panel("quick", checkpoint_path)
+                run_quick_panel(checkpoint_path)
                 checkpoint_now(append_manifest=False)
             while next_quick <= local:
                 next_quick += config.quick_eval_interval
@@ -2185,6 +2951,11 @@ def run_five_c_preflight(
     pool = OpponentPool.load_manifest(
         run_root / "historical_pool" / "initial.json", device=device
     )
+    if (
+        len(pool.fixed_historical_entries) != config.fixed_historical_capacity
+        or pool.dynamic_historical_entries
+    ):
+        raise AssertionError("preflight historical buckets disagree with frozen config")
     latest = pool.set_latest(trainer.model, training_step=trainer.global_learning_decision_step)
     latest_model = pool.policy_for(latest.opponent_id).policy.model
     if any(
@@ -2201,7 +2972,14 @@ def run_five_c_preflight(
         kind = "latest" if index % 2 == 0 else "historical"
         opponent_seed = _PREFLIGHT_POLICY_RNG_OFFSET + index * 2 + 1
         choice = pool.choose_for_training(
-            kind, policy_seed=opponent_seed, timing=timing
+            kind,
+            policy_seed=opponent_seed,
+            timing=timing,
+            dynamic_historical_probability=(
+                _DYNAMIC_HISTORICAL_PROBABILITY
+                if kind == "historical"
+                else None
+            ),
         )
         return (
             LearningEnvironment.new(
@@ -2307,12 +3085,39 @@ def run_five_c_preflight(
             raise AssertionError("preflight TensorBoard writer produced no event file")
 
     train_seeds = {episode_plan(config.training_seed, index).game_seed for index in range(8)}
-    dev_seeds = set(dev_eval_game_seeds(config.dev_panel_seed, 8))
+    quick_seeds = set(
+        _evaluation_game_seeds(
+            _QUICK_GAME_RNG_OFFSET, config.quick_panel_seed, 8
+        )
+    )
+    formal_seeds = set(
+        _evaluation_game_seeds(
+            _FORMAL_GAME_RNG_OFFSET, config.formal_panel_seed, 8
+        )
+    )
+    promotion_seeds = set(
+        _evaluation_game_seeds(
+            _PROMOTION_GAME_RNG_OFFSET, config.promotion_panel_seed, 8
+        )
+    )
+    historical_seeds = set(
+        _evaluation_game_seeds(
+            _HISTORICAL_GAME_RNG_OFFSET, config.historical_panel_seed, 8
+        )
+    )
     final_seeds = set(final_eval_game_seeds(config.final_panel_seed, 8))
     preflight_seeds = {_PREFLIGHT_GAME_RNG_OFFSET + index for index in range(8)}
-    domains = (train_seeds, dev_seeds, final_seeds, preflight_seeds)
+    domains = (
+        train_seeds,
+        quick_seeds,
+        formal_seeds,
+        promotion_seeds,
+        historical_seeds,
+        final_seeds,
+        preflight_seeds,
+    )
     if any(left & right for i, left in enumerate(domains) for right in domains[i + 1 :]):
-        raise AssertionError("TRAIN/DEV/FINAL/preflight seed domains overlap")
+        raise AssertionError("5C TRAIN/evaluation seed domains overlap")
     if FiveCOpponentSelector(1).choose_kind(PHASE_B_START - 1) not in PHASE_A_MIX:
         raise AssertionError("preflight Phase A selector failed")
     if FiveCOpponentSelector(1).choose_kind(PHASE_B_START) not in PHASE_B_MIX:
@@ -2320,6 +3125,7 @@ def run_five_c_preflight(
 
     result = {
         "status": "PASS",
+        "run_format_version": FIVE_C_RUN_FORMAT_VERSION,
         "completed_at_utc": _utc_now(),
         "device": device,
         "runtime": preflight_runtime,
@@ -2366,28 +3172,11 @@ def _default_config(repo_root: Path) -> FiveCConfig:
         source_checkpoint=absolute(
             "runs/5b_stage4_selfplay_seed_004/checkpoints/step_000512112.pt"
         ),
-        historical_checkpoints=(
-            absolute("runs/5a_random_seed_001/checkpoints/step_000100005.pt"),
+        fixed_historical_checkpoints=(
             absolute("runs/5b_fixed_mix_seed_002/checkpoints/step_000157351.pt"),
-            absolute("runs/5b_fixed_mix_seed_002/checkpoints/step_000206542.pt"),
-            absolute(
-                "runs/5b_fixed_mix_seed_002_resume_206542/checkpoints/step_000255701.pt"
-            ),
-            absolute(
-                "runs/5b_fixed_mix_seed_002_resume_206542/checkpoints/step_000304858.pt"
-            ),
-            absolute(
-                "runs/5b_fixed_mix_seed_002_resume_206542/checkpoints/step_000354015.pt"
-            ),
-            absolute(
-                "runs/5b_fixed_mix_seed_002_resume_206542/checkpoints/step_000403183.pt"
-            ),
             absolute(
                 "runs/5b_stage4_selfplay_seed_004/checkpoints/step_000512112.pt"
             ),
-        ),
-        anchor_403183_checkpoint=absolute(
-            "runs/5b_fixed_mix_seed_002_resume_206542/checkpoints/step_000403183.pt"
         ),
         anchor_512112_checkpoint=absolute(
             "runs/5b_stage4_selfplay_seed_004/checkpoints/step_000512112.pt"

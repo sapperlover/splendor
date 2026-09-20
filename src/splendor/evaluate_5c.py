@@ -11,10 +11,13 @@ import torch
 
 from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .paired_statistics import pair_scores, paired_bootstrap_mean
-from .train_5a import dev_eval_game_seeds
 from .train_5c import (
-    _DEV_POLICY_RNG_OFFSET,
+    _FORMAL_GAME_RNG_OFFSET,
+    _FORMAL_POLICY_RNG_OFFSET,
     _FINAL_POLICY_RNG_OFFSET,
+    _QUICK_GAME_RNG_OFFSET,
+    _QUICK_POLICY_RNG_OFFSET,
+    _evaluation_game_seeds,
     _panel_record,
     _write_panel,
     build_five_c_eval_opponents,
@@ -53,16 +56,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise AssertionError("checkpoint argument was not resolved")
     if args.kind == "quick":
         default_pairs = config.quick_eval_pairs
-        include_historical = False
-        seed_domain = "DEV"
+        seed_domain = "QUICK"
+        game_seed_offset = _QUICK_GAME_RNG_OFFSET
+        policy_seed_offset = _QUICK_POLICY_RNG_OFFSET
+        panel_seed = config.quick_panel_seed
     elif args.kind == "formal":
         default_pairs = config.formal_eval_pairs
-        include_historical = True
-        seed_domain = "DEV"
+        seed_domain = "FORMAL"
+        game_seed_offset = _FORMAL_GAME_RNG_OFFSET
+        policy_seed_offset = _FORMAL_POLICY_RNG_OFFSET
+        panel_seed = config.formal_panel_seed
     else:
         default_pairs = config.final_eval_min_pairs
-        include_historical = True
         seed_domain = "FINAL"
+        game_seed_offset = None
+        policy_seed_offset = _FINAL_POLICY_RNG_OFFSET
+        panel_seed = config.final_panel_seed
     pairs = default_pairs if args.pairs is None else args.pairs
     if pairs <= 0:
         raise ValueError("evaluation pair count must be positive")
@@ -73,13 +82,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     opponents = build_five_c_eval_opponents(
         config,
         device=args.device,
-        include_historical=include_historical,
+        kind=args.kind,
     )
-    if seed_domain == "DEV":
-        seeds = dev_eval_game_seeds(config.dev_panel_seed, pairs)
-        policy_seed_base = -(
-            _DEV_POLICY_RNG_OFFSET + config.dev_panel_seed * 10_000_000
-        )
+    if game_seed_offset is not None:
+        seeds = _evaluation_game_seeds(game_seed_offset, panel_seed, pairs)
+        policy_seed_base = -(policy_seed_offset + panel_seed * 1_000_000)
     else:
         seeds = final_eval_game_seeds(config.final_panel_seed, pairs)
         policy_seed_base = -(
