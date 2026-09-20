@@ -278,7 +278,8 @@ def run_random_game(
     forced_skips = 0
     checkpoint_rng = DeterministicRng(_policy_seed(seed, 2))
     checkpoint_seen: Counter[str] = Counter()
-    seen_signatures: dict[str, int] = {}
+    seen_signatures: tuple[dict[str, int], dict[str, int]] = ({}, {})
+    repeated_players: set[int] = set()
 
     def snapshots() -> tuple[object, object]:
         return tuple(
@@ -348,9 +349,15 @@ def run_random_game(
                 return result_for(RunStatus.NATURAL_TERMINAL, decision_or_result)
             request = decision_or_result
             if adjudicate_deterministic_policy_cycles:
-                signature = canonical_state_signature(engine._debug_state(), catalog)
-                first_decision = seen_signatures.get(signature)
+                state = engine._debug_state()
+                actor = state.current_player
+                signature = canonical_state_signature(state, catalog)
+                first_decision = seen_signatures[actor].get(signature)
                 if first_decision is not None:
+                    repeated_players.add(actor)
+                else:
+                    seen_signatures[actor][signature] = decision_count
+                if len(repeated_players) == 2:
                     signature_digest = hashlib.sha256(signature.encode("utf-8")).hexdigest()
                     scene = _write_failure_scene(
                         failure_dir,
@@ -362,6 +369,11 @@ def run_random_game(
                             "canonical_state_signature_sha256": signature_digest,
                             "first_seen_decision": first_decision,
                             "repeated_at_decision": decision_count,
+                            "repeated_players": sorted(repeated_players),
+                            "criterion": (
+                                "each player has encountered a canonical state "
+                                "signature for at least the second time"
+                            ),
                             "excluded_fields": [
                                 "completed_turns",
                                 "rng.draws",
@@ -370,7 +382,6 @@ def run_random_game(
                         },
                     )
                     return result_for(RunStatus.POLICY_CYCLE_DRAW, None, scene=scene)
-                seen_signatures[signature] = decision_count
             completed = sum(engine._debug_state().completed_turns)
             if completed >= max_completed_turns:
                 scene = _write_failure_scene(

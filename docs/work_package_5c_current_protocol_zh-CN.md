@@ -42,7 +42,7 @@ Quick、Formal、Promotion、Historical 和 FINAL 的双方策略在单局内都
 
 - 包含当前玩家、phase、双方 token、已购买卡/保留卡/贵族及由其重算的 score/bonus、公开市场、公共贵族、完整有序牌堆、pending context、forced-skip/final-round 状态、会影响后续转移的 RNG 实际状态，以及其他权威 `GameState` 字段；
 - 排除 `completed_turns`、`rng.draws`、replay index 和 logging counters 等纯记录字段；
-- 同一局、同一固定策略配置下，完整 signature 第二次出现时，评测立即记为 `policy_cycle_draw`，按平局计分；
+- 按 `current_player` 分别记录 signature；某名玩家至少第二次遇到其某个完整 signature 时，该玩家标记为已重复；只有双方都已重复时，评测才记为 `policy_cycle_draw` 并按平局计分。因为 signature 本身包含 `current_player`，双方的 signature 不需要字面相同；
 - `policy_cycle_draw` 不是 `GameEngine` 的 terminal result，不改变正式规则、forced skip 或训练 reward；普通 engineering truncation 仍然是评测失败；
 - 每次判平都单独记录状态、replay prefix、首次/重复决策位置和 signature digest。
 

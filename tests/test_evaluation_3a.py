@@ -262,8 +262,9 @@ def test_deterministic_evaluation_scores_repeated_complete_state_as_draw(
     for match in result.matches:
         scene = json.loads(match.failure_scene.read_text(encoding="utf-8"))
         assert scene["reason"] == "policy-cycle-draw"
-        assert scene["context"]["first_seen_decision"] == 0
-        assert scene["context"]["repeated_at_decision"] == 4
+        assert scene["context"]["first_seen_decision"] == 2
+        assert scene["context"]["repeated_at_decision"] == 6
+        assert scene["context"]["repeated_players"] == [0, 1]
 
     _, scores = pair_scores(result)
     assert scores.tolist() == [0.5]

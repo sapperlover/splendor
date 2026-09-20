@@ -614,7 +614,10 @@ def prepare_five_c_run(config: FiveCConfig, *, run_root: Path) -> dict[str, Any]
         "deterministic_evaluation_cycle_adjudication": {
             "enabled": True,
             "outcome": "policy_cycle_draw",
-            "trigger": "second occurrence of the complete canonical state signature",
+            "trigger": (
+                "both players have each encountered a complete canonical state "
+                "signature for at least the second time"
+            ),
             "excluded": [
                 "completed_turns",
                 "rng.draws",
