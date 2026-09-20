@@ -92,6 +92,23 @@ def test_historical_pool_manifest_round_trip_and_deterministic_sampling(
     assert restored.choose("historical", seed=45).entry in (first, second)
 
 
+def test_historical_removal_is_explicit_and_manifest_persistent(tmp_path: Path) -> None:
+    _, checkpoint_a = _checkpoint(tmp_path, step=100)
+    _, checkpoint_b = _checkpoint(tmp_path, step=200)
+    pool = OpponentPool(max_historical=2)
+    first = pool.add_historical(checkpoint_a, reason="protected", added_at_step=0)
+    second = pool.add_historical(checkpoint_b, reason="dynamic", added_at_step=200)
+
+    assert pool.remove_historical(second.opponent_id) == second
+    assert pool.historical_entries == (first,)
+    with pytest.raises(ValueError, match="unknown historical"):
+        pool.remove_historical(second.opponent_id)
+
+    manifest = tmp_path / "after-removal.json"
+    pool.save_manifest(manifest)
+    assert OpponentPool.load_manifest(manifest).historical_entries == (first,)
+
+
 def test_historical_neural_opponent_completes_game_without_entering_trajectory(
     tmp_path: Path,
 ) -> None:

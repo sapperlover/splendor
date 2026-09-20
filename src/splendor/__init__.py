@@ -37,8 +37,18 @@ from .features import (
 )
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
 from .model import Color, DecisionPhase, GemVector, ReservationSource, Tier, TokenVector
-from .neural_policy import GreedyActorCriticPolicy, frozen_actor_critic_copy
-from .opponent_pool import OpponentChoice, OpponentEntry, OpponentPool
+from .neural_policy import (
+    GreedyActorCriticPolicy,
+    NeuralInferenceTiming,
+    SamplingActorCriticPolicy,
+    frozen_actor_critic_copy,
+)
+from .opponent_pool import (
+    OpponentChoice,
+    OpponentEntry,
+    OpponentPool,
+    load_frozen_actor_critic_checkpoint,
+)
 from .ppo import (
     BatchedRolloutCollector,
     PPOConfig,
@@ -91,6 +101,7 @@ __all__ = [
     "GemVector",
     "GameEngine",
     "GreedyActorCriticPolicy",
+    "NeuralInferenceTiming",
     "IllegalActionError",
     "InvalidCandidateIndexError",
     "LearningDecision",
@@ -130,6 +141,7 @@ __all__ = [
     "MatchResult",
     "RunStatus",
     "ScorePolicy",
+    "SamplingActorCriticPolicy",
     "StaleLearningDecisionError",
     "RolloutBatch",
     "RolloutCollector",
@@ -143,6 +155,7 @@ __all__ = [
     "explained_variance",
     "frozen_actor_critic_copy",
     "group_rollout_by_episode",
+    "load_frozen_actor_critic_checkpoint",
     "normalize_advantages",
     "run_match",
     "run_learning_episode",

@@ -14,7 +14,12 @@ from .actor_critic import ActorCritic, ActorCriticConfig
 from .contracts import Policy
 from .features import FEATURE_SCHEMA_VERSION
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
-from .neural_policy import GreedyActorCriticPolicy, frozen_actor_critic_copy
+from .neural_policy import (
+    GreedyActorCriticPolicy,
+    NeuralInferenceTiming,
+    SamplingActorCriticPolicy,
+    frozen_actor_critic_copy,
+)
 from .ppo import TRAINING_CHECKPOINT_FORMAT_VERSION
 from .random_policy import RandomPolicy
 from .replay import RULESET_ID
@@ -67,6 +72,16 @@ def _model_from_payload(
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.to(device).eval().requires_grad_(False)
     return model
+
+
+def load_frozen_actor_critic_checkpoint(
+    path: Path,
+    *,
+    device: torch.device | str = "cpu",
+) -> ActorCritic:
+    """Load checkpoint weights without restoring any training RNG state."""
+
+    return _model_from_payload(_checkpoint_payload(path, device), device)
 
 
 class OpponentPool:
@@ -159,6 +174,16 @@ class OpponentPool:
         self._models[opponent_id] = _model_from_payload(payload, self.device)
         return entry
 
+    def remove_historical(self, opponent_id: str) -> OpponentEntry:
+        """Remove one explicitly selected historical entry without implicit eviction."""
+
+        for index, entry in enumerate(self._historical):
+            if entry.opponent_id == opponent_id:
+                self._historical.pop(index)
+                self._models.pop(opponent_id)
+                return entry
+        raise ValueError(f"unknown historical opponent id: {opponent_id}")
+
     def choose(
         self, kind: OpponentKind, *, seed: int | None = None
     ) -> OpponentChoice:
@@ -188,6 +213,37 @@ class OpponentPool:
         return OpponentChoice(
             entry,
             GreedyActorCriticPolicy(self._models[entry.opponent_id], device=self.device),
+        )
+
+    def choose_for_training(
+        self,
+        kind: OpponentKind,
+        *,
+        policy_seed: int,
+        timing: NeuralInferenceTiming | None = None,
+    ) -> OpponentChoice:
+        """Choose one whole-game opponent; neural policies sample, not greedily act."""
+
+        if kind in ("random", "score", "development"):
+            return self.choose(kind, seed=policy_seed)
+        if kind == "latest":
+            if self._latest is None:
+                raise ValueError("latest opponent snapshot has not been set")
+            entry = self._latest
+        elif kind == "historical":
+            if not self._historical:
+                raise ValueError("historical opponent pool is empty")
+            entry = self._historical[self._rng.randbelow(len(self._historical))]
+        else:
+            raise ValueError(f"unsupported opponent kind: {kind}")
+        return OpponentChoice(
+            entry,
+            SamplingActorCriticPolicy(
+                self._models[entry.opponent_id],
+                seed=policy_seed,
+                device=self.device,
+                timing=timing,
+            ),
         )
 
     def policy_for(self, opponent_id: str, *, seed: int = 0) -> OpponentChoice:

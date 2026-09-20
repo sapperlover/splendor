@@ -1,4 +1,4 @@
-# 工作包 5B：Stage 1–3 验收报告
+# 工作包 5B：Stage 1–4 总览
 
 ## 1. 当前结论
 
@@ -6,7 +6,7 @@ Stage 1 的固定混合对手实验已完成 500,005 个累计 learning decision
 
 Stage 2 的 multi-env batched collector 已实现并通过独立吞吐验收；32 个逻辑环境实测达到 serial 的 `2.76×` decisions/s。Stage 3 的 frozen latest/historical/fixed opponent pool、manifest 和可恢复 RNG 也已实现，并用真实 checkpoint 完成了成对换先手对局测试。
 
-Stage 4 self-play 训练按要求没有启动。下一步需要人工确认起始 checkpoint；本报告不自行选择 self-play 的起点、learning rate 或对手比例。
+Stage 4 后续已在人工确认配置后完成：从 `step_000403183.pt` 出发，执行约 150k decisions 的短历史池 self-play。详细结果见 `docs/work_package_5b_stage4_zh-CN.md`。
 
 ## 2. Stage 1 固定混合对手训练
 
@@ -75,7 +75,7 @@ Stage 4 self-play 训练按要求没有启动。下一步需要人工确认起�
 
 - Stage 2 针对性测试：`5 passed`；
 - Stage 3 pool/checkpoint/training-environment 回归：`37 passed, 1 skipped`；
-- 最终全量回归：`186 passed, 2 skipped`；
+- Stage 1–3 完成时的全量回归：`186 passed, 2 skipped`；Stage 4 最终全量回归为 `194 passed, 2 skipped`；
 - Stage 2 原始基准：`runs/5b_infrastructure/batched_benchmark_step_000500005.json`；
 - Stage 3 真实 checkpoint smoke：`runs/5b_infrastructure/pool_validation/100005_vs_157351.json`。
 
@@ -86,7 +86,7 @@ Stage 4 self-play 训练按要求没有启动。下一步需要人工确认起�
 3. **batched sampler 提高多少？** 32 环境从 `186.34` 提升到 `513.69 decisions/s`，为 `2.76×`。
 4. **frozen latest neural opponent 是否正确工作？** 是，快照与 learner 参数独立且不参与梯度。
 5. **historical pool 是否能保存、抽样、恢复并完整对局？** 是，单元、集成和真实 checkpoint smoke 均通过。
-6. **小规模 self-play 是否稳定？** 未验证；根据本次明确限制，Stage 4 未启动。
+6. **小规模 self-play 是否稳定？** 是。Stage 4 完成 150,947 decisions，0 correctness failure/engineering truncation，最佳 checkpoint 的 heuristic composite 从 `0.5205` 升至 `0.53125`。
 7. **当前最佳 checkpoint 的综合表现？** `step_000403183.pt`，Random/Score/Development score rate 为 `0.9950/0.4175/0.3863`，composite `0.5205`。
 
-下一步是由人工根据上述 DEV 面板确认 self-play 起点和配置，然后才能进入 Stage 4。
+工作包 5B Stage 4 已完成并停止；下一步若进入 5C，仍需人工确认 best-dev checkpoint、多 seed 实验和长训练配置。

@@ -15,11 +15,14 @@
 - 工作包 4B 单学习方环境与 transition：[`docs/work_package_4b_zh-CN.md`](docs/work_package_4b_zh-CN.md)
 - 工作包 4C Rollout、GAE 与 PPO 学习闭环：[`docs/work_package_4c_zh-CN.md`](docs/work_package_4c_zh-CN.md)
 - 工作包 5A 固定 Random 对手短训练与学习验证：[`docs/work_package_5a_zh-CN.md`](docs/work_package_5a_zh-CN.md)
-- 工作包 5B Stage 1–3 验收：[`docs/work_package_5b_zh-CN.md`](docs/work_package_5b_zh-CN.md)
+- 工作包 5B Stage 1–4 总览：[`docs/work_package_5b_zh-CN.md`](docs/work_package_5b_zh-CN.md)
 - 工作包 5B Stage 2 batched collector：[`docs/work_package_5b_stage2_zh-CN.md`](docs/work_package_5b_stage2_zh-CN.md)
 - 工作包 5B Stage 3 opponent pool：[`docs/work_package_5b_stage3_zh-CN.md`](docs/work_package_5b_stage3_zh-CN.md)
+- 工作包 5B Stage 4 短历史池 self-play：[`docs/work_package_5b_stage4_zh-CN.md`](docs/work_package_5b_stage4_zh-CN.md)
+- Stage 4 扩展成对评测与 bootstrap CI：[`docs/work_package_5b_stage4_paired_ci_zh-CN.md`](docs/work_package_5b_stage4_paired_ci_zh-CN.md)
+- 工作包 5C 5M 主训练配置与 preflight：[`docs/work_package_5c_preflight_zh-CN.md`](docs/work_package_5c_preflight_zh-CN.md)
 
-当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A，以及 5B Stage 1–3。固定混合启发式对手的 500k 实验已完成；PPO 对 Score/Development 有明确提升，对 Random 未发生灾难性遗忘。multi-env batched collector 和可恢复 historical opponent pool 已可用。Stage 4 self-play 尚未启动，等待人工确认起始 checkpoint 和训练配置。
+当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A，以及 5B Stage 1–4。Stage 4 best-dev checkpoint 为 `step_000512112.pt`。5C 的 5M 主训练配置、真实 CLI、独立实验目录与 GPU preflight 已完成；正式 5M 训练尚未启动，等待人工执行冻结命令。
 
 在项目 Conda 环境运行测试：`conda run -n splendor python -m pytest`
 
