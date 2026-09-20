@@ -102,11 +102,22 @@ conda run -n splendor python -m pytest
 
 ### C. 正式 5M 训练
 
+如果 `runs/5c_main_seed1/` 已被删除或移走，先重新生成一次冻结配置：
+
+```bash
+conda run --no-capture-output -n splendor env PYTHONPATH=src python -u -m splendor.train_5c prepare \
+  --run-root runs/5c_main_seed1
+```
+
+然后只对这个新目录执行一次 `train`：
+
 ```bash
 conda run --no-capture-output -n splendor env PYTHONPATH=src python -u -m splendor.train_5c train \
   --config runs/5c_main_seed1/config.json \
   2>&1 | tee -a runs/5c_main_seed1/logs/train.log
 ```
+
+`train` 会先对 step 0 运行 formal DEV：7 个对手 × 200 paired seeds × 2 个先后手，共 2,800 局。这期间 learning-decision step 仍为 0，但不是死锁。标准输出会立即写入 `training_process_started`、`evaluation_panel_started` 和每个对手的 started/completed 事件，并在每个对手内大约每 10% paired seeds 输出一次 progress；`status.json` 会同步显示 `phase=formal_evaluation` 及当前对手/已完成 paired seeds，TensorBoard 会立即写入 `system/process_alive` 和 `system/formal_evaluation_progress`。
 
 ### D. 从 latest 恢复
 
@@ -117,6 +128,8 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src python -u -m splend
 ```
 
 `resume` 自动读取 `runs/5c_main_seed1/checkpoints/latest.json`，不需要人工猜测最后一个 step 文件名。
+
+如果在 step-0 formal DEV 中断，`resume` 会识别“checkpoint 已写入但初始基线尚未完成”，重新完成该基线后才进入采样；不会把这种中间 checkpoint 误当成已完成的 step 0。
 
 ### E. 指定 checkpoint 的 Quick DEV
 

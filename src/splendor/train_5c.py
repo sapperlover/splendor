@@ -14,7 +14,7 @@ from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 import numpy as np
 import torch
@@ -678,6 +678,12 @@ def evaluate_five_c_panel(
     device: str,
     max_completed_turns: int,
     failure_dir: Path,
+    progress_callback: Callable[
+        [str, int, int, str, EvaluationResult | None], None
+    ]
+    | None = None,
+    pair_progress_callback: Callable[[str, int, int, int, int], None]
+    | None = None,
 ) -> tuple[dict[str, EvaluationResult], float]:
     required = {
         "random",
@@ -696,17 +702,37 @@ def evaluate_five_c_panel(
         lambda seed: GreedyActorCriticPolicy(model, device=device),
     )
     started = time.perf_counter()
-    results = {
-        name: evaluate_policies(
+    results: dict[str, EvaluationResult] = {}
+    total_opponents = len(opponents)
+    for index, (name, opponent) in enumerate(opponents.items(), start=1):
+        if progress_callback is not None:
+            progress_callback(name, index, total_opponents, "started", None)
+
+        def pair_progress(completed_pairs: int, total_pairs: int) -> None:
+            if pair_progress_callback is None:
+                return
+            report_interval = max(1, total_pairs // 10)
+            if completed_pairs < total_pairs and completed_pairs % report_interval == 0:
+                pair_progress_callback(
+                    name,
+                    index,
+                    total_opponents,
+                    completed_pairs,
+                    total_pairs,
+                )
+
+        result = evaluate_policies(
             candidate,
             opponent,
             seeds,
             policy_seed_base=policy_seed_base,
             max_completed_turns=max_completed_turns,
             failure_dir=failure_dir / name,
+            progress_callback=pair_progress,
         )
-        for name, opponent in opponents.items()
-    }
+        results[name] = result
+        if progress_callback is not None:
+            progress_callback(name, index, total_opponents, "completed", result)
     elapsed = time.perf_counter() - started
     model.train(was_training)
     if not all(
@@ -1075,6 +1101,8 @@ def _write_status(
     trainer: PPOTrainer,
     progress: FiveCProgress,
     error: BaseException | None = None,
+    phase: str | None = None,
+    phase_detail: dict[str, Any] | None = None,
 ) -> None:
     _write_json(
         run_root / "status.json",
@@ -1095,6 +1123,8 @@ def _write_status(
             "best_checkpoint": progress.best_checkpoint,
             "nan_or_inf": int(isinstance(error, FloatingPointError)),
             "engineering_truncations": progress.training.engineering_truncations,
+            "phase": phase,
+            "phase_detail": phase_detail,
             "error_type": None if error is None else type(error).__name__,
             "error_detail": None if error is None else str(error),
             "updated_at_utc": _utc_now(),
@@ -1158,6 +1188,20 @@ def _maybe_add_historical_best(
 
 def _next_multiple_after(current: int, interval: int) -> int:
     return (current // interval + 1) * interval
+
+
+def _initial_formal_dev_required(
+    trainer: PPOTrainer,
+    progress: FiveCProgress,
+) -> bool:
+    """A step-0 checkpoint is not initialized until its formal baseline is saved."""
+
+    return (
+        _run_local_step(trainer, progress) == 0
+        and 0 not in progress.evaluation_steps
+        and progress.best_heuristic_composite is None
+        and progress.best_checkpoint is None
+    )
 
 
 def run_five_c_training(
@@ -1366,6 +1410,135 @@ def run_five_c_training(
         else:
             raise ValueError(f"unknown in-training 5C evaluation kind: {kind}")
         seeds = dev_eval_game_seeds(config.dev_panel_seed, pairs)
+        panel_started = time.perf_counter()
+        print(
+            json.dumps(
+                {
+                    "event": "evaluation_panel_started",
+                    "kind": kind,
+                    "run_local_step": local,
+                    "opponents": len(opponents),
+                    "paired_seeds_per_opponent": pairs,
+                    "total_games": len(opponents) * pairs * 2,
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+        _write_status(
+            run_root,
+            status="running",
+            trainer=trainer,
+            progress=progress,
+            phase=f"{kind}_evaluation",
+            phase_detail={
+                "completed_opponents": 0,
+                "total_opponents": len(opponents),
+                "paired_seeds_per_opponent": pairs,
+            },
+        )
+
+        def evaluation_progress(
+            opponent_name: str,
+            opponent_index: int,
+            opponent_total: int,
+            event: str,
+            result: EvaluationResult | None,
+        ) -> None:
+            payload: dict[str, Any] = {
+                "event": f"evaluation_opponent_{event}",
+                "kind": kind,
+                "run_local_step": local,
+                "opponent": opponent_name,
+                "opponent_index": opponent_index,
+                "opponent_total": opponent_total,
+                "elapsed_seconds": time.perf_counter() - panel_started,
+            }
+            if result is not None:
+                payload.update(
+                    {
+                        "score_rate": result.win_rate_score,
+                        "valid_games": result.valid_games,
+                        "total_games": result.total_games,
+                    }
+                )
+            print(json.dumps(payload, sort_keys=True), flush=True)
+            completed = opponent_index if event == "completed" else opponent_index - 1
+            _write_status(
+                run_root,
+                status="running",
+                trainer=trainer,
+                progress=progress,
+                phase=f"{kind}_evaluation",
+                phase_detail={
+                    "opponent": opponent_name,
+                    "opponent_index": opponent_index,
+                    "completed_opponents": completed,
+                    "total_opponents": opponent_total,
+                    "paired_seeds_per_opponent": pairs,
+                    "event": event,
+                    "elapsed_seconds": time.perf_counter() - panel_started,
+                },
+            )
+            tensorboard.add_scalar(
+                f"system/{kind}_evaluation_progress",
+                completed / opponent_total,
+                local,
+            )
+            tensorboard.flush()
+
+        def evaluation_pair_progress(
+            opponent_name: str,
+            opponent_index: int,
+            opponent_total: int,
+            completed_pairs: int,
+            total_pairs: int,
+        ) -> None:
+            elapsed = time.perf_counter() - panel_started
+            print(
+                json.dumps(
+                    {
+                        "event": "evaluation_opponent_progress",
+                        "kind": kind,
+                        "run_local_step": local,
+                        "opponent": opponent_name,
+                        "opponent_index": opponent_index,
+                        "opponent_total": opponent_total,
+                        "completed_pairs": completed_pairs,
+                        "total_pairs": total_pairs,
+                        "elapsed_seconds": elapsed,
+                    },
+                    sort_keys=True,
+                ),
+                flush=True,
+            )
+            _write_status(
+                run_root,
+                status="running",
+                trainer=trainer,
+                progress=progress,
+                phase=f"{kind}_evaluation",
+                phase_detail={
+                    "opponent": opponent_name,
+                    "opponent_index": opponent_index,
+                    "completed_opponents": opponent_index - 1,
+                    "total_opponents": opponent_total,
+                    "completed_pairs": completed_pairs,
+                    "total_pairs": total_pairs,
+                    "event": "progress",
+                    "elapsed_seconds": elapsed,
+                },
+            )
+            overall_progress = (
+                opponent_index - 1 + completed_pairs / total_pairs
+            ) / opponent_total
+            tensorboard.add_scalar(
+                f"system/{kind}_evaluation_progress",
+                overall_progress,
+                local,
+            )
+            tensorboard.flush()
+
         results, elapsed = evaluate_five_c_panel(
             trainer.model,
             opponents=opponents,
@@ -1381,6 +1554,8 @@ def run_five_c_training(
                 / "failures"
                 / f"{kind}-local-{local:09d}"
             ),
+            progress_callback=evaluation_progress,
+            pair_progress_callback=evaluation_pair_progress,
         )
         record = _panel_record(
             results,
@@ -1492,12 +1667,54 @@ def run_five_c_training(
             status="running",
             trainer=trainer,
             progress=progress,
+            phase="startup",
+            phase_detail={"resume": resume_checkpoint is not None},
         )
-        if resume_checkpoint is None:
+        print(
+            json.dumps(
+                {
+                    "event": "training_process_started",
+                    "resume": resume_checkpoint is not None,
+                    "run_local_step": _run_local_step(trainer, progress),
+                    "lifetime_step": trainer.global_learning_decision_step,
+                    "device": config.device,
+                    "collector_backend": config.collector_backend,
+                    "active_envs": config.active_envs,
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+        tensorboard.add_scalar(
+            "system/process_alive",
+            1.0,
+            _run_local_step(trainer, progress),
+        )
+        tensorboard.add_text(
+            "run/status",
+            "startup" if resume_checkpoint is None else "resume startup",
+            _run_local_step(trainer, progress),
+        )
+        tensorboard.flush()
+        if _initial_formal_dev_required(trainer, progress):
             pool.set_latest(
                 trainer.model, training_step=trainer.global_learning_decision_step
             )
-            initial_path = checkpoint_now()
+            initial_path = checkpoint_now(
+                append_manifest=resume_checkpoint is None
+            )
+            print(
+                json.dumps(
+                    {
+                        "event": "initial_formal_dev_required",
+                        "resume": resume_checkpoint is not None,
+                        "checkpoint": str(initial_path),
+                        "run_local_step": 0,
+                    },
+                    sort_keys=True,
+                ),
+                flush=True,
+            )
             _, selected = perform_panel("formal", initial_path)
             _maybe_add_historical_best(
                 selected=selected,
@@ -1510,6 +1727,17 @@ def run_five_c_training(
                 run_root=run_root,
             )
             checkpoint_now(append_manifest=False)
+            print(
+                json.dumps(
+                    {
+                        "event": "initial_formal_dev_complete",
+                        "run_local_step": 0,
+                        "best_composite": progress.best_heuristic_composite,
+                    },
+                    sort_keys=True,
+                ),
+                flush=True,
+            )
 
         local = _run_local_step(trainer, progress)
         next_checkpoint = _next_multiple_after(local, config.checkpoint_interval)
@@ -1877,6 +2105,12 @@ def run_five_c_training(
                 status="running",
                 trainer=trainer,
                 progress=progress,
+                phase="training",
+                phase_detail={
+                    "run_local_update_count": (
+                        trainer.update_count - progress.source_update_count
+                    )
+                },
             )
 
         latest_manifest = json.loads(
@@ -1908,6 +2142,7 @@ def run_five_c_training(
             status="complete",
             trainer=trainer,
             progress=progress,
+            phase="complete",
         )
         print(json.dumps({"event": "complete", **summary}, sort_keys=True), flush=True)
         return summary
@@ -1918,6 +2153,7 @@ def run_five_c_training(
             trainer=trainer,
             progress=progress,
             error=caught,
+            phase="failed",
         )
         raise
     finally:

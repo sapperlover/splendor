@@ -151,6 +151,7 @@ def evaluate_policies(
     policy_seed_base: int = 0,
     max_completed_turns: int = 400,
     failure_dir: Path | None = None,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> EvaluationResult:
     """Evaluate paired games: A starts once and B starts once per game seed."""
 
@@ -185,6 +186,8 @@ def evaluate_policies(
                     raise_on_error=False,
                 )
             )
+        if progress_callback is not None:
+            progress_callback(pair_id + 1, len(seeds))
 
     frozen_matches = tuple(matches)
     valid = tuple(
