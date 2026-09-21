@@ -22,8 +22,15 @@
 - Stage 4 扩展成对评测与 bootstrap CI：[`docs/work_package_5b_stage4_paired_ci_zh-CN.md`](docs/work_package_5b_stage4_paired_ci_zh-CN.md)
 - 工作包 5C 5M 主训练配置与 preflight：[`docs/work_package_5c_preflight_zh-CN.md`](docs/work_package_5c_preflight_zh-CN.md)
 - 5C 现行评测、promotion、训练对手与历史池协议：[`docs/work_package_5c_current_protocol_zh-CN.md`](docs/work_package_5c_current_protocol_zh-CN.md)
+- 5C 首次 5M 主训练完成报告：[`docs/work_package_5c_5m_training_report_zh-CN.md`](docs/work_package_5c_5m_training_report_zh-CN.md)
 
-当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A，以及 5B Stage 1–4。Stage 4 best-dev checkpoint 为 `step_000512112.pt`。5C 的 5M 主训练配置、真实 CLI、独立实验目录与 GPU preflight 已完成；正式 5M 训练尚未启动，等待人工执行冻结命令。
+当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A、5B Stage 1–4，以及
+5C 首次 5M learning-decisions 主训练。该 run 的 DEV 最优 checkpoint 为
+`local_004150000_lifetime_004662112.pt`；详细结果、训练节点和局限见上方 5C 完成报告。
+
+目录约定：[`artifacts/`](artifacts/README.md) 只放值得随仓库保留的实验交付物，默认纳入 Git；
+`runtime/` 放日志、断点进度、失败现场和其他程序运行状态，整体忽略。专用训练运行目录
+`runs/` 同样不进入 Git。
 
 在项目 Conda 环境运行测试：`conda run -n splendor python -m pytest`
 

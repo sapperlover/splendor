@@ -1,0 +1,30 @@
+{
+  "aggregation": {
+    "action_fraction": "sum(action count) / sum(all MAIN_ACTION counts)",
+    "bin_membership": "update belongs to the interval ending at the smallest bin boundary >= update run-local step",
+    "game_quality_means": "weighted by completed games in each update",
+    "opponent_score_rate": "sum(per-update score_rate * opponent games) / sum(opponent games)"
+  },
+  "bin_sizes": [
+    100000,
+    250000
+  ],
+  "formal_candidates": 61,
+  "observed_historical_matchups": 160,
+  "outputs": [
+    "artifacts/work_package_5c/ppo_updates.csv",
+    "artifacts/work_package_5c/formal_candidates.csv",
+    "artifacts/work_package_5c/historical_observed_matchups_long.csv",
+    "artifacts/work_package_5c/historical_observed_matchups_wide.csv",
+    "artifacts/work_package_5c/opponent_training_100k.csv",
+    "artifacts/work_package_5c/action_distribution_100k.csv",
+    "artifacts/work_package_5c/game_quality_100k.csv",
+    "artifacts/work_package_5c/opponent_training_250k.csv",
+    "artifacts/work_package_5c/action_distribution_250k.csv",
+    "artifacts/work_package_5c/game_quality_250k.csv"
+  ],
+  "ppo_updates": 698,
+  "run_local_steps": 5000000,
+  "source_metrics": "/home/lc/下载/splendor/runs/5c_main_seed1/metrics.jsonl",
+  "source_run_root": "/home/lc/下载/splendor/runs/5c_main_seed1"
+}
