@@ -1,5 +1,7 @@
 # 工作包 5C：首次 5M learning-decisions 主训练完成报告
 
+> 历史实验报告：本文数据来自当时的 `single_process` collector。后续 P0–P3 性能优化不追溯改变本次训练的耗时、吞吐或评测结果；当前执行实现见 [P0–P3 性能优化](performance_optimization_p0_p3_zh-CN.md)。
+
 ## 1. 结论摘要
 
 `5c_main_seed1` 已正常完成计划中的 `5,000,000` 个 run-local learning decisions。

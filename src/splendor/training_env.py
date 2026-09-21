@@ -10,7 +10,7 @@ from .catalog import Catalog
 from .contracts import DecisionRequest, Observation, Policy
 from .engine import GameEngine
 from .features import EncodedDecision, encode_decision
-from .replay import ReplayRecord, state_digest
+from .replay import ReplayRecord
 from .result import TerminalResult
 
 
@@ -370,7 +370,7 @@ class LearningEnvironment:
             terminal_result=terminal_result,
             replay_event_start=pending.replay_event_start,
             replay_event_end=len(self._engine.replay_record.events),
-            state_digest_after=state_digest(self._engine._debug_state()),
+            state_digest_after=self._engine.current_state_digest,
             completed_turns_after=completed_turns,
         )
         self._transitions.append(transition)
@@ -432,7 +432,7 @@ class LearningEnvironment:
             completed_turns=state.completed_turns,
             completed_player_turns=sum(state.completed_turns),
             replay=self._engine.replay_record,
-            final_state_digest=state_digest(state),
+            final_state_digest=self._engine.current_state_digest,
         )
 
     def _make_decision(self, request: DecisionRequest) -> LearningDecision:

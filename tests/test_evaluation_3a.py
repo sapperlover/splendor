@@ -193,36 +193,8 @@ def test_canonical_signature_excludes_only_record_counters(tmp_path: Path) -> No
     moved_deck = replace(state.decks, tier_one=(second, first, *rest))
     assert canonical_state_signature(replace(state, decks=moved_deck), catalog) != signature
 
-    payload = json.loads(signature)
-    assert payload["current_player"] == state.current_player
-    assert "completed_turns" not in payload
-    assert set(payload["rng"]) == {"algorithm", "state"}
-    assert payload["derived_players"] == [
-        {
-            "bonuses": {
-                "__type__": "GemVector",
-                "black": 0,
-                "blue": 0,
-                "green": 0,
-                "red": 0,
-                "white": 0,
-            },
-            "purchased_card_count": 0,
-            "score": 0,
-        },
-        {
-            "bonuses": {
-                "__type__": "GemVector",
-                "black": 0,
-                "blue": 0,
-                "green": 0,
-                "red": 0,
-                "white": 0,
-            },
-            "purchased_card_count": 0,
-            "score": 0,
-        },
-    ]
+    assert len(signature) == 64
+    assert set(signature) <= set("0123456789abcdef")
 
 
 def test_deterministic_evaluation_scores_repeated_complete_state_as_draw(

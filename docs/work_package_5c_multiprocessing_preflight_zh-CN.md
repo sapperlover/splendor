@@ -1,5 +1,7 @@
 # 工作包 5C：Multiprocessing Collector Preflight
 
+> 历史档案：本文记录的是逐对手动作通过 Queue 往返的 legacy `central` backend，不是当前的 `multiprocessing_local_opponents` 路径。原始数据和当时决策保留；后续实现与新基准见 [P0–P3 性能优化](performance_optimization_p0_p3_zh-CN.md)。
+
 ## 结论
 
 预检通过，正式 5M **未启动**。
@@ -12,7 +14,7 @@
 - 相对原单进程 32 logical env 的 `341.63 decisions/s`，为 `0.925x`（约 `-7.5%`）
 - 两次 8-worker 结果为 `292.68` 和 `339.21 decisions/s`，变异系数 `7.36%`
 
-因此第一版 multiprocessing **不用于正式 5M**；正式配置继续采用原单进程 32 logical env。8 worker 确实把总 CPU 利用率从约 `100%` 提高到 `272%`，但 Python Queue/pickle IPC、主进程调度，以及 neural-opponent 请求通常只能形成约 `1.19` 的小 batch，抵消了并行环境推进的收益。按照本工作包约束，没有继续测试更多 worker，也没有引入共享内存、Ray 或其他复杂框架。
+因此当时的第一版 multiprocessing **不用于正式 5M**；正式配置继续采用原单进程 32 logical env。8 worker 确实把总 CPU 利用率从约 `100%` 提高到 `272%`，但 Python Queue/pickle IPC、主进程调度，以及 neural-opponent 请求通常只能形成约 `1.19` 的小 batch，抵消了并行环境推进的收益。按照本工作包约束，没有继续测试更多 worker，也没有引入共享内存、Ray 或其他复杂框架。
 
 原始结果：`runs/5c_main_seed1/multiprocessing_preflight/benchmark.json`。
 
@@ -80,7 +82,7 @@ RTX 4050 Laptop GPU、FP32、同一 `step_000512112.pt`、同一 Phase-A mixture
 
 ## 正式配置与命令
 
-`runs/5c_main_seed1/config.json` 的正式 backend 保持 `single_process`。若后续仅为调试 multiprocessing，当前最佳拓扑是 `8 × 4 = 32`；它不应覆盖正式 5M 配置。
+`runs/5c_main_seed1/config.json` 的正式 backend 保持 `single_process`。在当时的 legacy central backend 中，用于调试的最佳拓扑是 `8 × 4 = 32`；它不应覆盖已完成的正式 5M 配置，也不应被解读为当前 worker-local backend 的推荐拓扑。
 
 启动：
 

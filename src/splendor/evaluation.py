@@ -250,6 +250,7 @@ def evaluate_policies(
                         adjudicate_deterministic_policy_cycles
                     ),
                     raise_on_error=False,
+                    lean=True,
                 )
             )
         if progress_callback is not None:
@@ -413,6 +414,7 @@ def _run_parallel_pair(task: _ParallelPairTask) -> _ParallelPairResult:
                     task.adjudicate_deterministic_policy_cycles
                 ),
                 raise_on_error=False,
+                lean=True,
             )
         )
         _sum_numeric_stats(a_stats, _numeric_policy_stats(policy_a))

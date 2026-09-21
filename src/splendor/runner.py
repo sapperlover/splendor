@@ -13,8 +13,10 @@ from .actions import (
     BuyMarket,
     BuyReserved,
     ClaimNoble,
+    Pay,
     ReserveDeck,
     ReserveMarket,
+    ReturnTokens,
     TakeDistinct,
     TakePair,
 )
@@ -23,7 +25,7 @@ from .contracts import DecisionRequest, Policy
 from .engine import GameEngine
 from .model import DecisionPhase
 from .random_policy import RandomPolicy
-from .replay import ForcedSkipEvent, ReplayRecord, state_digest, to_primitive
+from .replay import ForcedSkipEvent, ReplayRecord, to_primitive
 from .result import TerminalReason, TerminalResult
 from .rng import DeterministicRng
 from .rules import legal_actions, player_bonuses, player_score
@@ -119,7 +121,7 @@ def _action_name(action: Action) -> str | None:
 
 
 def canonical_state_signature(state: object, catalog: Catalog) -> str:
-    """Canonical future-relevant state used only for deterministic evaluation.
+    """Stable digest of future-relevant state for deterministic evaluation.
 
     ``completed_turns`` is deliberately excluded by the 5C evaluation
     protocol.  Replay positions and logging counters do not live in
@@ -135,33 +137,108 @@ def canonical_state_signature(state: object, catalog: Catalog) -> str:
 
     if not isinstance(state, GameState):
         raise TypeError("canonical state signatures require a GameState")
-    authoritative: dict[str, object] = {}
-    for field in fields(state):
-        if field.name == "completed_turns":
-            continue
-        value = getattr(state, field.name)
-        if field.name == "rng":
-            authoritative[field.name] = {
-                "algorithm": value.algorithm,
-                "state": value.state,
-            }
-        else:
-            authoritative[field.name] = to_primitive(value)
-    authoritative["catalog_data_fingerprint"] = catalog.data_fingerprint
-    authoritative["derived_players"] = [
-        {
-            "score": player_score(player, catalog),
-            "bonuses": to_primitive(player_bonuses(player, catalog)),
-            "purchased_card_count": len(player.purchased_card_ids),
-        }
-        for player in state.players
-    ]
-    return json.dumps(
-        authoritative,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
+    expected_fields = (
+        "supply",
+        "decks",
+        "market",
+        "players",
+        "nobles_in_play",
+        "nobles_out_of_game",
+        "first_player",
+        "current_player",
+        "completed_turns",
+        "consecutive_forced_skips",
+        "phase",
+        "pending",
+        "final_round_triggered_by",
+        "result",
+        "rng",
     )
+    if tuple(item.name for item in fields(state)) != expected_fields:
+        raise RuntimeError(
+            "GameState changed; classify new fields in the cycle signature"
+        )
+
+    def player_signature(player: object) -> tuple[object, ...]:
+        return (
+            tuple(player.tokens),  # type: ignore[attr-defined]
+            player.purchased_card_ids,  # type: ignore[attr-defined]
+            tuple(
+                (reserved.card_id, reserved.source.value)
+                for reserved in player.reserved_cards  # type: ignore[attr-defined]
+            ),
+            player.noble_ids,  # type: ignore[attr-defined]
+        )
+
+    pending = state.pending
+    result = state.result
+    canonical = (
+        "canonical-state-signature-v1",
+        tuple(state.supply),
+        (state.decks.tier_one, state.decks.tier_two, state.decks.tier_three),
+        (state.market.tier_one, state.market.tier_two, state.market.tier_three),
+        tuple(player_signature(player) for player in state.players),
+        state.nobles_in_play,
+        state.nobles_out_of_game,
+        state.first_player,
+        state.current_player,
+        state.consecutive_forced_skips,
+        state.phase.value,
+        (
+            None
+            if pending is None
+            else (
+                _cycle_action_signature(pending.main_action),
+                pending.tokens_to_return,
+                pending.eligible_noble_ids,
+            )
+        ),
+        state.final_round_triggered_by,
+        (
+            None
+            if result is None
+            else (
+                result.scores,
+                result.purchased_card_counts,
+                result.winner_ids,
+                result.completed_turns,
+                result.reason.value,
+            )
+        ),
+        (state.rng.algorithm, state.rng.state),
+        catalog.data_fingerprint,
+        tuple(
+            (
+                player_score(player, catalog),
+                tuple(player_bonuses(player, catalog)),
+                len(player.purchased_card_ids),
+            )
+            for player in state.players
+        ),
+    )
+    return hashlib.sha256(repr(canonical).encode("utf-8")).hexdigest()
+
+
+def _cycle_action_signature(action: Action) -> tuple[object, ...]:
+    if isinstance(action, TakeDistinct):
+        return ("TakeDistinct", tuple(color.value for color in action.colors))
+    if isinstance(action, TakePair):
+        return ("TakePair", action.color.value)
+    if isinstance(action, ReserveMarket):
+        return ("ReserveMarket", action.card_id)
+    if isinstance(action, ReserveDeck):
+        return ("ReserveDeck", int(action.tier))
+    if isinstance(action, BuyMarket):
+        return ("BuyMarket", action.card_id)
+    if isinstance(action, BuyReserved):
+        return ("BuyReserved", action.card_id)
+    if isinstance(action, Pay):
+        return ("Pay", tuple(action.tokens))
+    if isinstance(action, ReturnTokens):
+        return ("ReturnTokens", tuple(action.tokens))
+    if isinstance(action, ClaimNoble):
+        return ("ClaimNoble", action.noble_id)
+    raise TypeError(f"unsupported cycle action: {type(action).__name__}")
 
 
 def _checkpoint_tags(engine: GameEngine, request: DecisionRequest) -> tuple[str, ...]:
@@ -207,7 +284,7 @@ def _write_failure_scene(
         "engine_rng": to_primitive(state.rng),
         "policy_seeds": list(policy_seeds),
         "policy_rng": to_primitive(policy_snapshots),
-        "state_digest": state_digest(state),
+        "state_digest": engine.current_state_digest,
         "state": to_primitive(state),
         "replay_prefix": to_primitive(engine.replay_record),
         "context": context,
@@ -233,6 +310,7 @@ def run_random_game(
     policy_seeds: tuple[int, int] | None = None,
     adjudicate_deterministic_policy_cycles: bool = False,
     raise_on_error: bool = True,
+    lean: bool = False,
 ) -> GameRun:
     """Run one complete game or return an explicitly classified truncation.
 
@@ -276,7 +354,7 @@ def run_random_game(
     noble_claims = 0
     trigger_count = 0
     forced_skips = 0
-    checkpoint_rng = DeterministicRng(_policy_seed(seed, 2))
+    checkpoint_rng = None if lean else DeterministicRng(_policy_seed(seed, 2))
     checkpoint_seen: Counter[str] = Counter()
     seen_signatures: tuple[dict[str, int], dict[str, int]] = ({}, {})
     repeated_players: set[int] = set()
@@ -315,7 +393,7 @@ def run_random_game(
             ),
             coverage_tags=frozenset(coverage),
             checkpoint_indices=dict(checkpoints),
-            final_state_digest=state_digest(state),
+            final_state_digest=engine.current_state_digest,
             failure_scene=scene,
             error_type=None if error is None else type(error).__name__,
             error_detail=None if error is None else str(error),
@@ -324,12 +402,16 @@ def run_random_game(
     def record_new_events(before_count: int) -> None:
         nonlocal noble_claims, forced_skips
         for event in engine.replay_record.events[before_count:]:
-            phase_entries[event.phase.value] += 1
-            coverage.add(event.phase.value)
             if isinstance(event, ForcedSkipEvent):
                 forced_skips += 1
-                coverage.add("forced_skip")
+                if not lean:
+                    phase_entries[event.phase.value] += 1
+                    coverage.update((event.phase.value, "forced_skip"))
                 continue
+            if lean:
+                continue
+            phase_entries[event.phase.value] += 1
+            coverage.add(event.phase.value)
             name = _action_name(event.action)
             if name is not None:
                 main_actions[name] += 1
@@ -345,7 +427,8 @@ def run_random_game(
             decision_or_result = engine.decision()
             record_new_events(before_decision_events)
             if isinstance(decision_or_result, TerminalResult):
-                coverage.add("terminal")
+                if not lean:
+                    coverage.add("terminal")
                 return result_for(RunStatus.NATURAL_TERMINAL, decision_or_result)
             request = decision_or_result
             if adjudicate_deterministic_policy_cycles:
@@ -358,7 +441,6 @@ def run_random_game(
                 else:
                     seen_signatures[actor][signature] = decision_count
                 if len(repeated_players) == 2:
-                    signature_digest = hashlib.sha256(signature.encode("utf-8")).hexdigest()
                     scene = _write_failure_scene(
                         failure_dir,
                         reason="policy-cycle-draw",
@@ -366,7 +448,7 @@ def run_random_game(
                         policy_seeds=policy_seeds,
                         policy_snapshots=snapshots(),
                         context={
-                            "canonical_state_signature_sha256": signature_digest,
+                            "canonical_state_signature_sha256": signature,
                             "first_seen_decision": first_decision,
                             "repeated_at_decision": decision_count,
                             "repeated_players": sorted(repeated_players),
@@ -393,28 +475,35 @@ def run_random_game(
                 )
                 return result_for(RunStatus.ENGINEERING_TRUNCATION, None, scene=scene)
 
-            for tag in _checkpoint_tags(engine, request):
-                checkpoint_seen[tag] += 1
-                if checkpoint_rng.randbelow(checkpoint_seen[tag]) == 0:
-                    checkpoints[tag] = decision_count
-            phase = request.observation.phase
-            coverage.add(phase.value)
-            if phase is DecisionPhase.PAYMENT and len(request.legal_actions) > 1:
-                coverage.add("multiple_payment_options")
+            if not lean:
+                if checkpoint_rng is None:
+                    raise AssertionError("full runner lost checkpoint RNG")
+                for tag in _checkpoint_tags(engine, request):
+                    checkpoint_seen[tag] += 1
+                    if checkpoint_rng.randbelow(checkpoint_seen[tag]) == 0:
+                        checkpoints[tag] = decision_count
+                phase = request.observation.phase
+                coverage.add(phase.value)
+                if phase is DecisionPhase.PAYMENT and len(request.legal_actions) > 1:
+                    coverage.add("multiple_payment_options")
 
             action = policy_objects[engine.current_player].choose(request)
             decision_count += 1
-            before_trigger = engine._debug_state().final_round_triggered_by
+            before_trigger = (
+                None if lean else engine._debug_state().final_round_triggered_by
+            )
             before_events = len(engine.replay_record.events)
             outcome = engine.apply(action)
-            after_trigger = engine._debug_state().final_round_triggered_by
-            if before_trigger is None and after_trigger is not None:
-                trigger_count += 1
+            if not lean:
+                after_trigger = engine._debug_state().final_round_triggered_by
+                if before_trigger is None and after_trigger is not None:
+                    trigger_count += 1
 
             record_new_events(before_events)
 
             if isinstance(outcome, TerminalResult):
-                coverage.update(("final_round", "terminal"))
+                if not lean:
+                    coverage.update(("final_round", "terminal"))
                 return result_for(RunStatus.NATURAL_TERMINAL, outcome)
     except Exception as error:
         scene = _write_failure_scene(
@@ -456,6 +545,7 @@ def run_match(
     failure_dir: Path | None = None,
     adjudicate_deterministic_policy_cycles: bool = False,
     raise_on_error: bool = True,
+    lean: bool = False,
 ) -> MatchResult:
     """Run one game through the same engine path used by every policy."""
 
@@ -473,6 +563,7 @@ def run_match(
         policy_seeds=policy_seeds,
         adjudicate_deterministic_policy_cycles=adjudicate_deterministic_policy_cycles,
         raise_on_error=raise_on_error,
+        lean=lean,
     )
     terminal = run.result
     outcome = None

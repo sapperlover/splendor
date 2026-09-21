@@ -1,10 +1,10 @@
-"""Spawn-based CPU environment workers with central neural inference.
+"""Spawn-based CPU environment workers with selectable opponent inference.
 
 The workers own authoritative game engines and perform all rule, observation,
-legal-action, and feature-encoding work.  They never own a neural model.  A
-neural opponent is represented in a worker by a small policy proxy which sends
-an already encoded public decision to the parent process and waits for the
-chosen legal-candidate index.
+legal-action, and feature-encoding work.  The legacy backend proxies neural
+opponent requests to the parent.  The worker-local backend loads historical
+CPU models once and receives one frozen latest snapshot per rollout, avoiding
+all action-level neural-opponent IPC.
 """
 
 from __future__ import annotations
@@ -16,18 +16,21 @@ import resource
 import time
 import traceback
 from collections import defaultdict, deque
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Literal, Mapping, Sequence
 
 import numpy as np
 import torch
 
 from .actor_critic import ActorCritic
+from .actor_critic import ActorCriticConfig
 from .actions import Action, ClaimNoble, Pay, ReturnTokens
 from .contracts import DecisionRequest, Policy
 from .features import EncodedDecision, collate_encoded_decisions, encode_decision
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
+from .neural_policy import NeuralInferenceTiming, SamplingActorCriticPolicy
+from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .ppo import PolicySampler, RolloutBatch, RolloutSample, group_rollout_by_episode
 from .random_policy import RandomPolicy
 from .replay import ReplayRecord, to_primitive
@@ -37,6 +40,7 @@ from .training_env import LearningDecision, LearningEnvironment, LearningTransit
 
 
 MULTIPROCESS_COLLECTOR_FORMAT_VERSION = 1
+OpponentInferenceBackend = Literal["central", "worker_cpu"]
 _WORKER_RNG_OFFSET = 6_700_000_000_000_000
 # Exact two-player upper bounds from the frozen rules: 45 combined main
 # choices; at most C(10, 5)=252 gold allocations; C(8, 5)=56 ways to return
@@ -82,15 +86,27 @@ class MultiprocessEpisodeSpec:
 
 @dataclass(frozen=True, slots=True)
 class MultiprocessEpisodeLaunch:
-    """Parent-only launch record; the model is deliberately not sent to workers."""
+    """Parent launch record for either central or worker-local inference."""
 
     spec: MultiprocessEpisodeSpec
     neural_opponent_model: ActorCritic | None = None
 
     def __post_init__(self) -> None:
         neural = self.spec.opponent_kind in ("latest", "historical")
-        if neural != (self.neural_opponent_model is not None):
-            raise ValueError("neural opponent specs require exactly one central model")
+        if not neural and self.neural_opponent_model is not None:
+            raise ValueError("fixed opponent specs cannot carry a neural model")
+
+
+@dataclass(frozen=True, slots=True)
+class WorkerHistoricalModel:
+    opponent_id: str
+    checkpoint_path: str
+
+    def __post_init__(self) -> None:
+        if not self.opponent_id:
+            raise ValueError("worker historical opponent id must not be empty")
+        if not self.checkpoint_path:
+            raise ValueError("worker historical checkpoint path must not be empty")
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,6 +149,13 @@ class WorkerStatistics:
     learner_steps: int
     environment_encoding_seconds: float
     neural_opponent_wait_seconds: float
+    neural_opponent_inference_seconds: float
+    neural_opponent_decisions: int
+    neural_opponent_inference_calls: int
+    opponent_model_sync_seconds: float
+    opponent_model_sync_count: int
+    opponent_model_count: int
+    torch_num_threads: int
     cpu_seconds: float
     max_rss_mib: float
     rng: RngState
@@ -178,6 +201,15 @@ class _CloseWorker:
 
 
 @dataclass(frozen=True, slots=True)
+class _SyncWorkerOpponents:
+    request_id: int
+    latest_opponent_id: str
+    latest_model_config: dict[str, object]
+    latest_state_dict: dict[str, torch.Tensor]
+    historical_models: tuple[WorkerHistoricalModel, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class _EpisodeReady:
     worker_id: int
     slot_id: int
@@ -209,6 +241,19 @@ class _WorkerSnapshotReady:
 
 
 @dataclass(frozen=True, slots=True)
+class _WorkerInitialized:
+    worker_id: int
+    historical_model_count: int
+
+
+@dataclass(frozen=True, slots=True)
+class _WorkerOpponentsReady:
+    worker_id: int
+    request_id: int
+    model_count: int
+
+
+@dataclass(frozen=True, slots=True)
 class _WorkerFailure:
     worker_id: int
     slot_id: int | None
@@ -227,9 +272,17 @@ class _WorkerRuntime:
     learner_steps: int = 0
     environment_encoding_seconds: float = 0.0
     neural_opponent_wait_seconds: float = 0.0
+    opponent_timing: NeuralInferenceTiming = field(default_factory=NeuralInferenceTiming)
+    opponent_model_sync_seconds: float = 0.0
+    opponent_model_sync_count: int = 0
     cpu_started: float = 0.0
 
-    def statistics(self, rng: DeterministicRng) -> WorkerStatistics:
+    def statistics(
+        self,
+        rng: DeterministicRng,
+        *,
+        opponent_model_count: int,
+    ) -> WorkerStatistics:
         return WorkerStatistics(
             worker_id=self.worker_id,
             pid=os.getpid(),
@@ -237,6 +290,13 @@ class _WorkerRuntime:
             learner_steps=self.learner_steps,
             environment_encoding_seconds=self.environment_encoding_seconds,
             neural_opponent_wait_seconds=self.neural_opponent_wait_seconds,
+            neural_opponent_inference_seconds=self.opponent_timing.seconds,
+            neural_opponent_decisions=self.opponent_timing.decisions,
+            neural_opponent_inference_calls=self.opponent_timing.calls,
+            opponent_model_sync_seconds=self.opponent_model_sync_seconds,
+            opponent_model_sync_count=self.opponent_model_sync_count,
+            opponent_model_count=opponent_model_count,
+            torch_num_threads=torch.get_num_threads(),
             cpu_seconds=time.process_time() - self.cpu_started,
             max_rss_mib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0,
             rng=rng.snapshot(),
@@ -332,11 +392,18 @@ def _worker_main(
     output_queue: Any,
     worker_seed: int,
     restored_rng: RngState | None,
+    opponent_inference_backend: OpponentInferenceBackend,
+    initial_historical_models: tuple[WorkerHistoricalModel, ...],
 ) -> None:
     # Importing torch is unavoidable because encoded/transition dataclasses use
     # tensors elsewhere, but workers must never initialize or address CUDA.
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
     torch.set_num_threads(1)
+    try:
+        torch.set_num_interop_threads(1)
+    except RuntimeError:
+        # A spawned interpreter normally permits this exactly once.
+        pass
     runtime = _WorkerRuntime(
         worker_id=worker_id,
         output_queue=output_queue,
@@ -349,18 +416,78 @@ def _worker_main(
         else DeterministicRng(worker_seed)
     )
     environments: dict[int, LearningEnvironment] = {}
+    opponent_ids_by_slot: dict[int, str] = {}
+    opponent_models: dict[str, ActorCritic] = {}
+    historical_model_ids: set[str] = set()
+    current_latest_id: str | None = None
     current_slot: int | None = None
     try:
+        if opponent_inference_backend == "worker_cpu":
+            for item in initial_historical_models:
+                opponent_models[item.opponent_id] = (
+                    load_frozen_actor_critic_checkpoint(
+                        Path(item.checkpoint_path), device="cpu"
+                    )
+                )
+                historical_model_ids.add(item.opponent_id)
+        output_queue.put(
+            _WorkerInitialized(worker_id, len(historical_model_ids))
+        )
         while True:
             command = command_queue.get()
             if isinstance(command, _CloseWorker):
                 return
+            if isinstance(command, _SyncWorkerOpponents):
+                if opponent_inference_backend != "worker_cpu":
+                    raise RuntimeError(
+                        "central-inference worker received local model synchronization"
+                    )
+                sync_started = time.perf_counter()
+                desired_historical = {
+                    item.opponent_id: item for item in command.historical_models
+                }
+                for opponent_id, item in desired_historical.items():
+                    if opponent_id not in opponent_models:
+                        opponent_models[opponent_id] = (
+                            load_frozen_actor_critic_checkpoint(
+                                Path(item.checkpoint_path), device="cpu"
+                            )
+                        )
+                historical_model_ids = set(desired_historical)
+                latest = ActorCritic(
+                    ActorCriticConfig(**command.latest_model_config)
+                )
+                latest.load_state_dict(command.latest_state_dict, strict=True)
+                latest.eval().requires_grad_(False)
+                opponent_models[command.latest_opponent_id] = latest
+                current_latest_id = command.latest_opponent_id
+
+                active_ids = set(opponent_ids_by_slot.values())
+                retained = historical_model_ids | active_ids | {current_latest_id}
+                for opponent_id in tuple(opponent_models):
+                    if opponent_id not in retained:
+                        opponent_models.pop(opponent_id)
+                runtime.opponent_model_sync_seconds += (
+                    time.perf_counter() - sync_started
+                )
+                runtime.opponent_model_sync_count += 1
+                output_queue.put(
+                    _WorkerOpponentsReady(
+                        worker_id,
+                        command.request_id,
+                        len(opponent_models),
+                    )
+                )
+                continue
             if isinstance(command, _SnapshotWorker):
                 output_queue.put(
                     _WorkerSnapshotReady(
                         worker_id,
                         command.request_id,
-                        runtime.statistics(worker_rng),
+                        runtime.statistics(
+                            worker_rng,
+                            opponent_model_count=len(opponent_models),
+                        ),
                     )
                 )
                 continue
@@ -374,15 +501,31 @@ def _worker_main(
                 worker_rng.randbelow(2**31)
                 policy: Policy
                 if spec.opponent_kind in ("latest", "historical"):
-                    policy = _RemoteNeuralOpponentPolicy(
-                        runtime,
-                        slot_id=current_slot,
-                        opponent_id=spec.opponent_id,
-                    )
+                    if opponent_inference_backend == "worker_cpu":
+                        model = opponent_models.get(spec.opponent_id)
+                        if model is None:
+                            raise RuntimeError(
+                                "worker has no synchronized model for neural opponent "
+                                f"{spec.opponent_id!r}"
+                            )
+                        policy = SamplingActorCriticPolicy(
+                            model,
+                            seed=spec.opponent_seed,
+                            device="cpu",
+                            timing=runtime.opponent_timing,
+                        )
+                        opponent_ids_by_slot[current_slot] = spec.opponent_id
+                    else:
+                        policy = _RemoteNeuralOpponentPolicy(
+                            runtime,
+                            slot_id=current_slot,
+                            opponent_id=spec.opponent_id,
+                        )
                 else:
                     policy = _fixed_opponent(spec.opponent_kind, spec.opponent_seed)
                 started = time.perf_counter()
                 wait_before = runtime.neural_opponent_wait_seconds
+                inference_before = runtime.opponent_timing.seconds
                 environment = LearningEnvironment.new(
                     spec.game_seed,
                     first_player=spec.first_player,
@@ -395,13 +538,15 @@ def _worker_main(
                 runtime.environment_encoding_seconds += max(
                     0.0,
                     time.perf_counter() - started
-                    - (runtime.neural_opponent_wait_seconds - wait_before),
+                    - (runtime.neural_opponent_wait_seconds - wait_before)
+                    - (runtime.opponent_timing.seconds - inference_before),
                 )
                 runtime.episodes_started += 1
                 environments[current_slot] = environment
                 if environment.done:
                     completed = _completed_episode(environment)
                     environments.pop(current_slot)
+                    opponent_ids_by_slot.pop(current_slot, None)
                     raise RuntimeError(
                         f"episode {completed.episode_id} ended without a learner decision"
                     )
@@ -417,6 +562,7 @@ def _worker_main(
                     raise RuntimeError("worker received a step for an inactive slot")
                 started = time.perf_counter()
                 wait_before = runtime.neural_opponent_wait_seconds
+                inference_before = runtime.opponent_timing.seconds
                 transition = environment.step_learning_action(
                     command.candidate_index,
                     decision_id=command.decision_id,
@@ -424,13 +570,15 @@ def _worker_main(
                 runtime.environment_encoding_seconds += max(
                     0.0,
                     time.perf_counter() - started
-                    - (runtime.neural_opponent_wait_seconds - wait_before),
+                    - (runtime.neural_opponent_wait_seconds - wait_before)
+                    - (runtime.opponent_timing.seconds - inference_before),
                 )
                 runtime.learner_steps += 1
                 completed = None
                 if transition.terminated or transition.truncated:
                     completed = _completed_episode(environment)
                     environments.pop(current_slot)
+                    opponent_ids_by_slot.pop(current_slot, None)
                 output_queue.put(
                     _TransitionReady(
                         worker_id,
@@ -467,7 +615,7 @@ class _CentralSlot:
 
 
 class MultiprocessRolloutCollector:
-    """Parallel CPU environments with one parent-owned inference device."""
+    """Parallel CPU environments with central or worker-local opponents."""
 
     def __init__(
         self,
@@ -479,6 +627,8 @@ class MultiprocessRolloutCollector:
         master_seed: int,
         start_episode_index: int = 0,
         restored_worker_rng_states: Sequence[RngState] | None = None,
+        opponent_inference_backend: OpponentInferenceBackend = "central",
+        worker_historical_models: Mapping[str, str | Path] | None = None,
     ) -> None:
         if num_workers <= 0 or envs_per_worker <= 0:
             raise ValueError("num_workers and envs_per_worker must be positive")
@@ -486,22 +636,43 @@ class MultiprocessRolloutCollector:
             raise ValueError("start_episode_index must be non-negative")
         if restored_worker_rng_states is not None and len(restored_worker_rng_states) != num_workers:
             raise ValueError("one restored RNG state is required per worker")
+        if opponent_inference_backend not in ("central", "worker_cpu"):
+            raise ValueError("unsupported opponent inference backend")
+        if opponent_inference_backend == "central" and worker_historical_models:
+            raise ValueError(
+                "central opponent inference cannot preload worker models"
+            )
         self.sampler = sampler
         self.environment_factory = environment_factory
         self.num_workers = num_workers
         self.envs_per_worker = envs_per_worker
         self.active_envs = num_workers * envs_per_worker
         self.master_seed = master_seed
+        self.opponent_inference_backend = opponent_inference_backend
         self._next_episode_index = start_episode_index
         self._slots: dict[int, _CentralSlot] = {}
         self._completed_environments: list[CompletedLearningEpisode] = []
         self._pending_events: deque[Any] = deque()
         self._closed = False
         self._snapshot_request_id = 0
+        self._opponent_sync_request_id = 0
         self.ipc_wait_seconds = 0.0
         self.opponent_inference_seconds = 0.0
         self.opponent_inference_calls = 0
         self.opponent_inference_items = 0
+        self.opponent_model_sync_seconds = 0.0
+        self._latest_worker_statistics: tuple[WorkerStatistics, ...] = ()
+        self._worker_timing_baseline: tuple[WorkerStatistics, ...] = ()
+        historical = tuple(
+            WorkerHistoricalModel(opponent_id, str(Path(path).resolve()))
+            for opponent_id, path in sorted(
+                (worker_historical_models or {}).items()
+            )
+        )
+        self._worker_historical_models = {
+            item.opponent_id: item for item in historical
+        }
+        self._worker_model_ids = set(self._worker_historical_models)
 
         self._context = mp.get_context("spawn")
         self._output_queue = self._context.Queue()
@@ -525,11 +696,24 @@ class MultiprocessRolloutCollector:
                     self._output_queue,
                     _WORKER_RNG_OFFSET + master_seed * 1_000 + worker_id,
                     restored[worker_id],
+                    opponent_inference_backend,
+                    historical,
                 ),
                 name=f"splendor-env-{worker_id}",
             )
             process.start()
             self._workers.append(process)
+        initialized: set[int] = set()
+        while len(initialized) < self.num_workers:
+            event = self._get_event()
+            if not isinstance(event, _WorkerInitialized):
+                raise RuntimeError(
+                    "unexpected event during worker initialization: "
+                    f"{type(event).__name__}"
+                )
+            initialized.add(event.worker_id)
+            if event.historical_model_count != len(historical):
+                raise RuntimeError("worker did not load every historical model")
 
     @property
     def start_method(self) -> str:
@@ -566,6 +750,10 @@ class MultiprocessRolloutCollector:
         )
 
     @property
+    def worker_local_opponents(self) -> bool:
+        return self.opponent_inference_backend == "worker_cpu"
+
+    @property
     def worker_pids(self) -> tuple[int, ...]:
         return tuple(process.pid or -1 for process in self._workers)
 
@@ -574,6 +762,73 @@ class MultiprocessRolloutCollector:
         self.opponent_inference_seconds = 0.0
         self.opponent_inference_calls = 0
         self.opponent_inference_items = 0
+        self.opponent_model_sync_seconds = 0.0
+        if self.worker_local_opponents:
+            if not self._latest_worker_statistics:
+                self._latest_worker_statistics = self.worker_statistics()
+            self._worker_timing_baseline = self._latest_worker_statistics
+
+    def sync_worker_opponents(
+        self,
+        *,
+        latest_opponent_id: str,
+        latest_model: ActorCritic,
+        historical_models: Mapping[str, str | Path],
+    ) -> None:
+        """Synchronize one rollout's worker-local frozen opponent registry."""
+
+        self._ensure_open()
+        if not self.worker_local_opponents:
+            raise ValueError(
+                "worker opponent synchronization requires worker_cpu inference"
+            )
+        if not latest_opponent_id:
+            raise ValueError("latest opponent id must not be empty")
+        if any(slot.current_decision is None for slot in self._slots.values()):
+            raise ValueError(
+                "worker opponent synchronization requires learner boundaries"
+            )
+        historical = tuple(
+            WorkerHistoricalModel(opponent_id, str(Path(path).resolve()))
+            for opponent_id, path in sorted(historical_models.items())
+        )
+        state_dict = {
+            name: tensor.detach().cpu().clone()
+            for name, tensor in latest_model.state_dict().items()
+        }
+        request_id = self._opponent_sync_request_id
+        self._opponent_sync_request_id += 1
+        command = _SyncWorkerOpponents(
+            request_id=request_id,
+            latest_opponent_id=latest_opponent_id,
+            latest_model_config=asdict(latest_model.config),
+            latest_state_dict=state_dict,
+            historical_models=historical,
+        )
+        started = time.perf_counter()
+        for command_queue in self._command_queues:
+            command_queue.put(command)
+        ready: set[int] = set()
+        while len(ready) < self.num_workers:
+            event = self._get_event()
+            if (
+                isinstance(event, _WorkerOpponentsReady)
+                and event.request_id == request_id
+            ):
+                ready.add(event.worker_id)
+            else:
+                raise RuntimeError(
+                    "unexpected event during worker model synchronization: "
+                    f"{type(event).__name__}"
+                )
+        self.opponent_model_sync_seconds += time.perf_counter() - started
+        self._worker_historical_models = {
+            item.opponent_id: item for item in historical
+        }
+        self._worker_model_ids = {
+            latest_opponent_id,
+            *(item.opponent_id for item in historical),
+        }
 
     def take_completed_environments(self) -> tuple[CompletedLearningEpisode, ...]:
         completed = tuple(self._completed_environments)
@@ -661,7 +916,31 @@ class MultiprocessRolloutCollector:
                 self._serve_opponent_requests((event,))
             else:
                 self._pending_events.append(event)
-        return tuple(replies[index] for index in range(self.num_workers))
+        result = tuple(replies[index] for index in range(self.num_workers))
+        self._latest_worker_statistics = result
+        if self.worker_local_opponents and self._worker_timing_baseline:
+            self.opponent_inference_seconds = sum(
+                after.neural_opponent_inference_seconds
+                - before.neural_opponent_inference_seconds
+                for before, after in zip(
+                    self._worker_timing_baseline, result, strict=True
+                )
+            )
+            self.opponent_inference_items = sum(
+                after.neural_opponent_decisions
+                - before.neural_opponent_decisions
+                for before, after in zip(
+                    self._worker_timing_baseline, result, strict=True
+                )
+            )
+            self.opponent_inference_calls = sum(
+                after.neural_opponent_inference_calls
+                - before.neural_opponent_inference_calls
+                for before, after in zip(
+                    self._worker_timing_baseline, result, strict=True
+                )
+            )
+        return result
 
     def close(self) -> None:
         if self._closed:
@@ -724,12 +1003,30 @@ class MultiprocessRolloutCollector:
             launch = self.environment_factory(self._next_episode_index)
             if launch.spec.episode_index != self._next_episode_index:
                 raise ValueError("environment factory returned the wrong episode index")
+            neural = launch.spec.opponent_kind in ("latest", "historical")
+            if self.worker_local_opponents:
+                if launch.neural_opponent_model is not None:
+                    raise ValueError(
+                        "worker-local opponent launch must not carry a parent model"
+                    )
+                if neural and launch.spec.opponent_id not in self._worker_model_ids:
+                    raise ValueError(
+                        "worker-local opponent was not synchronized: "
+                        f"{launch.spec.opponent_id}"
+                    )
+            elif neural != (launch.neural_opponent_model is not None):
+                raise ValueError(
+                    "central neural opponent launch requires exactly one model"
+                )
             slot_id = self._next_episode_index
             self._next_episode_index += 1
             learner_rng = torch.Generator(device="cpu")
             learner_rng.manual_seed(launch.spec.learning_policy_seed)
             opponent_rng = None
-            if launch.neural_opponent_model is not None:
+            if (
+                not self.worker_local_opponents
+                and launch.neural_opponent_model is not None
+            ):
                 opponent_rng = torch.Generator(device="cpu")
                 opponent_rng.manual_seed(launch.spec.opponent_seed)
             self._slots[slot_id] = _CentralSlot(

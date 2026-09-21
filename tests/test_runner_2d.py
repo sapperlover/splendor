@@ -39,6 +39,37 @@ def test_complete_random_game_is_reproducible_and_replayable(tmp_path: Path) -> 
     assert state_digest(replayed._debug_state()) == left.final_state_digest
 
 
+def test_lean_runner_preserves_game_and_failure_evidence_without_reservoirs(
+    tmp_path: Path,
+) -> None:
+    full = run_random_game(12, failure_dir=tmp_path / "full")
+    lean = run_random_game(12, failure_dir=tmp_path / "lean", lean=True)
+
+    assert lean.status is full.status
+    assert lean.result == full.result
+    assert lean.replay == full.replay
+    assert lean.final_state_digest == full.final_state_digest
+    assert lean.decision_count == full.decision_count
+    assert lean.forced_skips == full.forced_skips
+    assert full.coverage_tags
+    assert full.checkpoint_indices
+    assert lean.coverage_tags == frozenset()
+    assert lean.checkpoint_indices == {}
+
+    truncated = run_random_game(
+        12,
+        max_completed_turns=1,
+        failure_dir=tmp_path / "lean-failure",
+        lean=True,
+    )
+    assert truncated.failure_scene is not None
+    scene = json.loads(truncated.failure_scene.read_text(encoding="utf-8"))
+    assert scene["seed"] == 12
+    assert scene["legal_actions"]
+    assert scene["state"]
+    assert scene["replay_prefix"]
+
+
 def test_engineering_turn_watchdog_is_not_a_game_result_and_saves_scene(tmp_path: Path) -> None:
     run = run_random_game(0, max_completed_turns=1, failure_dir=tmp_path)
 

@@ -1,7 +1,9 @@
 # Splendor AI：当前项目快照与导航
 
-> 最后更新：2026-09-21  
-> 里程碑：WP5C / 首次 5M learning-decisions 主训练已完成  
+> 最后更新：2026-09-21
+>
+> 里程碑：WP5C / 首次 5M learning-decisions 主训练已完成
+>
 > 当前阶段：分析 5M 模型、改善训练与验证效率、决定下一阶段实验
 
 本页是仓库的当前状态入口。新的 AI agent 应先读本页，再按任务跳转到对应文档和代码。
@@ -14,9 +16,10 @@
 - 严格隔离私有信息的 Observation + legal-actions 策略边界；
 - 数值编码、Deep-Sets Actor–Critic、GAE/PPO、checkpoint/resume；
 - Random/Score/Development 策略、冻结神经对手和历史对手池；
-- 单进程 multi-env batched collector，以及已验证的 multiprocessing collector；
+- 单进程 multi-env learner/opponent batching，以及 worker-local CPU 神经对手的 multiprocessing collector；
+- paired-seed CPU 多进程评测和可复用 worker 池；
 - 一次已完成的 5M 纯 terminal-reward 主训练；
-- 基于现有 checkpoint 的信息集安全 top-k / critic 固定深度搜索外挂；
+- 基于现有 checkpoint 的信息集安全 top-k / critic 固定深度搜索外挂，以及受控引擎 fork/热路径缓存；
 - 完整的训练后分析导出和本地人机对战网页。
 
 当前 DEV 协议下的最优 checkpoint：
@@ -238,12 +241,17 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 
 ## 7. 性能与验证成本
 
-- WP5B 单进程 32-env batching 在当时基准中从 186.34 提升到 513.69 decisions/s（2.76x）；
-- Stage 4 含 neural opponent 时约 303.56 decisions/s；5C 实际加权 rollout 约 270.36 decisions/s；
-- multiprocessing preflight 中，单进程对照为 341.63 decisions/s，最好 8 workers × 4 envs 为 315.94（0.925x）；
-- 多进程提高了 CPU 利用，但 Queue/IPC 和 neural-opponent 小批次抵消了收益。该结论只属于特定硬件和实现，不是“单核永远更好”；
+- WP5B 单进程 32-env learner batching 在当时基准中从 186.34 提升到 513.69 decisions/s（2.76x）；Stage 4 含未批处理 neural opponent 时约 303.56 decisions/s；
+- 首次 5M 的实际加权 rollout 约 270.36 decisions/s，它使用单进程 collector，不包含后来的 P0–P3 优化；
+- legacy central-opponent multiprocessing preflight 的最佳值是 8 workers × 4 envs = 315.94 decisions/s，为当时单进程对照的 0.925x；该结论只适用于逐对手动作 Queue 往返的旧 backend；
+- P1 已在单进程 collector 中按共享模型合并对手请求，并以 critic-only 路径计算 rollout bootstrap；
+- P2 的 worker-local CPU 对手短基准中，4 workers × 8 envs 达到约 600.2 decisions/s，是同轮单进程对照的 1.27x，也是 legacy central 4×8 的 2.21x；8 workers 反而回退；
+- P0 支持以 paired seed 为单位的 CPU 多进程评测；新 `prepare` 默认 8 evaluation workers，短搜索基准显示 4–8 之后边际收益很小；
+- P3 的 digest、合法动作、fork 和 lean-runner 优化使 20 pairs 浅搜索墙钟缩短约 3.2%，cycle signature 微基准约快 4.06x；
 - 5C 约运行 127,800 局 validation：Quick 15,600、Formal 73,200、Promotion 23,000、Historical 16,000；
-- 当前主要工程成本是 validation、环境/编码和 neural-opponent inference；PPO update 本身不是主要瓶颈。
+- 新 P2 路径已取消中央 neural-opponent 逐动作 IPC，但尚未在可用 CUDA 的环境中验证完整长 rollout 收益。
+
+新执行 `train_5c prepare` 生成的默认执行配置为 `multiprocessing_local_opponents`、4 workers × 8 envs、8 evaluation workers。已完成的 `5c_main_seed1` 冻结配置仍是 `single_process`，不应用新默认值重解释旧运行。详见 [P0–P3 性能优化](performance_optimization_p0_p3_zh-CN.md)。
 
 ## 8. 已确认的结论
 
@@ -261,16 +269,16 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 - 尚未确认当前模型容量或 Observation 已成瓶颈；没有受控扩容/特征 ablation。
 - <code>TakePair</code> 崩落不等于它在规则上没有价值。
 - 5M latest 不能概括为“全面弱于”4.15M best；不同对手上的排序不一致。
-- “单核/单进程永远最好”不成立；现有结果只是一轮 preflight。
+- “worker 越多越好”和“单进程永远最好”都不成立；当前数字仍是特定硬件上的短基准。
 - reward shaping、lambda=1.0、更大网络、其他 RL 算法和 MCTS 都未做正式对照。
 
 ## 10. 已知问题与当前研究问题
 
 ### 已知问题
 
-1. Validation 很慢，Formal candidate、promotion 和 dynamic historical panel 成本高。
-2. Neural-opponent inference batch 偏小，GPU 利用不足，也降低 multiprocessing 收益。
-3. 环境/编码仍是主要 CPU 成本，但大改前应先 profile。
+1. Validation 总对局量仍很大；P0 已降低墙钟时间，但 Formal candidate、promotion 和 dynamic historical panel 仍是主要成本。
+2. 首次 5M 和 legacy central backend 存在 neural-opponent 小 batch/IPC 瓶颈；P1/P2 已缓解该问题，尚待 CUDA 长 rollout 验收。
+3. 环境/编码仍是主要 CPU 成本；P3 已去掉部分重复工作，进一步大改前仍应先 profile。
 4. 95.69% minibatches 发生 gradient clipping，值得单变量调查，但目前不是已知数值 bug。
 5. Dynamic-history 的训练成绩随对手池变化，不能像固定 heuristic panel 一样直接纵向比较。
 
@@ -323,6 +331,7 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 | 修改模型 | [WP4A](work_package_4a_zh-CN.md) → <code>actor_critic.py</code> |
 | 修改 transition/PPO | [WP4B](work_package_4b_zh-CN.md) → [WP4C](work_package_4c_zh-CN.md) |
 | 修改 collector/对手池 | [WP5B](work_package_5b_zh-CN.md) → [Stage 2](work_package_5b_stage2_zh-CN.md) → [Stage 3](work_package_5b_stage3_zh-CN.md) → [multiprocessing](work_package_5c_multiprocessing_preflight_zh-CN.md) |
+| 优化训练/评测/搜索性能 | [P0–P3 性能优化](performance_optimization_p0_p3_zh-CN.md) → 对应代码与测试 |
 | 理解 5C 实际协议 | [5C 现行协议](work_package_5c_current_protocol_zh-CN.md) |
 | 分析 5M 结果 | [5M 报告](work_package_5c_5m_training_report_zh-CN.md) → <code>artifacts/work_package_5c/</code> |
 | 评测固定深度搜索外挂 | [Policy + Critic 搜索](policy_value_search_zh-CN.md) → <code>evaluate_search.py</code> |
@@ -350,6 +359,7 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 - [WP5C：multiprocessing preflight](work_package_5c_multiprocessing_preflight_zh-CN.md)
 - [WP5C：现行协议](work_package_5c_current_protocol_zh-CN.md)
 - [WP5C：5M 训练报告](work_package_5c_5m_training_report_zh-CN.md)
+- [P0–P3：训练、评测与搜索性能优化](performance_optimization_p0_p3_zh-CN.md)
 
 ## 13. 常用命令
 
@@ -359,7 +369,7 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 conda run -n splendor env PYTHONPATH=src python -m pytest -q
 ~~~
 
-2026-09-21 最近一次当前工作树结果：<code>242 passed, 2 skipped</code>。
+2026-09-21 最近一次当前工作树结果：<code>248 passed, 2 skipped</code>。两个 skip 均因当时环境无可用 CUDA。
 
 重建 5C 分析交付物：
 

@@ -2,11 +2,13 @@
 
 本文档是 5C run-format v4 的权威实验协议。`learning decision`指学习方实际作出的一次且被收入 PPO rollout 的决策，不是整局、玩家回合或 PPO update。
 
+> 适用范围：本文的具体执行配置记录已完成的 `5c_main_seed1`；该 run 实际使用 `single_process` collector。2026-09-21 完成的 P0–P3 优化没有改变本文的训练、paired-seed、promotion、历史池或 RNG 协议；它们只改变新运行的执行后端和热路径。当前执行细节见 [P0–P3 性能优化](performance_optimization_p0_p3_zh-CN.md)。
+
 ## 1. 起点和通用训练配置
 
 - learner 和 initial global best-dev 都是 `step_000512112.pt`；
 - run-local 预算为 5,000,000 learning decisions；
-- 32 个 logical environments，正式 collector 为单进程 batched collector；
+- 32 个 logical environments；已完成的 `5c_main_seed1` 正式 collector 为单进程 batched collector；
 - rollout 上限 8,192 decisions，minibatch 512，PPO epochs 4；
 - reward 为纯 terminal `+1/0/-1`，`gamma=1`，`lambda=0.95`；
 - LR 从 `1e-4` 线性降至 `3e-5`，entropy coefficient 从 `0.01` 线性降至 `0.002`；
@@ -18,6 +20,8 @@
 - Quick、Formal、Promotion、Historical 和 FINAL 评测中，candidate 与 neural opponent 都使用 greedy argmax，不做随机采样；
 - 训练 rollout 中 learner 与 latest/historical neural opponent 都按各自独立、可恢复的 RNG 做 categorical sampling；
 - ScorePolicy 和 DevelopmentPolicy 本身是确定性策略。
+
+新执行 `train_5c prepare` 时，代码默认生成 `multiprocessing_local_opponents`、4 workers × 8 envs 和 8 evaluation workers。已有冻结 config 不会被该默认值改写，resume 仍要求配置严格匹配。
 
 ## 2. Quick DEV
 

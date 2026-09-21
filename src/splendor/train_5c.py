@@ -177,7 +177,11 @@ class FiveCConfig:
             raise ValueError("the first 5C main run training seed is frozen at 1")
         if self.device != "cuda" or self.active_envs != 32:
             raise ValueError("the first 5C main run requires CUDA and 32 active envs")
-        if self.collector_backend not in ("single_process", "multiprocessing"):
+        if self.collector_backend not in (
+            "single_process",
+            "multiprocessing",
+            "multiprocessing_local_opponents",
+        ):
             raise ValueError("unsupported 5C collector backend")
         if self.num_workers not in (1, 2, 4, 8):
             raise ValueError("5C multiprocessing workers must be one of 1, 2, 4, or 8")
@@ -719,6 +723,7 @@ class FiveCMetricWriter:
         "environment_encoding_seconds",
         "model_inference_seconds",
         "neural_opponent_inference_seconds",
+        "opponent_model_sync_seconds",
         "ipc_wait_seconds",
         "worker_cpu_seconds",
         "ppo_update_seconds",
@@ -1054,7 +1059,11 @@ def _checkpoint_metadata(
         "collector_at_episode_boundary": True,
         "collector_rng": {
             "kind": (
-                "spawn-multiprocessing-counter-derived-episode-streams"
+                (
+                    "spawn-multiprocessing-worker-cpu-opponents"
+                    if collector.worker_local_opponents
+                    else "spawn-multiprocessing-central-opponents"
+                )
                 if isinstance(collector, MultiprocessRolloutCollector)
                 else "counter-derived episode streams"
             ),
@@ -1499,7 +1508,14 @@ def run_five_c_training(
             _MIXTURE_RNG_OFFSET + config.training_seed
         )
         initial_manifest = run_root / "historical_pool" / "initial.json"
-        pool = OpponentPool.load_manifest(initial_manifest, device=config.device)
+        pool = OpponentPool.load_manifest(
+            initial_manifest,
+            device=(
+                "cpu"
+                if config.collector_backend == "multiprocessing_local_opponents"
+                else config.device
+            ),
+        )
         progress.historical_games = {
             entry.opponent_id: 0 for entry in pool.historical_entries
         }
@@ -1538,7 +1554,12 @@ def run_five_c_training(
             raise ValueError("5C resume Adam learning rate disagrees with schedule")
         selector = FiveCOpponentSelector.restore(RngState(**metadata["mixture_rng"]))
         pool = OpponentPool.load_manifest(
-            Path(metadata["pool_manifest"]), device=config.device
+            Path(metadata["pool_manifest"]),
+            device=(
+                "cpu"
+                if config.collector_backend == "multiprocessing_local_opponents"
+                else config.device
+            ),
         )
         start_episode_index = int(metadata["next_episode_index"])
         restored_worker_states = restored_worker_rng_states(
@@ -1605,7 +1626,11 @@ def run_five_c_training(
 
     def multiprocess_environment_factory(index: int) -> MultiprocessEpisodeLaunch:
         plan, choice, episode_id = episode_choice(index)
-        model = getattr(choice.policy, "model", None)
+        model = (
+            None
+            if config.collector_backend == "multiprocessing_local_opponents"
+            else getattr(choice.policy, "model", None)
+        )
         return MultiprocessEpisodeLaunch(
             spec=MultiprocessEpisodeSpec(
                 episode_index=index,
@@ -1624,7 +1649,10 @@ def run_five_c_training(
         )
 
     collector: BatchedRolloutCollector | MultiprocessRolloutCollector
-    if config.collector_backend == "multiprocessing":
+    if config.collector_backend in (
+        "multiprocessing",
+        "multiprocessing_local_opponents",
+    ):
         collector = MultiprocessRolloutCollector(
             sampler,
             multiprocess_environment_factory,
@@ -1633,6 +1661,20 @@ def run_five_c_training(
             master_seed=config.training_seed,
             start_episode_index=start_episode_index,
             restored_worker_rng_states=restored_worker_states,
+            opponent_inference_backend=(
+                "worker_cpu"
+                if config.collector_backend == "multiprocessing_local_opponents"
+                else "central"
+            ),
+            worker_historical_models=(
+                {
+                    entry.opponent_id: entry.checkpoint_path
+                    for entry in pool.historical_entries
+                    if entry.checkpoint_path is not None
+                }
+                if config.collector_backend == "multiprocessing_local_opponents"
+                else None
+            ),
         )
     else:
         collector = BatchedRolloutCollector(
@@ -2662,6 +2704,19 @@ def run_five_c_training(
             if config.device == "cuda":
                 torch.cuda.reset_peak_memory_stats()
             rollout_started = time.perf_counter()
+            if (
+                isinstance(collector, MultiprocessRolloutCollector)
+                and collector.worker_local_opponents
+            ):
+                collector.sync_worker_opponents(
+                    latest_opponent_id=latest_entry.opponent_id,
+                    latest_model=latest_model,
+                    historical_models={
+                        entry.opponent_id: entry.checkpoint_path
+                        for entry in pool.historical_entries
+                        if entry.checkpoint_path is not None
+                    },
+                )
             rollout = collector.collect(target)
             boundary_drain_decisions = 0
             if boundary_due:
@@ -2806,6 +2861,11 @@ def run_five_c_training(
                 "environment_encoding_seconds": environment_seconds,
                 "model_inference_seconds": sampler.inference_seconds,
                 "neural_opponent_inference_seconds": neural_opponent_seconds,
+                "opponent_model_sync_seconds": (
+                    collector.opponent_model_sync_seconds
+                    if isinstance(collector, MultiprocessRolloutCollector)
+                    else 0.0
+                ),
                 "neural_opponent_decisions": neural_opponent_decisions,
                 "mean_inference_batch_size": sampler.mean_inference_batch_size,
                 "mean_opponent_inference_batch_size": (
@@ -2902,6 +2962,7 @@ def run_five_c_training(
                 ("env_encoding_seconds", "environment_encoding_seconds"),
                 ("learner_inference_seconds", "model_inference_seconds"),
                 ("neural_opponent_inference_seconds", "neural_opponent_inference_seconds"),
+                ("opponent_model_sync_seconds", "opponent_model_sync_seconds"),
                 ("ipc_wait_seconds", "ipc_wait_seconds"),
                 ("worker_cpu_seconds", "worker_cpu_seconds"),
                 ("ppo_update_seconds", "ppo_update_seconds"),
@@ -3279,6 +3340,9 @@ def _default_config(repo_root: Path) -> FiveCConfig:
 
     return FiveCConfig(
         run_id="5c_main_seed1",
+        collector_backend="multiprocessing_local_opponents",
+        num_workers=4,
+        envs_per_worker=8,
         evaluation_workers=8,
         source_checkpoint=absolute(
             "runs/5b_stage4_selfplay_seed_004/checkpoints/step_000512112.pt"

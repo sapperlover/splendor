@@ -12,8 +12,9 @@ from splendor.multiprocess_collector import (
     MultiprocessRolloutCollector,
     restored_worker_rng_states,
 )
-from splendor.ppo import BatchedRolloutCollector, PolicySampler
+from splendor.ppo import BatchedRolloutCollector, PPOTrainer, PolicySampler
 from splendor.random_policy import RandomPolicy
+from splendor.replay import RULESET_ID
 from splendor.train_5a import episode_plan
 from splendor.training_env import LearningEnvironment
 
@@ -196,3 +197,80 @@ def test_spawn_collector_centralizes_neural_opponent_and_restores_worker_rng(
     finally:
         resumed.close()
     assert restored_after_snapshot == uninterrupted_after_snapshot
+
+
+def test_spawn_collector_runs_historical_and_latest_opponents_inside_workers(
+    tmp_path: Path,
+) -> None:
+    torch.manual_seed(503)
+    source = ActorCritic()
+    checkpoint = tmp_path / "historical.pt"
+    checkpoint_trainer = PPOTrainer(copy.deepcopy(source))
+    checkpoint_sampler = PolicySampler(checkpoint_trainer.model, seed=0)
+    checkpoint_trainer.save_checkpoint(
+        checkpoint,
+        sampler=checkpoint_sampler,
+        metadata={"rules_version": RULESET_ID},
+    )
+
+    def run(label: str):
+        learner = copy.deepcopy(source)
+        sampler = PolicySampler(learner, seed=0)
+
+        def factory(index: int) -> MultiprocessEpisodeLaunch:
+            plan = episode_plan(63, index)
+            historical = index % 2 == 0
+            return MultiprocessEpisodeLaunch(
+                MultiprocessEpisodeSpec(
+                    episode_index=index,
+                    episode_id=f"local-{index}",
+                    game_seed=plan.game_seed,
+                    first_player=plan.first_player,
+                    learning_player=plan.learning_player,
+                    learning_policy_seed=plan.learning_policy_seed,
+                    opponent_seed=plan.opponent_seed,
+                    opponent_kind="historical" if historical else "latest",
+                    opponent_id="historical-test" if historical else "latest-test",
+                    max_completed_turns=400,
+                    failure_dir=str(tmp_path / label / f"episode-{index}"),
+                )
+            )
+
+        collector = MultiprocessRolloutCollector(
+            sampler,
+            factory,
+            num_workers=2,
+            envs_per_worker=1,
+            master_seed=63,
+            opponent_inference_backend="worker_cpu",
+            worker_historical_models={"historical-test": checkpoint},
+        )
+        try:
+            collector.sync_worker_opponents(
+                latest_opponent_id="latest-test",
+                latest_model=copy.deepcopy(source).eval().requires_grad_(False),
+                historical_models={"historical-test": checkpoint},
+            )
+            collector.reset_timing()
+            rollout = collector.collect(2)
+            collector.drain_active_environments()
+            completed = collector.take_completed_environments()
+            statistics = collector.worker_statistics()
+            signature = _completed_signature(completed)
+        finally:
+            collector.close()
+        return rollout, statistics, signature, collector
+
+    rollout, statistics, first_signature, first = run("first")
+    _, _, second_signature, _ = run("second")
+
+    assert len(rollout) == 2
+    assert first_signature == second_signature
+    assert first.opponent_inference_items > 0
+    assert first.opponent_inference_calls == first.opponent_inference_items
+    assert first.mean_opponent_inference_batch_size == 1.0
+    assert all(item.neural_opponent_wait_seconds == 0.0 for item in statistics)
+    assert all(item.neural_opponent_decisions > 0 for item in statistics)
+    assert all(item.opponent_model_sync_count == 1 for item in statistics)
+    assert all(item.opponent_model_count == 2 for item in statistics)
+    assert all(item.torch_num_threads == 1 for item in statistics)

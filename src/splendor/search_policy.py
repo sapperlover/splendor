@@ -332,11 +332,8 @@ def determinize_request(
 def _clone_engine(engine: GameEngine) -> GameEngine:
     """Fork a search-owned immutable engine state, never a live match state."""
 
-    return GameEngine(
-        engine._debug_state(),
-        engine.catalog,
-        engine.replay_record,
-        Path.cwd() / "runtime" / "search_failures",
+    return engine.fork(
+        failure_dir=Path.cwd() / "runtime" / "search_failures"
     )
 
 

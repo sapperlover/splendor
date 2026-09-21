@@ -25,6 +25,7 @@
 - 5C 现行评测、promotion、训练对手与历史池协议：[`docs/work_package_5c_current_protocol_zh-CN.md`](docs/work_package_5c_current_protocol_zh-CN.md)
 - 5C 首次 5M 主训练完成报告：[`docs/work_package_5c_5m_training_report_zh-CN.md`](docs/work_package_5c_5m_training_report_zh-CN.md)
 - Policy + Critic 固定深度搜索外挂：[`docs/policy_value_search_zh-CN.md`](docs/policy_value_search_zh-CN.md)
+- P0–P3 训练、评测与搜索性能优化：[`docs/performance_optimization_p0_p3_zh-CN.md`](docs/performance_optimization_p0_p3_zh-CN.md)
 
 当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A、5B Stage 1–4，以及
 5C 首次 5M learning-decisions 主训练。该 run 的 DEV 最优 checkpoint 为
@@ -35,6 +36,8 @@
 `runs/` 同样不进入 Git。
 
 在项目 Conda 环境运行测试：`conda run -n splendor python -m pytest`
+
+新建 5C 配置默认使用 4 workers × 8 envs 的 worker-local CPU 神经对手，并使用 8 个 CPU evaluation workers。已完成的 5M run 仍保留其原始 `single_process` 冻结配置；详见上方 P0–P3 文档。
 
 从仓库根目录运行基线评测：`PYTHONPATH=src python -m splendor.evaluate --player-a score --player-b development --seed-start 0 --seed-count 100`
 

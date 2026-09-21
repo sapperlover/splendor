@@ -52,6 +52,7 @@ def _one_case(
     decisions: int,
     repeat: int,
     num_workers: int | None,
+    opponent_backend: str,
 ) -> dict[str, Any]:
     trainer, sampler, metadata = PPOTrainer.load_checkpoint(
         Path(config.source_checkpoint), device=device
@@ -61,7 +62,8 @@ def _one_case(
     _configure_trainer(trainer, config)
     _apply_schedules(trainer, config, 0)
     pool = OpponentPool.load_manifest(
-        run_root / "historical_pool" / "initial.json", device=device
+        run_root / "historical_pool" / "initial.json",
+        device=("cpu" if opponent_backend == "worker_cpu" else device),
     )
     latest = pool.set_latest(
         trainer.model, training_step=trainer.global_learning_decision_step
@@ -127,7 +129,11 @@ def _one_case(
                 max_completed_turns=config.max_completed_turns,
                 failure_dir=str(failure_root / f"episode-{index:09d}"),
             ),
-            neural_opponent_model=getattr(selected.policy, "model", None),
+            neural_opponent_model=(
+                None
+                if opponent_backend == "worker_cpu"
+                else getattr(selected.policy, "model", None)
+            ),
         )
 
     if num_workers is None:
@@ -146,8 +152,21 @@ def _one_case(
             num_workers=num_workers,
             envs_per_worker=envs_per_worker,
             master_seed=config.training_seed,
+            opponent_inference_backend=opponent_backend,
+            worker_historical_models=(
+                {
+                    entry.opponent_id: entry.checkpoint_path
+                    for entry in pool.historical_entries
+                    if entry.checkpoint_path is not None
+                }
+                if opponent_backend == "worker_cpu"
+                else None
+            ),
         )
-        label = f"{num_workers}-workers-x-{envs_per_worker}-envs"
+        label = (
+            f"{num_workers}-workers-x-{envs_per_worker}-envs-"
+            f"{opponent_backend}"
+        )
         worker_before = collector.worker_statistics()
 
     sampler.reset_timing()
@@ -161,6 +180,19 @@ def _one_case(
     main_cpu_before = time.process_time()
     rollout_started = time.perf_counter()
     try:
+        if (
+            isinstance(collector, MultiprocessRolloutCollector)
+            and collector.worker_local_opponents
+        ):
+            collector.sync_worker_opponents(
+                latest_opponent_id=latest.opponent_id,
+                latest_model=latest_model,
+                historical_models={
+                    entry.opponent_id: entry.checkpoint_path
+                    for entry in pool.historical_entries
+                    if entry.checkpoint_path is not None
+                },
+            )
         rollout = collector.collect(decisions)
         if device == "cuda":
             torch.cuda.synchronize()
@@ -236,6 +268,9 @@ def _one_case(
             "start_method": (
                 "none" if num_workers is None else collector.start_method
             ),
+            "opponent_inference_backend": (
+                "single_process" if num_workers is None else opponent_backend
+            ),
             "worker_pids": list(pids),
             "decisions": len(rollout),
             "completed_games": len(completed),
@@ -246,7 +281,13 @@ def _one_case(
             "mean_opponent_inference_batch_size": opponent_batch,
             "environment_encoding_seconds": environment_seconds,
             "gpu_learner_inference_seconds": sampler.inference_seconds,
+            "neural_opponent_inference_seconds": opponent_seconds,
             "gpu_opponent_inference_seconds": opponent_seconds,
+            "opponent_model_sync_seconds": (
+                collector.opponent_model_sync_seconds
+                if isinstance(collector, MultiprocessRolloutCollector)
+                else 0.0
+            ),
             "neural_opponent_decisions": opponent_items,
             "ipc_wait_seconds": ipc_wait,
             "gae_seconds": gae_seconds,
@@ -285,10 +326,13 @@ def benchmark_multiprocessing_collectors(
     decisions: int,
     repeats: int,
     worker_counts: Sequence[int] = (1, 2, 4, 8),
+    opponent_backend: str = "central",
     output_path: Path | None = None,
 ) -> dict[str, Any]:
     if decisions <= 0 or repeats <= 0:
         raise ValueError("decisions and repeats must be positive")
+    if opponent_backend not in ("central", "worker_cpu"):
+        raise ValueError("unsupported opponent inference backend")
     counts = tuple(worker_counts)
     if counts != (1, 2, 4, 8):
         raise ValueError("preflight worker counts must be exactly 1, 2, 4, 8")
@@ -305,6 +349,7 @@ def benchmark_multiprocessing_collectors(
                 decisions=decisions,
                 repeat=repeat,
                 num_workers=None,
+                opponent_backend=opponent_backend,
             )
         )
         for count in counts:
@@ -316,6 +361,7 @@ def benchmark_multiprocessing_collectors(
                     decisions=decisions,
                     repeat=repeat,
                     num_workers=count,
+                    opponent_backend=opponent_backend,
                 )
             )
 
@@ -382,6 +428,7 @@ def benchmark_multiprocessing_collectors(
         "decisions_per_case": decisions,
         "repeats": repeats,
         "active_envs": config.active_envs,
+        "opponent_inference_backend": opponent_backend,
         "rules_version": RULESET_ID,
         "feature_schema_version": FEATURE_SCHEMA_VERSION,
         "raw_results": rows,
@@ -409,6 +456,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--decisions", type=int, default=2048)
     parser.add_argument("--repeats", type=int, default=2)
+    parser.add_argument(
+        "--opponent-backend",
+        choices=("central", "worker_cpu"),
+        default="central",
+    )
     parser.add_argument("--output", type=Path, required=True)
     return parser
 
@@ -420,6 +472,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         device=args.device,
         decisions=args.decisions,
         repeats=args.repeats,
+        opponent_backend=args.opponent_backend,
         output_path=args.output,
     )
     print(json.dumps(result["recommendation"], ensure_ascii=False, sort_keys=True))

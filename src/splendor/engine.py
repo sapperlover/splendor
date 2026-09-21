@@ -7,7 +7,6 @@ from ._state import DeckState, GameState, MarketState, PlayerState
 from .actions import Action
 from .catalog import Catalog, load_default_catalog
 from .contracts import DecisionRequest, Observation
-from .invariants import assert_game_state
 from .model import DecisionPhase, Tier, TokenVector
 from .observation import build_observation
 from .replay import (
@@ -59,6 +58,8 @@ class GameEngine:
         self.__replay = replay
         self.__guard = InvariantGuard(catalog, replay, failure_dir)
         self.__guard.check(state)
+        self.__state_digest = state_digest(state)
+        self.__legal_actions_cache: tuple[Action, ...] | None = None
 
     @classmethod
     def new(
@@ -137,6 +138,33 @@ class GameEngine:
 
         return self.__state.current_player
 
+    @property
+    def current_state_digest(self) -> str:
+        """Digest of the immutable current state, computed once per transition."""
+
+        return self.__state_digest
+
+    def fork(self, *, failure_dir: Path | None = None) -> GameEngine:
+        """Fork an already-validated immutable state for controlled simulation.
+
+        The parent state, replay, digest, and legal candidates are immutable and
+        safe to share.  The fork skips only the redundant parent-state invariant
+        scan; every state produced by the fork is validated normally.
+        """
+
+        forked = object.__new__(GameEngine)
+        forked.__state = self.__state
+        forked.catalog = self.catalog
+        forked.__replay = self.__replay
+        forked.__guard = InvariantGuard(
+            self.catalog,
+            self.__replay,
+            failure_dir or self.__guard.failure_dir,
+        )
+        forked.__state_digest = self.__state_digest
+        forked.__legal_actions_cache = self.__legal_actions_cache
+        return forked
+
     def observation_for(self, observer: int) -> Observation:
         """Return the information-safe view for a seat, including at terminal.
 
@@ -153,7 +181,7 @@ class GameEngine:
                 self.__guard.fail(self.__state, EngineError("terminal state has no result"))
             return self.__state.result
 
-        actions = legal_actions(self.__state, self.catalog)
+        actions = self._legal_actions()
         if self.__state.phase not in (
             DecisionPhase.MAIN_ACTION,
             DecisionPhase.PAYMENT,
@@ -182,7 +210,7 @@ class GameEngine:
             if self.__state.result is None:
                 self.__guard.fail(self.__state, EngineError("terminal state has no result"))
             return self.__state.result
-        actions = legal_actions(self.__state, self.catalog)
+        actions = self._legal_actions()
         if not actions:
             self.__guard.fail(
                 self.__state,
@@ -196,20 +224,20 @@ class GameEngine:
     def _advance_automatic_transitions(self) -> None:
         while True:
             if self.__state.phase is DecisionPhase.CHOOSE_NOBLE:
-                candidates = legal_actions(self.__state, self.catalog)
+                candidates = self._legal_actions()
                 if len(candidates) == 1:
                     self._commit_action(candidates[0], automatic=True)
                     continue
                 return
             if self.__state.phase is DecisionPhase.MAIN_ACTION:
-                if legal_actions(self.__state, self.catalog):
+                if self._legal_actions():
                     return
                 self._commit_forced_skip()
                 continue
             return
 
     def _commit_action(self, action: Action, *, automatic: bool) -> None:
-        candidates = legal_actions(self.__state, self.catalog)
+        candidates = self._legal_actions()
         if action not in candidates:
             self.__guard.fail(
                 self.__state,
@@ -218,12 +246,14 @@ class GameEngine:
             )
 
         before = self.__state
+        before_digest = self.__state_digest
         try:
             after = apply_legal_action(before, action, self.catalog)
             assert_phase_transition(before.phase, after.phase)
         except Exception as error:
             self.__guard.fail(before, error, action)
         self.__guard.check(after, action)
+        after_digest = state_digest(after)
 
         event = ActionEvent(
             sequence=len(self.__replay.events),
@@ -231,10 +261,12 @@ class GameEngine:
             phase=before.phase,
             action=action,
             automatic=automatic,
-            state_digest_before=state_digest(before),
-            state_digest_after=state_digest(after),
+            state_digest_before=before_digest,
+            state_digest_after=after_digest,
         )
         self.__state = after
+        self.__state_digest = after_digest
+        self.__legal_actions_cache = None
         self.__replay = replace(
             self.__replay,
             events=self.__replay.events + (event,),
@@ -244,19 +276,23 @@ class GameEngine:
 
     def _commit_forced_skip(self) -> None:
         before = self.__state
+        before_digest = self.__state_digest
         try:
             after = apply_forced_skip(before, self.catalog)
             assert_phase_transition(before.phase, after.phase)
         except Exception as error:
             self.__guard.fail(before, error)
         self.__guard.check(after)
+        after_digest = state_digest(after)
         event = ForcedSkipEvent(
             sequence=len(self.__replay.events),
             actor=before.current_player,
-            state_digest_before=state_digest(before),
-            state_digest_after=state_digest(after),
+            state_digest_before=before_digest,
+            state_digest_after=after_digest,
         )
         self.__state = after
+        self.__state_digest = after_digest
+        self.__legal_actions_cache = None
         self.__replay = replace(
             self.__replay,
             events=self.__replay.events + (event,),
@@ -275,6 +311,11 @@ class GameEngine:
         """Tests and full debug replay only; never pass this value to a policy."""
 
         return self.__state
+
+    def _legal_actions(self) -> tuple[Action, ...]:
+        if self.__legal_actions_cache is None:
+            self.__legal_actions_cache = legal_actions(self.__state, self.catalog)
+        return self.__legal_actions_cache
 
 
 def replay_game(

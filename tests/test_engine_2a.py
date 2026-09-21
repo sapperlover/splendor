@@ -6,6 +6,8 @@ from math import comb
 from pathlib import Path
 
 import pytest
+import splendor.engine as engine_module
+import splendor.replay as replay_module
 
 from splendor._state import GameState, PlayerState, ReservedCard
 from splendor.actions import (
@@ -50,6 +52,60 @@ def test_seeded_setup_is_complete_and_reproducible(catalog: Catalog, tmp_path: P
     assert state.decks.tier_one + state.market.tier_one != tier_one_csv_order
     assert explicit._debug_state().first_player == 1
     assert_game_state(state, catalog)
+
+
+def test_decision_candidates_are_reused_for_the_following_apply(
+    catalog: Catalog, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = 0
+    authoritative = engine_module.legal_actions
+
+    def counted(state, current_catalog):  # type: ignore[no-untyped-def]
+        nonlocal calls
+        calls += 1
+        return authoritative(state, current_catalog)
+
+    monkeypatch.setattr(engine_module, "legal_actions", counted)
+    engine = GameEngine.new(2027, first_player=0, catalog=catalog, failure_dir=tmp_path)
+    request = engine.decision()
+    assert calls == 1
+
+    engine.apply(request.legal_actions[0])
+
+    assert calls == 2
+
+
+def test_transition_digest_is_chained_and_fork_skips_only_parent_validation(
+    catalog: Catalog, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    engine = GameEngine.new(2028, first_player=0, catalog=catalog, failure_dir=tmp_path)
+    request = engine.decision()
+    initial_digest = engine.current_state_digest
+    assert initial_digest == state_digest(engine._debug_state())
+
+    checks = 0
+    authoritative_check = replay_module.InvariantGuard.check
+
+    def counted_check(self, state, attempted_action=None):  # type: ignore[no-untyped-def]
+        nonlocal checks
+        checks += 1
+        return authoritative_check(self, state, attempted_action)
+
+    monkeypatch.setattr(replay_module.InvariantGuard, "check", counted_check)
+    forked = engine.fork(failure_dir=tmp_path / "fork")
+    assert checks == 0
+    assert forked.current_state_digest == initial_digest
+    assert forked.replay_record == engine.replay_record
+
+    forked.apply(request.legal_actions[0])
+
+    assert checks == 1
+    event = forked.replay_record.events[-1]
+    assert event.state_digest_before == initial_digest
+    assert event.state_digest_after == forked.current_state_digest
+    assert forked.current_state_digest == state_digest(forked._debug_state())
+    assert engine.current_state_digest == initial_digest
+    assert not engine.replay_record.events
 
 
 @pytest.mark.parametrize(

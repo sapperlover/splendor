@@ -1,7 +1,9 @@
 # Policy + Critic 固定深度搜索外挂
 
-> 状态：实现与整局 smoke test 已完成  
-> 基准模型：5C latest，lifetime 5,512,112 decisions  
+> 状态：实现、整局 smoke test、paired CPU 并行和 P3 热路径优化已完成
+>
+> 基准模型：5C latest，lifetime 5,512,112 decisions
+>
 > 协议版本：<code>policy-value-search-v1</code>
 
 ## 1. 目标
@@ -66,6 +68,8 @@ choose(request: DecisionRequest) -> Action
 
 - 搜索策略与 determinization：<code>src/splendor/search_policy.py</code>
 - 搜索对原始 greedy policy 的 paired 评测：<code>src/splendor/evaluate_search.py</code>
+- paired-seed 多进程调度：<code>src/splendor/evaluation.py</code>
+- 受控 fork、合法动作与 digest 缓存：<code>src/splendor/engine.py</code>
 - 测试：<code>tests/test_search_policy.py</code>
 - 公共类：
   - <code>SearchConfig</code>
@@ -107,7 +111,27 @@ choose(request: DecisionRequest) -> Action
 | critic/policy positions | 22,925 |
 | 搜索总耗时 | 24.79 s |
 
-该 2 局结果只证明全流程可运行，没有棋力统计意义。工具环境当时不可见 CUDA，因此这里记录的是 CPU smoke；用户主机的 CUDA 环境应使用下面的 CUDA 命令。
+该 2 局结果只证明全流程可运行，没有棋力统计意义。工具环境当时不可见 CUDA，因此这里记录的是 CPU smoke。当前可在“单进程 CUDA”和“paired-seed 多进程 CPU”两种执行模式中选择，需用实际搜索参数做短基准，不预设某一种必然更快。
+
+### 5.1 P0 paired CPU 并行短基准
+
+同一 checkpoint、20 paired seeds / 40 games、<code>top-k=2</code>、<code>depth=2</code> 的单次 CPU 短基准：
+
+| workers | 墙钟时间 |
+|---:|---:|
+| 2 | 9.340 s |
+| 4 | 5.732 s |
+| 8 | 5.700 s |
+| 12 | 5.544 s |
+| 14 | 5.521 s |
+
+4 workers 之后收益已明显收窄。搜索评测建议从 4 或 8 workers 起步；如果电脑同时运行其他应用，应保留 CPU 余量，不建议为了几个百分点的收益直接使用 12–14 workers。
+
+### 5.2 P3 搜索热路径
+
+搜索现在使用受控的 <code>GameEngine.fork()</code>，复用已验证的父 state、replay、digest 和合法动作；每个新子状态仍正常做 invariant check。评测 runner 使用 lean 模式，cycle signature 直接生成稳定摘要。
+
+在上述 4-worker、20-pair 浅搜索基准中，P3 使墙钟从 5.732 s 降到 5.550 s（约 -3.2%），合计搜索时间约 -3.9%，评测结果逐字段一致。详见 [P0–P3 性能优化](performance_optimization_p0_p3_zh-CN.md)。
 
 ## 6. 运行命令
 
@@ -144,7 +168,27 @@ conda run -n splendor env PYTHONPATH=src \
   --output artifacts/search_5p5m_top5_depth4_500games.json
 ~~~
 
-### 6.3 1000 局
+### 6.3 paired-seed CPU 多进程
+
+<code>workers &gt; 1</code> 时必须使用 CPU：
+
+~~~bash
+conda run -n splendor env PYTHONPATH=src \
+  python -u -m splendor.evaluate_search \
+  --checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --pairs 250 \
+  --top-k 5 \
+  --depth 4 \
+  --determinizations 1 \
+  --device cpu \
+  --workers 4 \
+  --progress-every 5 \
+  --output artifacts/search_5p5m_top5_depth4_500games_cpu_w4.json
+~~~
+
+对当前机器建议先在 20–50 pairs 上比较 <code>--workers 4</code> 和 <code>8</code>，再锁定正式评测配置。
+
+### 6.4 1000 局
 
 只需把上一条命令改为：
 
@@ -153,7 +197,7 @@ conda run -n splendor env PYTHONPATH=src \
 --output artifacts/search_5p5m_top5_depth4_1000games.json
 ~~~
 
-### 6.4 参数微调
+### 6.5 参数微调
 
 如果完整评测过慢，建议先按以下顺序缩小：
 
@@ -169,5 +213,5 @@ conda run -n splendor env PYTHONPATH=src \
 - 单 determinization 对未来未知牌有采样方差；
 - 当前树不跨真实决策复用；
 - 规则引擎分支展开仍在 Python CPU 上进行；
-- 每层模型位置已批量推理，但不同真实对局尚未合并为搜索 batch；
+- 每层模型位置已批量推理，但不同真实对局尚未合并为同一搜索 batch；P0 是进程级并行，不是跨局模型 batching；
 - 尚未完成 500–1000 局棋力验收，因此不能宣称搜索强于原始 policy。
