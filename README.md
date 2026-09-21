@@ -1,5 +1,6 @@
-# Splendor 基础版规则数据
+# Splendor 双人 AI
 
+- 项目当前快照与导航（AI agent 首先阅读）：[`docs/current_project_state_zh-CN.md`](docs/current_project_state_zh-CN.md)
 - 中文规则与引擎规格：[`docs/splendor_standard_rules_zh-CN.md`](docs/splendor_standard_rules_zh-CN.md)
 - 90 张发展卡：[`data/splendor_cards.csv`](data/splendor_cards.csv)
 - 10 块贵族：[`data/splendor_nobles.csv`](data/splendor_nobles.csv)
@@ -23,6 +24,7 @@
 - 工作包 5C 5M 主训练配置与 preflight：[`docs/work_package_5c_preflight_zh-CN.md`](docs/work_package_5c_preflight_zh-CN.md)
 - 5C 现行评测、promotion、训练对手与历史池协议：[`docs/work_package_5c_current_protocol_zh-CN.md`](docs/work_package_5c_current_protocol_zh-CN.md)
 - 5C 首次 5M 主训练完成报告：[`docs/work_package_5c_5m_training_report_zh-CN.md`](docs/work_package_5c_5m_training_report_zh-CN.md)
+- Policy + Critic 固定深度搜索外挂：[`docs/policy_value_search_zh-CN.md`](docs/policy_value_search_zh-CN.md)
 
 当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A、5B Stage 1–4，以及
 5C 首次 5M learning-decisions 主训练。该 run 的 DEV 最优 checkpoint 为
@@ -61,4 +63,4 @@ checkpoint、自己先后手和 seed。PPO 对手使用 CPU greedy 推理，
 当前玩家的 Observation 派生视图与规则引擎枚举的合法动作；所有规则
 判定和状态转移仍由 `GameEngine` 完成。
 
-数据范围仅限 2–4 人基础标准版，不含扩展、《璀璨宝石：对决》或漫威版。
+当前引擎和 AI 范围仅限双人基础标准版，不含 3–4 人、扩展、《璀璨宝石：对决》或漫威版。
