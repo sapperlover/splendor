@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>璀璨宝石·本地对局</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">◈</span>
+      <div><strong>璀璨宝石</strong><small>LOCAL MATCH</small></div>
+    </div>
+    <div id="turn-status" class="turn-status">请开始新对局</div>
+    <button id="new-game-button" class="ghost-button" type="button">新对局</button>
+  </header>
+
+  <main id="board" class="board is-empty" aria-live="polite">
+    <section class="market-zone panel">
+      <div class="section-heading"><span>发展卡市场</span><small>点击卡牌上的合法操作</small></div>
+      <div id="market"></div>
+    </section>
+
+    <section class="supply-zone panel">
+      <div class="section-heading"><span>宝石银行</span><small>当前余量</small></div>
+      <div id="supply" class="token-bank"></div>
+    </section>
+
+    <section class="noble-zone panel">
+      <div class="section-heading"><span>贵族</span><small>达成需求可获得</small></div>
+      <div id="nobles" class="noble-list"></div>
+    </section>
+
+    <aside class="players-zone">
+      <div id="opponent-panel"></div>
+      <div id="self-panel"></div>
+    </aside>
+
+    <section class="history-zone panel">
+      <div class="section-heading"><span>最近行动</span><small>最新在上</small></div>
+      <div id="history-list" class="history-list">
+        <div class="history-empty">开局后会在这里记录双方行动</div>
+      </div>
+    </section>
+
+    <section class="actions-zone panel">
+      <div class="action-copy">
+        <span id="phase-label" class="phase-badge">MAIN ACTION</span>
+        <strong id="action-title">选择你的行动</strong>
+        <small id="action-hint">只会显示规则引擎返回的合法候选</small>
+      </div>
+      <div id="action-list" class="action-list"></div>
+    </section>
+  </main>
+
+  <div id="setup-modal" class="modal is-open" role="dialog" aria-modal="true">
+    <form id="setup-form" class="setup-card">
+      <p class="eyebrow">NEW LOCAL GAME</p>
+      <h1>开始对局</h1>
+      <p class="setup-intro">你将与固定启发式策略对弈。对手只能看到它自己的 Observation 和合法动作。</p>
+      <label>
+        <span>对手策略</span>
+        <select id="opponent-select" required>
+          <option value="" disabled selected>正在读取可用对手…</option>
+        </select>
+      </label>
+      <fieldset>
+        <legend>行动顺序</legend>
+        <label class="radio-option"><input type="radio" name="order" value="first" checked><span>我先手</span></label>
+        <label class="radio-option"><input type="radio" name="order" value="second"><span>我后手</span></label>
+      </fieldset>
+      <label>
+        <span>Seed</span>
+        <input id="seed-input" type="number" step="1" value="1" required>
+      </label>
+      <p id="setup-error" class="error-message" role="alert"></p>
+      <button id="start-button" class="primary-button" type="submit">开始游戏</button>
+    </form>
+  </div>
+
+  <div id="result-modal" class="modal" role="dialog" aria-modal="true">
+    <div class="setup-card result-card">
+      <p class="eyebrow">GAME OVER</p>
+      <h1 id="result-title">对局结束</h1>
+      <p id="result-detail"></p>
+      <button id="result-new-game" class="primary-button" type="button">再来一局</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

@@ -6,7 +6,7 @@ from pathlib import Path
 from ._state import DeckState, GameState, MarketState, PlayerState
 from .actions import Action
 from .catalog import Catalog, load_default_catalog
-from .contracts import DecisionRequest
+from .contracts import DecisionRequest, Observation
 from .invariants import assert_game_state
 from .model import DecisionPhase, Tier, TokenVector
 from .observation import build_observation
@@ -136,6 +136,15 @@ class GameEngine:
         """Seat whose policy must answer the next decision request."""
 
         return self.__state.current_player
+
+    def observation_for(self, observer: int) -> Observation:
+        """Return the information-safe view for a seat, including at terminal.
+
+        This is intended for non-policy consumers such as a local human UI.
+        Policies continue to receive only :class:`DecisionRequest`.
+        """
+
+        return build_observation(self.__state, observer, self.catalog)
 
     def decision(self) -> DecisionRequest | TerminalResult:
         self._advance_automatic_transitions()

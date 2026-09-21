@@ -39,4 +39,19 @@ conda run -n splendor env PYTHONPATH=src python -m splendor.train_5a \
 
 查看 TensorBoard：`conda run -n splendor tensorboard --logdir runs`
 
+## 本地人机对局网页
+
+从仓库根目录启动本地服务：
+
+```bash
+conda run -n splendor env PYTHONPATH=src python -m splendor.web_app
+```
+
+然后在浏览器打开 `http://127.0.0.1:8765`。开局前可选择
+`ScorePolicy` / `DevelopmentPolicy` / [`play_checkpoints`](play_checkpoints) 中的 PPO
+checkpoint、自己先后手和 seed。PPO 对手使用 CPU greedy 推理，
+不会访问训练中的模型或 GPU。浏览器仅接收
+当前玩家的 Observation 派生视图与规则引擎枚举的合法动作；所有规则
+判定和状态转移仍由 `GameEngine` 完成。
+
 数据范围仅限 2–4 人基础标准版，不含扩展、《璀璨宝石：对决》或漫威版。
