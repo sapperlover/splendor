@@ -9,6 +9,7 @@ import torch
 
 from splendor.actor_critic import ActorCritic
 from splendor.features import collate_encoded_decisions
+from splendor.neural_policy import NeuralInferenceTiming, SamplingActorCriticPolicy
 from splendor.ppo import (
     BatchedRolloutCollector,
     PolicySampler,
@@ -199,3 +200,58 @@ def test_batched_collector_rejects_invalid_sizes(tmp_path: Path) -> None:
     collector = BatchedRolloutCollector(sampler, factory, active_envs=2)
     with pytest.raises(ValueError, match="positive"):
         collector.collect(0)
+
+
+def test_batched_collector_batches_shared_neural_opponents(tmp_path: Path) -> None:
+    torch.manual_seed(105)
+    source = ActorCritic()
+
+    def run(label: str):
+        learner = copy.deepcopy(source)
+        opponent = copy.deepcopy(source).eval().requires_grad_(False)
+        timing = NeuralInferenceTiming()
+        sampler = PolicySampler(learner, seed=0)
+
+        def factory(index: int) -> tuple[LearningEnvironment, int]:
+            return (
+                LearningEnvironment.new(
+                    8_000 + index,
+                    first_player=0,
+                    learning_player=1,
+                    opponent_policy=SamplingActorCriticPolicy(
+                        opponent,
+                        seed=9_000 + index,
+                        timing=timing,
+                    ),
+                    episode_id=f"neural-{index}",
+                    max_completed_turns=400,
+                    failure_dir=tmp_path / label / f"neural-{index}",
+                    defer_opponent=True,
+                ),
+                10_000 + index,
+            )
+
+        collector = BatchedRolloutCollector(sampler, factory, active_envs=4)
+        rollout = collector.collect(32)
+        trace = tuple(
+            (
+                sample.episode_id,
+                sample.chosen_candidate_index,
+                sample.encoded.candidate_actions,
+                sample.reward,
+                sample.terminated,
+                sample.bootstrap_value,
+            )
+            for sample in rollout.samples
+        )
+        return rollout, timing, trace
+
+    rollout, timing, first_trace = run("first")
+    _, second_timing, second_trace = run("second")
+
+    assert len(rollout) == 32
+    assert timing.decisions > 0
+    assert timing.calls < timing.decisions
+    assert timing.mean_batch_size > 1.0
+    assert second_timing.mean_batch_size == timing.mean_batch_size
+    assert second_trace == first_trace

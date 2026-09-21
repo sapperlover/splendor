@@ -20,7 +20,11 @@ from .features import (
     EncodedDecision,
     collate_encoded_decisions,
 )
-from .training_env import LearningEnvironment
+from .neural_policy import (
+    SamplingActorCriticPolicy,
+    choose_sampling_actor_critic_batch,
+)
+from .training_env import LearningEnvironment, LearningTransition
 
 
 TRAINING_CHECKPOINT_FORMAT_VERSION = 1
@@ -174,7 +178,7 @@ class PolicySampler:
         was_training = self.model.training
         self.model.eval()
         with torch.inference_mode():
-            _, values = self.model(batch)
+            values = self.model.value_only(batch)
             value = float(values[0].item())
         self.model.train(was_training)
         self.inference_seconds += time.perf_counter() - started
@@ -195,7 +199,7 @@ class PolicySampler:
         was_training = self.model.training
         self.model.eval()
         with torch.inference_mode():
-            _, values = self.model(batch)
+            values = self.model.value_only(batch)
             cpu_values = values.detach().cpu()
         self.model.train(was_training)
         self.inference_seconds += time.perf_counter() - started
@@ -379,6 +383,7 @@ class BatchedRolloutCollector:
         *,
         active_envs: int,
         start_episode_index: int = 0,
+        batch_opponents: bool = True,
     ) -> None:
         if active_envs <= 0:
             raise ValueError("active_envs must be positive")
@@ -387,6 +392,7 @@ class BatchedRolloutCollector:
         self.sampler = sampler
         self.environment_factory = environment_factory
         self.active_envs = active_envs
+        self.batch_opponents = batch_opponents
         self._next_episode_index = start_episode_index
         self._slots: list[_BatchedEnvironmentSlot] = []
         self._completed_environments: list[LearningEnvironment] = []
@@ -438,14 +444,26 @@ class BatchedRolloutCollector:
         return group_rollout_by_episode(samples)
 
     def _fill_slots(self) -> None:
-        while len(self._slots) < self.active_envs:
-            environment, policy_seed = self.environment_factory(
-                self._next_episode_index
+        while True:
+            while len(self._slots) < self.active_envs:
+                environment, policy_seed = self.environment_factory(
+                    self._next_episode_index
+                )
+                self._next_episode_index += 1
+                generator = torch.Generator(device="cpu")
+                generator.manual_seed(policy_seed)
+                self._slots.append(_BatchedEnvironmentSlot(environment, generator))
+            self._advance_batched_opponents(tuple(self._slots))
+            completed = tuple(slot for slot in self._slots if slot.environment.done)
+            if not completed:
+                return
+            self._completed_environments.extend(
+                slot.environment for slot in completed
             )
-            self._next_episode_index += 1
-            generator = torch.Generator(device="cpu")
-            generator.manual_seed(policy_seed)
-            self._slots.append(_BatchedEnvironmentSlot(environment, generator))
+            completed_ids = {id(slot) for slot in completed}
+            self._slots = [
+                slot for slot in self._slots if id(slot) not in completed_ids
+            ]
 
     def _step(
         self, selected: tuple[_BatchedEnvironmentSlot, ...]
@@ -457,15 +475,33 @@ class BatchedRolloutCollector:
             tuple(decision.encoded for decision in decisions),
             generators=tuple(slot.policy_rng for slot in selected),
         )
-        transitions = tuple(
-            slot.environment.step_learning_action(
-                policy_sample.chosen_candidate_index,
-                decision_id=decision.decision_id,
+        if not self.batch_opponents:
+            transitions = tuple(
+                slot.environment.step_learning_action(
+                    policy_sample.chosen_candidate_index,
+                    decision_id=decision.decision_id,
+                )
+                for slot, decision, policy_sample in zip(
+                    selected, decisions, policy_samples, strict=True
+                )
             )
+        else:
+            transition_by_slot: dict[int, LearningTransition] = {}
             for slot, decision, policy_sample in zip(
                 selected, decisions, policy_samples, strict=True
-            )
-        )
+            ):
+                transition = slot.environment.begin_learning_action(
+                    policy_sample.chosen_candidate_index,
+                    decision_id=decision.decision_id,
+                )
+                if transition is not None:
+                    transition_by_slot[id(slot)] = transition
+            transition_by_slot.update(self._advance_batched_opponents(selected))
+            if len(transition_by_slot) != len(selected):
+                raise AssertionError(
+                    "batched opponent advancement lost a learner transition"
+                )
+            transitions = tuple(transition_by_slot[id(slot)] for slot in selected)
 
         successor_indices = tuple(
             index
@@ -515,6 +551,71 @@ class BatchedRolloutCollector:
                 slot for slot in self._slots if id(slot) not in completed_slots
             ]
         return samples
+
+    def _advance_batched_opponents(
+        self,
+        slots: tuple[_BatchedEnvironmentSlot, ...],
+    ) -> dict[int, LearningTransition]:
+        """Advance waiting opponents and batch policies sharing one model."""
+
+        transitions: dict[int, LearningTransition] = {}
+        while True:
+            waiting = tuple(
+                slot
+                for slot in slots
+                if id(slot) not in transitions
+                and slot.environment.opponent_request is not None
+                and not slot.environment.done
+            )
+            if not waiting:
+                return transitions
+
+            neural_groups: dict[int, list[_BatchedEnvironmentSlot]] = {}
+            fixed: list[_BatchedEnvironmentSlot] = []
+            for slot in waiting:
+                policy = slot.environment.opponent_policy
+                if isinstance(policy, SamplingActorCriticPolicy):
+                    neural_groups.setdefault(id(policy.model), []).append(slot)
+                else:
+                    fixed.append(slot)
+
+            for slot in fixed:
+                request = slot.environment.opponent_request
+                if request is None:
+                    raise AssertionError("fixed opponent request disappeared")
+                transition = slot.environment.step_opponent_action(
+                    slot.environment.opponent_policy.choose(request)
+                )
+                if transition is not None:
+                    transitions[id(slot)] = transition
+
+            for group in neural_groups.values():
+                ordered = tuple(group)
+                policies = tuple(
+                    slot.environment.opponent_policy for slot in ordered
+                )
+                if not all(
+                    isinstance(policy, SamplingActorCriticPolicy)
+                    for policy in policies
+                ):
+                    raise AssertionError("neural opponent group changed policy type")
+                requests = tuple(
+                    slot.environment.opponent_request for slot in ordered
+                )
+                if any(request is None for request in requests):
+                    raise AssertionError("neural opponent request disappeared")
+                actions = choose_sampling_actor_critic_batch(
+                    tuple(
+                        policy
+                        for policy in policies
+                        if isinstance(policy, SamplingActorCriticPolicy)
+                    ),
+                    tuple(request for request in requests if request is not None),
+                )
+                for slot, action in zip(ordered, actions, strict=True):
+                    transition = slot.environment.step_opponent_action(action)
+                    if transition is not None:
+                        transitions[id(slot)] = transition
 
 
 def compute_gae(

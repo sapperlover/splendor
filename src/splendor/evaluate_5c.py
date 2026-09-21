@@ -36,6 +36,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--kind", choices=("quick", "formal", "final"), required=True)
     parser.add_argument("--pairs", type=int)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="pair-parallel CPU workers; values above 1 use CPU inference",
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--bootstrap-resamples", type=int, default=100_000)
     return parser
@@ -44,6 +50,8 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     config = load_five_c_config(args.config)
+    if args.workers <= 0:
+        raise ValueError("workers must be positive")
     if args.checkpoint_manifest is not None:
         manifest = json.loads(args.checkpoint_manifest.read_text(encoding="utf-8"))
         checkpoint_value = manifest.get("new_best_checkpoint", manifest.get("checkpoint"))
@@ -78,10 +86,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.kind == "final" and pairs < config.final_eval_min_pairs:
         raise ValueError("5C FINAL evaluation requires at least 500 paired seeds")
 
-    model = load_frozen_actor_critic_checkpoint(checkpoint, device=args.device)
+    evaluation_device = args.device if args.workers == 1 else "cpu"
+    model = load_frozen_actor_critic_checkpoint(
+        checkpoint, device=evaluation_device
+    )
     opponents = build_five_c_eval_opponents(
         config,
-        device=args.device,
+        device=evaluation_device,
         kind=args.kind,
     )
     if game_seed_offset is not None:
@@ -97,9 +108,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         opponents=opponents,
         seeds=seeds,
         policy_seed_base=policy_seed_base,
-        device=args.device,
+        device=evaluation_device,
         max_completed_turns=config.max_completed_turns,
         failure_dir=args.output.parent / "failures" / args.output.stem,
+        candidate_checkpoint=checkpoint,
+        parallel_workers=args.workers,
     )
     payload = torch.load(checkpoint, map_location="cpu", weights_only=True)
     lifetime_step = int(payload["global_learning_decision_step"])
@@ -120,6 +133,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         lifetime_update_count=lifetime_updates,
         elapsed_seconds=elapsed,
     )
+    record["evaluation_workers"] = args.workers
+    record["evaluation_device"] = evaluation_device
     _write_panel(
         args.output,
         results=results,
@@ -154,6 +169,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "kind": args.kind,
                 "seed_domain": seed_domain,
                 "pairs": pairs,
+                "workers": args.workers,
+                "device": evaluation_device,
                 "panel_summary": record,
                 "output": str(args.output.resolve()),
             },

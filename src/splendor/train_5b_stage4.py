@@ -629,6 +629,7 @@ def run_stage4_training(
                 episode_id=episode_id,
                 max_completed_turns=config.max_completed_turns,
                 failure_dir=output_dir / "logs" / f"failure-{index:08d}",
+                defer_opponent=True,
             ),
             plan.learning_policy_seed,
         )

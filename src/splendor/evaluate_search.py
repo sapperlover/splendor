@@ -11,7 +11,12 @@ from typing import Sequence
 
 import torch
 
-from .evaluation import PolicySpec, evaluate_policies
+from .evaluation import (
+    PolicySpec,
+    SerializablePolicySpec,
+    evaluate_policies,
+    evaluate_policies_parallel,
+)
 from .neural_policy import GreedyActorCriticPolicy
 from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .paired_statistics import pair_scores, paired_bootstrap_mean
@@ -44,6 +49,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--bootstrap-seed", type=int, default=8_800_000)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="pair-parallel CPU workers; values above 1 force CPU inference",
+    )
+    parser.add_argument(
         "--progress-every",
         type=int,
         default=5,
@@ -75,11 +86,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise ValueError("progress_every must be positive")
     if args.bootstrap_resamples <= 0:
         raise ValueError("bootstrap_resamples must be positive")
+    if args.workers <= 0:
+        raise ValueError("workers must be positive")
+    if args.workers > 1 and args.device != "cpu":
+        raise ValueError("parallel search evaluation requires --device cpu")
     if args.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is unavailable")
 
     checkpoint = args.checkpoint.resolve()
-    model = load_frozen_actor_critic_checkpoint(checkpoint, device=args.device)
     base_config = SearchConfig(
         top_k=args.top_k,
         depth=args.depth,
@@ -90,8 +104,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
     )
     search_policies: list[PolicyValueSearchPolicy] = []
+    model = (
+        load_frozen_actor_critic_checkpoint(checkpoint, device=args.device)
+        if args.workers == 1
+        else None
+    )
 
     def search_factory(seed: int) -> PolicyValueSearchPolicy:
+        if model is None:
+            raise AssertionError("serial search model was not loaded")
         policy = PolicyValueSearchPolicy(
             model,
             config=replace(base_config, seed=base_config.seed ^ seed),
@@ -102,6 +123,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     def raw_factory(seed: int) -> GreedyActorCriticPolicy:
         del seed
+        if model is None:
+            raise AssertionError("serial greedy model was not loaded")
         return GreedyActorCriticPolicy(model, device=args.device)
 
     def progress(completed: int, total: int) -> None:
@@ -119,16 +142,50 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
 
     started = time.perf_counter()
-    result = evaluate_policies(
-        PolicySpec("policy_value_search", search_factory),
-        PolicySpec("raw_greedy_policy", raw_factory),
-        tuple(range(args.seed_start, args.seed_start + args.pairs)),
-        policy_seed_base=args.policy_seed_base,
-        max_completed_turns=args.max_completed_turns,
-        failure_dir=args.output.parent / "failures" / args.output.stem,
-        progress_callback=progress,
-        adjudicate_deterministic_policy_cycles=True,
-    )
+    seeds = tuple(range(args.seed_start, args.seed_start + args.pairs))
+    if args.workers == 1:
+        result = evaluate_policies(
+            PolicySpec("policy_value_search", search_factory),
+            PolicySpec("raw_greedy_policy", raw_factory),
+            seeds,
+            policy_seed_base=args.policy_seed_base,
+            max_completed_turns=args.max_completed_turns,
+            failure_dir=args.output.parent / "failures" / args.output.stem,
+            progress_callback=progress,
+            adjudicate_deterministic_policy_cycles=True,
+        )
+        search_stats = _sum_search_stats(search_policies)
+    else:
+        parallel = evaluate_policies_parallel(
+            SerializablePolicySpec.search_checkpoint(
+                "policy_value_search",
+                checkpoint,
+                search_config={
+                    "top_k": base_config.top_k,
+                    "depth": base_config.depth,
+                    "determinizations": base_config.determinizations,
+                    "seed": base_config.seed,
+                    "leaf_value_clip": base_config.leaf_value_clip,
+                },
+            ),
+            SerializablePolicySpec.greedy_checkpoint(
+                "raw_greedy_policy", checkpoint
+            ),
+            seeds,
+            workers=args.workers,
+            policy_seed_base=args.policy_seed_base,
+            max_completed_turns=args.max_completed_turns,
+            failure_dir=args.output.parent / "failures" / args.output.stem,
+            progress_callback=progress,
+            adjudicate_deterministic_policy_cycles=True,
+        )
+        result = parallel.result
+        search_stats = dict(parallel.policy_a_stats)
+        decisions = int(search_stats.get("decisions", 0))
+        total_seconds = float(search_stats.get("total_seconds", 0.0))
+        search_stats["mean_seconds_per_search_decision"] = (
+            total_seconds / decisions if decisions else 0.0
+        )
     elapsed = time.perf_counter() - started
     _, scores = pair_scores(result)
     bootstrap = paired_bootstrap_mean(
@@ -148,6 +205,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "global_learning_decision_step"
         ),
         "device": args.device,
+        "workers": args.workers,
         "search": {
             "top_k": base_config.top_k,
             "depth": base_config.depth,
@@ -168,7 +226,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "paired_bootstrap": bootstrap.to_dict(),
             "result": result.to_dict(include_matches=True),
         },
-        "search_stats": _sum_search_stats(search_policies),
+        "search_stats": search_stats,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_suffix(args.output.suffix + ".tmp")

@@ -147,6 +147,7 @@ def test_tensorize_and_cpu_forward_support_ragged_batch(initial_state, catalog) 
     distribution, distribution_values = model.distribution(batch)
     probabilities = distribution.probs
     torch.testing.assert_close(distribution_values, values)
+    torch.testing.assert_close(model.value_only(batch), values)
     assert probabilities[0, 0].item() == 1.0
     assert torch.count_nonzero(probabilities[0, 1:]).item() == 0
     torch.testing.assert_close(

@@ -62,7 +62,7 @@ runs/5c_main_seed1/checkpoints/local_004150000_lifetime_004662112.pt
 
 ## 3. 信息源优先级
 
-文档看似冲突时，按以下顺序判断：
+文档看似冲突时，按以下顺序判断并报告：
 
 1. [本地双人规则](splendor_standard_rules_zh-CN.md) 和 <code>data/</code>；
 2. 当前 contracts/state/rules/engine 代码及通过的测试；
@@ -274,14 +274,6 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 4. 95.69% minibatches 发生 gradient clipping，值得单变量调查，但目前不是已知数值 bug。
 5. Dynamic-history 的训练成绩随对手池变化，不能像固定 heuristic panel 一样直接纵向比较。
 
-### 建议研究顺序
-
-1. 决定是否用未使用的 FINAL seed domain 评测预先冻结的少量候选。
-2. 用多训练 seed 验证提升与行为演化的可重复性。
-3. 在不改变 paired-seed/promotion semantics 的前提下降低 validation 成本。
-4. 诊断容量/表示是否进入平台，以及 <code>TakePair</code> 行为崩落的原因。
-5. 有证据后，再在继续 PPO、扩容网络、改 curriculum/历史池和改算法之间选择。
-6. 先完成当前固定深度搜索的 500–1000 局直接评测；只有在收益和决策延迟都可接受时，再考虑 MCTS。
 
 ## 11. 代码导航
 

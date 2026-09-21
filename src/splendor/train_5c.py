@@ -21,7 +21,15 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 
 from .catalog import load_default_catalog
-from .evaluation import EvaluationResult, PolicySpec, baseline_policy_spec, evaluate_policies
+from .evaluation import (
+    EvaluationResult,
+    ParallelEvaluationPool,
+    PolicySpec,
+    SerializablePolicySpec,
+    baseline_policy_spec,
+    evaluate_policies,
+    evaluate_policies_parallel,
+)
 from .features import FEATURE_SCHEMA_VERSION
 from .neural_policy import GreedyActorCriticPolicy, NeuralInferenceTiming
 from .multiprocess_collector import (
@@ -114,6 +122,7 @@ class FiveCConfig:
     collector_backend: str = "single_process"
     num_workers: int = 8
     envs_per_worker: int = 4
+    evaluation_workers: int = 1
     rollout_steps: int = 8_192
     checkpoint_interval: int = 100_000
     quick_eval_interval: int = 50_000
@@ -174,6 +183,8 @@ class FiveCConfig:
             raise ValueError("5C multiprocessing workers must be one of 1, 2, 4, or 8")
         if self.num_workers * self.envs_per_worker != self.active_envs:
             raise ValueError("num_workers * envs_per_worker must equal active_envs")
+        if not 1 <= self.evaluation_workers <= 12:
+            raise ValueError("evaluation_workers must be between 1 and 12")
         if (
             self.rollout_steps != 8_192
             or self.checkpoint_interval != 100_000
@@ -772,6 +783,7 @@ def build_five_c_eval_opponents(
             lambda seed, frozen=model: GreedyActorCriticPolicy(
                 frozen, device=device
             ),
+            SerializablePolicySpec.greedy_checkpoint(name, path),
         )
     return opponents
 
@@ -785,6 +797,8 @@ def evaluate_five_c_panel(
     device: str,
     max_completed_turns: int,
     failure_dir: Path,
+    candidate_checkpoint: Path | None = None,
+    parallel_workers: int = 1,
     progress_callback: Callable[
         [str, int, int, str, EvaluationResult | None], None
     ]
@@ -794,6 +808,10 @@ def evaluate_five_c_panel(
 ) -> tuple[dict[str, EvaluationResult], float]:
     if not opponents:
         raise ValueError("5C evaluation panel must contain at least one opponent")
+    if parallel_workers <= 0:
+        raise ValueError("parallel_workers must be positive")
+    if parallel_workers > 1 and candidate_checkpoint is None:
+        raise ValueError("parallel evaluation requires the candidate checkpoint")
     parameters_before = tuple(parameter.detach().clone() for parameter in model.parameters())
     was_training = model.training
     model.eval()
@@ -804,38 +822,72 @@ def evaluate_five_c_panel(
     started = time.perf_counter()
     results: dict[str, EvaluationResult] = {}
     total_opponents = len(opponents)
-    for index, (name, opponent) in enumerate(opponents.items(), start=1):
-        if progress_callback is not None:
-            progress_callback(name, index, total_opponents, "started", None)
+    parallel_pool = (
+        ParallelEvaluationPool(parallel_workers)
+        if parallel_workers > 1
+        else None
+    )
+    try:
+        for index, (name, opponent) in enumerate(opponents.items(), start=1):
+            if progress_callback is not None:
+                progress_callback(name, index, total_opponents, "started", None)
 
-        def pair_progress(completed_pairs: int, total_pairs: int) -> None:
-            if pair_progress_callback is None:
-                return
-            report_interval = max(1, total_pairs // 10)
-            if completed_pairs < total_pairs and completed_pairs % report_interval == 0:
-                pair_progress_callback(
-                    name,
-                    index,
-                    total_opponents,
-                    completed_pairs,
-                    total_pairs,
+            def pair_progress(completed_pairs: int, total_pairs: int) -> None:
+                if pair_progress_callback is None:
+                    return
+                report_interval = max(1, total_pairs // 10)
+                if (
+                    completed_pairs < total_pairs
+                    and completed_pairs % report_interval == 0
+                ):
+                    pair_progress_callback(
+                        name,
+                        index,
+                        total_opponents,
+                        completed_pairs,
+                        total_pairs,
+                    )
+
+            if parallel_workers == 1:
+                result = evaluate_policies(
+                    candidate,
+                    opponent,
+                    seeds,
+                    policy_seed_base=policy_seed_base,
+                    max_completed_turns=max_completed_turns,
+                    failure_dir=failure_dir / name,
+                    progress_callback=pair_progress,
+                    adjudicate_deterministic_policy_cycles=True,
                 )
-
-        result = evaluate_policies(
-            candidate,
-            opponent,
-            seeds,
-            policy_seed_base=policy_seed_base,
-            max_completed_turns=max_completed_turns,
-            failure_dir=failure_dir / name,
-            progress_callback=pair_progress,
-            adjudicate_deterministic_policy_cycles=True,
-        )
-        results[name] = result
-        if progress_callback is not None:
-            progress_callback(name, index, total_opponents, "completed", result)
+            else:
+                if opponent.parallel_spec is None or candidate_checkpoint is None:
+                    raise ValueError(
+                        f"opponent {name!r} has no spawn-safe parallel policy"
+                    )
+                result = evaluate_policies_parallel(
+                    SerializablePolicySpec.greedy_checkpoint(
+                        "ppo-greedy", candidate_checkpoint
+                    ),
+                    opponent.parallel_spec,
+                    seeds,
+                    workers=parallel_workers,
+                    policy_seed_base=policy_seed_base,
+                    max_completed_turns=max_completed_turns,
+                    failure_dir=failure_dir / name,
+                    progress_callback=pair_progress,
+                    adjudicate_deterministic_policy_cycles=True,
+                    pool=parallel_pool,
+                ).result
+            results[name] = result
+            if progress_callback is not None:
+                progress_callback(name, index, total_opponents, "completed", result)
+    finally:
+        try:
+            if parallel_pool is not None:
+                parallel_pool.close()
+        finally:
+            model.train(was_training)
     elapsed = time.perf_counter() - started
-    model.train(was_training)
     if not all(
         torch.equal(before, after)
         for before, after in zip(parameters_before, model.parameters(), strict=True)
@@ -1546,6 +1598,7 @@ def run_five_c_training(
                 episode_id=episode_id,
                 max_completed_turns=config.max_completed_turns,
                 failure_dir=run_root / "failures" / f"episode-{index:09d}",
+                defer_opponent=True,
             ),
             plan.learning_policy_seed,
         )
@@ -1779,6 +1832,8 @@ def run_five_c_training(
             policy_seed_base=policy_seed_base,
             device=config.device,
             max_completed_turns=config.max_completed_turns,
+            candidate_checkpoint=checkpoint_path,
+            parallel_workers=config.evaluation_workers,
             failure_dir=(
                 run_root
                 / "eval"
@@ -1799,6 +1854,10 @@ def run_five_c_training(
         )
         record["evaluation_cycle_run_local_step"] = cycle_local_step
         record["candidate_checkpoint"] = str(checkpoint_path)
+        record["evaluation_workers"] = config.evaluation_workers
+        record["evaluation_device"] = (
+            "cpu" if config.evaluation_workers > 1 else config.device
+        )
         _write_panel(
             output_path,
             results=results,
@@ -1856,15 +1915,20 @@ def run_five_c_training(
         return record
 
     def historical_opponents() -> dict[str, PolicySpec]:
-        return {
-            entry.opponent_id: PolicySpec(
+        opponents: dict[str, PolicySpec] = {}
+        for entry in pool.historical_entries:
+            if entry.checkpoint_path is None:
+                raise ValueError("historical evaluation entry has no checkpoint")
+            opponents[entry.opponent_id] = PolicySpec(
                 entry.opponent_id,
                 lambda seed, opponent_id=entry.opponent_id: pool.policy_for(
                     opponent_id, seed=seed
                 ).policy,
+                SerializablePolicySpec.greedy_checkpoint(
+                    entry.opponent_id, entry.checkpoint_path
+                ),
             )
-            for entry in pool.historical_entries
-        }
+        return opponents
 
     def run_historical_diagnostic(
         checkpoint_path: Path,
@@ -1980,6 +2044,9 @@ def run_five_c_training(
             "current_global_best",
             lambda seed: GreedyActorCriticPolicy(
                 incumbent_model, device=config.device
+            ),
+            SerializablePolicySpec.greedy_checkpoint(
+                "current_global_best", incumbent_checkpoint
             ),
         )
         all_seeds = _evaluation_game_seeds(
@@ -2744,7 +2811,7 @@ def run_five_c_training(
                 "mean_opponent_inference_batch_size": (
                     collector.mean_opponent_inference_batch_size
                     if isinstance(collector, MultiprocessRolloutCollector)
-                    else 1.0 if opponent_timing.decisions else 0.0
+                    else opponent_timing.mean_batch_size
                 ),
                 "ipc_wait_seconds": ipc_wait_seconds,
                 "worker_cpu_seconds": worker_cpu_seconds,
@@ -3032,6 +3099,7 @@ def run_five_c_preflight(
                 episode_id=f"5c-preflight-{index:04d}",
                 max_completed_turns=config.max_completed_turns,
                 failure_dir=run_root / "failures" / f"preflight-{index:04d}",
+                defer_opponent=True,
             ),
             _PREFLIGHT_POLICY_RNG_OFFSET + index * 2,
         )
@@ -3211,6 +3279,7 @@ def _default_config(repo_root: Path) -> FiveCConfig:
 
     return FiveCConfig(
         run_id="5c_main_seed1",
+        evaluation_workers=8,
         source_checkpoint=absolute(
             "runs/5b_stage4_selfplay_seed_004/checkpoints/step_000512112.pt"
         ),

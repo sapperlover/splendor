@@ -406,6 +406,22 @@ class PolicyValueSearchPolicy:
             ]
         )
 
+    def _infer_values(self, requests: list[DecisionRequest]) -> list[float]:
+        if not requests:
+            return []
+        started = time.perf_counter()
+        encoded = tuple(encode_decision(request) for request in requests)
+        batch = collate_encoded_decisions(encoded)
+        was_training = self.model.training
+        self.model.eval()
+        with torch.inference_mode():
+            values = self.model.value_only(batch)
+        self.model.train(was_training)
+        self.stats.model_batches += 1
+        self.stats.model_positions += len(requests)
+        self.stats.inference_seconds += time.perf_counter() - started
+        return values.detach().cpu().tolist()
+
     def choose(self, request: DecisionRequest) -> Action:
         started = time.perf_counter()
         self.stats.decisions += 1
@@ -499,7 +515,7 @@ class PolicyValueSearchPolicy:
             if not isinstance(response, DecisionRequest):
                 raise AssertionError("leaf tree node is terminal")
             leaf_requests.append(response)
-        _, leaf_values = self._infer(leaf_requests)
+        leaf_values = self._infer_values(leaf_requests)
         for node_index, raw_value in zip(leaf_indices, leaf_values, strict=True):
             node = nodes[node_index]
             if self.config.leaf_value_clip is not None:

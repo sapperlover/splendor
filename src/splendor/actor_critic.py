@@ -312,6 +312,14 @@ class ActorCritic(nn.Module):
         values = self.critic(state).squeeze(-1)
         return logits, values
 
+    def value_only(
+        self, batch: EncodedDecisionBatch | TorchDecisionBatch
+    ) -> Tensor:
+        """Evaluate the critic without encoding candidates or running the actor."""
+
+        prepared = self._prepare(batch)
+        return self.critic(self.encode_state(prepared)).squeeze(-1)
+
     @staticmethod
     def masked_logits(logits: Tensor, candidate_mask: Tensor) -> Tensor:
         if logits.shape != candidate_mask.shape:

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import median
+from typing import Any
 
 from .contracts import Policy
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
@@ -19,9 +22,66 @@ PolicyFactory = Callable[[int], Policy]
 class PolicySpec:
     name: str
     factory: PolicyFactory
+    parallel_spec: SerializablePolicySpec | None = None
 
     def create(self, seed: int) -> Policy:
         return self.factory(seed)
+
+
+@dataclass(frozen=True, slots=True)
+class SerializablePolicySpec:
+    """Spawn-safe policy description for pair-parallel CPU evaluation."""
+
+    name: str
+    kind: str
+    baseline_name: str | None = None
+    checkpoint: str | None = None
+    search_config: dict[str, Any] | None = None
+
+    def __post_init__(self) -> None:
+        if self.kind == "baseline":
+            if self.baseline_name not in _BASELINES:
+                raise ValueError("parallel baseline policy is unknown")
+            if self.checkpoint is not None or self.search_config is not None:
+                raise ValueError("baseline policy cannot carry neural configuration")
+            return
+        if self.kind not in ("greedy_checkpoint", "search_checkpoint"):
+            raise ValueError(f"unsupported parallel policy kind: {self.kind}")
+        if not self.checkpoint:
+            raise ValueError("checkpoint-backed policy requires a checkpoint")
+        if self.kind == "greedy_checkpoint" and self.search_config is not None:
+            raise ValueError("greedy policy cannot carry search configuration")
+        if self.kind == "search_checkpoint" and self.search_config is None:
+            raise ValueError("search policy requires search configuration")
+
+    @classmethod
+    def baseline(cls, name: str) -> SerializablePolicySpec:
+        return cls(name=name, kind="baseline", baseline_name=name)
+
+    @classmethod
+    def greedy_checkpoint(
+        cls, name: str, checkpoint: Path | str
+    ) -> SerializablePolicySpec:
+        return cls(
+            name=name,
+            kind="greedy_checkpoint",
+            checkpoint=str(Path(checkpoint).resolve()),
+        )
+
+    @classmethod
+    def search_checkpoint(
+        cls,
+        name: str,
+        checkpoint: Path | str,
+        *,
+        search_config: dict[str, Any],
+    ) -> SerializablePolicySpec:
+        return cls(
+            name=name,
+            kind="search_checkpoint",
+            checkpoint=str(Path(checkpoint).resolve()),
+            search_config=dict(search_config),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,7 +198,7 @@ def baseline_policy_spec(name: str) -> PolicySpec:
     except KeyError as error:
         choices = ", ".join(sorted(_BASELINES))
         raise ValueError(f"unknown baseline policy {name!r}; choose one of: {choices}") from error
-    return PolicySpec(name, factory)
+    return PolicySpec(name, factory, SerializablePolicySpec.baseline(name))
 
 
 def baseline_policy_names() -> tuple[str, ...]:
@@ -195,7 +255,267 @@ def evaluate_policies(
         if progress_callback is not None:
             progress_callback(pair_id + 1, len(seeds))
 
-    frozen_matches = tuple(matches)
+    return _evaluation_from_matches(policy_a.name, policy_b.name, seeds, tuple(matches))
+
+
+@dataclass(frozen=True, slots=True)
+class ParallelEvaluation:
+    result: EvaluationResult
+    policy_a_stats: dict[str, int | float]
+    policy_b_stats: dict[str, int | float]
+
+
+class ParallelEvaluationPool:
+    """Reusable spawn pool so a multi-opponent panel loads checkpoints once."""
+
+    def __init__(self, workers: int) -> None:
+        if workers <= 1:
+            raise ValueError("a reusable parallel pool requires at least two workers")
+        self.workers = workers
+        self._executor = ProcessPoolExecutor(
+            max_workers=workers,
+            mp_context=mp.get_context("spawn"),
+            initializer=_parallel_worker_init,
+        )
+
+    def map(
+        self, tasks: tuple[_ParallelPairTask, ...]
+    ) -> Sequence[_ParallelPairResult]:
+        return self._executor.map(_run_parallel_pair, tasks, chunksize=1)
+
+    def close(self) -> None:
+        self._executor.shutdown(wait=True, cancel_futures=False)
+
+    def __enter__(self) -> ParallelEvaluationPool:
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+
+@dataclass(frozen=True, slots=True)
+class _ParallelPairTask:
+    policy_a: SerializablePolicySpec
+    policy_b: SerializablePolicySpec
+    pair_id: int
+    game_seed: int
+    policy_seed_base: int
+    max_completed_turns: int
+    failure_dir: str
+    adjudicate_deterministic_policy_cycles: bool
+
+
+@dataclass(frozen=True, slots=True)
+class _ParallelPairResult:
+    matches: tuple[MatchResult, MatchResult]
+    policy_a_stats: dict[str, int | float]
+    policy_b_stats: dict[str, int | float]
+
+
+_PARALLEL_MODEL_CACHE: dict[str, object] = {}
+
+
+def _parallel_worker_init() -> None:
+    import torch
+
+    torch.set_num_threads(1)
+    try:
+        torch.set_num_interop_threads(1)
+    except RuntimeError:
+        # PyTorch permits setting inter-op threads only before parallel work.
+        pass
+
+
+def _create_serializable_policy(
+    spec: SerializablePolicySpec,
+    *,
+    seed: int,
+) -> Policy:
+    if spec.kind == "baseline":
+        if spec.baseline_name is None:
+            raise AssertionError("baseline policy lost its name")
+        return baseline_policy_spec(spec.baseline_name).create(seed)
+
+    if spec.checkpoint is None:
+        raise AssertionError("checkpoint-backed policy lost its checkpoint")
+    model = _PARALLEL_MODEL_CACHE.get(spec.checkpoint)
+    if model is None:
+        from .opponent_pool import load_frozen_actor_critic_checkpoint
+
+        model = load_frozen_actor_critic_checkpoint(
+            Path(spec.checkpoint), device="cpu"
+        )
+        _PARALLEL_MODEL_CACHE[spec.checkpoint] = model
+    if spec.kind == "greedy_checkpoint":
+        from .neural_policy import GreedyActorCriticPolicy
+
+        return GreedyActorCriticPolicy(model, device="cpu")  # type: ignore[arg-type]
+
+    from .search_policy import PolicyValueSearchPolicy, SearchConfig
+
+    if spec.search_config is None:
+        raise AssertionError("search policy lost its configuration")
+    values = dict(spec.search_config)
+    values["seed"] = int(values["seed"]) ^ seed
+    return PolicyValueSearchPolicy(
+        model,  # type: ignore[arg-type]
+        config=SearchConfig(**values),
+        device="cpu",
+    )
+
+
+def _numeric_policy_stats(policy: Policy) -> dict[str, int | float]:
+    stats = getattr(policy, "stats", None)
+    if stats is None:
+        return {}
+    values = stats.to_dict()
+    return {
+        str(key): value
+        for key, value in values.items()
+        if isinstance(value, (int, float))
+    }
+
+
+def _sum_numeric_stats(
+    target: dict[str, int | float], values: dict[str, int | float]
+) -> None:
+    for key, value in values.items():
+        target[key] = target.get(key, 0) + value
+
+
+def _run_parallel_pair(task: _ParallelPairTask) -> _ParallelPairResult:
+    policy_seeds = (
+        task.policy_seed_base + task.pair_id * 2,
+        task.policy_seed_base + task.pair_id * 2 + 1,
+    )
+    matches: list[MatchResult] = []
+    a_stats: dict[str, int | float] = {}
+    b_stats: dict[str, int | float] = {}
+    for game_in_pair, first_player in enumerate((0, 1)):
+        policy_a = _create_serializable_policy(task.policy_a, seed=policy_seeds[0])
+        policy_b = _create_serializable_policy(task.policy_b, seed=policy_seeds[1])
+        matches.append(
+            run_match(
+                policy_a,
+                policy_b,
+                game_seed=task.game_seed,
+                policy_seeds=policy_seeds,
+                first_player=first_player,
+                policy_names=(task.policy_a.name, task.policy_b.name),
+                pair_id=task.pair_id,
+                game_in_pair=game_in_pair,
+                max_completed_turns=task.max_completed_turns,
+                failure_dir=(
+                    Path(task.failure_dir)
+                    / f"pair-{task.pair_id:06d}-game-{game_in_pair}"
+                ),
+                adjudicate_deterministic_policy_cycles=(
+                    task.adjudicate_deterministic_policy_cycles
+                ),
+                raise_on_error=False,
+            )
+        )
+        _sum_numeric_stats(a_stats, _numeric_policy_stats(policy_a))
+        _sum_numeric_stats(b_stats, _numeric_policy_stats(policy_b))
+    return _ParallelPairResult(
+        matches=(matches[0], matches[1]),
+        policy_a_stats=a_stats,
+        policy_b_stats=b_stats,
+    )
+
+
+def evaluate_policies_parallel(
+    policy_a: SerializablePolicySpec,
+    policy_b: SerializablePolicySpec,
+    game_seeds: Sequence[int],
+    *,
+    workers: int,
+    policy_seed_base: int = 0,
+    max_completed_turns: int = 400,
+    failure_dir: Path | None = None,
+    progress_callback: Callable[[int, int], None] | None = None,
+    adjudicate_deterministic_policy_cycles: bool = False,
+    pool: ParallelEvaluationPool | None = None,
+) -> ParallelEvaluation:
+    """Evaluate independent paired seeds in long-lived spawn workers.
+
+    Neural checkpoints are loaded once per worker and always evaluated on CPU.
+    A pair remains the scheduling unit, so its two seat-swapped games cannot be
+    split across workers and pair-level statistics retain their original order.
+    """
+
+    seeds = tuple(game_seeds)
+    if workers <= 0:
+        raise ValueError("parallel evaluation workers must be positive")
+    if not seeds:
+        raise ValueError("at least one game seed is required")
+    if len(set(seeds)) != len(seeds) or not all(type(seed) is int for seed in seeds):
+        raise ValueError("game seeds must be unique integers")
+    if max_completed_turns <= 0:
+        raise ValueError("max_completed_turns must be positive")
+    root = failure_dir or Path.cwd() / "evaluation_failures"
+    tasks = tuple(
+        _ParallelPairTask(
+            policy_a=policy_a,
+            policy_b=policy_b,
+            pair_id=pair_id,
+            game_seed=game_seed,
+            policy_seed_base=policy_seed_base,
+            max_completed_turns=max_completed_turns,
+            failure_dir=str(root),
+            adjudicate_deterministic_policy_cycles=(
+                adjudicate_deterministic_policy_cycles
+            ),
+        )
+        for pair_id, game_seed in enumerate(seeds)
+    )
+    pair_results: list[_ParallelPairResult] = []
+    if workers == 1:
+        _parallel_worker_init()
+        for task in tasks:
+            pair_results.append(_run_parallel_pair(task))
+            if progress_callback is not None:
+                progress_callback(len(pair_results), len(tasks))
+    elif pool is not None:
+        if pool.workers != workers:
+            raise ValueError("parallel pool worker count does not match request")
+        for pair_result in pool.map(tasks):
+            pair_results.append(pair_result)
+            if progress_callback is not None:
+                progress_callback(len(pair_results), len(tasks))
+    else:
+        context = mp.get_context("spawn")
+        with ProcessPoolExecutor(
+            max_workers=workers,
+            mp_context=context,
+            initializer=_parallel_worker_init,
+        ) as executor:
+            for pair_result in executor.map(_run_parallel_pair, tasks, chunksize=1):
+                pair_results.append(pair_result)
+                if progress_callback is not None:
+                    progress_callback(len(pair_results), len(tasks))
+
+    matches = tuple(
+        match for pair_result in pair_results for match in pair_result.matches
+    )
+    a_stats: dict[str, int | float] = {}
+    b_stats: dict[str, int | float] = {}
+    for pair_result in pair_results:
+        _sum_numeric_stats(a_stats, pair_result.policy_a_stats)
+        _sum_numeric_stats(b_stats, pair_result.policy_b_stats)
+    return ParallelEvaluation(
+        result=_evaluation_from_matches(policy_a.name, policy_b.name, seeds, matches),
+        policy_a_stats=a_stats,
+        policy_b_stats=b_stats,
+    )
+
+
+def _evaluation_from_matches(
+    policy_a: str,
+    policy_b: str,
+    seeds: tuple[int, ...],
+    frozen_matches: tuple[MatchResult, ...],
+) -> EvaluationResult:
     valid = tuple(
         match
         for match in frozen_matches
@@ -214,8 +534,8 @@ def evaluate_policies(
     lengths = tuple(match.completed_player_turns for match in valid)
     decisions = tuple(match.decision_count for match in valid)
     return EvaluationResult(
-        policy_a=policy_a.name,
-        policy_b=policy_b.name,
+        policy_a=policy_a,
+        policy_b=policy_b,
         game_seeds=seeds,
         total_pairs=len(seeds),
         total_games=len(frozen_matches),

@@ -106,6 +106,7 @@ def _one_case(
                 episode_id=episode_id,
                 max_completed_turns=config.max_completed_turns,
                 failure_dir=failure_root / f"episode-{index:09d}",
+                defer_opponent=True,
             ),
             plan.learning_policy_seed,
         )

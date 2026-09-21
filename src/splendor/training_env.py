@@ -67,6 +67,13 @@ class LearningTransition:
 
 
 @dataclass(frozen=True, slots=True)
+class _PendingLearningStep:
+    decision: LearningDecision
+    chosen_candidate_index: int
+    replay_event_start: int
+
+
+@dataclass(frozen=True, slots=True)
 class LearningEpisodeRun:
     episode_id: str
     game_seed: int
@@ -106,6 +113,8 @@ class LearningEnvironment:
         "_next_decision_id",
         "_opponent_decision_count",
         "_opponent_policy",
+        "_opponent_request",
+        "_pending_learning_step",
         "_terminal_result",
         "_transitions",
         "_truncated",
@@ -119,6 +128,7 @@ class LearningEnvironment:
         opponent_policy: Policy,
         episode_id: str,
         max_completed_turns: int = 400,
+        defer_opponent: bool = False,
     ) -> None:
         if learning_player not in (0, 1):
             raise ValueError("learning_player must be 0 or 1")
@@ -138,13 +148,13 @@ class LearningEnvironment:
         self._terminal_result: TerminalResult | None = None
         self._truncated = False
         self._opponent_decision_count = 0
+        self._opponent_request: DecisionRequest | None = None
+        self._pending_learning_step: _PendingLearningStep | None = None
         self._transitions: list[LearningTransition] = []
 
-        initial = self._advance_opponent_until_learning_boundary(engine.decision())
-        if isinstance(initial, TerminalResult):
-            self._terminal_result = initial
-        else:
-            self._current = self._make_decision(initial)
+        self._route_outcome(engine.decision())
+        if not defer_opponent:
+            self._finish_opponent_synchronously()
 
     @classmethod
     def new(
@@ -158,6 +168,7 @@ class LearningEnvironment:
         max_completed_turns: int = 400,
         catalog: Catalog | None = None,
         failure_dir: Path | None = None,
+        defer_opponent: bool = False,
     ) -> LearningEnvironment:
         return cls(
             GameEngine.new(
@@ -174,6 +185,7 @@ class LearningEnvironment:
                 else f"game-{game_seed}-learner-{learning_player}"
             ),
             max_completed_turns=max_completed_turns,
+            defer_opponent=defer_opponent,
         )
 
     @property
@@ -224,6 +236,12 @@ class LearningEnvironment:
     def bootstrap_decision(self) -> LearningDecision | None:
         return self._bootstrap_decision
 
+    @property
+    def opponent_request(self) -> DecisionRequest | None:
+        """Waiting opponent request when an event-driven collector owns scheduling."""
+
+        return self._opponent_request
+
     def current_decision(self) -> LearningDecision:
         if self._current is None:
             if self._terminal_result is not None:
@@ -239,6 +257,34 @@ class LearningEnvironment:
         *,
         decision_id: int,
     ) -> LearningTransition:
+        transition = self.begin_learning_action(
+            candidate_index,
+            decision_id=decision_id,
+        )
+        while transition is None:
+            request = self.opponent_request
+            if request is None:
+                raise AssertionError("unfinished learner step has no opponent request")
+            transition = self.step_opponent_action(
+                self.opponent_policy.choose(request)
+            )
+        return transition
+
+    def begin_learning_action(
+        self,
+        candidate_index: int,
+        *,
+        decision_id: int,
+    ) -> LearningTransition | None:
+        """Apply one learner action and pause if the opponent must act.
+
+        The ordinary ``step_learning_action`` API remains synchronous. Batched
+        collectors use this split form so requests from several environments
+        can be grouped before neural-opponent inference.
+        """
+
+        if self._pending_learning_step is not None:
+            raise LearningEnvironmentError("another learner step is still pending")
         current = self.current_decision()
         if decision_id != current.decision_id:
             self._engine._fail(
@@ -257,8 +303,38 @@ class LearningEnvironment:
 
         action = current.legal_actions[candidate_index]
         replay_event_start = len(self._engine.replay_record.events)
+        self._current = None
+        self._pending_learning_step = _PendingLearningStep(
+            decision=current,
+            chosen_candidate_index=candidate_index,
+            replay_event_start=replay_event_start,
+        )
         outcome = self._engine.apply(action)
-        outcome = self._advance_opponent_until_learning_boundary(outcome)
+        return self._route_outcome(outcome)
+
+    def step_opponent_action(self, action: Action) -> LearningTransition | None:
+        request = self._opponent_request
+        if request is None:
+            raise LearningEnvironmentError("environment has no waiting opponent request")
+        if action not in request.legal_actions:
+            self._engine._fail(
+                InvalidCandidateIndexError(
+                    "opponent policy returned an action outside the legal candidates"
+                ),
+                action,
+            )
+        self._opponent_request = None
+        self._opponent_decision_count += 1
+        return self._route_outcome(self._engine.apply(action))
+
+    def _finish_learning_transition(
+        self,
+        outcome: DecisionRequest | TerminalResult,
+    ) -> LearningTransition:
+        pending = self._pending_learning_step
+        if pending is None:
+            raise AssertionError("cannot finish a missing learner transition")
+        self._pending_learning_step = None
 
         reward = 0.0
         terminated = isinstance(outcome, TerminalResult)
@@ -285,19 +361,48 @@ class LearningEnvironment:
         transition = LearningTransition(
             episode_id=self.episode_id,
             learning_player=self.learning_player,
-            decision=current,
-            chosen_candidate_index=candidate_index,
+            decision=pending.decision,
+            chosen_candidate_index=pending.chosen_candidate_index,
             reward=reward,
             terminated=terminated,
             truncated=truncated,
             next_decision=next_decision,
             terminal_result=terminal_result,
-            replay_event_start=replay_event_start,
+            replay_event_start=pending.replay_event_start,
             replay_event_end=len(self._engine.replay_record.events),
             state_digest_after=state_digest(self._engine._debug_state()),
             completed_turns_after=completed_turns,
         )
         self._transitions.append(transition)
+        return transition
+
+    def _route_outcome(
+        self,
+        outcome: DecisionRequest | TerminalResult,
+    ) -> LearningTransition | None:
+        if isinstance(outcome, TerminalResult):
+            self._opponent_request = None
+            if self._pending_learning_step is None:
+                self._terminal_result = outcome
+                self._current = None
+                return None
+            return self._finish_learning_transition(outcome)
+        if self._engine.current_player != self.learning_player:
+            self._opponent_request = outcome
+            return None
+        self._opponent_request = None
+        if self._pending_learning_step is not None:
+            return self._finish_learning_transition(outcome)
+        self._current = self._make_decision(outcome)
+        return None
+
+    def _finish_opponent_synchronously(self) -> LearningTransition | None:
+        transition = None
+        while self._opponent_request is not None:
+            request = self._opponent_request
+            transition = self.step_opponent_action(
+                self.opponent_policy.choose(request)
+            )
         return transition
 
     def episode_run(
@@ -340,19 +445,6 @@ class LearningEnvironment:
         )
         self._next_decision_id += 1
         return decision
-
-    def _advance_opponent_until_learning_boundary(
-        self,
-        outcome: DecisionRequest | TerminalResult,
-    ) -> DecisionRequest | TerminalResult:
-        while (
-            isinstance(outcome, DecisionRequest)
-            and self._engine.current_player != self.learning_player
-        ):
-            action = self.opponent_policy.choose(outcome)
-            self._opponent_decision_count += 1
-            outcome = self._engine.apply(action)
-        return outcome
 
     def _absolute_completed_turns(self, observation: Observation) -> tuple[int, int]:
         if self.learning_player == 0:

@@ -8,7 +8,13 @@ from splendor._state import PlayerState
 from splendor.actions import ReturnTokens, TakeDistinct
 from splendor.catalog import load_default_catalog
 from splendor.engine import replay_game
-from splendor.evaluation import PolicySpec, baseline_policy_spec, evaluate_policies
+from splendor.evaluation import (
+    PolicySpec,
+    SerializablePolicySpec,
+    baseline_policy_spec,
+    evaluate_policies,
+    evaluate_policies_parallel,
+)
 from splendor.model import Color, DecisionPhase, TokenVector
 from splendor.paired_statistics import pair_scores, serialized_pair_scores
 from splendor.random_policy import RandomPolicy
@@ -86,6 +92,28 @@ def test_paired_evaluation_swaps_first_player_without_losing_pair_identity(
         assert {match.first_player for match in pair} == {0, 1}
         assert {match.game_seed for match in pair} == {seed}
         assert len({match.policy_seeds for match in pair}) == 1
+
+
+def test_pair_parallel_evaluation_matches_serial_result(tmp_path: Path) -> None:
+    seeds = (140, 141, 142, 143)
+    serial = evaluate_policies(
+        baseline_policy_spec("random"),
+        baseline_policy_spec("random"),
+        seeds,
+        policy_seed_base=1_900,
+        failure_dir=tmp_path / "serial",
+    )
+    parallel = evaluate_policies_parallel(
+        SerializablePolicySpec.baseline("random"),
+        SerializablePolicySpec.baseline("random"),
+        seeds,
+        workers=2,
+        policy_seed_base=1_900,
+        failure_dir=tmp_path / "parallel",
+    ).result
+
+    assert parallel.passed
+    assert parallel.to_dict() == serial.to_dict()
 
 
 def test_all_baseline_matchups_complete_without_engine_errors(tmp_path: Path) -> None:
