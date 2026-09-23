@@ -20,7 +20,12 @@ from .evaluation import (
 from .neural_policy import GreedyActorCriticPolicy
 from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .paired_statistics import pair_scores, paired_bootstrap_mean
-from .search_policy import PolicyValueSearchPolicy, SearchConfig, SearchStats
+from .search_policy import (
+    PolicyValueSearchPolicy,
+    SearchConfig,
+    SearchStats,
+    decision_quality_metrics,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -43,6 +48,15 @@ def _parser() -> argparse.ArgumentParser:
         type=float,
         default=1.0,
         help="critic clipping magnitude; use 0 to disable",
+    )
+    parser.add_argument(
+        "--plain-phases",
+        action="store_true",
+        help=(
+            "disable macro folding for diagnostics; strength curves use the "
+            "default folded depth, where a ply is one real choice instead of "
+            "one model decision request"
+        ),
     )
     parser.add_argument("--max-completed-turns", type=int, default=400)
     parser.add_argument("--bootstrap-resamples", type=int, default=100_000)
@@ -102,6 +116,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         leaf_value_clip=(
             None if args.leaf_value_clip == 0 else args.leaf_value_clip
         ),
+        fold_forced_phases=not args.plain_phases,
     )
     search_policies: list[PolicyValueSearchPolicy] = []
     model = (
@@ -166,6 +181,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "determinizations": base_config.determinizations,
                     "seed": base_config.seed,
                     "leaf_value_clip": base_config.leaf_value_clip,
+                    "fold_forced_phases": base_config.fold_forced_phases,
                 },
             ),
             SerializablePolicySpec.greedy_checkpoint(
@@ -207,13 +223,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "device": args.device,
         "workers": args.workers,
         "search": {
+            "algorithm": "alpha_beta_strict_root",
             "top_k": base_config.top_k,
             "depth": base_config.depth,
             "depth_unit": "model_decision_request",
             "backup": "root-perspective_minimax",
             "leaf": "critic",
+            "leaf_encoding": "state_only",
             "leaf_value_clip": base_config.leaf_value_clip,
             "determinizations": base_config.determinizations,
+            "fold_forced_phases": base_config.fold_forced_phases,
             "information_set_safe": True,
             "seed": base_config.seed,
         },
@@ -227,6 +246,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "result": result.to_dict(include_matches=True),
         },
         "search_stats": search_stats,
+        "decision_quality": decision_quality_metrics(search_stats),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_suffix(args.output.suffix + ".tmp")
@@ -246,6 +266,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "elapsed_seconds": elapsed,
                 "output": str(args.output.resolve()),
                 "search_stats": payload["search_stats"],
+                "decision_quality": payload["decision_quality"],
             },
             ensure_ascii=False,
             sort_keys=True,

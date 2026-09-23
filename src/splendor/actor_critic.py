@@ -16,6 +16,7 @@ from .features import (
     FEATURE_SCHEMA_VERSION,
     NOBLE_FEATURE_NAMES,
     EncodedDecisionBatch,
+    EncodedStateBatch,
 )
 
 
@@ -69,6 +70,70 @@ class TorchDecisionBatch:
                 if name != "feature_schema_version"
             },
         )
+
+
+@dataclass(frozen=True, slots=True)
+class TorchStateBatch:
+    """Tensor-only counterpart of :class:`EncodedStateBatch` (no candidates)."""
+
+    feature_schema_version: str
+    global_features: Tensor
+    market_t1: Tensor
+    market_t1_mask: Tensor
+    market_t2: Tensor
+    market_t2_mask: Tensor
+    market_t3: Tensor
+    market_t3_mask: Tensor
+    self_reserved: Tensor
+    self_reserved_mask: Tensor
+    opponent_reserved: Tensor
+    opponent_reserved_mask: Tensor
+    nobles: Tensor
+    nobles_mask: Tensor
+    pending_card: Tensor
+    pending_card_mask: Tensor
+
+    def to(self, device: torch.device | str) -> TorchStateBatch:
+        return TorchStateBatch(
+            feature_schema_version=self.feature_schema_version,
+            **{
+                name: getattr(self, name).to(device)
+                for name in self.__dataclass_fields__
+                if name != "feature_schema_version"
+            },
+        )
+
+
+def tensorize_state(
+    batch: EncodedStateBatch,
+    *,
+    device: torch.device | str | None = None,
+) -> TorchStateBatch:
+    """Convert the frozen NumPy state contract to FP32/bool tensors."""
+
+    tensor_device = torch.device("cpu") if device is None else torch.device(device)
+
+    def tensor(name: str) -> Tensor:
+        return torch.as_tensor(getattr(batch, name), device=tensor_device)
+
+    return TorchStateBatch(
+        feature_schema_version=batch.feature_schema_version,
+        global_features=tensor("global_features"),
+        market_t1=tensor("market_t1"),
+        market_t1_mask=tensor("market_t1_mask"),
+        market_t2=tensor("market_t2"),
+        market_t2_mask=tensor("market_t2_mask"),
+        market_t3=tensor("market_t3"),
+        market_t3_mask=tensor("market_t3_mask"),
+        self_reserved=tensor("self_reserved"),
+        self_reserved_mask=tensor("self_reserved_mask"),
+        opponent_reserved=tensor("opponent_reserved"),
+        opponent_reserved_mask=tensor("opponent_reserved_mask"),
+        nobles=tensor("nobles"),
+        nobles_mask=tensor("nobles_mask"),
+        pending_card=tensor("pending_card"),
+        pending_card_mask=tensor("pending_card_mask"),
+    )
 
 
 def tensorize_batch(
@@ -233,7 +298,7 @@ class ActorCritic(nn.Module):
         )
         return torch.cat((pooled, count), dim=-1)
 
-    def encode_state(self, batch: TorchDecisionBatch) -> Tensor:
+    def encode_state(self, batch: TorchDecisionBatch | TorchStateBatch) -> Tensor:
         card_sets = (
             self._pool_cards(
                 batch.market_t1, batch.market_t1_mask, FEATURE_SCHEMA.market_capacity
@@ -318,6 +383,26 @@ class ActorCritic(nn.Module):
         """Evaluate the critic without encoding candidates or running the actor."""
 
         prepared = self._prepare(batch)
+        return self.critic(self.encode_state(prepared)).squeeze(-1)
+
+    def value_from_state(
+        self, batch: EncodedStateBatch | TorchStateBatch
+    ) -> Tensor:
+        """Evaluate the critic from a state-only encoding.
+
+        Equivalent to :meth:`value_only` for the same state, but the caller
+        never builds candidate features.
+        """
+
+        prepared = (
+            tensorize_state(batch, device=self.device)
+            if isinstance(batch, EncodedStateBatch)
+            else batch.to(self.device)
+        )
+        if prepared.feature_schema_version != self.config.feature_schema_version:
+            raise ValueError(
+                "batch feature schema version does not match model configuration"
+            )
         return self.critic(self.encode_state(prepared)).squeeze(-1)
 
     @staticmethod

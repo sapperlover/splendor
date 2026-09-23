@@ -5,15 +5,34 @@ from a determinization reconstructed solely from the policy's DecisionRequest:
 public cards and the acting player's private reservations are fixed, while
 future deck order and the opponent's blind reservations are sampled with a
 deterministic policy-local seed.
+
+Search shape (rewritten for depth sweeps; equivalence with the previous
+implementation is pinned by ``tests/test_search_policy_equivalence.py``):
+
+* the root expands its policy top-k candidates with a full window per child,
+  so every root action value stays *exact* and the final choice matches the
+  pre-alpha-beta reference;
+* interior nodes use fail-soft alpha-beta ordered by the acting player's own
+  policy logits, which prunes most of the tree while returning the same
+  minimax value;
+* leaves are evaluated by the critic from a state-only encoding that still
+  carries the complete pending-turn context (payment target, tokens to return,
+  eligible nobles);
+* ``fold_forced_phases`` optionally collapses single-legal-action chains
+  (``PAYMENT`` / ``RETURN_TOKENS`` / ``CHOOSE_NOBLE`` and any other forced
+  decision) into one macro transition, so depth is spent on real choices.
+  Folding changes the searched tree and is therefore off by default.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import math
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Mapping
 
 import torch
 
@@ -30,7 +49,12 @@ from .actor_critic import ActorCritic
 from .catalog import Catalog, load_default_catalog
 from .contracts import DecisionRequest, Observation, PlayerPublicState
 from .engine import GameEngine
-from .features import collate_encoded_decisions, encode_decision
+from .features import (
+    collate_encoded_decisions,
+    collate_encoded_states,
+    encode_decision,
+    encode_decision_state,
+)
 from .model import ReservationSource, Tier
 from .replay import new_replay, to_primitive
 from .result import TerminalResult
@@ -39,13 +63,19 @@ from .rng import DeterministicRng
 
 @dataclass(frozen=True, slots=True)
 class SearchConfig:
-    """Small, deliberately direct policy-guided minimax configuration."""
+    """Policy-guided alpha-beta configuration.
+
+    ``depth`` counts model decision plies, exactly as before: the root is one
+    ply and the horizon is evaluated with the critic.  ``fold_forced_phases``
+    opts into macro transitions; see the module docstring.
+    """
 
     top_k: int = 5
     depth: int = 4
     determinizations: int = 1
     seed: int = 0
     leaf_value_clip: float | None = 1.0
+    fold_forced_phases: bool = False
 
     def __post_init__(self) -> None:
         if self.top_k <= 0:
@@ -68,6 +98,15 @@ class SearchStats:
     model_positions: int = 0
     inference_seconds: float = 0.0
     total_seconds: float = 0.0
+    folded_decisions: int = 0
+    pruned_branches: int = 0
+    searchable_decisions: int = 0
+    changed_action_count: int = 0
+    chosen_rank_sum: int = 0
+    chosen_rank_top1_count: int = 0
+    chosen_rank_top2_count: int = 0
+    chosen_rank_top3_count: int = 0
+    chosen_rank_beyond3_count: int = 0
 
     def to_dict(self) -> dict[str, int | float]:
         return {
@@ -79,17 +118,79 @@ class SearchStats:
             "model_positions": self.model_positions,
             "inference_seconds": self.inference_seconds,
             "total_seconds": self.total_seconds,
+            "folded_decisions": self.folded_decisions,
+            "pruned_branches": self.pruned_branches,
+            "searchable_decisions": self.searchable_decisions,
+            "changed_action_count": self.changed_action_count,
+            "chosen_rank_sum": self.chosen_rank_sum,
+            "chosen_rank_top1_count": self.chosen_rank_top1_count,
+            "chosen_rank_top2_count": self.chosen_rank_top2_count,
+            "chosen_rank_top3_count": self.chosen_rank_top3_count,
+            "chosen_rank_beyond3_count": self.chosen_rank_beyond3_count,
         }
 
 
-@dataclass(slots=True)
-class _TreeNode:
-    engine: GameEngine
-    response: DecisionRequest | TerminalResult
-    actor: int | None
-    depth: int
-    children: list[tuple[Action, int]]
-    value: float | None = None
+def decision_quality_metrics(
+    stats: Mapping[str, int | float],
+) -> dict[str, float]:
+    """Derive the search-vs-raw-policy metrics from summed counters.
+
+    ``chosen_policy_rank`` is the mean 1-based rank of the action the search
+    picked inside the raw policy's own ordering over all legal actions.
+    ``search_changed_raw_action_rate`` is the share of decisions whose final
+    action differs from the raw policy's argmax; the ``_searchable`` variant
+    excludes single-legal-action decisions, which the search never explores.
+    Per-search averages are normalised by executed searches (one per
+    determinization), and ``cutoff_rate`` is cut-offs per expanded node.
+    """
+
+    decisions = float(stats.get("decisions", 0))
+    searchable = float(stats.get("searchable_decisions", 0))
+    searches = float(stats.get("determinizations", 0))
+    expanded = float(stats.get("expanded_nodes", 0))
+    leaf_nodes = float(stats.get("leaf_nodes", 0))
+    pruned = float(stats.get("pruned_branches", 0))
+    changed = float(stats.get("changed_action_count", 0))
+
+    def per_search(value: float) -> float:
+        return (value / searches) if searches else 0.0
+
+    chain_rate = (changed / decisions) if decisions else 0.0
+    searchable_rate = (changed / searchable) if searchable else 0.0
+    result: dict[str, float] = {
+        "search_calls": decisions,
+        "search_expansions": searches,
+        "searchable_decisions": searchable,
+        "nodes_per_search": per_search(expanded),
+        "leaf_nodes_per_search": per_search(leaf_nodes),
+        "model_positions_per_search": per_search(stats.get("model_positions", 0)),
+        "folded_plies_per_search": per_search(stats.get("folded_decisions", 0)),
+        "wall_ms_per_search": 1000.0 * per_search(stats.get("total_seconds", 0.0)),
+        "inference_ms_per_search": 1000.0
+        * per_search(stats.get("inference_seconds", 0.0)),
+        "alpha_beta_cutoffs": pruned,
+        "cutoff_rate": (pruned / expanded) if expanded else 0.0,
+        "chosen_policy_rank": (stats.get("chosen_rank_sum", 0) / searchable)
+        if searchable
+        else 0.0,
+        "search_changed_raw_action_count": changed,
+        "search_changed_raw_action_rate": chain_rate,
+        "search_changed_raw_action_rate_searchable": searchable_rate,
+        # Kept for continuity with the earlier artifacts.
+        "search_changed_action_rate": chain_rate,
+        "search_changed_action_rate_searchable": searchable_rate,
+        "chosen_rank_top1_rate": (stats.get("chosen_rank_top1_count", 0) / searchable)
+        if searchable
+        else 0.0,
+        "chosen_rank_top2_rate": (stats.get("chosen_rank_top2_count", 0) / searchable)
+        if searchable
+        else 0.0,
+        "chosen_rank_top3_rate": (stats.get("chosen_rank_top3_count", 0) / searchable)
+        if searchable
+        else 0.0,
+        "searchable_decision_share": (searchable / decisions) if decisions else 0.0,
+    }
+    return {name: float(value) for name, value in result.items()}
 
 
 def _request_seed(request: DecisionRequest, base_seed: int, sample: int) -> int:
@@ -344,11 +445,12 @@ def _terminal_value(result: TerminalResult) -> float:
 
 
 class PolicyValueSearchPolicy:
-    """Top-k policy-guided minimax with critic evaluation at leaf requests.
+    """Top-k policy-guided alpha-beta with critic evaluation at leaf requests.
 
     A ply is one model decision boundary, not necessarily one completed player
-    turn. PAYMENT, RETURN_TOKENS, and CHOOSE_NOBLE therefore count exactly as
-    the model sees them during PPO training.
+    turn.  PAYMENT, RETURN_TOKENS, and CHOOSE_NOBLE therefore count exactly as
+    the model sees them during PPO training, unless ``fold_forced_phases``
+    collapses single-action chains into macro transitions.
     """
 
     def __init__(
@@ -365,69 +467,243 @@ class PolicyValueSearchPolicy:
         self.catalog = catalog or load_default_catalog()
         self.config = config or SearchConfig()
         self.stats = SearchStats()
+        self.last_root_values: dict[Action, float] | None = None
+        self.last_root_bound_values: dict[Action, float] | None = None
 
-    def _infer(
-        self,
-        requests: list[DecisionRequest],
-    ) -> tuple[list[list[float]], list[float]]:
-        if not requests:
-            return [], []
+    # -- inference ---------------------------------------------------------
+
+    def _infer_logits(self, request: DecisionRequest) -> list[float]:
+        """Masked actor logits for one request (root or interior node)."""
+
         started = time.perf_counter()
-        encoded = tuple(encode_decision(request) for request in requests)
-        batch = collate_encoded_decisions(encoded)
+        batch = collate_encoded_decisions((encode_decision(request),))
         was_training = self.model.training
         self.model.eval()
         with torch.inference_mode():
-            logits, values = self.model(batch)
+            logits, _ = self.model(batch)
             mask = torch.as_tensor(batch.candidate_mask, device=logits.device)
             masked = self.model.masked_logits(logits, mask)
         self.model.train(was_training)
-        cpu_logits = masked.detach().cpu()
-        cpu_values = values.detach().cpu()
         self.stats.model_batches += 1
-        self.stats.model_positions += len(requests)
+        self.stats.model_positions += 1
         self.stats.inference_seconds += time.perf_counter() - started
-        return (
-            [
-                row[: len(request.legal_actions)].tolist()
-                for row, request in zip(cpu_logits, requests, strict=True)
-            ],
-            cpu_values.tolist(),
-        )
+        return masked.detach().cpu()[0, : len(request.legal_actions)].tolist()
 
-    def _top_indices(self, logits: list[float]) -> tuple[int, ...]:
-        count = min(self.config.top_k, len(logits))
-        return tuple(
-            sorted(range(len(logits)), key=lambda index: (-logits[index], index))[
-                :count
-            ]
-        )
+    def _leaf_value(self, request: DecisionRequest, actor: int) -> float:
+        """Critic value at the horizon, from the state-only encoding."""
 
-    def _infer_values(self, requests: list[DecisionRequest]) -> list[float]:
-        if not requests:
-            return []
         started = time.perf_counter()
-        encoded = tuple(encode_decision(request) for request in requests)
-        batch = collate_encoded_decisions(encoded)
+        batch = collate_encoded_states((encode_decision_state(request),))
         was_training = self.model.training
         self.model.eval()
         with torch.inference_mode():
-            values = self.model.value_only(batch)
+            values = self.model.value_from_state(batch)
         self.model.train(was_training)
         self.stats.model_batches += 1
-        self.stats.model_positions += len(requests)
+        self.stats.model_positions += 1
         self.stats.inference_seconds += time.perf_counter() - started
-        return values.detach().cpu().tolist()
+        value = float(values.detach().cpu()[0])
+        if self.config.leaf_value_clip is not None:
+            limit = self.config.leaf_value_clip
+            value = max(-limit, min(limit, value))
+        return value if actor == 0 else -value
+
+    # -- tree --------------------------------------------------------------
+
+    def _top_indices(self, logits: list[float]) -> tuple[int, ...]:
+        """Top-k candidate indices, most preferred by the acting player first."""
+
+        return self._ranked_indices(logits)[: self.config.top_k]
+
+    @staticmethod
+    def _ranked_indices(logits: list[float]) -> tuple[int, ...]:
+        """Full raw-policy ordering over every legal action."""
+
+        return tuple(
+            sorted(range(len(logits)), key=lambda index: (-logits[index], index))
+        )
+
+    def _record_choice_metrics(
+        self,
+        request: DecisionRequest,
+        ranked: tuple[int, ...],
+        chosen: Action,
+    ) -> None:
+        """Rank the chosen action inside the raw policy's own ordering."""
+
+        chosen_index = request.legal_actions.index(chosen)
+        rank = ranked.index(chosen_index) + 1
+        self.stats.searchable_decisions += 1
+        self.stats.chosen_rank_sum += rank
+        if rank == 1:
+            self.stats.chosen_rank_top1_count += 1
+        if rank <= 2:
+            self.stats.chosen_rank_top2_count += 1
+        if rank <= 3:
+            self.stats.chosen_rank_top3_count += 1
+        if rank > 3:
+            self.stats.chosen_rank_beyond3_count += 1
+        if chosen_index != ranked[0]:
+            self.stats.changed_action_count += 1
+
+    def _expand_child(
+        self,
+        engine: GameEngine,
+        action: Action,
+    ) -> tuple[GameEngine, DecisionRequest | TerminalResult]:
+        """Apply one action on a forked search engine, folding forced plies."""
+
+        child = _clone_engine(engine)
+        response = child.apply(action)
+        if not self.config.fold_forced_phases:
+            return child, response
+        folded = 0
+        while isinstance(response, DecisionRequest) and len(response.legal_actions) == 1:
+            response = child.apply(response.legal_actions[0])
+            folded += 1
+        self.stats.folded_decisions += folded
+        return child, response
+
+    def _child_value(
+        self,
+        child: GameEngine,
+        response: DecisionRequest | TerminalResult,
+        remaining: int,
+        alpha: float,
+        beta: float,
+    ) -> float:
+        if isinstance(response, TerminalResult):
+            self.stats.leaf_nodes += 1
+            return _terminal_value(response)
+        if remaining == 0:
+            self.stats.leaf_nodes += 1
+            return self._leaf_value(response, child.current_player)
+        return self._alpha_beta(child, response, remaining, alpha, beta)
+
+    def _alpha_beta(
+        self,
+        engine: GameEngine,
+        request: DecisionRequest,
+        remaining: int,
+        alpha: float,
+        beta: float,
+    ) -> float:
+        """Fail-soft alpha-beta value of ``request`` in root perspective.
+
+        ``remaining`` counts the plies still to expand below this node, so
+        ``remaining == 1`` means its children are critic leaves.
+        """
+
+        logits = self._infer_logits(request)
+        maximizing = engine.current_player == 0
+        best = -math.inf if maximizing else math.inf
+        # Policy logit order explores each node's most preferred child first,
+        # which is the ordering that prunes most for both max and min nodes.
+        for action_index in self._top_indices(logits):
+            action = request.legal_actions[action_index]
+            child, response = self._expand_child(engine, action)
+            self.stats.expanded_nodes += 1
+            value = self._child_value(child, response, remaining - 1, alpha, beta)
+            if maximizing:
+                if value > best:
+                    best = value
+                if best > alpha:
+                    alpha = best
+                # Strict cutoff: a pruned branch is proven strictly worse than
+                # the current best, never merely equal, so the root can prune
+                # without losing a value tie that the (value, logit, index)
+                # rule would resolve differently.
+                cutoff = best > beta
+            else:
+                if value < best:
+                    best = value
+                if best < beta:
+                    beta = best
+                cutoff = best < alpha
+            if cutoff:
+                self.stats.pruned_branches += 1
+                break
+        return best
+
+    # -- entry point -------------------------------------------------------
 
     def choose(self, request: DecisionRequest) -> Action:
         started = time.perf_counter()
         self.stats.decisions += 1
+        self.last_root_values = None
+        self.last_root_bound_values = None
         if len(request.legal_actions) == 1:
             self.stats.total_seconds += time.perf_counter() - started
             return request.legal_actions[0]
+        if self.config.determinizations == 1:
+            chosen = self._choose_single_determinization(request)
+        else:
+            chosen = self._choose_combined_determinizations(request)
+        self.stats.total_seconds += time.perf_counter() - started
+        return chosen
 
-        roots: list[int] = []
-        nodes: list[_TreeNode] = []
+    def _choose_single_determinization(self, request: DecisionRequest) -> Action:
+        """Root search with strict pruning, keeping the chosen value exact.
+
+        Every root child is searched with a lower bound equal to the best exact
+        value found so far.  Interior cutoffs are strict, so a cut-off child is
+        *proven* strictly worse than that bound and can never win the
+        ``(value, logit, index)`` tie-break; its value is not needed.  A child
+        that returns exactly at the bound may be an exact tie, so it is
+        re-searched with a full window.
+        """
+
+        seed = _request_seed(request, self.config.seed, 0)
+        engine = determinize_request(
+            request,
+            seed=seed,
+            catalog=self.catalog,
+        )
+        self.stats.determinizations += 1
+        logits = self._infer_logits(request)
+        ranked = self._ranked_indices(logits)
+        remaining = self.config.depth - 1
+        exact: dict[Action, float] = {}
+        bounds: dict[Action, float] = {}
+        alpha = -math.inf
+        for action_index in ranked[: self.config.top_k]:
+            action = request.legal_actions[action_index]
+            child, response = self._expand_child(engine, action)
+            self.stats.expanded_nodes += 1
+            # One ulp below the best exact value: a child that comes back at or
+            # above it was searched strictly inside its window and is therefore
+            # exact, while a cut-off child is proven strictly worse than alpha.
+            window = (
+                alpha
+                if alpha == -math.inf
+                else math.nextafter(alpha, -math.inf)
+            )
+            value = self._child_value(child, response, remaining, window, math.inf)
+            if value >= alpha:
+                exact[action] = value
+                if value > alpha:
+                    alpha = value
+                continue
+            bounds[action] = value
+        if not exact:
+            raise AssertionError("search produced no root action")
+        candidates = []
+        for index, action in enumerate(request.legal_actions):
+            value = exact.get(action)
+            if value is None:
+                continue
+            candidates.append((value, logits[index], -index, action))
+        self.last_root_values = {item[3]: item[0] for item in candidates}
+        self.last_root_bound_values = dict(bounds)
+        chosen = max(candidates, key=lambda item: item[:3])[3]
+        self._record_choice_metrics(request, ranked, chosen)
+        return chosen
+
+    def _choose_combined_determinizations(self, request: DecisionRequest) -> Action:
+        """Average exact root action values across determinizations."""
+
+        values_by_action: dict[Action, list[float]] = {}
+        root_logits: list[float] | None = None
         for sample in range(self.config.determinizations):
             seed = _request_seed(request, self.config.seed, sample)
             engine = determinize_request(
@@ -435,118 +711,28 @@ class PolicyValueSearchPolicy:
                 seed=seed,
                 catalog=self.catalog,
             )
-            roots.append(len(nodes))
-            nodes.append(
-                _TreeNode(
-                    engine=engine,
-                    response=request,
-                    actor=0,
-                    depth=0,
-                    children=[],
+            self.stats.determinizations += 1
+            logits = self._infer_logits(request)
+            if root_logits is None:
+                root_logits = logits
+            root_remaining = self.config.depth - 1
+            for action_index in self._top_indices(logits):
+                action = request.legal_actions[action_index]
+                child, response = self._expand_child(engine, action)
+                self.stats.expanded_nodes += 1
+                # Every root child is searched with a full window so its value
+                # stays exact; interior pruning cannot change the root choice.
+                value = self._child_value(
+                    child,
+                    response,
+                    root_remaining,
+                    -math.inf,
+                    math.inf,
                 )
-            )
-        self.stats.determinizations += len(roots)
-
-        frontier = list(roots)
-        root_logits: list[float] | None = None
-        for depth in range(self.config.depth):
-            active = [
-                index
-                for index in frontier
-                if isinstance(nodes[index].response, DecisionRequest)
-            ]
-            if not active:
-                frontier = []
-                break
-            active_requests = []
-            for index in active:
-                response = nodes[index].response
-                if not isinstance(response, DecisionRequest):
-                    raise AssertionError("active tree node is terminal")
-                active_requests.append(response)
-            logits_rows, _ = self._infer(active_requests)
-            if depth == 0:
-                root_logits = logits_rows[0]
-            next_frontier: list[int] = []
-            for node_index, logits in zip(active, logits_rows, strict=True):
-                node = nodes[node_index]
-                node_request = node.response
-                if not isinstance(node_request, DecisionRequest):
-                    raise AssertionError("active tree node is terminal")
-                for action_index in self._top_indices(logits):
-                    action = node_request.legal_actions[action_index]
-                    child_engine = _clone_engine(node.engine)
-                    child_response = child_engine.apply(action)
-                    child_index = len(nodes)
-                    child = _TreeNode(
-                        engine=child_engine,
-                        response=child_response,
-                        actor=(
-                            None
-                            if isinstance(child_response, TerminalResult)
-                            else child_engine.current_player
-                        ),
-                        depth=depth + 1,
-                        children=[],
-                        value=(
-                            _terminal_value(child_response)
-                            if isinstance(child_response, TerminalResult)
-                            else None
-                        ),
-                    )
-                    nodes.append(child)
-                    node.children.append((action, child_index))
-                    self.stats.expanded_nodes += 1
-                    if child.value is None:
-                        next_frontier.append(child_index)
-            frontier = next_frontier
-
-        leaf_indices = [
-            index
-            for index in frontier
-            if isinstance(nodes[index].response, DecisionRequest)
-        ]
-        leaf_requests = []
-        for index in leaf_indices:
-            response = nodes[index].response
-            if not isinstance(response, DecisionRequest):
-                raise AssertionError("leaf tree node is terminal")
-            leaf_requests.append(response)
-        leaf_values = self._infer_values(leaf_requests)
-        for node_index, raw_value in zip(leaf_indices, leaf_values, strict=True):
-            node = nodes[node_index]
-            if self.config.leaf_value_clip is not None:
-                limit = self.config.leaf_value_clip
-                raw_value = max(-limit, min(limit, raw_value))
-            if node.actor == 1:
-                raw_value = -raw_value
-            node.value = raw_value
-
-        self.stats.leaf_nodes += sum(not node.children for node in nodes)
-        for node in reversed(nodes):
-            if node.value is not None:
-                continue
-            if not node.children or node.actor is None:
-                raise AssertionError("search tree contains an unevaluated node")
-            child_values = []
-            for _, child_index in node.children:
-                child_value = nodes[child_index].value
-                if child_value is None:
-                    raise AssertionError("child value was not backed up")
-                child_values.append(child_value)
-            node.value = (
-                max(child_values) if node.actor == 0 else min(child_values)
-            )
+                values_by_action.setdefault(action, []).append(value)
 
         if root_logits is None:
             raise AssertionError("search root was not evaluated")
-        values_by_action: dict[Action, list[float]] = {}
-        for root_index in roots:
-            for action, child_index in nodes[root_index].children:
-                value = nodes[child_index].value
-                if value is None:
-                    raise AssertionError("root child was not evaluated")
-                values_by_action.setdefault(action, []).append(value)
         candidates = []
         for index, action in enumerate(request.legal_actions):
             values = values_by_action.get(action)
@@ -564,6 +750,9 @@ class PolicyValueSearchPolicy:
             )
         if not candidates:
             raise AssertionError("search produced no root action")
+        self.last_root_values = {item[3]: item[0] for item in candidates}
         chosen = max(candidates, key=lambda item: item[:3])[3]
-        self.stats.total_seconds += time.perf_counter() - started
+        self._record_choice_metrics(
+            request, self._ranked_indices(root_logits), chosen
+        )
         return chosen

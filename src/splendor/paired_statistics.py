@@ -16,6 +16,12 @@ _SCORED_STATUSES = frozenset(
 )
 
 
+def is_scored_status(status: RunStatus) -> bool:
+    """True when a finished game contributes a score to paired statistics."""
+
+    return status in _SCORED_STATUSES
+
+
 @dataclass(frozen=True, slots=True)
 class BootstrapInterval:
     estimate: float

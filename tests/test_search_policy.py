@@ -121,7 +121,7 @@ def test_determinization_rebuilds_random_intermediate_decisions(catalog) -> None
     assert checked >= 40
 
 
-def test_top_k_depth_and_batched_leaf_evaluation_are_deterministic(catalog) -> None:
+def test_top_k_depth_and_per_node_leaf_evaluation_are_deterministic(catalog) -> None:
     engine = GameEngine.new(777, first_player=0, catalog=catalog)
     request = engine.decision()
     assert isinstance(request, DecisionRequest)
@@ -144,8 +144,11 @@ def test_top_k_depth_and_batched_leaf_evaluation_are_deterministic(catalog) -> N
     assert first_action in request.legal_actions
     assert first.stats.expanded_nodes == 6
     assert first.stats.leaf_nodes == 4
-    assert first.stats.model_batches == 3
+    # Alpha-beta evaluates each visited node on its own, so batches now count
+    # model calls rather than levels; the number of positions is unchanged.
+    assert first.stats.model_batches == 7
     assert first.stats.model_positions == 7
+    assert first.stats.pruned_branches == 0
 
 
 def test_default_four_ply_search_returns_a_legal_action(catalog) -> None:

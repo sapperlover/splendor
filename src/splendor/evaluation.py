@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import multiprocessing as mp
+import os
 from concurrent.futures import ProcessPoolExecutor
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -281,7 +282,7 @@ class ParallelEvaluationPool:
 
     def map(
         self, tasks: tuple[_ParallelPairTask, ...]
-    ) -> Sequence[_ParallelPairResult]:
+    ) -> Sequence[ParallelPairResult]:
         return self._executor.map(_run_parallel_pair, tasks, chunksize=1)
 
     def close(self) -> None:
@@ -304,10 +305,13 @@ class _ParallelPairTask:
     max_completed_turns: int
     failure_dir: str
     adjudicate_deterministic_policy_cycles: bool
+    game_log_dir: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
-class _ParallelPairResult:
+class ParallelPairResult:
+    """One finished paired seed: both seat-swapped games and per-policy stats."""
+
     matches: tuple[MatchResult, MatchResult]
     policy_a_stats: dict[str, int | float]
     policy_b_stats: dict[str, int | float]
@@ -384,7 +388,51 @@ def _sum_numeric_stats(
         target[key] = target.get(key, 0) + value
 
 
-def _run_parallel_pair(task: _ParallelPairTask) -> _ParallelPairResult:
+def _game_log_record(
+    match: MatchResult,
+    a_stats: dict[str, int | float],
+    b_stats: dict[str, int | float],
+) -> dict[str, object]:
+    return {
+        "pair_id": match.pair_id,
+        "game_in_pair": match.game_in_pair,
+        "game_seed": match.game_seed,
+        "first_player": match.first_player,
+        "status": match.status.value,
+        "outcome_for_a": (
+            None if match.outcome_for_a is None else match.outcome_for_a.value
+        ),
+        "policy_names": list(match.policy_names),
+        "policy_seeds": list(match.policy_seeds),
+        "completed_turns": list(match.completed_turns),
+        "completed_player_turns": match.completed_player_turns,
+        "decision_count": match.decision_count,
+        "forced_skips": match.forced_skips,
+        "final_state_digest": match.final_state_digest,
+        "failure_scene": (
+            None if match.failure_scene is None else str(match.failure_scene)
+        ),
+        "policy_a_stats": dict(a_stats),
+        "policy_b_stats": dict(b_stats),
+    }
+
+
+def _append_game_log(task: _ParallelPairTask, record: dict[str, object]) -> None:
+    """Durably record one finished game so a stop never loses played games."""
+
+    if task.game_log_dir is None:
+        return
+    directory = Path(task.game_log_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"pair-{task.pair_id:07d}.jsonl"
+    line = json.dumps(record, sort_keys=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(line + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def _run_parallel_pair(task: _ParallelPairTask) -> ParallelPairResult:
     policy_seeds = (
         task.policy_seed_base + task.pair_id * 2,
         task.policy_seed_base + task.pair_id * 2 + 1,
@@ -395,31 +443,35 @@ def _run_parallel_pair(task: _ParallelPairTask) -> _ParallelPairResult:
     for game_in_pair, first_player in enumerate((0, 1)):
         policy_a = _create_serializable_policy(task.policy_a, seed=policy_seeds[0])
         policy_b = _create_serializable_policy(task.policy_b, seed=policy_seeds[1])
-        matches.append(
-            run_match(
-                policy_a,
-                policy_b,
-                game_seed=task.game_seed,
-                policy_seeds=policy_seeds,
-                first_player=first_player,
-                policy_names=(task.policy_a.name, task.policy_b.name),
-                pair_id=task.pair_id,
-                game_in_pair=game_in_pair,
-                max_completed_turns=task.max_completed_turns,
-                failure_dir=(
-                    Path(task.failure_dir)
-                    / f"pair-{task.pair_id:06d}-game-{game_in_pair}"
-                ),
-                adjudicate_deterministic_policy_cycles=(
-                    task.adjudicate_deterministic_policy_cycles
-                ),
-                raise_on_error=False,
-                lean=True,
-            )
+        match = run_match(
+            policy_a,
+            policy_b,
+            game_seed=task.game_seed,
+            policy_seeds=policy_seeds,
+            first_player=first_player,
+            policy_names=(task.policy_a.name, task.policy_b.name),
+            pair_id=task.pair_id,
+            game_in_pair=game_in_pair,
+            max_completed_turns=task.max_completed_turns,
+            failure_dir=(
+                Path(task.failure_dir)
+                / f"pair-{task.pair_id:06d}-game-{game_in_pair}"
+            ),
+            adjudicate_deterministic_policy_cycles=(
+                task.adjudicate_deterministic_policy_cycles
+            ),
+            raise_on_error=False,
+            lean=True,
         )
-        _sum_numeric_stats(a_stats, _numeric_policy_stats(policy_a))
-        _sum_numeric_stats(b_stats, _numeric_policy_stats(policy_b))
-    return _ParallelPairResult(
+        matches.append(match)
+        game_a_stats = _numeric_policy_stats(policy_a)
+        game_b_stats = _numeric_policy_stats(policy_b)
+        _sum_numeric_stats(a_stats, game_a_stats)
+        _sum_numeric_stats(b_stats, game_b_stats)
+        _append_game_log(
+            task, _game_log_record(match, game_a_stats, game_b_stats)
+        )
+    return ParallelPairResult(
         matches=(matches[0], matches[1]),
         policy_a_stats=a_stats,
         policy_b_stats=b_stats,
@@ -438,12 +490,23 @@ def evaluate_policies_parallel(
     progress_callback: Callable[[int, int], None] | None = None,
     adjudicate_deterministic_policy_cycles: bool = False,
     pool: ParallelEvaluationPool | None = None,
+    pair_ids: Sequence[int] | None = None,
+    pair_callback: Callable[[ParallelPairResult], None] | None = None,
+    game_log_dir: Path | str | None = None,
 ) -> ParallelEvaluation:
     """Evaluate independent paired seeds in long-lived spawn workers.
 
     Neural checkpoints are loaded once per worker and always evaluated on CPU.
     A pair remains the scheduling unit, so its two seat-swapped games cannot be
     split across workers and pair-level statistics retain their original order.
+
+    ``pair_callback`` fires in the parent process as soon as one pair finishes,
+    which lets long runs persist completed pairs instead of waiting for the
+    whole panel.  ``pair_ids`` keeps the original pair identity when only a
+    subset of seeds is replayed (resume), so policy seeds stay reproducible.
+    ``game_log_dir`` additionally makes every *single finished game* durable
+    from inside the worker (one fsynced line per game), so stopping the run
+    never loses played games.
     """
 
     seeds = tuple(game_seeds)
@@ -455,6 +518,14 @@ def evaluate_policies_parallel(
         raise ValueError("game seeds must be unique integers")
     if max_completed_turns <= 0:
         raise ValueError("max_completed_turns must be positive")
+    if pair_ids is None:
+        resolved_pair_ids = tuple(range(len(seeds)))
+    else:
+        resolved_pair_ids = tuple(pair_ids)
+        if len(resolved_pair_ids) != len(seeds):
+            raise ValueError("pair_ids must match the number of game seeds")
+        if len(set(resolved_pair_ids)) != len(resolved_pair_ids):
+            raise ValueError("pair_ids must be unique")
     root = failure_dir or Path.cwd() / "evaluation_failures"
     tasks = tuple(
         _ParallelPairTask(
@@ -468,23 +539,28 @@ def evaluate_policies_parallel(
             adjudicate_deterministic_policy_cycles=(
                 adjudicate_deterministic_policy_cycles
             ),
+            game_log_dir=None if game_log_dir is None else str(game_log_dir),
         )
-        for pair_id, game_seed in enumerate(seeds)
+        for pair_id, game_seed in zip(resolved_pair_ids, seeds, strict=True)
     )
-    pair_results: list[_ParallelPairResult] = []
+    pair_results: list[ParallelPairResult] = []
+
+    def record(pair_result: ParallelPairResult) -> None:
+        pair_results.append(pair_result)
+        if pair_callback is not None:
+            pair_callback(pair_result)
+        if progress_callback is not None:
+            progress_callback(len(pair_results), len(tasks))
+
     if workers == 1:
         _parallel_worker_init()
         for task in tasks:
-            pair_results.append(_run_parallel_pair(task))
-            if progress_callback is not None:
-                progress_callback(len(pair_results), len(tasks))
+            record(_run_parallel_pair(task))
     elif pool is not None:
         if pool.workers != workers:
             raise ValueError("parallel pool worker count does not match request")
         for pair_result in pool.map(tasks):
-            pair_results.append(pair_result)
-            if progress_callback is not None:
-                progress_callback(len(pair_results), len(tasks))
+            record(pair_result)
     else:
         context = mp.get_context("spawn")
         with ProcessPoolExecutor(
@@ -493,9 +569,7 @@ def evaluate_policies_parallel(
             initializer=_parallel_worker_init,
         ) as executor:
             for pair_result in executor.map(_run_parallel_pair, tasks, chunksize=1):
-                pair_results.append(pair_result)
-                if progress_callback is not None:
-                    progress_callback(len(pair_results), len(tasks))
+                record(pair_result)
 
     matches = tuple(
         match for pair_result in pair_results for match in pair_result.matches

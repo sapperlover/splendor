@@ -1,10 +1,10 @@
 # Splendor AI：当前项目快照与导航
 
-> 最后更新：2026-09-21
+> 最后更新：2026-09-22
 >
 > 里程碑：WP5C / 首次 5M learning-decisions 主训练已完成
 >
-> 当前阶段：分析 5M 模型、改善训练与验证效率、决定下一阶段实验
+> 当前阶段：分析 5M 模型、完善搜索效率与深度实验、决定下一阶段实验
 
 本页是仓库的当前状态入口。新的 AI agent 应先读本页，再按任务跳转到对应文档和代码。
 
@@ -19,7 +19,7 @@
 - 单进程 multi-env learner/opponent batching，以及 worker-local CPU 神经对手的 multiprocessing collector；
 - paired-seed CPU 多进程评测和可复用 worker 池；
 - 一次已完成的 5M 纯 terminal-reward 主训练；
-- 基于现有 checkpoint 的信息集安全 top-k / critic 固定深度搜索外挂，以及受控引擎 fork/热路径缓存；
+- 基于现有 checkpoint 的信息集安全 top-k / critic alpha-beta 搜索，以及向量化特征编码、state-only 叶节点评估、forced-phase folding 和可恢复深度阶梯；
 - 完整的训练后分析导出和本地人机对战网页。
 
 当前 DEV 协议下的最优 checkpoint：
@@ -36,7 +36,7 @@ runs/5c_main_seed1/checkpoints/local_004150000_lifetime_004662112.pt
 
 - 只实现本地规则定义的双人基础版 Splendor；
 - 不是 Splendor Duel，不包含 3–4 人、扩展或其他游戏模式；
-- 当前已有实验性的固定深度 top-k minimax 搜索外挂，但没有 MCTS；是否把搜索作为正式方向仍需 500–1000 局直接评测。
+- 当前已有实验性 top-k / critic alpha-beta 搜索，完成了 500 局 search-vs-greedy 和 1,000 局 folded-depth 阶梯；没有 MCTS，也尚未完成多 checkpoint、多训练 seed 或 FINAL 协议复验。
 
 ### 2.2 核心契约
 
@@ -139,6 +139,8 @@ WP2D 的 10,000 局验收：
 - <code>public_purchased</code> 只表示双方实际购买的发展卡；
 - card ID、槽位/保留索引、seed、RNG、replay 计数不进入模型特征；
 - action handle 不进入模型；模型返回 candidate index 后由引擎执行原 handle。
+- 当前编码器以 NumPy 对整组 card/noble/candidate 向量化；特征 schema 未变，并由改写前捕获的 golden fixture 锁定跨阶段的 bit-exact 输出。
+- critic-only 路径使用 <code>EncodedState</code>/<code>EncodedStateBatch</code>，保留 payment target、tokens-to-return 和 eligible nobles 等 pending-turn 上下文，但不构建合法候选特征。
 
 详见 [WP3B](work_package_3b_zh-CN.md) 和 <code>src/splendor/features.py</code>、<code>observation.py</code>。
 
@@ -248,10 +250,25 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 - P2 的 worker-local CPU 对手短基准中，4 workers × 8 envs 达到约 600.2 decisions/s，是同轮单进程对照的 1.27x，也是 legacy central 4×8 的 2.21x；8 workers 反而回退；
 - P0 支持以 paired seed 为单位的 CPU 多进程评测；新 `prepare` 默认 8 evaluation workers，短搜索基准显示 4–8 之后边际收益很小；
 - P3 的 digest、合法动作、fork 和 lean-runner 优化使 20 pairs 浅搜索墙钟缩短约 3.2%，cycle signature 微基准约快 4.06x；
+- P0–P3 之后的搜索热路径又增加了整组 NumPy 特征编码、不构建 candidate/actor 的 state-only critic 叶节点、按 policy logit 排序的 fail-soft alpha-beta 和严格 cutoff；关闭 folding 时，新旧搜索选择等价性由固定参考实现回归测试锁定；
+- <code>fold_forced_phases</code> 可把只有一个合法动作的 PAYMENT / RETURN_TOKENS / CHOOSE_NOBLE 等链折叠为宏转移，使深度预算只消耗在真实选择上；库层 <code>SearchConfig</code> 默认不折叠，当前搜索评测和深度阶梯默认折叠，<code>--plain-phases</code> 只用于诊断；
+- 深度阶梯可在 worker 内每完成一局就 fsync 到 <code>&lt;output&gt;.games/</code>，<code>--resume</code> 只重放未完整的 paired seeds 并保留原 pair id/策略 seed；汇总 JSON 跟踪，逐局 sidecar 由 Git 忽略；
 - 5C 约运行 127,800 局 validation：Quick 15,600、Formal 73,200、Promotion 23,000、Historical 16,000；
 - 新 P2 路径已取消中央 neural-opponent 逐动作 IPC，但尚未在可用 CUDA 的环境中验证完整长 rollout 收益。
 
 新执行 `train_5c prepare` 生成的默认执行配置为 `multiprocessing_local_opponents`、4 workers × 8 envs、8 evaluation workers。已完成的 `5c_main_seed1` 冻结配置仍是 `single_process`，不应用新默认值重解释旧运行。详见 [P0–P3 性能优化](performance_optimization_p0_p3_zh-CN.md)。
+
+### 7.1 搜索与 folded-depth 实验
+
+固定 5.5M latest checkpoint、top-5、单 determinization、CPU paired-seed 评测：
+
+| 对照 | phase 语义 | paired seeds / games | W/D/L | score rate | paired bootstrap 95% |
+|---|---|---:|---:|---:|---:|
+| depth-4 search vs raw greedy | plain model decisions | 250 / 500 | 343 / 2 / 155 | 68.8% | 64.5%–73.0% |
+| folded depth 5 vs 4 | forced chain 折叠 | 250 / 500 | 296 / 2 / 202 | 59.4% | 55.2%–63.6% |
+| folded depth 6 vs 5 | forced chain 折叠 | 250 / 500 | 286 / 6 / 208 | 57.8% | 53.4%–62.1% |
+
+folded-depth 阶梯的两级挑战都高于 54% 晋级阈值，因配置的 <code>max-depth=6</code> 而结束；这表示本轮在深度 6 以内没有观测到收益天花板，不表示 depth 6 已是最优深度。成本同时快速上升：对应轮次的 CPU 平均每次实际搜索约为 depth 4 = 0.47 s、depth 5 = 1.4 s、depth 6 = 4.21 s。汇总交付物为 <code>artifacts/search_5p5m_top5_depth4_500games_cpu_w4.json</code> 和 <code>artifacts/work_package_5c/folded_depth_ladder_5p5m.json</code>。
 
 ## 8. 已确认的结论
 
@@ -260,6 +277,7 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 - 纯 terminal reward 在完整游戏中能学习；5C 模型相对起点和固定 heuristic 均明显提高。
 - best-dev 与 latest 必须分开；训练末尾不自动是最优模型。
 - 历史模型存在非传递性，不能只靠“击败最新自己”证明进步。
+- 在本轮固定 checkpoint/top-k/单 determinization 协议下，plain depth-4 搜索相对 raw greedy 有正收益，folded depth 5 相对 4、depth 6 相对 5 也都超过 54% 阶梯阈值。
 - 网页直接调用现有引擎，浏览器没有复制规则。
 
 ## 9. 尚未确认：不要当作事实
@@ -271,6 +289,7 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 - 5M latest 不能概括为“全面弱于”4.15M best；不同对手上的排序不一致。
 - “worker 越多越好”和“单进程永远最好”都不成立；当前数字仍是特定硬件上的短基准。
 - reward shaping、lambda=1.0、更大网络、其他 RL 算法和 MCTS 都未做正式对照。
+- 搜索结果尚未跨 checkpoint、训练 seed、top-k 或 determinization 配置复验；阶梯在 depth 6 因配置上限停止，尚未测到更深处的收益拐点。
 
 ## 10. 已知问题与当前研究问题
 
@@ -281,6 +300,7 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 3. 环境/编码仍是主要 CPU 成本；P3 已去掉部分重复工作，进一步大改前仍应先 profile。
 4. 95.69% minibatches 发生 gradient clipping，值得单变量调查，但目前不是已知数值 bug。
 5. Dynamic-history 的训练成绩随对手池变化，不能像固定 heuristic panel 一样直接纵向比较。
+6. folded search 每增加一层的 CPU 代价在本轮约增长 3 倍；继续推高深度前应先考虑 batching、树复用或更强的剪枝/缓存。
 
 
 ## 11. 代码导航
@@ -301,7 +321,7 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 | 5C 训练/评测 | <code>train_5c.py</code>, <code>evaluate_5c.py</code> |
 | multiprocessing | <code>multiprocess_collector.py</code>, <code>benchmark_5c_multiprocess.py</code> |
 | 5C 后分析 | <code>analyze_5c.py</code> |
-| 固定深度 policy/critic 搜索 | <code>search_policy.py</code>, <code>evaluate_search.py</code> |
+| policy/critic 搜索与深度阶梯 | <code>search_policy.py</code>, <code>evaluate_search.py</code>, <code>ladder_search.py</code> |
 | 本地网页 | <code>web_app.py</code>, <code>web/</code> |
 | 测试 | <code>tests/</code> |
 
@@ -369,7 +389,7 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 conda run -n splendor env PYTHONPATH=src python -m pytest -q
 ~~~
 
-2026-09-21 最近一次当前工作树结果：<code>248 passed, 2 skipped</code>。两个 skip 均因当时环境无可用 CUDA。
+2026-09-22 最近一次当前工作树结果：<code>281 passed, 2 skipped</code>。两个 skip 均因当时环境无可用 CUDA。
 
 重建 5C 分析交付物：
 
@@ -378,6 +398,16 @@ conda run -n splendor env PYTHONPATH=src \
   python -m splendor.analyze_5c export \
   --run-root runs/5c_main_seed1 \
   --output-dir artifacts/work_package_5c
+~~~
+
+继续可恢复的 folded-depth 阶梯：
+
+~~~bash
+conda run -n splendor env PYTHONPATH=src \
+  python -u -m splendor.ladder_search \
+  --checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --output artifacts/work_package_5c/folded_depth_ladder_5p5m.json \
+  --start-depth 4 --max-depth 6 --workers 8 --resume
 ~~~
 
 TensorBoard：
@@ -401,7 +431,7 @@ conda run -n splendor env PYTHONPATH=src python -m splendor.web_app
 | <code>src/splendor/</code> | 正式代码 | 跟踪 |
 | <code>tests/</code> | 测试 | 跟踪 |
 | <code>docs/</code> | 规则、契约、报告 | 跟踪 |
-| <code>artifacts/</code> | 值得保留的小型实验交付物 | 默认跟踪 |
+| <code>artifacts/</code> | 值得保留的小型实验交付物 | 汇总默认跟踪；<code>*.games/</code> 逐局 sidecar 忽略 |
 | <code>runtime/</code> | PID、status、failure dump 等运行状态 | 忽略 |
 | <code>runs/</code> | 训练目录、checkpoint、TensorBoard | 忽略 |
 | <code>play_checkpoints/</code> | 本地网页可选 checkpoint | checkpoint 本体忽略 |
