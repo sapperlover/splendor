@@ -25,9 +25,9 @@ P0–P3 只改变调度、推理位置和引擎热路径的重复工作，没有
 - 使用 `spawn` 长寿命进程池，同一面板的多个对手可复用 worker；
 - checkpoint 在每个 worker 中加载一次后缓存；
 - worker 中的 PyTorch intra-op 和 inter-op 线程均限制为 1，避免进程与线程双重超额订阅；
-- `evaluate_5c` 和 `evaluate_search` 在 `workers > 1` 时使用 CPU 推理；单 worker 路径仍可使用 CUDA。
+- `evaluation.py` 的固定对局评测在 `workers > 1` 时使用 CPU 推理；单 worker 路径可选择 CPU 或 CUDA。训练期 `evaluate_5c` 的 worker 规则保持不变。
 
-5C 训练配置的 `evaluation_workers` 取值范围是 1–12，新 `prepare` 默认为 8。`evaluate_search --workers` 虽接受任意正整数，但不代表更大的值会更快。
+5C 训练配置的 `evaluation_workers` 取值范围是 1–12，新 `prepare` 默认为 8。固定评测 JSON 配置中的 `workers` 可设为正整数，但更大的值不一定更快。
 
 ### 2.2 短基准
 

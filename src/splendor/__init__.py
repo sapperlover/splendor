@@ -4,6 +4,9 @@ Engine-only state deliberately lives in :mod:`splendor._state` and is not
 re-exported here.  Policies receive only ``DecisionRequest`` values.
 """
 
+from importlib import import_module
+from typing import TYPE_CHECKING
+
 from .actions import (
     Action,
     BuyMarket,
@@ -26,7 +29,13 @@ from .actor_critic import (
 )
 from .contracts import DecisionRequest, Observation, Policy
 from .engine import GameEngine, IllegalActionError, UnsupportedRuleError
-from .evaluation import EvaluationResult, PolicySpec, baseline_policy_spec, evaluate_policies
+if TYPE_CHECKING:
+    from .evaluation import (
+        EvaluationResult,
+        PolicySpec,
+        baseline_policy_spec,
+        evaluate_policies,
+    )
 from .features import (
     FEATURE_SCHEMA,
     FEATURE_SCHEMA_VERSION,
@@ -80,6 +89,20 @@ from .training_env import (
     StaleLearningDecisionError,
     run_learning_episode,
 )
+
+_EVALUATION_EXPORTS = frozenset(
+    {"EvaluationResult", "PolicySpec", "baseline_policy_spec", "evaluate_policies"}
+)
+
+
+def __getattr__(name: str):
+    if name not in _EVALUATION_EXPORTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module = import_module(".evaluation", __name__)
+    value = getattr(module, name)
+    globals()[name] = value
+    return value
+
 
 __all__ = [
     "Action",

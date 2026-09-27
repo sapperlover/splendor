@@ -1,6 +1,6 @@
 # Splendor AI：当前项目快照与导航
 
-> 最后更新：2026-09-22
+> 最后更新：2026-09-23
 >
 > 里程碑：WP5C / 首次 5M learning-decisions 主训练已完成
 >
@@ -252,7 +252,7 @@ Historical 总体上约拆为 10% fixed anchors + 20% dynamic history。<code>fr
 - P3 的 digest、合法动作、fork 和 lean-runner 优化使 20 pairs 浅搜索墙钟缩短约 3.2%，cycle signature 微基准约快 4.06x；
 - P0–P3 之后的搜索热路径又增加了整组 NumPy 特征编码、不构建 candidate/actor 的 state-only critic 叶节点、按 policy logit 排序的 fail-soft alpha-beta 和严格 cutoff；关闭 folding 时，新旧搜索选择等价性由固定参考实现回归测试锁定；
 - <code>fold_forced_phases</code> 可把只有一个合法动作的 PAYMENT / RETURN_TOKENS / CHOOSE_NOBLE 等链折叠为宏转移，使深度预算只消耗在真实选择上；库层 <code>SearchConfig</code> 默认不折叠，当前搜索评测和深度阶梯默认折叠，<code>--plain-phases</code> 只用于诊断；
-- 深度阶梯可在 worker 内每完成一局就 fsync 到 <code>&lt;output&gt;.games/</code>，<code>--resume</code> 只重放未完整的 paired seeds 并保留原 pair id/策略 seed；汇总 JSON 跟踪，逐局 sidecar 由 Git 忽略；
+- <code>evaluation.py</code> 统一负责固定双方评测、种子/局数/并行配置、逐局 fsync sidecar、配置校验与断点续跑；<code>ladder_search.py</code> 复用该接口并只保留 rung/block 编排和统计决策；逐局 sidecar 由 Git 忽略；
 - 5C 约运行 127,800 局 validation：Quick 15,600、Formal 73,200、Promotion 23,000、Historical 16,000；
 - 新 P2 路径已取消中央 neural-opponent 逐动作 IPC，但尚未在可用 CUDA 的环境中验证完整长 rollout 收益。
 
@@ -321,7 +321,7 @@ folded-depth 阶梯的两级挑战都高于 54% 晋级阈值，因配置的 <cod
 | 5C 训练/评测 | <code>train_5c.py</code>, <code>evaluate_5c.py</code> |
 | multiprocessing | <code>multiprocess_collector.py</code>, <code>benchmark_5c_multiprocess.py</code> |
 | 5C 后分析 | <code>analyze_5c.py</code> |
-| policy/critic 搜索与深度阶梯 | <code>search_policy.py</code>, <code>evaluate_search.py</code>, <code>ladder_search.py</code> |
+| policy/critic 搜索、通用评测与深度阶梯 | <code>search_policy.py</code>, <code>evaluation.py</code>, <code>ladder_search.py</code>；<code>evaluate_search.py</code> 为弃用兼容入口 |
 | 本地网页 | <code>web_app.py</code>, <code>web/</code> |
 | 测试 | <code>tests/</code> |
 
@@ -354,7 +354,7 @@ folded-depth 阶梯的两级挑战都高于 54% 晋级阈值，因配置的 <cod
 | 优化训练/评测/搜索性能 | [P0–P3 性能优化](performance_optimization_p0_p3_zh-CN.md) → 对应代码与测试 |
 | 理解 5C 实际协议 | [5C 现行协议](work_package_5c_current_protocol_zh-CN.md) |
 | 分析 5M 结果 | [5M 报告](work_package_5c_5m_training_report_zh-CN.md) → <code>artifacts/work_package_5c/</code> |
-| 评测固定深度搜索外挂 | [Policy + Critic 搜索](policy_value_search_zh-CN.md) → <code>evaluate_search.py</code> |
+| 评测固定策略对局 | [Policy + Critic 搜索](policy_value_search_zh-CN.md) → <code>evaluation.py</code> JSON 配置接口 |
 | 运行人机网页 | [README](../README.md) → <code>web_app.py</code> |
 
 ### 12.2 工作包时间线

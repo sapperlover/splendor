@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
 import numpy as np
 
-from .evaluation import EvaluationResult
+if TYPE_CHECKING:
+    from .evaluation import EvaluationResult
 from .runner import MatchOutcome, RunStatus
 
 

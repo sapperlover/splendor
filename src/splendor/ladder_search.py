@@ -14,11 +14,12 @@ default here, so ``depth`` counts real choices:
   whose rate clears the threshold stops the whole ladder; probes keep walking
   down while they stay at or below the threshold, until ``--min-depth``.
 
-Durability: every worker appends one fsynced JSON line per *finished game* to
-``<output>.games/stage-XXX/bYY/pair-NNNNNNN.jsonl``.  Stopping at any moment
-keeps all finished games; only games still in flight are discarded, and
-``--resume`` replays just the incomplete pairs with their original pair ids so
-policy seeds stay reproducible.
+Durability is provided by ``evaluation.py``: every worker appends one fsynced
+JSON line per *finished game* to
+``<output>.games/stage-XXX/bYY/pair-NNNNNNN.jsonl``. Stopping at any moment
+keeps completed pairs; ``--resume`` replays only incomplete pairs with their
+original pair ids so policy seeds stay reproducible. This module owns the rung
+schedule, threshold decisions, and stage-level statistics.
 
 Reference run (frozen 5.5M checkpoint, top-5, folded, 8 workers):
 
@@ -43,9 +44,12 @@ from typing import Any, Callable, Mapping, Sequence
 import torch
 
 from .evaluation import (
+    EvaluationGameStore as GameStore,
+    atomic_write_json,
+    FixedEvaluationConfig,
     ParallelPairResult,
     SerializablePolicySpec,
-    evaluate_policies_parallel,
+    run_fixed_evaluation,
 )
 from .paired_statistics import is_scored_status, paired_bootstrap_mean
 from .runner import RunStatus
@@ -211,94 +215,6 @@ class Rung:
     incumbent_depth: int
     challenger_depth: int
 
-
-class GameStore:
-    """Per-game durable log: one fsynced file per paired seed, one line per game."""
-
-    def __init__(self, root: Path, header: dict[str, Any]) -> None:
-        self.root = root
-        self.header = header
-        self._cache: dict[tuple[int, int], dict[int, list[dict[str, Any]]]] = {}
-
-    def start(self) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        self.header_path.write_text(
-            json.dumps(self.header, ensure_ascii=False, sort_keys=True, indent=2)
-            + "\n",
-            encoding="utf-8",
-        )
-
-    @property
-    def header_path(self) -> Path:
-        return self.root / "header.json"
-
-    def load(self) -> None:
-        self.header = json.loads(self.header_path.read_text(encoding="utf-8"))
-
-    def stage_dir(self, index: int) -> Path:
-        return self.root / f"stage-{index:03d}"
-
-    def block_dir(self, index: int, block: int) -> Path:
-        return self.stage_dir(index) / f"b{block:02d}"
-
-    def invalidate(self, index: int, block: int) -> None:
-        self._cache.pop((index, block), None)
-
-    def clear_cache(self) -> None:
-        self._cache.clear()
-
-    def games(self, index: int, block: int) -> dict[int, list[dict[str, Any]]]:
-        key = (index, block)
-        cached = self._cache.get(key)
-        if cached is not None:
-            return cached
-        games: dict[int, list[dict[str, Any]]] = {}
-        directory = self.block_dir(index, block)
-        if directory.is_dir():
-            for path in sorted(directory.glob("pair-*.jsonl")):
-                try:
-                    pair_id = int(path.stem.split("-")[1])
-                except (IndexError, ValueError):  # pragma: no cover - defensive
-                    continue
-                records: list[dict[str, Any]] = []
-                for line in path.read_text(encoding="utf-8").splitlines():
-                    if not line.strip():
-                        continue
-                    try:
-                        records.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        # Only a partial final line survives a hard stop.
-                        break
-                games[pair_id] = records
-        self._cache[key] = games
-        return games
-
-    def scored_pairs(
-        self, index: int, block: int
-    ) -> dict[int, list[dict[str, Any]]]:
-        """Pairs with both seat-swapped games finished and scored."""
-
-        complete: dict[int, list[dict[str, Any]]] = {}
-        for pair_id, records in self.games(index, block).items():
-            if len(records) != 2:
-                continue
-            ordered = sorted(records, key=lambda record: record["game_in_pair"])
-            if [record["game_in_pair"] for record in ordered] != [0, 1]:
-                continue
-            if any(
-                not is_scored_status(RunStatus(str(record["status"])))
-                or record.get("outcome_for_a") not in _OUTCOME_SCORES
-                for record in ordered
-            ):
-                continue
-            complete[pair_id] = ordered
-        return complete
-
-    def discard_pair(self, index: int, block: int, pair_id: int) -> None:
-        path = self.block_dir(index, block) / f"pair-{pair_id:07d}.jsonl"
-        if path.exists():
-            path.unlink()
-        self.invalidate(index, block)
 
 
 def _block_seeds(args: argparse.Namespace, block: int) -> tuple[int, ...]:
@@ -653,29 +569,16 @@ def _summary(
     }
 
 
-def _write_summary(summary: dict[str, Any], output: Path) -> None:
-    output.parent.mkdir(parents=True, exist_ok=True)
-    temporary = output.with_suffix(output.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    temporary.replace(output)
-
 
 def _run_pairs(
     args: argparse.Namespace,
     checkpoint: Path,
     rung: Rung,
     block: int,
-    missing_pair_ids: Sequence[int],
     store: GameStore,
     on_pair: Callable[[], None],
 ) -> float:
     all_seeds = _block_seeds(args, block)
-    seeds = tuple(all_seeds[pair_id] for pair_id in missing_pair_ids)
-    for pair_id in missing_pair_ids:
-        store.discard_pair(rung.index, block, pair_id)
     started = time.perf_counter()
 
     def progress(completed: int, total: int) -> None:
@@ -701,27 +604,44 @@ def _run_pairs(
         require_scored_pair(pair_result)
         on_pair()
 
-    evaluate_policies_parallel(
-        SerializablePolicySpec.search_checkpoint(
+    config = FixedEvaluationConfig(
+        policy_a=SerializablePolicySpec.search_checkpoint(
             f"search_depth_{rung.challenger_depth}",
             checkpoint,
             search_config=_search_config(args, rung.challenger_depth),
         ),
-        SerializablePolicySpec.search_checkpoint(
+        policy_b=SerializablePolicySpec.search_checkpoint(
             f"search_depth_{rung.incumbent_depth}",
             checkpoint,
             search_config=_search_config(args, rung.incumbent_depth),
         ),
-        seeds,
+        game_seeds=all_seeds,
         workers=args.workers,
+        device="cpu",
         policy_seed_base=args.policy_seed_base,
         max_completed_turns=args.max_completed_turns,
-        failure_dir=args.output.parent / "failures" / args.output.stem,
-        progress_callback=progress,
         adjudicate_deterministic_policy_cycles=True,
-        pair_ids=missing_pair_ids,
+        metadata={
+            "experiment": PROTOCOL,
+            "stage": rung.index,
+            "mode": rung.mode,
+            "block": block,
+            "incumbent_depth": rung.incumbent_depth,
+            "challenger_depth": rung.challenger_depth,
+        },
+    )
+    run_fixed_evaluation(
+        config,
+        store.block_dir(rung.index, block) / "evaluation.json",
+        store_dir=store.block_dir(rung.index, block),
+        failure_dir=args.output.parent / "failures" / args.output.stem,
+        resume=args.resume,
+        allow_legacy_resume=args.resume,
+        require_scored_pairs=True,
+        progress_every=args.progress_every,
+        summary_every=args.summary_every,
+        progress_callback=progress,
         pair_callback=check_pair,
-        game_log_dir=store.block_dir(rung.index, block),
     )
     store.invalidate(rung.index, block)
     return time.perf_counter() - started
@@ -779,13 +699,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             store.header["min_depth"] = args.min_depth
             store.header["max_depth"] = args.max_depth
-            store.header_path.write_text(
-                json.dumps(
-                    store.header, ensure_ascii=False, sort_keys=True, indent=2
-                )
-                + "\n",
-                encoding="utf-8",
-            )
+            store.start()
     else:
         store.start()
 
@@ -848,13 +762,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     def write_summary(*, full: bool = False) -> None:
         store.clear_cache()
-        _write_summary(
+        atomic_write_json(
+            args.output,
             _summary(
                 store,
                 _rebuild(args, store, resamples=None if full else 0),
                 args,
             ),
-            args.output,
         )
 
     pairs_since_summary = 0
@@ -867,7 +781,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             write_summary()
 
     if position.finished:
-        _write_summary(_summary(store, position, args), args.output)
+        atomic_write_json(args.output, _summary(store, position, args))
         print(
             json.dumps(
                 {
@@ -896,9 +810,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise RuntimeError(
                 f"ladder made no progress at stage {rung.index} block {block}"
             )
-        elapsed = _run_pairs(
-            args, checkpoint, rung, block, missing, store, on_pair
-        )
+        elapsed = _run_pairs(args, checkpoint, rung, block, store, on_pair)
         print(
             json.dumps(
                 {
@@ -971,7 +883,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             flush=True,
         )
 
-    _write_summary(_summary(store, position, args), args.output)
+    atomic_write_json(args.output, _summary(store, position, args))
     print(
         json.dumps(
             {

@@ -30,7 +30,7 @@ import hashlib
 import json
 import math
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping
 
@@ -107,9 +107,10 @@ class SearchStats:
     chosen_rank_top2_count: int = 0
     chosen_rank_top3_count: int = 0
     chosen_rank_beyond3_count: int = 0
+    chosen_rank_counts: dict[int, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, int | float]:
-        return {
+        result: dict[str, int | float] = {
             "decisions": self.decisions,
             "determinizations": self.determinizations,
             "expanded_nodes": self.expanded_nodes,
@@ -128,6 +129,13 @@ class SearchStats:
             "chosen_rank_top3_count": self.chosen_rank_top3_count,
             "chosen_rank_beyond3_count": self.chosen_rank_beyond3_count,
         }
+        result.update(
+            {
+                f"chosen_rank_{rank}_count": count
+                for rank, count in sorted(self.chosen_rank_counts.items())
+            }
+        )
+        return result
 
 
 def decision_quality_metrics(
@@ -142,6 +150,7 @@ def decision_quality_metrics(
     excludes single-legal-action decisions, which the search never explores.
     Per-search averages are normalised by executed searches (one per
     determinization), and ``cutoff_rate`` is cut-offs per expanded node.
+    ``chosen_rank_N_rate`` is the exact rank-N share over searchable decisions.
     """
 
     decisions = float(stats.get("decisions", 0))
@@ -190,6 +199,14 @@ def decision_quality_metrics(
         else 0.0,
         "searchable_decision_share": (searchable / decisions) if decisions else 0.0,
     }
+    for name, value in stats.items():
+        if not name.startswith("chosen_rank_") or not name.endswith("_count"):
+            continue
+        rank = name[len("chosen_rank_") : -len("_count")]
+        if rank.isdigit():
+            result[f"chosen_rank_{rank}_rate"] = (
+                float(value) / searchable if searchable else 0.0
+            )
     return {name: float(value) for name, value in result.items()}
 
 
@@ -466,7 +483,11 @@ class PolicyValueSearchPolicy:
         self.model.eval()
         self.catalog = catalog or load_default_catalog()
         self.config = config or SearchConfig()
-        self.stats = SearchStats()
+        self.stats = SearchStats(
+            chosen_rank_counts={
+                rank: 0 for rank in range(1, self.config.top_k + 1)
+            }
+        )
         self.last_root_values: dict[Action, float] | None = None
         self.last_root_bound_values: dict[Action, float] | None = None
 
@@ -535,6 +556,9 @@ class PolicyValueSearchPolicy:
         rank = ranked.index(chosen_index) + 1
         self.stats.searchable_decisions += 1
         self.stats.chosen_rank_sum += rank
+        self.stats.chosen_rank_counts[rank] = (
+            self.stats.chosen_rank_counts.get(rank, 0) + 1
+        )
         if rank == 1:
             self.stats.chosen_rank_top1_count += 1
         if rank <= 2:
