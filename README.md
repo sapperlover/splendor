@@ -61,9 +61,21 @@ conda run -n splendor env PYTHONPATH=src python -m splendor.web_app
 
 然后在浏览器打开 `http://127.0.0.1:8765`。开局前可选择
 `ScorePolicy` / `DevelopmentPolicy` / [`play_checkpoints`](play_checkpoints) 中的 PPO
-checkpoint、自己先后手和 seed。PPO 对手使用 CPU greedy 推理，
-不会访问训练中的模型或 GPU。浏览器仅接收
-当前玩家的 Observation 派生视图与规则引擎枚举的合法动作；所有规则
+greedy checkpoint、自己先后手和 seed。也可在启动服务时配置一个搜索 checkpoint，
+让它作为额外对手出现在列表中：
+
+```bash
+conda run --no-capture-output -n splendor env PYTHONPATH=src \
+  python -u -m splendor.web_app \
+  --search-checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --search-depth 6 --search-top-k 8 --search-determinizations 1 \
+  --search-seed 9200000 --search-leaf-value-clip 1.0 \
+  --search-fold-forced-phases
+```
+
+搜索配置在服务端创建 `PolicyValueSearchPolicy`，仅在当前玩家 Observation 与合法动作上工作；
+搜索模型使用 CPU 推理。未指定搜索 checkpoint 时，普通 PPO checkpoint 仍使用 CPU greedy 推理。
+浏览器仅接收当前玩家的 Observation 派生视图与规则引擎枚举的合法动作；所有规则
 判定和状态转移仍由 `GameEngine` 完成。
 
 当前引擎和 AI 范围仅限双人基础标准版，不含 3–4 人、扩展、《璀璨宝石：对决》或漫威版。

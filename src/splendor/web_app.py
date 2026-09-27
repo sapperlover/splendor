@@ -1,4 +1,4 @@
-"""Small local human-vs-heuristic web application.
+"""Small local human-vs-policy web application.
 
 The browser receives only an Observation-derived payload and the current legal
 action candidates.  All legality and transitions remain owned by GameEngine.
@@ -47,6 +47,7 @@ from .neural_policy import GreedyActorCriticPolicy
 from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .replay import ActionEvent, ForcedSkipEvent, ReplayEvent
 from .result import TerminalResult
+from .search_policy import PolicyValueSearchPolicy, SearchConfig
 
 
 _STATIC_ROOT = Path(__file__).with_name("web")
@@ -367,11 +368,27 @@ class WebGameService:
         *,
         failure_dir: Path | None = None,
         checkpoint_dir: Path | None = None,
+        search_checkpoint: Path | None = None,
+        search_config: SearchConfig | None = None,
     ) -> None:
         self.catalog = load_default_catalog()
         self.failure_dir = failure_dir or Path.cwd() / "web_failures"
         self.checkpoint_dir = (checkpoint_dir or _DEFAULT_CHECKPOINT_ROOT).resolve()
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        if search_checkpoint is None and search_config is not None:
+            raise ValueError("search_config requires search_checkpoint")
+        self.search_checkpoint = (
+            None if search_checkpoint is None else search_checkpoint.resolve()
+        )
+        if self.search_checkpoint is not None:
+            if (
+                self.search_checkpoint.suffix != ".pt"
+                or not self.search_checkpoint.is_file()
+            ):
+                raise ValueError("search_checkpoint must be an existing .pt file")
+            self.search_config = search_config or SearchConfig()
+        else:
+            self.search_config = None
         self._checkpoint_models: dict[tuple[Path, int, int], ActorCritic] = {}
         self._games: dict[str, _WebGame] = {}
         self._lock = threading.RLock()
@@ -394,22 +411,23 @@ class WebGameService:
             for path in sorted(self.checkpoint_dir.glob("*.pt"), key=lambda item: item.name)
             if path.is_file()
         )
+        if self.search_checkpoint is not None and self.search_config is not None:
+            config = self.search_config
+            fold_label = " · 折叠强制阶段" if config.fold_forced_phases else ""
+            opponents.append(
+                {
+                    "id": "search",
+                    "label": (
+                        f"PPO 搜索 · {self.search_checkpoint.stem} · "
+                        f"D{config.depth} top{config.top_k} · "
+                        f"{config.determinizations} determinization{fold_label}"
+                    ),
+                    "kind": "search_checkpoint",
+                }
+            )
         return opponents
 
-    def _opponent_policy(self, opponent_id: str) -> tuple[str, Policy]:
-        if opponent_id == "score":
-            return "ScorePolicy", ScorePolicy()
-        if opponent_id == "development":
-            return "DevelopmentPolicy", DevelopmentPolicy()
-        prefix = "checkpoint:"
-        if not opponent_id.startswith(prefix):
-            raise ValueError("unknown opponent")
-        filename = opponent_id[len(prefix):]
-        if not filename or Path(filename).name != filename or not filename.endswith(".pt"):
-            raise ValueError("invalid playable checkpoint id")
-        path = (self.checkpoint_dir / filename).resolve()
-        if path.parent != self.checkpoint_dir or not path.is_file():
-            raise ValueError("playable checkpoint does not exist")
+    def _load_checkpoint(self, path: Path) -> ActorCritic:
         stat = path.stat()
         cache_key = (path, stat.st_mtime_ns, stat.st_size)
         model = self._checkpoint_models.get(cache_key)
@@ -421,6 +439,38 @@ class WebGameService:
             }
             model = load_frozen_actor_critic_checkpoint(path, device="cpu")
             self._checkpoint_models[cache_key] = model
+        return model
+
+    def _opponent_policy(self, opponent_id: str) -> tuple[str, Policy]:
+        if opponent_id == "score":
+            return "ScorePolicy", ScorePolicy()
+        if opponent_id == "development":
+            return "DevelopmentPolicy", DevelopmentPolicy()
+        if opponent_id == "search":
+            if self.search_checkpoint is None or self.search_config is None:
+                raise ValueError("search opponent is not configured")
+            model = self._load_checkpoint(self.search_checkpoint)
+            config = self.search_config
+            label = (
+                f"PPO 搜索 · {self.search_checkpoint.stem} · "
+                f"D{config.depth} top{config.top_k}"
+            )
+            return label, PolicyValueSearchPolicy(
+                model,
+                config=config,
+                device="cpu",
+                catalog=self.catalog,
+            )
+        prefix = "checkpoint:"
+        if not opponent_id.startswith(prefix):
+            raise ValueError("unknown opponent")
+        filename = opponent_id[len(prefix):]
+        if not filename or Path(filename).name != filename or not filename.endswith(".pt"):
+            raise ValueError("invalid playable checkpoint id")
+        path = (self.checkpoint_dir / filename).resolve()
+        if path.parent != self.checkpoint_dir or not path.is_file():
+            raise ValueError("playable checkpoint does not exist")
+        model = self._load_checkpoint(path)
         label = f"PPO · {path.stem}"
         return label, GreedyActorCriticPolicy(model, device="cpu")
 
@@ -591,10 +641,55 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--checkpoint-dir", type=Path, default=_DEFAULT_CHECKPOINT_ROOT)
+    parser.add_argument(
+        "--search-checkpoint",
+        type=Path,
+        help="add one top-k search opponent backed by this checkpoint",
+    )
+    parser.add_argument("--search-depth", type=int, default=4)
+    parser.add_argument("--search-top-k", type=int, default=5)
+    parser.add_argument("--search-determinizations", type=int, default=1)
+    parser.add_argument("--search-seed", type=int, default=0)
+    parser.add_argument("--search-leaf-value-clip", type=float, default=1.0)
+    parser.add_argument(
+        "--search-fold-forced-phases",
+        action="store_true",
+        help="collapse forced payment/return/noble decisions in the search tree",
+    )
     args = parser.parse_args(argv)
+
+    search_config = None
+    if args.search_checkpoint is None:
+        configured_search_options = (
+            args.search_depth != 4
+            or args.search_top_k != 5
+            or args.search_determinizations != 1
+            or args.search_seed != 0
+            or args.search_leaf_value_clip != 1.0
+            or args.search_fold_forced_phases
+        )
+        if configured_search_options:
+            parser.error("search options require --search-checkpoint")
+    else:
+        try:
+            search_config = SearchConfig(
+                top_k=args.search_top_k,
+                depth=args.search_depth,
+                determinizations=args.search_determinizations,
+                seed=args.search_seed,
+                leaf_value_clip=args.search_leaf_value_clip,
+                fold_forced_phases=args.search_fold_forced_phases,
+            )
+        except ValueError as error:
+            parser.error(str(error))
+
     server = WebGameServer(
         (args.host, args.port),
-        WebGameService(checkpoint_dir=args.checkpoint_dir),
+        WebGameService(
+            checkpoint_dir=args.checkpoint_dir,
+            search_checkpoint=args.search_checkpoint,
+            search_config=search_config,
+        ),
     )
     print(f"Splendor web UI: http://{args.host}:{args.port}", flush=True)
     try:

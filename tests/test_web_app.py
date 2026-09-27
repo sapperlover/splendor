@@ -4,9 +4,12 @@ from pathlib import Path
 
 import pytest
 
+from splendor.actor_critic import ActorCritic
+import splendor.web_app as web_app
 from splendor.contracts import PublicReservedCard
 from splendor.actions import ReserveDeck
 from splendor.model import ReservationSource, Tier
+from splendor.search_policy import PolicyValueSearchPolicy, SearchConfig
 from splendor.web_app import (
     WebGameService,
     _action_history_text,
@@ -152,3 +155,169 @@ def test_web_setup_rejects_unsupported_settings(
             human_first=human_first,  # type: ignore[arg-type]
             seed=seed,  # type: ignore[arg-type]
         )
+
+
+def test_configured_search_checkpoint_is_listed_with_search_settings(
+    tmp_path: Path,
+) -> None:
+    checkpoint = tmp_path / "local_005000000.pt"
+    checkpoint.write_bytes(b"loaded only when selected")
+    config = SearchConfig(
+        top_k=8,
+        depth=6,
+        determinizations=1,
+        seed=123,
+        leaf_value_clip=1.0,
+        fold_forced_phases=True,
+    )
+    service = WebGameService(
+        failure_dir=tmp_path / "failures",
+        checkpoint_dir=tmp_path / "play_checkpoints",
+        search_checkpoint=checkpoint,
+        search_config=config,
+    )
+
+    search_opponent = service.available_opponents()[-1]
+
+    assert search_opponent == {
+        "id": "search",
+        "label": (
+            "PPO 搜索 · local_005000000 · D6 top8 · "
+            "1 determinization · 折叠强制阶段"
+        ),
+        "kind": "search_checkpoint",
+    }
+
+
+def test_web_game_uses_configured_search_policy_for_opponent_turn(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkpoint = tmp_path / "search_model.pt"
+    checkpoint.write_bytes(b"test checkpoint")
+    config = SearchConfig(top_k=8, depth=6, seed=42, fold_forced_phases=True)
+    loaded_models: list[tuple[Path, str]] = []
+    created_policies: list[tuple[object, SearchConfig, str, object]] = []
+    model = object()
+
+    def load_model(path: Path, *, device: str) -> object:
+        loaded_models.append((path, device))
+        return model
+
+    class FakeSearchPolicy:
+        def __init__(
+            self,
+            policy_model: object,
+            *,
+            config: SearchConfig,
+            device: str,
+            catalog: object,
+        ) -> None:
+            created_policies.append((policy_model, config, device, catalog))
+
+        def choose(self, request: object) -> object:
+            return request.legal_actions[0]  # type: ignore[attr-defined]
+
+    monkeypatch.setattr(web_app, "load_frozen_actor_critic_checkpoint", load_model)
+    monkeypatch.setattr(web_app, "PolicyValueSearchPolicy", FakeSearchPolicy)
+    service = WebGameService(
+        failure_dir=tmp_path / "failures",
+        checkpoint_dir=tmp_path / "play_checkpoints",
+        search_checkpoint=checkpoint,
+        search_config=config,
+    )
+
+    payload = service.create_game(opponent="search", human_first=False, seed=37)
+
+    assert payload["opponent"] == "search"
+    assert payload["opponentLabel"] == "PPO 搜索 · search_model · D6 top8"
+    assert payload["players"]["opponent"]["completedTurns"] == 1
+    assert payload["legalActions"]
+    assert loaded_models == [(checkpoint.resolve(), "cpu")]
+    assert created_policies == [(model, config, "cpu", service.catalog)]
+
+
+def test_search_configuration_requires_checkpoint(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="requires search_checkpoint"):
+        WebGameService(
+            failure_dir=tmp_path / "failures",
+            checkpoint_dir=tmp_path / "play_checkpoints",
+            search_config=SearchConfig(depth=6, top_k=8),
+        )
+
+
+def test_web_cli_builds_requested_search_configuration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkpoint = tmp_path / "search_model.pt"
+    checkpoint.write_bytes(b"test checkpoint")
+    server_args: list[tuple[tuple[str, int], WebGameService]] = []
+
+    class FakeServer:
+        def __init__(self, address: tuple[str, int], service: WebGameService) -> None:
+            server_args.append((address, service))
+
+        def serve_forever(self) -> None:
+            return None
+
+        def server_close(self) -> None:
+            return None
+
+    monkeypatch.setattr(web_app, "WebGameServer", FakeServer)
+
+    result = web_app.main(
+        [
+            "--port", "8766",
+            "--search-checkpoint", str(checkpoint),
+            "--search-depth", "6",
+            "--search-top-k", "8",
+            "--search-determinizations", "1",
+            "--search-seed", "9200000",
+            "--search-leaf-value-clip", "1.0",
+            "--search-fold-forced-phases",
+        ]
+    )
+
+    assert result == 0
+    assert server_args[0][0] == ("127.0.0.1", 8766)
+    service = server_args[0][1]
+    assert service.search_checkpoint == checkpoint.resolve()
+    assert service.search_config == SearchConfig(
+        depth=6,
+        top_k=8,
+        determinizations=1,
+        seed=9200000,
+        leaf_value_clip=1.0,
+        fold_forced_phases=True,
+    )
+
+
+
+def test_web_game_runs_real_search_policy_for_opponent_turn(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkpoint = tmp_path / "search_model.pt"
+    checkpoint.write_bytes(b"test checkpoint")
+    model = ActorCritic().eval()
+    config = SearchConfig(top_k=1, depth=1, seed=5)
+    loaded: list[tuple[Path, str]] = []
+
+    def load_model(path: Path, *, device: str) -> ActorCritic:
+        loaded.append((path, device))
+        return model
+
+    monkeypatch.setattr(web_app, "load_frozen_actor_critic_checkpoint", load_model)
+    service = WebGameService(
+        failure_dir=tmp_path / "failures",
+        checkpoint_dir=tmp_path / "play_checkpoints",
+        search_checkpoint=checkpoint,
+        search_config=config,
+    )
+
+    payload = service.create_game(opponent="search", human_first=False, seed=43)
+
+    game = service._games[payload["gameId"]]
+    assert isinstance(game.opponent, PolicyValueSearchPolicy)
+    assert game.opponent.config == config
+    assert loaded == [(checkpoint.resolve(), "cpu")]
+    assert payload["players"]["opponent"]["completedTurns"] == 1
+    assert payload["legalActions"]

@@ -20,7 +20,7 @@
 - paired-seed CPU 多进程评测和可复用 worker 池；
 - 一次已完成的 5M 纯 terminal-reward 主训练；
 - 基于现有 checkpoint 的信息集安全 top-k / critic alpha-beta 搜索，以及向量化特征编码、state-only 叶节点评估、forced-phase folding 和可恢复深度阶梯；
-- 完整的训练后分析导出和本地人机对战网页。
+- 完整的训练后分析导出和本地人机对战网页；网页可配置并调用 top-k 搜索策略作为对手。
 
 当前 DEV 协议下的最优 checkpoint：
 
@@ -156,7 +156,7 @@ WP2D 的 10,000 局验收：
 - market tier 和 self/opponent reserve 分组保留，组内 masked-sum pooling；
 - actor/critic 共享 card/noble encoder；critic 不看候选集。
 
-训练用 categorical sampling；DEV/FINAL/网页对局中的 neural policy 用 greedy argmax。详见 [WP4A](work_package_4a_zh-CN.md)。
+训练用 categorical sampling；DEV/FINAL 和网页普通 checkpoint 对手使用 greedy argmax；网页也可配置 top-k 搜索 checkpoint 对手。详见 [WP4A](work_package_4a_zh-CN.md)。
 
 ### 5.4 训练语义
 
@@ -416,13 +416,26 @@ TensorBoard：
 conda run -n splendor tensorboard --logdir runs --port 6006
 ~~~
 
-人机网页：
+人机网页支持 ScorePolicy、DevelopmentPolicy、普通 greedy checkpoint 和启动时配置的搜索 checkpoint。
+
+默认启动：
 
 ~~~bash
 conda run -n splendor env PYTHONPATH=src python -m splendor.web_app
 ~~~
 
-打开 <code>http://127.0.0.1:8765</code>。可选 ScorePolicy、DevelopmentPolicy 或 <code>play_checkpoints/</code> 中的兼容 checkpoint，并设置先/后手与 seed。
+配置 D6 top8 搜索对手：
+
+~~~bash
+conda run --no-capture-output -n splendor env PYTHONPATH=src \
+  python -u -m splendor.web_app \
+  --search-checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --search-depth 6 --search-top-k 8 --search-determinizations 1 \
+  --search-seed 9200000 --search-leaf-value-clip 1.0 \
+  --search-fold-forced-phases
+~~~
+
+打开 `http://127.0.0.1:8765`，在对手列表中选择搜索 checkpoint。搜索策略只接收当前 `DecisionRequest`，在服务端 CPU 上运行。
 
 ## 14. 目录与 Git 约定
 

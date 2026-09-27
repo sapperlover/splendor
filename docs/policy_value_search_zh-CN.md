@@ -66,7 +66,7 @@ choose(request: DecisionRequest) -> Action
 
 ## 4. 代码入口与评测分层
 
-- 搜索策略与 determinization：`src/splendor/search_policy.py`；评测器通过 `PolicyValueSearchPolicy` 接口调用，不在评测代码里实现搜索算法；
+- 搜索策略与 determinization：`src/splendor/search_policy.py`；评测器和网页对局服务通过 `PolicyValueSearchPolicy` 接口调用，不在调用层实现搜索算法；
 - 固定双方对局、种子/局数/并行配置、逐局保存、恢复与汇总：`src/splendor/evaluation.py`；
 - 深度阶梯实验编排：`src/splendor/ladder_search.py`；它只生成每个 rung/block 的双方策略配置，并决定下一阶段；
 - `src/splendor/evaluate_search.py` 是旧命令的兼容入口，已弃用；新评测使用 JSON 配置调用 `evaluation.py`；
