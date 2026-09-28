@@ -206,3 +206,168 @@ conda run -n splendor env PYTHONPATH=src python -m pytest -q
 - `submit` 在校验 value/logits 后才移除 pending 请求。无效输出保留原请求的 world、determinization seed 和分支；消费请求后推进新分支发生异常时，仍记录正在推进的新分支。
 - summary 的 `logical_model_positions` 从全部已归档对局汇总。`wall_seconds`、`inference`、延迟和资源统计采用本次成功采集会话口径（`statistics_scope=collection_session`），由 `statistics_game_ids` 明确覆盖范围；三个吞吐指标也只使用这些对局作为分子。首次完整采集时覆盖全 run，部分完成后恢复时只覆盖恢复阶段。
 - `statistics_complete` 表示统计是否覆盖当前全部已归档对局，`statistics_missing_game_ids` 列出未覆盖对局。没有 status 时 scope 为 `unavailable`；旧 status 无覆盖信息时为 `unknown`，吞吐返回 null。历史未落盘的物理推理量和墙钟不能从并行对局耗时还原，不伪造累计值，也不增加逐步审计写入。
+
+## 第三轮：FP32 合批搜索实验（D6 与 MCTS 的选招反转率与提速）
+
+目标：把多条独立搜索的推理请求合并成 FP32 大 batch，量化选招反转率与真实提速。
+
+### 实现
+
+- D6 搜索重构为可挂起的生成器：`PolicyValueSearchPolicy._search` 每次产出 `SearchEvaluation`，同步 `choose()` 用本地求值器驱动同一生成器（遍历、剪枝、平局规则、统计口径完全不变，legacy 等价测试与固定面板继续通过），`PolicyValueSearchSession` 供合批运行器驱动。
+- MCTS 直接复用现有 `MCTSSearchJob` 的挂起/回填协议，不需要改动搜索实现。
+- 新增 `src/splendor/batched_search.py`：`BatchedSearchRunner` 把多条独立搜索的待评估请求按 kind（policy / value）合并为一次 FP32 forward；`max_batch_size` 限制物理 batch，D6 的并发会话池默认 `2 × max_batch_size`（流式补充，避免快搜索先结束时 batch 变小），MCTS 全部 job 并发。
+- 新增 `scripts/benchmark_batched_search.py`：固定 seed 从随机对局收集局面，逐条顺序搜索 vs 全池合批搜索，报告选招反转、根值/目标差异、batch 分布与墙钟。
+
+合批只改变张量形状，不改变搜索语义；逻辑位置数（搜索真正需要的评估次数）与顺序路径保持可对照，物理 batch/位置单独统计。
+
+### 结果（CPU 1 线程 / CUDA，全部 FP32；D6 depth=6 top_k=5，MCTS S=256/N=2）
+
+| 算法 | 设备 | 局面数 | batch 上限 | 均值 batch | 选招反转 | 结果差异 | 顺序耗时 | 合批耗时 | 提速 |
+| --- | --- | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: |
+| D6 | CPU | 64 | 32 | 8.4 | 0/64 | max\|Δ根值\|=6.3e-7 | 114.2s | 75.6s | 1.51× |
+| D6 | CPU | 128 | 32 | 10.7 | 0/128 | 同上量级 | 243.5s | 150.6s | 1.62× |
+| D6 | CPU | 64 | 64 | 8.6 | 0/64 | max\|Δ根值\|=6.3e-7，逻辑位置 −0.03% | 107.4s | 67.3s | 1.59× |
+| D6 | CUDA | 24 | 32 | 5.1 | 0/24 | max\|Δ根值\|=2.5e-7 | 61.3s | 24.3s | 2.52× |
+| MCTS | CPU | 64 | 32 | 28.7 | 0/64 | 目标逐位相同 | 13.0s | 9.6s | 1.36× |
+| MCTS | CPU | 128 | 32 | 29.8 | 0/128 | 目标逐位相同 | 32.6s | 18.7s | 1.74× |
+| MCTS | CPU | 128 | 64 | 57.8 | 0/128 | 目标逐位相同，逻辑位置完全相同 | 25.2s | 17.6s | 1.44× |
+| MCTS | CUDA | 64 | 32 | 28.7 | 0/64 | 目标逐位相同 | 21.2s | 11.4s | 1.86× |
+
+结论：
+
+- **选招反转率**：0 次反转 / 全部合批运行（D6 296 次决策、MCTS 384 次决策，共 680 次；覆盖同一批 128 个局面的多种 batch/设备组合）。按二项分布，0/680 的 95% 置信上界约 0.44%（按 128 个唯一局面计约 2.3%）。反转率没有随 batch 上限 32→64 明显变化。
+- **数值差异**：D6 根值最大差 6.3e-7（batch 形状噪声量级），MCTS 的根访问分布完全没变（目标逐位相同）。MCTS 的逻辑位置数逐位一致；D6 有一次配置相差 0.03%（值噪声改变了剪枝路径），最终选招仍然一致。
+- **提速**：MCTS 1.4–1.9×（job 结构同步，均值 batch ~29–58，利用率高）；D6 1.5–1.6×（CPU）/ 2.5×（CUDA），均值 batch 只有 5–11——不同搜索的深度进展不同步，且 policy/value 两类请求要分开合批，这是 D6 合批效率的天然上限。作为对照：D6 用 CUDA 合批（1.01s/决策）比现在默认的 CPU 单条（~1.9s/决策）快约 1.9×。
+- **风险画像**：D6 batch=64 的 64 个局面里有 20 个根值前二名差距 < 1e-6（多数是完全平分，由 logits 决胜），属于理论上有翻转风险的位置，但本次没有出现反转；MCTS 128 个局面里有 5 个前二 visit 差 ≤1。换句话说，合批不是"逐位一致"，而是"在本次 1024 次决策里没有改变任何选择"。
+
+### 使用方式
+
+```bash
+# D6：64 个局面一起合批，batch 上限 32
+conda run --no-capture-output -n splendor env PYTHONPATH=src python -u \
+  scripts/benchmark_batched_search.py \
+  --checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --output runtime/search_accel/batched_d6_cpu.json \
+  --algorithm d6 --positions 64 --batch-size 32 --repeats 2
+
+# MCTS：S=256/N=2，batch 上限 64，CUDA
+conda run --no-capture-output -n splendor env PYTHONPATH=src python -u \
+  scripts/benchmark_batched_search.py \
+  --checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --output runtime/search_accel/batched_mcts_cuda.json \
+  --algorithm mcts --positions 128 --batch-size 64 --device cuda \
+  --simulations 256 --mcts-determinizations 2
+```
+
+库内用法：
+
+```python
+from splendor.batched_search import BatchedSearchRunner
+
+runner = BatchedSearchRunner(policy, max_batch_size=32)      # D6 或 MCTS policy 均可
+choices = runner.choose_many(policy, requests)               # D6：多条独立决策一起搜
+results = runner.search_many(mcts_policy, requests)          # MCTS
+print(runner.stats.to_dict())                                # 物理 batch/位置统计
+```
+
+当需要"逐位完全一致"时，继续使用默认的同步路径（`policy.choose` / `policy.search`），合批路径只在可接受 ~1e-6 级 FP 噪声、且要批量吞吐时开启。
+
+## 第四轮：GPU 合批的适用范围（哪些搜索能吃到 GPU 红利）
+
+问题：现在跑的实际测试、以及后续 AlphaZero 式迭代学习（搜索产出训练数据），能否都用 GPU 合批加速搜索？
+
+### 每位置推理成本：合批是主收益，GPU 只在 batch≥8–32 后略优
+
+同一 checkpoint、1024 个真实请求、`policy_value`（含编码/传输/取回）中位每位置毫秒：
+
+| batch | CPU 1 线程 | CPU 8 线程 | CUDA |
+| ---: | ---: | ---: | ---: |
+| 1 | 0.831 | 0.771 | 1.469 |
+| 8 | 0.346 | 0.340 | 0.384 |
+| 32 | 0.264 | 0.278 | 0.233 |
+| 128 | 0.269 | 0.249 | 0.208 |
+| 512 | 0.324 | 0.251 | 0.201 |
+
+结论：batch=1 → 32 的合批收益约 3 倍（CPU 与 CUDA 都有）；同一 batch 下 GPU 只比 CPU 快约 1.1–1.25 倍（这个网络很小，GPU 用不满）。CPU 多线程只在大 batch 下提供约 1.3 倍。因此"要不要上 GPU"取决于能否把 batch 堆到 32 以上，而不是取决于设备本身。
+
+### 端到端自博弈采集（AlphaZero 式数据生产）：GPU 已接通，但当前收益有限
+
+16 局、S=256/N=2、fast 引擎、batch 上限 32（新配置 `configs/search_accel/batched_cpu_16games_b32.json` / `batched_cuda_16games_b32.json`，均为单进程协作调度）：
+
+| 后端 | 墙钟 | 仿真/s | 平均 batch | 前向总时长 | 规则总时长 | 峰值显存 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `batched_cpu` | 141.0s | 1719 | 26.4 | 21.5s | 47.4s | — |
+| `batched_cuda` | 132.8s | 1826 | 26.4 | 10.8s | 46.9s | 15.3 MiB |
+
+同一份 16 局、批次分布完全相同（8,633 个物理 batch，22.8 万个逻辑位置）。GPU 把前向时间砍半，但前向只占总墙钟约 15%，规则/调度占大头，端到端只快约 6%。显存不是约束（batch 512 峰值也只有约 12 MiB）。
+
+### 结论（按工作负载）
+
+- **MCTS 自博弈数据生产（AlphaZero 迭代里的搜索阶段）**：可以端到端用 GPU 合批，已经接通（`execution.backend = "batched_cuda"`，`workers=1`）。收益 = (前向占比) × (GPU/CPU 前向比)，当前小网络、batch≈26 时约 1.06×；把并发局数提到 32–64、batch 上限提到 32–64 会更接近 1.1–1.2×。训练与搜索在迭代里交替使用 GPU，不冲突；显存充裕。
+- **D6 alpha-beta（现有评测/阶梯/教师）**：合批核心已就绪（`BatchedSearchRunner`），但实测 batch 只有 5–11，恰好落在 GPU 不占优的区间（batch<8 GPU 更慢，8–32 基本持平）。应使用 CPU 合批（1.5–1.6×，见第三轮）或多进程，不要为 D6 单开 GPU 服务。
+- **评测/阶梯（多进程 CPU）**：目前跨进程并行已经吃满 CPU；只有把很多对局的决策汇总到同一个 batcher（MCTS 评测能堆到 30+ 请求/轮）时 GPU 才有意义，收益量级同上（约 1.1×，端到端更小）。
+- **更大的网络/更大的 GPU**：本机 6GB 卡 + 64/256 宽的小网络是 GPU 收益偏低的主因；若以后扩网络，前向占比和 GPU 优势都会上升，届时 `batched_cuda` 的优先级应提高。
+
+命令：
+
+```bash
+# GPU 自博弈采集（16 局、batch 32）
+conda run --no-capture-output -n splendor env PYTHONPATH=src \
+  python -m splendor.selfplay_fast generate \
+  --config configs/search_accel/batched_cuda_16games_b32.json \
+  --output runtime/search_accel/my_cuda_run
+
+# 对照：同一工作量 CPU 合批
+conda run --no-capture-output -n splendor env PYTHONPATH=src \
+  python -m splendor.selfplay_fast generate \
+  --config configs/search_accel/batched_cpu_16games_b32.json \
+  --output runtime/search_accel/my_cpu_run
+
+# 每位置成本对照（CPU 1/8 线程、CUDA）
+conda run --no-capture-output -n splendor env PYTHONPATH=src python -u \
+  scripts/benchmark_large_batch_inference.py \
+  --checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --requests 1024 --max-batch 512 --repeats 3 \
+  --output runtime/search_accel/large_batch_cpu_t8.json --device cpu --threads 8
+```
+
+## 第五轮：合批在 16 核机器上的最优形态（多进程 vs 单进程大 batch）
+
+背景：目标配置是搜索端 S=1024/N=1、每轮约 500 局新数据，评测端频繁用 D6 与 S=2048/N=2。
+
+### 单进程合批没有跑赢多进程（16 局、S=256/N=2 同一份数据，1,388 样本 / 242,432 simulations）
+
+| 采集配置 | 墙钟 | simulations/s | 均值 batch |
+| --- | ---: | ---: | ---: |
+| `batched_cpu` 单进程（active 16、batch 32） | 141.0s | 1,719 | 26.4 |
+| `batched_cuda` 单进程（active 16、batch 32） | 132.8s | 1,826 | 26.4 |
+| `serial_cpu` 16 进程 × 1 局（batch=1） | 58.2s | 4,164 | 1.0 |
+| `batched_cpu` 8 进程 × 每进程 2 局（batch≤4） | **48.1s** | **5,040** | 3.8 |
+
+结论：这个网络很小（前向约占 27% 墙钟），单进程合批把引擎/Python 串行化了；16 核机器上「多进程 + 每进程小批次」比「单进程大 batch」快约 2.9 倍，GPU 单进程合批反而是最慢的一档。四者产出的对局数据一致（同样 5:11 胜负、947 个 policy 样本）。
+
+### 搜索端 S=1024/N=1 试运行（8 进程 × 2 局、batch≤4）
+
+16 局：墙钟 263.3s（16.5s/局），4,030 simulations/s，95.7 万逻辑位置，1,389 样本（1,036 policy 样本），0 异常。按此吞吐外推：
+
+- 500 局 ≈ 500 × 66,304 simulations ÷ 4,030 ≈ **8,200s ≈ 2.3 小时/轮**；把 workers 提到 16、active 提高到 2–4 后还有 1.5–2 倍的余量。
+- 对照：单进程合批在同样配置下约 0.50–0.52s/决策 × 约 87 决策/局 ≈ 44s/局 ≈ 6.1 小时/轮。
+
+### 按你的配置实测合批收益（32 个并发局面，固定 seed）
+
+| 配置 | 设备 | 逐条 | 合批 | 提速 | 均值 batch | 选招反转 | 目标差异 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| S=1024/N=1 | CPU | 31.0s | 16.5s | 1.88× | 26.9 | 0/32 | 逐位相同 |
+| S=1024/N=1 | CUDA | 49.7s | 15.9s | 3.12× | 26.9 | 0/32 | 逐位相同 |
+| S=2048/N=2 | CPU | 47.4s | 33.3s | 1.43× | 53.7 | 0/32 | 逐位相同 |
+| S=2048/N=2 | CUDA | 65.9s | 29.6s | 2.23× | 53.7 | 0/32 | 逐位相同 |
+
+注意 CUDA 的 3.12×/2.23× 是「同一块 GPU 上合批 vs 逐条」，不是「GPU vs CPU」：CUDA 逐条本身比 CPU 逐条慢（batch=1 每位置 1.47ms vs 0.83ms），跨设备同 batch 时 CUDA 只比 CPU 快 1.04×（S=1024/N=1）与 1.13×（S=2048/N=2）。
+
+### 建议配置
+
+- **500 局/轮的数据生产（S=1024/N=1）**：`backend=batched_cpu`，`workers≈8–16`，`active_games_per_worker=2–4`，`max_batch_size=4–8`；这是本次实测最快形态，不需要 GPU。示例配置：`configs/search_accel/batched_cpu_16games_s1024_n1.json`。
+- **D6 评测**：保持多进程逐条（batch 只有 5–11，GPU 不占优）；若要用合批，仅在同一进程内有多局时才划算。
+- **S=2048/N=2 评测**：同样优先多进程 + 小批次；单进程合批只比逐条快 1.43×（CPU）/2.23×（CUDA），而多进程并行在 16 核上有数倍空间。
+- **GPU 何时值得上**：CPU 核被别的任务占满；或以后把网络做大（前向占比上升）；或做「多进程 producer → 单个 GPU batcher」的中央推理服务（需要新工程，收益取决于前向占比）。当前小网络 + 16 核 CPU 下，GPU 合批不是最优解。
+- 显存不是约束：batch 512 的峰值也只有约 12 MiB。

@@ -24,6 +24,7 @@
 - 基于同一冻结网络的可恢复 MCTS 自我对弈数据采集与数值读取接口；见 [自我对弈数据说明](mcts_selfplay_data_zh-CN.md)；首批 300 个完整对局已校验；
 - 冻结推理、fast 引擎、可暂停 MCTS 与 CPU/CUDA 跨局批量自博弈采集；v1/v2 数据均可读，见 [搜索吞吐优化](search_throughput_optimization_zh-CN.md)；
 - 搜索内记忆化（策略/叶估值/扩展去重，默认开启）与规则支付快速判定：D6/top-5 开局单次搜索约 1.0s（优化前约 2.45s），选招与逻辑搜索量不变；大 batch 下 GPU 优于 CPU，单步顺序搜索仍用 CPU；见 [搜索吞吐优化](search_throughput_optimization_zh-CN.md) 第二轮；
+- FP32 合批搜索运行器（`BatchedSearchRunner`，D6 与 MCTS 共用）：1024 次合批决策中选招反转 0 次，MCTS 提速 1.4–1.9×、D6 1.5–2.5×；默认同步路径仍为逐位一致版本，见 [搜索吞吐优化](search_throughput_optimization_zh-CN.md) 第三轮；
 - 完整的训练后分析导出和本地人机对战网页；网页可配置并调用 top-k 搜索策略作为对手。
 
 当前 DEV 协议下的最优 checkpoint：

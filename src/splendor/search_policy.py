@@ -485,6 +485,18 @@ def _terminal_value(result: TerminalResult) -> float:
     return 1.0 if result.winner_ids[0] == 0 else -1.0
 
 
+@dataclass(frozen=True, slots=True)
+class SearchEvaluation:
+    """One model evaluation that a suspended D6 search is waiting for."""
+
+    kind: str
+    request: DecisionRequest
+
+    def __post_init__(self) -> None:
+        if self.kind not in ("policy", "value"):
+            raise ValueError("search evaluation kind must be policy or value")
+
+
 class PolicyValueSearchPolicy:
     """Top-k policy-guided alpha-beta with critic evaluation at leaf requests.
 
@@ -544,8 +556,10 @@ class PolicyValueSearchPolicy:
             self._policy_cache[request] = tuple(logits)
         return list(logits)
 
-    def _leaf_value(self, request: DecisionRequest, actor: int) -> float:
-        """Critic value at the horizon, from a state-only encoding."""
+    def _leaf_raw_value(self, request: DecisionRequest) -> float:
+        """Cached raw critic value; clipping and the root-perspective flip stay
+        with the caller so both drivers share the same arithmetic."""
+
         self.stats.model_batches += 1
         self.stats.model_positions += 1
         value: float | None = self._value_cache.get(request.observation) if self.config.memoize else None
@@ -560,6 +574,12 @@ class PolicyValueSearchPolicy:
         else:
             self.stats.cache_hits += 1
             self.stats.cached_value_calls += 1
+        return value
+
+    def _leaf_value(self, request: DecisionRequest, actor: int) -> float:
+        """Critic value at the horizon, clipped and flipped to root perspective."""
+
+        value = self._leaf_raw_value(request)
         if self.config.leaf_value_clip is not None:
             limit = self.config.leaf_value_clip
             value = max(-limit, min(limit, value))
@@ -634,37 +654,44 @@ class PolicyValueSearchPolicy:
             self._expansion_cache[key] = (child, response, folded)
         return child, response
 
-    def _child_value(
+    def _child_value_coro(
         self,
         child: GameEngine,
         response: DecisionRequest | TerminalResult,
         remaining: int,
         alpha: float,
         beta: float,
-    ) -> float:
+    ):
+        """Coroutine child value; yields value evaluations at the horizon."""
+
         if isinstance(response, TerminalResult):
             self.stats.leaf_nodes += 1
             return _terminal_value(response)
         if remaining == 0:
             self.stats.leaf_nodes += 1
-            return self._leaf_value(response, child.current_player)
-        return self._alpha_beta(child, response, remaining, alpha, beta)
+            raw = yield SearchEvaluation("value", response)
+            value = float(raw)
+            if self.config.leaf_value_clip is not None:
+                limit = self.config.leaf_value_clip
+                value = max(-limit, min(limit, value))
+            return value if child.current_player == 0 else -value
+        return (yield from self._alpha_beta_coro(child, response, remaining, alpha, beta))
 
-    def _alpha_beta(
+    def _alpha_beta_coro(
         self,
         engine: GameEngine,
         request: DecisionRequest,
         remaining: int,
         alpha: float,
         beta: float,
-    ) -> float:
-        """Fail-soft alpha-beta value of ``request`` in root perspective.
+    ):
+        """Coroutine form of fail-soft alpha-beta in root perspective.
 
         ``remaining`` counts the plies still to expand below this node, so
         ``remaining == 1`` means its children are critic leaves.
         """
 
-        logits = self._infer_logits(request)
+        logits = yield SearchEvaluation("policy", request)
         maximizing = engine.current_player == 0
         best = -math.inf if maximizing else math.inf
         # Policy logit order explores each node's most preferred child first,
@@ -673,7 +700,7 @@ class PolicyValueSearchPolicy:
             action = request.legal_actions[action_index]
             child, response = self._expand_child(engine, action_index)
             self.stats.expanded_nodes += 1
-            value = self._child_value(child, response, remaining - 1, alpha, beta)
+            value = yield from self._child_value_coro(child, response, remaining - 1, alpha, beta)
             if maximizing:
                 if value > best:
                     best = value
@@ -709,14 +736,46 @@ class PolicyValueSearchPolicy:
         if len(request.legal_actions) == 1:
             self.stats.total_seconds += time.perf_counter() - started
             return request.legal_actions[0]
-        if self.config.determinizations == 1:
-            chosen = self._choose_single_determinization(request)
-        else:
-            chosen = self._choose_combined_determinizations(request)
+        chosen = self._drive_local(self._search(request))
         self.stats.total_seconds += time.perf_counter() - started
         return chosen
 
-    def _choose_single_determinization(self, request: DecisionRequest) -> Action:
+    def clone_for_session(self) -> "PolicyValueSearchPolicy":
+        """A search instance with its own caches and stats, sharing the evaluator."""
+
+        return PolicyValueSearchPolicy(
+            self.model,
+            config=self.config,
+            device=self.device,
+            catalog=self.catalog,
+            engine_mode=self.engine_mode,
+            evaluator=self.evaluator,
+        )
+
+    def _search(self, request: DecisionRequest):
+        """Suspendable search: yields :class:`SearchEvaluation`, returns the action."""
+
+        if len(request.legal_actions) == 1:
+            return request.legal_actions[0]
+        if self.config.determinizations == 1:
+            return (yield from self._single_determinization_coro(request))
+        return (yield from self._combined_determinizations_coro(request))
+
+    def _drive_local(self, generator) -> Action:
+        """Run a suspended search with this policy's own scalar evaluator."""
+
+        result: object = None
+        while True:
+            try:
+                evaluation = generator.send(result)
+            except StopIteration as stop:
+                return stop.value
+            if evaluation.kind == "policy":
+                result = tuple(self._infer_logits(evaluation.request))
+            else:
+                result = self._leaf_raw_value(evaluation.request)
+
+    def _single_determinization_coro(self, request: DecisionRequest):
         """Root search with strict pruning, keeping the chosen value exact.
 
         Every root child is searched with a lower bound equal to the best exact
@@ -735,8 +794,8 @@ class PolicyValueSearchPolicy:
             engine_mode=self.engine_mode,
         )
         self.stats.determinizations += 1
-        logits = self._infer_logits(request)
-        ranked = self._ranked_indices(logits)
+        logits = yield SearchEvaluation("policy", request)
+        ranked = self._ranked_indices(list(logits))
         remaining = self.config.depth - 1
         exact: dict[Action, float] = {}
         bounds: dict[Action, float] = {}
@@ -753,7 +812,9 @@ class PolicyValueSearchPolicy:
                 if alpha == -math.inf
                 else math.nextafter(alpha, -math.inf)
             )
-            value = self._child_value(child, response, remaining, window, math.inf)
+            value = yield from self._child_value_coro(
+                child, response, remaining, window, math.inf
+            )
             if value >= alpha:
                 exact[action] = value
                 if value > alpha:
@@ -774,11 +835,11 @@ class PolicyValueSearchPolicy:
         self._record_choice_metrics(request, ranked, chosen)
         return chosen
 
-    def _choose_combined_determinizations(self, request: DecisionRequest) -> Action:
+    def _combined_determinizations_coro(self, request: DecisionRequest):
         """Average exact root action values across determinizations."""
 
         values_by_action: dict[Action, list[float]] = {}
-        root_logits: list[float] | None = None
+        root_logits = None
         for sample in range(self.config.determinizations):
             seed = _request_seed(request, self.config.seed, sample)
             engine = determinize_request(
@@ -788,22 +849,18 @@ class PolicyValueSearchPolicy:
                 engine_mode=self.engine_mode,
             )
             self.stats.determinizations += 1
-            logits = self._infer_logits(request)
+            logits = yield SearchEvaluation("policy", request)
             if root_logits is None:
                 root_logits = logits
             root_remaining = self.config.depth - 1
-            for action_index in self._top_indices(logits):
+            for action_index in self._top_indices(list(logits)):
                 action = request.legal_actions[action_index]
                 child, response = self._expand_child(engine, action_index)
                 self.stats.expanded_nodes += 1
                 # Every root child is searched with a full window so its value
                 # stays exact; interior pruning cannot change the root choice.
-                value = self._child_value(
-                    child,
-                    response,
-                    root_remaining,
-                    -math.inf,
-                    math.inf,
+                value = yield from self._child_value_coro(
+                    child, response, root_remaining, -math.inf, math.inf
                 )
                 values_by_action.setdefault(action, []).append(value)
 
@@ -829,6 +886,88 @@ class PolicyValueSearchPolicy:
         self.last_root_values = {item[3]: item[0] for item in candidates}
         chosen = max(candidates, key=lambda item: item[:3])[3]
         self._record_choice_metrics(
-            request, self._ranked_indices(root_logits), chosen
+            request, self._ranked_indices(list(root_logits)), chosen
         )
         return chosen
+
+
+class PolicyValueSearchSession:
+    """One resumable D6 search waiting for externally supplied evaluations.
+
+    The batched runner creates one session per root request, resolves content
+    cache hits, and hands only misses to the shared evaluator.  Traversal,
+    caches, counters and tie-breaks use the same code paths as
+    :meth:`PolicyValueSearchPolicy.choose`; only the forward tensor shapes of
+    the shared batch differ.
+    """
+
+    def __init__(self, policy: PolicyValueSearchPolicy, request: DecisionRequest) -> None:
+        self.policy = policy
+        self.request = request
+        if policy.config.memoize:
+            policy._policy_cache.clear()
+            policy._value_cache.clear()
+            policy._expansion_cache.clear()
+        policy.last_root_values = None
+        policy.last_root_bound_values = None
+        policy.stats.decisions += 1
+        self._generator = policy._search(request)
+        self.pending: SearchEvaluation | None = None
+        self.chosen: Action | None = None
+        self._started = time.perf_counter()
+        self._advance(None)
+
+    @property
+    def done(self) -> bool:
+        return self.pending is None
+
+    def _advance(self, result: object) -> None:
+        try:
+            self.pending = self._generator.send(result)
+        except StopIteration as stop:
+            self.chosen = stop.value
+            self.pending = None
+            self.policy.stats.total_seconds += time.perf_counter() - self._started
+
+    def lookup(self) -> bool:
+        """Resolve the pending evaluation from the session cache when possible."""
+
+        evaluation = self.pending
+        if evaluation is None:
+            raise RuntimeError("search session has no pending evaluation")
+        policy = self.policy
+        policy.stats.model_batches += 1
+        policy.stats.model_positions += 1
+        if not policy.config.memoize:
+            return False
+        if evaluation.kind == "policy":
+            cached = policy._policy_cache.get(evaluation.request)
+            if cached is None:
+                return False
+            policy.stats.cache_hits += 1
+            policy.stats.cached_policy_calls += 1
+            self._advance(tuple(cached))
+            return True
+        cached_value = policy._value_cache.get(evaluation.request.observation)
+        if cached_value is None:
+            return False
+        policy.stats.cache_hits += 1
+        policy.stats.cached_value_calls += 1
+        self._advance(cached_value)
+        return True
+
+    def complete(self, result: object) -> None:
+        """Store an externally computed result and advance the search."""
+
+        evaluation = self.pending
+        if evaluation is None:
+            raise RuntimeError("search session has no pending evaluation")
+        policy = self.policy
+        policy.stats.physical_model_batches += 1
+        policy.stats.physical_model_positions += 1
+        if policy.config.memoize:
+            if evaluation.kind == "policy":
+                policy._policy_cache[evaluation.request] = tuple(result)
+            else:
+                policy._value_cache[evaluation.request.observation] = float(result)
+        self._advance(result)

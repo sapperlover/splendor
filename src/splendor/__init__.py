@@ -78,6 +78,7 @@ from .ppo import (
 from .result import TerminalReason, TerminalResult
 from .random_policy import RandomPolicy
 from .runner import GameRun, MatchOutcome, MatchResult, RunStatus, run_match, run_random_game
+from .batched_search import BatchRunStats, BatchedSearchRunner
 from .search_policy import PolicyValueSearchPolicy, SearchConfig, SearchStats
 from .training_env import (
     InvalidCandidateIndexError,
@@ -143,6 +144,8 @@ __all__ = [
     "PPOUpdateStats",
     "Pay",
     "Policy",
+    "BatchRunStats",
+    "BatchedSearchRunner",
     "PolicyValueSearchPolicy",
     "PolicySample",
     "PolicySampler",
