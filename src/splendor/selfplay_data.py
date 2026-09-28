@@ -12,9 +12,10 @@ from typing import Any, Iterable, Iterator, Mapping, Sequence
 
 import numpy as np
 
-from .features import EncodedDecisionBatch, FEATURE_SCHEMA, FEATURE_SCHEMA_VERSION
+from .features import EncodedDecisionBatch, FEATURE_SCHEMA, FEATURE_SCHEMA_VERSION, PHASE_ORDER
 
 DATA_SCHEMA = "splendor-mcts-selfplay-v1"
+DATA_SCHEMA_V2 = "splendor-mcts-selfplay-v2"
 STATE_FIELDS = (
     "global_features", "market_t1", "market_t1_mask", "market_t2",
     "market_t2_mask", "market_t3", "market_t3_mask", "self_reserved",
@@ -132,7 +133,8 @@ def validate_game_arrays(
     game_id = metadata.get("game_id")
     if type(game_id) is not int or (expected_game_id is not None and game_id != expected_game_id):
         raise ValueError("archive game_id mismatch")
-    if metadata.get("data_schema") != DATA_SCHEMA or metadata.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+    schema = metadata.get("data_schema")
+    if schema not in (DATA_SCHEMA, DATA_SCHEMA_V2) or metadata.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
         raise ValueError(f"game {game_id}: schema mismatch")
     if fingerprint is not None and metadata.get("semantic_fingerprint") != fingerprint:
         raise ValueError(f"game {game_id}: semantic fingerprint mismatch")
@@ -246,16 +248,35 @@ def validate_game_arrays(
             raise ValueError(f"game {game_id} sample {i}: invalid single-candidate result")
     if int(np.sum(arrays["searchable"])) != metadata.get("policy_samples"):
         raise ValueError(f"game {game_id}: policy sample count mismatch")
-    replay = metadata.get("replay")
-    if not isinstance(replay, dict) or replay.get("header", {}).get("game_seed") != metadata.get("game_seed") or replay.get("result") != terminal:
-        raise ValueError(f"game {game_id}: replay metadata mismatch")
-    events = replay.get("events")
-    if not isinstance(events, list) or sum(not event.get("automatic", False) for event in events) != length:
-        raise ValueError(f"game {game_id}: replay decision count mismatch")
-    if events and events[-1].get("state_digest_after") != metadata.get("final_state_digest"):
-        raise ValueError(f"game {game_id}: replay final digest mismatch")
-    if not isinstance(metadata.get("final_state_digest"), str) or len(metadata["final_state_digest"]) != 64:
-        raise ValueError(f"game {game_id}: missing final digest")
+    if schema == DATA_SCHEMA:
+        replay = metadata.get("replay")
+        if not isinstance(replay, dict) or replay.get("header", {}).get("game_seed") != metadata.get("game_seed") or replay.get("result") != terminal:
+            raise ValueError(f"game {game_id}: replay metadata mismatch")
+        events = replay.get("events")
+        if not isinstance(events, list) or sum(not event.get("automatic", False) for event in events) != length:
+            raise ValueError(f"game {game_id}: replay decision count mismatch")
+        if events and events[-1].get("state_digest_after") != metadata.get("final_state_digest"):
+            raise ValueError(f"game {game_id}: replay final digest mismatch")
+        if not isinstance(metadata.get("final_state_digest"), str) or len(metadata["final_state_digest"]) != 64:
+            raise ValueError(f"game {game_id}: missing final digest")
+    else:
+        trace = metadata.get("trace")
+        if not isinstance(trace, dict) or trace.get("version") != "compact-action-trace-v2":
+            raise ValueError(f"game {game_id}: missing compact action trace")
+        if trace.get("game_seed") != metadata.get("game_seed") or trace.get("first_player") != metadata.get("first_player"):
+            raise ValueError(f"game {game_id}: trace header mismatch")
+        if trace.get("terminal_result") != terminal:
+            raise ValueError(f"game {game_id}: trace terminal mismatch")
+        actions = trace.get("actions")
+        if not isinstance(actions, list) or len(actions) != length:
+            raise ValueError(f"game {game_id}: trace decision count mismatch")
+        for index, action in enumerate(actions):
+            if (action.get("decision_index") != index
+                    or action.get("player_id") != int(arrays["player_id"][index])
+                    or action.get("phase") != PHASE_ORDER[int(arrays["phase"][index])].value
+                    or action.get("candidate_index") != int(arrays["chosen_candidate_index"][index])
+                    or not isinstance(action.get("action"), dict)):
+                raise ValueError(f"game {game_id} sample {index}: trace action mismatch")
     return {"decisions": length, "policy_samples": int(np.sum(arrays["searchable"])), "candidates": candidates, "simulations": int(np.sum(arrays["simulations"]))}
 
 
@@ -322,9 +343,10 @@ class SelfPlayDataset:
             raise ValueError("split must be train, validation, or None")
         self.root = Path(root)
         manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
-        if manifest.get("protocol") != "mcts-selfplay-v1" or manifest.get("versions", {}).get("data") != DATA_SCHEMA:
+        if manifest.get("protocol") not in ("mcts-selfplay-v1", "mcts-selfplay-v2") or manifest.get("versions", {}).get("data") not in (DATA_SCHEMA, DATA_SCHEMA_V2):
             raise ValueError("self-play manifest schema mismatch")
-        search = manifest["semantic_config"]["search_config"]
+        config_key = "semantic_config" if manifest["protocol"] == "mcts-selfplay-v1" else "config"
+        search = manifest[config_key]["search_config"]
         self.entries: list[tuple[Path, int]] = []
         self._cache: tuple[Path, dict[str, np.ndarray], dict[str, Any]] | None = None
         for path in sorted((self.root / "games").glob("game-*.npz")):

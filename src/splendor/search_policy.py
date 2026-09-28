@@ -29,6 +29,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -58,6 +59,7 @@ from .features import (
 from .model import ReservationSource, Tier
 from .replay import new_replay, to_primitive
 from .result import TerminalResult
+from .search_inference import FrozenSearchInference
 from .rng import DeterministicRng
 
 
@@ -210,22 +212,24 @@ def decision_quality_metrics(
     return {name: float(value) for name, value in result.items()}
 
 
-def _request_seed(request: DecisionRequest, base_seed: int, sample: int) -> int:
-    """Derive a platform-stable stream from public policy input only."""
-
+def _request_public_word(request: DecisionRequest) -> int:
     payload = json.dumps(
-        to_primitive(request),
-        ensure_ascii=False,
-        sort_keys=True,
+        to_primitive(request), ensure_ascii=False, sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    digest = hashlib.sha256(payload).digest()
-    public_word = int.from_bytes(digest[:8], "big")
+    return int.from_bytes(hashlib.sha256(payload).digest()[:8], "big")
+
+
+def _seed_from_public_word(public_word: int, base_seed: int, sample: int) -> int:
     return (
-        public_word
-        ^ (base_seed & ((1 << 64) - 1))
+        public_word ^ (base_seed & ((1 << 64) - 1))
         ^ ((sample + 1) * 0x9E3779B97F4A7C15)
     ) & ((1 << 64) - 1)
+
+
+def _request_seed(request: DecisionRequest, base_seed: int, sample: int) -> int:
+    """Derive a platform-stable stream from public policy input only."""
+    return _seed_from_public_word(_request_public_word(request), base_seed, sample)
 
 
 def _market_ids(observation: Observation) -> tuple[str, ...]:
@@ -428,6 +432,7 @@ def determinize_request(
     seed: int,
     catalog: Catalog | None = None,
     failure_dir: Path | None = None,
+    engine_mode: str = "checked",
 ) -> GameEngine:
     """Build a legal simulator whose root view exactly equals the input."""
 
@@ -436,8 +441,9 @@ def determinize_request(
     engine = GameEngine(
         state,
         catalog,
-        new_replay(catalog, seed, state.first_player),
+        new_replay(catalog, seed, state.first_player) if engine_mode == "checked" else None,
         failure_dir or Path.cwd() / "runtime" / "search_failures",
+        mode=engine_mode,
     )
     rebuilt = engine.decision()
     if not isinstance(rebuilt, DecisionRequest):
@@ -477,10 +483,13 @@ class PolicyValueSearchPolicy:
         config: SearchConfig | None = None,
         device: torch.device | str = "cpu",
         catalog: Catalog | None = None,
+        engine_mode: str = "fast",
+        evaluator: FrozenSearchInference | None = None,
     ) -> None:
-        self.device = torch.device(device)
-        self.model = model.to(self.device)
-        self.model.eval()
+        self.evaluator = evaluator or FrozenSearchInference(model, device=device)
+        self.device = self.evaluator.device
+        self.model = self.evaluator.model
+        self.engine_mode = engine_mode
         self.catalog = catalog or load_default_catalog()
         self.config = config or SearchConfig()
         self.stats = SearchStats(
@@ -494,36 +503,21 @@ class PolicyValueSearchPolicy:
     # -- inference ---------------------------------------------------------
 
     def _infer_logits(self, request: DecisionRequest) -> list[float]:
-        """Masked actor logits for one request (root or interior node)."""
-
-        started = time.perf_counter()
-        batch = collate_encoded_decisions((encode_decision(request),))
-        was_training = self.model.training
-        self.model.eval()
-        with torch.inference_mode():
-            logits, _ = self.model(batch)
-            mask = torch.as_tensor(batch.candidate_mask, device=logits.device)
-            masked = self.model.masked_logits(logits, mask)
-        self.model.train(was_training)
+        """Masked actor logits from the frozen policy-only path."""
+        before = self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds
+        logits = self.evaluator.policy_only((request,))[0]
         self.stats.model_batches += 1
         self.stats.model_positions += 1
-        self.stats.inference_seconds += time.perf_counter() - started
-        return masked.detach().cpu()[0, : len(request.legal_actions)].tolist()
+        self.stats.inference_seconds += self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds - before
+        return list(logits)
 
     def _leaf_value(self, request: DecisionRequest, actor: int) -> float:
-        """Critic value at the horizon, from the state-only encoding."""
-
-        started = time.perf_counter()
-        batch = collate_encoded_states((encode_decision_state(request),))
-        was_training = self.model.training
-        self.model.eval()
-        with torch.inference_mode():
-            values = self.model.value_from_state(batch)
-        self.model.train(was_training)
+        """Critic value at the horizon, from a state-only encoding."""
+        before = self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds
+        value = self.evaluator.value_only((request,))[0]
         self.stats.model_batches += 1
         self.stats.model_positions += 1
-        self.stats.inference_seconds += time.perf_counter() - started
-        value = float(values.detach().cpu()[0])
+        self.stats.inference_seconds += self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds - before
         if self.config.leaf_value_clip is not None:
             limit = self.config.leaf_value_clip
             value = max(-limit, min(limit, value))
@@ -573,18 +567,15 @@ class PolicyValueSearchPolicy:
     def _expand_child(
         self,
         engine: GameEngine,
-        action: Action,
+        action_index: int,
     ) -> tuple[GameEngine, DecisionRequest | TerminalResult]:
-        """Apply one action on a forked search engine, folding forced plies."""
+        """Apply one cached candidate on a forked search engine."""
 
         child = _clone_engine(engine)
-        response = child.apply(action)
         if not self.config.fold_forced_phases:
-            return child, response
-        folded = 0
-        while isinstance(response, DecisionRequest) and len(response.legal_actions) == 1:
-            response = child.apply(response.legal_actions[0])
-            folded += 1
+            return child, child.apply_candidate(action_index, state_version=engine.state_version)
+        response, _, folded = child.apply_candidate_folded(action_index, max_transitions=sys.maxsize,
+                                                            state_version=engine.state_version)
         self.stats.folded_decisions += folded
         return child, response
 
@@ -625,7 +616,7 @@ class PolicyValueSearchPolicy:
         # which is the ordering that prunes most for both max and min nodes.
         for action_index in self._top_indices(logits):
             action = request.legal_actions[action_index]
-            child, response = self._expand_child(engine, action)
+            child, response = self._expand_child(engine, action_index)
             self.stats.expanded_nodes += 1
             value = self._child_value(child, response, remaining - 1, alpha, beta)
             if maximizing:
@@ -682,6 +673,7 @@ class PolicyValueSearchPolicy:
             request,
             seed=seed,
             catalog=self.catalog,
+            engine_mode=self.engine_mode,
         )
         self.stats.determinizations += 1
         logits = self._infer_logits(request)
@@ -692,7 +684,7 @@ class PolicyValueSearchPolicy:
         alpha = -math.inf
         for action_index in ranked[: self.config.top_k]:
             action = request.legal_actions[action_index]
-            child, response = self._expand_child(engine, action)
+            child, response = self._expand_child(engine, action_index)
             self.stats.expanded_nodes += 1
             # One ulp below the best exact value: a child that comes back at or
             # above it was searched strictly inside its window and is therefore
@@ -742,7 +734,7 @@ class PolicyValueSearchPolicy:
             root_remaining = self.config.depth - 1
             for action_index in self._top_indices(logits):
                 action = request.legal_actions[action_index]
-                child, response = self._expand_child(engine, action)
+                child, response = self._expand_child(engine, action_index)
                 self.stats.expanded_nodes += 1
                 # Every root child is searched with a full window so its value
                 # stays exact; interior pruning cannot change the root choice.

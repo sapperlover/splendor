@@ -28,6 +28,7 @@
 - 独立 determinization PUCT/MCTS 搜索与统一评测：[`docs/puct_mcts_search_zh-CN.md`](docs/puct_mcts_search_zh-CN.md)
 - MCTS 自我对弈数据采集、归档与读取：[`docs/mcts_selfplay_data_zh-CN.md`](docs/mcts_selfplay_data_zh-CN.md)
 - MCTS 四组 50 pairs 顺序评测脚本与输出约定：[`docs/mcts_50pair_sweep_zh-CN.md`](docs/mcts_50pair_sweep_zh-CN.md)
+- 冻结搜索与自博弈采集加速：[`docs/search_throughput_optimization_zh-CN.md`](docs/search_throughput_optimization_zh-CN.md)
 - P0–P3 训练、评测与搜索性能优化：[`docs/performance_optimization_p0_p3_zh-CN.md`](docs/performance_optimization_p0_p3_zh-CN.md)
 
 当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A、5B Stage 1–4，以及

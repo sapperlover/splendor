@@ -1,5 +1,7 @@
 # MCTS 自我对弈数据：冻结网络的第一轮采集
 
+本页记录历史 v1/300 局协议。新增 fast 引擎与跨局批量采集写入显式 v2 compact trace；v1 仍可读取，见 [搜索吞吐优化](search_throughput_optimization_zh-CN.md)。
+
 ## 实现范围
 
 `src/splendor/selfplay.py` 用记录型 Policy 包装现有 `PUCTSearchPolicy`，双方共享同一冻结 checkpoint 的只读网络对象，但各自有独立 MCTS 策略、树、统计与随机种子。真实对局由 `run_match()` 执行；每个正式 `DecisionRequest` 只调用一次带探索的 `search()`，执行前记录当前可见数值编码、完整根策略分布和所选候选索引。引擎自动 forced skip 不产生样本，真实 PAYMENT、RETURN_TOKENS、CHOOSE_NOBLE 等请求均保留。搜索策略仍只接收 `DecisionRequest`。

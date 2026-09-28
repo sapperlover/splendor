@@ -117,18 +117,30 @@ def test_forced_root_fast_path_and_stable_result(catalog):
     assert tuple(inspect.signature(PUCTSearchPolicy.choose).parameters) == ('self', 'request')
 
 
-def test_terminal_edge_and_cap_use_correct_value(catalog):
+def _fake_job(policy, request, engine, prior, monkeypatch):
+    monkeypatch.setattr('splendor.mcts_policy.determinize_request',
+                        lambda *args, **kwargs: engine)
+    job = policy.start_job(request)
+    pending = job.pending_requests()
+    assert len(pending) == 1 and pending[0].kind == 'policy_value'
+    job.submit(pending[0].request_id, prior, 0.0, prior_is_normalized=True)
+    return job
+
+
+def test_terminal_edge_reuse_backs_up_once_per_simulation(catalog, monkeypatch):
     request = GameEngine.new(5, catalog=catalog).decision()
-    assert isinstance(request, DecisionRequest)
-    request = replace(request, legal_actions=request.legal_actions[:1])
-    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=1, determinizations=1), catalog=catalog)
-    engine = GameEngine.new(5, catalog=catalog)
+    request = replace(request, legal_actions=request.legal_actions[:2])
     terminal = TerminalResult((15, 0), (3, 0), (0,), (10, 10))
-    edge = _Edge(terminal=terminal)
-    node = _Node(engine, request, (1.0,), [edge])
-    assert policy._simulate(node) == 1
-    assert policy._simulate(node) == 1
-    assert edge.visits == 2 and edge.value_sum == 2
+    class TerminalEngine:
+        current_player = 0
+        state_version = 0
+        def fork(self):
+            return self
+        def apply_candidate_folded(self, index, *, max_transitions, action_trace=None, state_version):
+            return terminal, 1, 0
+    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=2, determinizations=1), catalog=catalog)
+    job = _fake_job(policy, request, TerminalEngine(), (1.0, 0.0), monkeypatch)
+    assert job.done and job.result.root_visit_counts == (2, 0)
     assert policy.stats.terminal_hits == 2
 
 
@@ -148,6 +160,7 @@ def test_evaluation_spec_and_default_seed(tmp_path, monkeypatch):
 
 
 class ScriptEngine:
+    state_version = 0
     def __init__(self, request, *, player=0, next_player=0, terminal=None):
         self.request = request
         self.current_player = player
@@ -155,44 +168,49 @@ class ScriptEngine:
         self.terminal = terminal
 
     def fork(self):
-        return ScriptEngine(self.request, player=self.current_player, next_player=self.next_player, terminal=self.terminal)
+        return ScriptEngine(self.request, player=self.current_player,
+                            next_player=self.next_player, terminal=self.terminal)
 
-    def apply(self, action):
+    def apply_candidate(self, index, *, state_version):
         self.current_player = self.next_player
         return self.request if self.terminal is None else self.terminal
 
+    def apply_candidate_folded(self, index, *, max_transitions, action_trace=None, state_version):
+        if action_trace is not None:
+            action_trace.append(self.request.legal_actions[index])
+        return self.apply_candidate(index, state_version=state_version), 1, 0
+
 
 @pytest.mark.parametrize('leaf_player,expected', [(0, 0.4), (1, -0.4)])
-def test_new_leaf_stops_and_backs_up_once(catalog, leaf_player, expected):
+def test_new_leaf_stops_and_backs_up_once(catalog, monkeypatch, leaf_player, expected):
     request = GameEngine.new(4, catalog=catalog).decision()
-    assert isinstance(request, DecisionRequest)
     request = replace(request, legal_actions=request.legal_actions[:2])
-    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=1, determinizations=1, fold_forced_phases=False), catalog=catalog)
-    calls = []
-    def infer(requests):
-        calls.append(requests)
-        return (((1.0, 0.0), 0.4),)
-    policy._infer = infer
-    root = _Node(ScriptEngine(request, next_player=leaf_player), request, (1.0, 0.0))
-    assert policy._simulate(root) == 1
-    assert len(calls) == 1
-    assert root.edges[0].visits == 1 and root.edges[0].value_sum == pytest.approx(expected)
-    assert root.edges[1].visits == 0
-    assert root.edges[0].child is not None
+    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=1, determinizations=1,
+                              fold_forced_phases=False), catalog=catalog)
+    job = _fake_job(policy, request, ScriptEngine(request, next_player=leaf_player),
+                    (1.0, 0.0), monkeypatch)
+    root = job._worlds[0].root
+    pending = job.pending_requests()
+    assert len(pending) == 1 and pending[0].kind == 'policy_value'
+    job.submit(pending[0].request_id, (1.0, 0.0), 0.4, prior_is_normalized=True)
+    assert job.done and root.edges[0].visits == 1
+    assert root.edges[0].value_sum == pytest.approx(expected)
+    assert root.edges[1].visits == 0 and root.edges[0].child is not None
 
 
-def test_transition_cap_uses_critic_and_not_terminal(catalog):
+def test_transition_cap_uses_critic_and_not_terminal(catalog, monkeypatch):
     request = GameEngine.new(6, catalog=catalog).decision()
-    assert isinstance(request, DecisionRequest)
     request = replace(request, legal_actions=request.legal_actions[:2])
-    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=1, determinizations=1, max_simulation_transitions=1), catalog=catalog)
-    policy._critic = lambda request: 0.35
-    root = _Node(ScriptEngine(request), request, (1.0, 0.0))
-    policy._simulate(root)
+    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=1,
+                              determinizations=1, max_simulation_transitions=1), catalog=catalog)
+    job = _fake_job(policy, request, ScriptEngine(request), (1.0, 0.0), monkeypatch)
+    root = job._worlds[0].root
+    pending = job.pending_requests()
+    assert len(pending) == 1 and pending[0].kind == 'value_only'
+    job.submit(pending[0].request_id, None, 0.35)
     assert root.edges[0].value_sum == pytest.approx(0.35)
     assert root.edges[0].child is None and root.edges[0].terminal is None
-    assert policy.stats.transition_cap_hits == 1
-    assert policy.stats.terminal_hits == 0
+    assert policy.stats.transition_cap_hits == 1 and policy.stats.terminal_hits == 0
 
 
 def test_paired_serial_parallel_resume_and_fingerprint(tmp_path):
@@ -236,53 +254,52 @@ def test_paired_serial_parallel_resume_and_fingerprint(tmp_path):
         run_fixed_evaluation(replace(serial, policy_a=SerializablePolicySpec.mcts_checkpoint('m1', checkpoint, search_config={'simulations': 4, 'determinizations': 2})), tmp_path / 'serial.json', resume=True)
 
 
-def test_low_prior_winning_terminal_can_overtake_high_prior_loss(catalog):
+def test_low_prior_winning_terminal_can_overtake_high_prior_loss(catalog, monkeypatch):
     request = GameEngine.new(12, catalog=catalog).decision()
-    assert isinstance(request, DecisionRequest)
     request = replace(request, legal_actions=request.legal_actions[:2])
     losing = TerminalResult((0, 15), (0, 3), (1,), (10, 10))
     winning = TerminalResult((15, 0), (3, 0), (0,), (10, 10))
 
     class TerminalEngine:
         current_player = 0
+        state_version = 0
         def fork(self):
             return self
-        def apply(self, action):
-            return losing if action == request.legal_actions[0] else winning
+        def apply_candidate_folded(self, index, *, max_transitions, action_trace=None, state_version):
+            return (losing if index == 0 else winning), 1, 0
 
-    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=20, determinizations=1), catalog=catalog)
-    policy._infer = lambda requests: (_ for _ in ()).throw(AssertionError('terminal must not call network'))
-    root = _Node(TerminalEngine(), request, (0.9, 0.1))
-    for _ in range(20):
-        policy._simulate(root)
-    assert root.edges[1].visits > root.edges[0].visits
-    assert root.edges[0].value_sum == -root.edges[0].visits
-    assert root.edges[1].value_sum == root.edges[1].visits
+    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=20,
+                              determinizations=1), catalog=catalog)
+    job = _fake_job(policy, request, TerminalEngine(), (0.9, 0.1), monkeypatch)
+    assert job.done and job.result.root_visit_counts[1] > job.result.root_visit_counts[0]
     assert policy.stats.terminal_hits == 20
 
 
-def test_forced_chain_uses_resulting_actor(catalog):
+def test_forced_chain_uses_resulting_actor(catalog, monkeypatch):
     request = GameEngine.new(13, catalog=catalog).decision()
-    assert isinstance(request, DecisionRequest)
     root_request = replace(request, legal_actions=request.legal_actions[:2])
     forced_request = replace(request, legal_actions=request.legal_actions[:1])
 
     class ForcedEngine:
+        state_version = 0
         def __init__(self, step=0):
             self.step = step
             self.current_player = 0 if step < 2 else 1
         def fork(self):
             return ForcedEngine(self.step)
-        def apply(self, action):
-            self.step += 1
-            self.current_player = 0 if self.step < 2 else 1
-            return forced_request if self.step == 1 else root_request
+        def apply_candidate_folded(self, index, *, max_transitions, action_trace=None, state_version):
+            self.step += 2
+            self.current_player = 1
+            if action_trace is not None:
+                action_trace.extend((root_request.legal_actions[index], forced_request.legal_actions[0]))
+            return root_request, 2, 1
 
-    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=1, determinizations=1), catalog=catalog)
-    policy._infer = lambda requests: (((0.5, 0.5), 0.4),)
-    root = _Node(ForcedEngine(), root_request, (1.0, 0.0))
-    policy._simulate(root)
+    policy = PUCTSearchPolicy(zero_model(), config=MCTSConfig(simulations=1,
+                              determinizations=1), catalog=catalog)
+    job = _fake_job(policy, root_request, ForcedEngine(), (1.0, 0.0), monkeypatch)
+    root = job._worlds[0].root
+    pending = job.pending_requests()[0]
+    job.submit(pending.request_id, (0.5, 0.5), 0.4, prior_is_normalized=True)
     assert root.edges[0].value_sum == pytest.approx(-0.4)
     assert root.edges[0].child.engine.current_player == 1
-    assert policy.stats.folded_actions == 1
-    assert policy.stats.state_transitions == 2
+    assert policy.stats.folded_actions == 1 and policy.stats.state_transitions == 2

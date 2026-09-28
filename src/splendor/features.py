@@ -921,17 +921,23 @@ def collate_encoded_decisions(
 
     batch_size = len(decisions)
     max_candidates = max(len(item.candidate_actions) for item in decisions)
-    candidates = np.zeros(
-        (batch_size, max_candidates, FEATURE_SCHEMA.action_dim),
-        dtype=np.float32,
-    )
-    candidate_mask = np.zeros((batch_size, max_candidates), dtype=np.bool_)
-    for index, item in enumerate(decisions):
-        count = item.candidate_features.shape[0]
-        candidates[index, :count] = item.candidate_features
-        candidate_mask[index, :count] = item.candidate_mask
+    if batch_size == 1:
+        candidates = np.expand_dims(decisions[0].candidate_features, axis=0)
+        candidate_mask = np.expand_dims(decisions[0].candidate_mask, axis=0)
+    else:
+        candidates = np.zeros(
+            (batch_size, max_candidates, FEATURE_SCHEMA.action_dim),
+            dtype=np.float32,
+        )
+        candidate_mask = np.zeros((batch_size, max_candidates), dtype=np.bool_)
+        for index, item in enumerate(decisions):
+            count = item.candidate_features.shape[0]
+            candidates[index, :count] = item.candidate_features
+            candidate_mask[index, :count] = item.candidate_mask
 
     def stack(name: str) -> np.ndarray:
+        if batch_size == 1:
+            return np.expand_dims(getattr(decisions[0], name), axis=0)
         return np.stack([getattr(item, name) for item in decisions])
 
     return EncodedDecisionBatch(
@@ -967,6 +973,8 @@ def collate_encoded_states(
         raise ValueError("feature schema version mismatch in batch")
 
     def stack(name: str) -> np.ndarray:
+        if len(states) == 1:
+            return np.expand_dims(getattr(states[0], name), axis=0)
         return np.stack([getattr(item, name) for item in states])
 
     return EncodedStateBatch(

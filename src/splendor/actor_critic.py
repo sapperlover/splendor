@@ -299,33 +299,25 @@ class ActorCritic(nn.Module):
         return torch.cat((pooled, count), dim=-1)
 
     def encode_state(self, batch: TorchDecisionBatch | TorchStateBatch) -> Tensor:
-        card_sets = (
-            self._pool_cards(
-                batch.market_t1, batch.market_t1_mask, FEATURE_SCHEMA.market_capacity
-            ),
-            self._pool_cards(
-                batch.market_t2, batch.market_t2_mask, FEATURE_SCHEMA.market_capacity
-            ),
-            self._pool_cards(
-                batch.market_t3, batch.market_t3_mask, FEATURE_SCHEMA.market_capacity
-            ),
-            self._pool_cards(
-                batch.self_reserved,
-                batch.self_reserved_mask,
-                FEATURE_SCHEMA.reserved_capacity,
-            ),
-            self._pool_cards(
-                batch.opponent_reserved,
-                batch.opponent_reserved_mask,
-                FEATURE_SCHEMA.reserved_capacity,
-            ),
+        card_fields = (
+            (batch.market_t1, batch.market_t1_mask, FEATURE_SCHEMA.market_capacity),
+            (batch.market_t2, batch.market_t2_mask, FEATURE_SCHEMA.market_capacity),
+            (batch.market_t3, batch.market_t3_mask, FEATURE_SCHEMA.market_capacity),
+            (batch.self_reserved, batch.self_reserved_mask, FEATURE_SCHEMA.reserved_capacity),
+            (batch.opponent_reserved, batch.opponent_reserved_mask, FEATURE_SCHEMA.reserved_capacity),
         )
-        pending_mask = batch.pending_card_mask.unsqueeze(-1)
-        pending_raw = torch.where(
-            pending_mask, batch.pending_card, torch.zeros_like(batch.pending_card)
+        raw_parts = [torch.where(mask.unsqueeze(-1), values, 0) for values, mask, _ in card_fields]
+        raw_parts.append(torch.where(batch.pending_card_mask.unsqueeze(-1), batch.pending_card, 0).unsqueeze(1))
+        widths = [part.shape[1] for part in raw_parts]
+        encoded_parts = self.card_encoder(torch.cat(raw_parts, dim=1)).split(widths, dim=1)
+        card_sets = tuple(
+            torch.cat((
+                torch.where(mask.unsqueeze(-1), encoded, 0).sum(dim=1) / float(capacity),
+                mask.sum(dim=1, dtype=values.dtype).unsqueeze(-1) / float(capacity),
+            ), dim=-1)
+            for (values, mask, capacity), encoded in zip(card_fields, encoded_parts[:-1])
         )
-        pending = self.card_encoder(pending_raw)
-        pending = torch.where(pending_mask, pending, torch.zeros_like(pending))
+        pending = torch.where(batch.pending_card_mask.unsqueeze(-1), encoded_parts[-1].squeeze(1), 0)
         state_input = torch.cat(
             (
                 batch.global_features,
@@ -360,22 +352,34 @@ class ActorCritic(nn.Module):
         )
         return torch.cat((meta, card_embedding, noble_embedding), dim=-1)
 
-    def forward(
-        self, batch: EncodedDecisionBatch | TorchDecisionBatch
-    ) -> tuple[Tensor, Tensor]:
-        prepared = self._prepare(batch)
-        state = self.encode_state(prepared)
-        candidate_mask = prepared.candidate_mask.unsqueeze(-1)
+    def _actor_logits(self, prepared: TorchDecisionBatch, state: Tensor) -> Tensor:
         candidate_raw = torch.where(
-            candidate_mask,
+            prepared.candidate_mask.unsqueeze(-1),
             prepared.candidate_features,
             torch.zeros_like(prepared.candidate_features),
         )
         actions = self.encode_actions(candidate_raw)
         expanded_state = state.unsqueeze(1).expand(-1, actions.shape[1], -1)
-        logits = self.actor(torch.cat((expanded_state, actions), dim=-1)).squeeze(-1)
-        values = self.critic(state).squeeze(-1)
-        return logits, values
+        return self.actor(torch.cat((expanded_state, actions), dim=-1)).squeeze(-1)
+
+    def _forward_prepared(self, prepared: TorchDecisionBatch) -> tuple[Tensor, Tensor]:
+        """Trusted tensor core used by frozen search after encoding checks."""
+        state = self.encode_state(prepared)
+        return self._actor_logits(prepared, state), self.critic(state).squeeze(-1)
+
+    def forward(
+        self, batch: EncodedDecisionBatch | TorchDecisionBatch
+    ) -> tuple[Tensor, Tensor]:
+        return self._forward_prepared(self._prepare(batch))
+
+    def _policy_logits_prepared(self, prepared: TorchDecisionBatch) -> Tensor:
+        return self._actor_logits(prepared, self.encode_state(prepared))
+
+    def policy_logits(
+        self, batch: EncodedDecisionBatch | TorchDecisionBatch
+    ) -> Tensor:
+        """Frozen-search actor path without evaluating the critic head."""
+        return self._policy_logits_prepared(self._prepare(batch))
 
     def value_only(
         self, batch: EncodedDecisionBatch | TorchDecisionBatch

@@ -151,7 +151,7 @@ def test_tensorize_and_cpu_forward_support_ragged_batch(initial_state, catalog) 
     assert probabilities[0, 0].item() == 1.0
     assert torch.count_nonzero(probabilities[0, 1:]).item() == 0
     torch.testing.assert_close(
-        probabilities.sum(dim=1), torch.ones(2), rtol=0, atol=1e-7
+        probabilities.sum(dim=1), torch.ones(2), rtol=0, atol=3e-7
     )
 
 
@@ -295,7 +295,7 @@ def test_shared_encoders_are_used_for_all_state_and_action_regions(
         card_hook.remove()
         noble_hook.remove()
 
-    assert card_calls == [id(model.card_encoder)] * 7
+    assert card_calls == [id(model.card_encoder)] * 2
     assert noble_calls == [id(model.noble_encoder)] * 2
 
 

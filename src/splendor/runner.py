@@ -120,8 +120,8 @@ def _action_name(action: Action) -> str | None:
     return None
 
 
-def canonical_state_signature(state: object, catalog: Catalog) -> str:
-    """Stable digest of future-relevant state for deterministic evaluation.
+def canonical_state_key(state: object, catalog: Catalog) -> tuple[object, ...]:
+    """Exact future-relevant structural key for deterministic cycle detection.
 
     ``completed_turns`` is deliberately excluded by the 5C evaluation
     protocol.  Replay positions and logging counters do not live in
@@ -216,7 +216,12 @@ def canonical_state_signature(state: object, catalog: Catalog) -> str:
             for player in state.players
         ),
     )
-    return hashlib.sha256(repr(canonical).encode("utf-8")).hexdigest()
+    return canonical
+
+
+def canonical_state_signature(state: object, catalog: Catalog) -> str:
+    """Legacy stable digest, computed only for diagnostics when requested."""
+    return hashlib.sha256(repr(canonical_state_key(state, catalog)).encode("utf-8")).hexdigest()
 
 
 def _cycle_action_signature(action: Action) -> tuple[object, ...]:
@@ -356,7 +361,7 @@ def run_random_game(
     forced_skips = 0
     checkpoint_rng = None if lean else DeterministicRng(_policy_seed(seed, 2))
     checkpoint_seen: Counter[str] = Counter()
-    seen_signatures: tuple[dict[str, int], dict[str, int]] = ({}, {})
+    seen_signatures: tuple[dict[tuple[object, ...], int], dict[tuple[object, ...], int]] = ({}, {})
     repeated_players: set[int] = set()
 
     def snapshots() -> tuple[object, object]:
@@ -434,7 +439,7 @@ def run_random_game(
             if adjudicate_deterministic_policy_cycles:
                 state = engine._debug_state()
                 actor = state.current_player
-                signature = canonical_state_signature(state, catalog)
+                signature = canonical_state_key(state, catalog)
                 first_decision = seen_signatures[actor].get(signature)
                 if first_decision is not None:
                     repeated_players.add(actor)
@@ -448,7 +453,7 @@ def run_random_game(
                         policy_seeds=policy_seeds,
                         policy_snapshots=snapshots(),
                         context={
-                            "canonical_state_signature_sha256": signature,
+                            "canonical_state_signature_sha256": canonical_state_signature(state, catalog),
                             "first_seen_decision": first_decision,
                             "repeated_at_decision": decision_count,
                             "repeated_players": sorted(repeated_players),

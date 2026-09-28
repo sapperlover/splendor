@@ -1,6 +1,6 @@
 # Splendor AI：当前项目快照与导航
 
-> 最后更新：2026-09-27
+> 最后更新：2026-09-28
 >
 > 里程碑：WP5C / 首次 5M learning-decisions 主训练已完成
 >
@@ -22,6 +22,7 @@
 - 基于现有 checkpoint 的信息集安全 top-k / critic alpha-beta 搜索，以及向量化特征编码、state-only 叶节点评估、forced-phase folding 和可恢复深度阶梯；
 - 独立 determinization PUCT/MCTS 搜索，可返回完整根访问分布并通过统一评测器串行或多进程评测；见 [PUCT 搜索说明](puct_mcts_search_zh-CN.md)；
 - 基于同一冻结网络的可恢复 MCTS 自我对弈数据采集与数值读取接口；见 [自我对弈数据说明](mcts_selfplay_data_zh-CN.md)；首批 300 个完整对局已校验；
+- 冻结推理、fast 引擎、可暂停 MCTS 与 CPU/CUDA 跨局批量自博弈采集；v1/v2 数据均可读，见 [搜索吞吐优化](search_throughput_optimization_zh-CN.md)；
 - 完整的训练后分析导出和本地人机对战网页；网页可配置并调用 top-k 搜索策略作为对手。
 
 当前 DEV 协议下的最优 checkpoint：
@@ -45,7 +46,7 @@ runs/5c_main_seed1/checkpoints/local_004150000_lifetime_004662112.pt
 1. **规则只实现一次。** <code>GameEngine/rules</code> 是合法性与状态转移的唯一来源。
 2. **Policy 只读 <code>DecisionRequest</code>。** 即 Observation + legal actions，不得接触 <code>GameState</code>、牌堆顺序或对手暗保留牌身份。
 3. **<code>legal_actions</code> 是唯一候选集。** Policy 不重写规则；内部执行 handle 与模型可见特征分离。
-4. **异常立即失败。** 不静默修复、换动作或重开；保存 seed、RNG、state 和 replay 现场。
+4. **异常立即失败。** 不静默修复、换动作或重开；checked 路径保存完整 state/replay，fast 路径保存 seed、真实动作前缀和搜索分支现场，均可用 checked 规则重建。
 5. **规则数据从权威持有物重算。** score、bonus、购卡数和贵族资格不依赖易失真缓存。
 6. **隐藏信息隔离是 API 契约。** 不得通过 ID、排序、槽位或牌堆补集泄漏。
 
