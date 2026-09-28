@@ -49,14 +49,23 @@ class SerializablePolicySpec:
             if self.checkpoint is not None or self.search_config is not None:
                 raise ValueError("baseline policy cannot carry neural configuration")
             return
-        if self.kind not in ("greedy_checkpoint", "search_checkpoint"):
+        if self.kind not in (
+            "greedy_checkpoint", "search_checkpoint", "mcts_checkpoint"
+        ):
             raise ValueError(f"unsupported parallel policy kind: {self.kind}")
         if not self.checkpoint:
             raise ValueError("checkpoint-backed policy requires a checkpoint")
         if self.kind == "greedy_checkpoint" and self.search_config is not None:
             raise ValueError("greedy policy cannot carry search configuration")
-        if self.kind == "search_checkpoint" and self.search_config is None:
+        if (
+            self.kind in ("search_checkpoint", "mcts_checkpoint")
+            and self.search_config is None
+        ):
             raise ValueError("search policy requires search configuration")
+        if self.kind == "mcts_checkpoint":
+            from .mcts_policy import MCTSConfig
+
+            MCTSConfig(**self.search_config)
 
     @classmethod
     def baseline(cls, name: str) -> SerializablePolicySpec:
@@ -87,6 +96,16 @@ class SerializablePolicySpec:
             search_config=dict(search_config),
         )
 
+    @classmethod
+    def mcts_checkpoint(
+        cls, name: str, checkpoint: Path | str, *, search_config: dict[str, Any]
+    ) -> SerializablePolicySpec:
+        return cls(
+            name=name,
+            kind="mcts_checkpoint",
+            checkpoint=str(Path(checkpoint).resolve()),
+            search_config=dict(search_config),
+        )
 
     @classmethod
     def from_dict(cls, value: Mapping[str, Any]) -> SerializablePolicySpec:
@@ -106,6 +125,13 @@ class SerializablePolicySpec:
             if not isinstance(search_config, Mapping):
                 raise ValueError(f"search policy {name!r} requires search_config")
             return cls.search_checkpoint(
+                name, checkpoint, search_config=dict(search_config)
+            )
+        if kind == "mcts_checkpoint":
+            search_config = value.get("search_config")
+            if not isinstance(search_config, Mapping):
+                raise ValueError(f"MCTS policy {name!r} requires search_config")
+            return cls.mcts_checkpoint(
                 name, checkpoint, search_config=dict(search_config)
             )
         raise ValueError(f"unsupported policy kind: {kind!r}")
@@ -672,12 +698,20 @@ def _create_serializable_policy(
 
         return GreedyActorCriticPolicy(model, device=device)  # type: ignore[arg-type]
 
-    from .search_policy import PolicyValueSearchPolicy, SearchConfig
-
     if spec.search_config is None:
         raise AssertionError("search policy lost its configuration")
     values = dict(spec.search_config)
-    values["seed"] = int(values["seed"]) ^ seed
+    values["seed"] = int(values.get("seed", 0)) ^ seed
+    if spec.kind == "mcts_checkpoint":
+        from .mcts_policy import MCTSConfig, PUCTSearchPolicy
+
+        return PUCTSearchPolicy(
+            model,  # type: ignore[arg-type]
+            config=MCTSConfig(**values),
+            device=device,
+        )
+    from .search_policy import PolicyValueSearchPolicy, SearchConfig
+
     return PolicyValueSearchPolicy(
         model,  # type: ignore[arg-type]
         config=SearchConfig(**values),

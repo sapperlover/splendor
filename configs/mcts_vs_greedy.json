@@ -1,0 +1,32 @@
+{
+  "policy_a": {
+    "kind": "mcts_checkpoint",
+    "name": "puct_s256_n2",
+    "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "search_config": {
+      "simulations": 256,
+      "determinizations": 2,
+      "c_puct": 1.5,
+      "seed": 9500000,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512
+    }
+  },
+  "policy_b": {
+    "kind": "greedy_checkpoint",
+    "name": "raw_greedy",
+    "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt"
+  },
+  "pairs": 2,
+  "seed_start": 9600000,
+  "policy_seed_base": 9700000,
+  "workers": 2,
+  "device": "cpu",
+  "max_completed_turns": 400,
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 0,
+  "metadata": {
+    "purpose": "mcts_step1_smoke",
+    "search_protocol": "determinized-puct-v1"
+  }
+}

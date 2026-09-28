@@ -467,3 +467,30 @@ def test_seeded_full_game_replay_reproduces_automatic_noble_and_terminal(
     assert replayed.replay_record == engine.replay_record
     assert state_digest(replayed._debug_state()) == state_digest(engine._debug_state())
     assert replayed._debug_state().phase is DecisionPhase.TERMINAL
+
+
+def test_mcts_accepts_all_decision_phases(initial_state, catalog, tmp_path) -> None:
+    import torch
+    from splendor.actor_critic import ActorCritic
+    from splendor.mcts_policy import MCTSConfig, PUCTSearchPolicy
+
+    model = ActorCritic().eval()
+    with torch.no_grad():
+        for parameter in model.parameters():
+            parameter.zero_()
+    policy = PUCTSearchPolicy(model, config=MCTSConfig(simulations=2, determinizations=1), catalog=catalog)
+    main = _engine(initial_state, catalog, tmp_path / 'main').decision()
+    reserved_id = initial_state.decks.tier_one[0]
+    reserved_state = _with_assets(initial_state, catalog, reserved=((reserved_id,), ()), tokens=(TokenVector(green=2, red=1), TokenVector()))
+    payment = _engine(reserved_state, catalog, tmp_path / 'payment').apply(BuyReserved(reserved_id))
+    return_state = _with_assets(initial_state, catalog, tokens=(TokenVector(blue=2, green=2, red=2, black=2, gold=1), TokenVector()))
+    returning = _engine(return_state, catalog, tmp_path / 'return').apply(TakePair(Color.WHITE))
+    noble_cards = _eligible_cards(initial_state, catalog, ('N01', 'N02'))
+    noble_state = _with_assets(initial_state, catalog, purchased=(noble_cards, ()))
+    noble = _engine(noble_state, catalog, tmp_path / 'noble').apply(TakePair(Color.BLUE))
+    for phase, request in zip((DecisionPhase.MAIN_ACTION, DecisionPhase.PAYMENT, DecisionPhase.RETURN_TOKENS, DecisionPhase.CHOOSE_NOBLE), (main, payment, returning, noble)):
+        assert isinstance(request, DecisionRequest)
+        assert request.observation.phase is phase
+        result = policy.search(request)
+        assert request.legal_actions[result.chosen_candidate_index] in request.legal_actions
+        assert sum(result.policy_target) == pytest.approx(1)

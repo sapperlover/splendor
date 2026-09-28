@@ -140,3 +140,19 @@ def test_search_determinization_is_invariant_to_actual_hidden_world(
         torch.set_num_threads(previous_threads)
 
     assert all(result == results[0] for result in results[1:])
+
+
+def test_mcts_root_is_invariant_to_real_hidden_world(initial_state, catalog) -> None:
+    from splendor.mcts_policy import MCTSConfig, PUCTSearchPolicy
+
+    _, requests = _hidden_state_variants(initial_state, catalog, count=3)
+    model = ActorCritic(ActorCriticConfig(
+        card_hidden=8, noble_hidden=4, state_hidden=16,
+        actor_hidden=16, critic_hidden=16,
+    )).eval()
+    with torch.no_grad():
+        for parameter in model.parameters():
+            parameter.zero_()
+    policy = PUCTSearchPolicy(model, config=MCTSConfig(simulations=5, determinizations=2, seed=901), catalog=catalog)
+    first = policy.search(requests[0])
+    assert all(policy.search(request) == first for request in requests[1:])

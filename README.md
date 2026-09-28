@@ -25,6 +25,9 @@
 - 5C 现行评测、promotion、训练对手与历史池协议：[`docs/work_package_5c_current_protocol_zh-CN.md`](docs/work_package_5c_current_protocol_zh-CN.md)
 - 5C 首次 5M 主训练完成报告：[`docs/work_package_5c_5m_training_report_zh-CN.md`](docs/work_package_5c_5m_training_report_zh-CN.md)
 - Policy + Critic 固定深度搜索外挂：[`docs/policy_value_search_zh-CN.md`](docs/policy_value_search_zh-CN.md)
+- 独立 determinization PUCT/MCTS 搜索与统一评测：[`docs/puct_mcts_search_zh-CN.md`](docs/puct_mcts_search_zh-CN.md)
+- MCTS 自我对弈数据采集、归档与读取：[`docs/mcts_selfplay_data_zh-CN.md`](docs/mcts_selfplay_data_zh-CN.md)
+- MCTS 四组 50 pairs 顺序评测脚本与输出约定：[`docs/mcts_50pair_sweep_zh-CN.md`](docs/mcts_50pair_sweep_zh-CN.md)
 - P0–P3 训练、评测与搜索性能优化：[`docs/performance_optimization_p0_p3_zh-CN.md`](docs/performance_optimization_p0_p3_zh-CN.md)
 
 当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A、5B Stage 1–4，以及

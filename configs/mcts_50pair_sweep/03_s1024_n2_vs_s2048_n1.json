@@ -1,0 +1,24 @@
+{
+  "policy_a": {
+    "kind": "mcts_checkpoint",
+    "name": "puct_s1024_n2",
+    "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "search_config": {"simulations": 1024, "determinizations": 2, "c_puct": 1.5, "seed": 9500000, "fold_forced_phases": true, "max_simulation_transitions": 512}
+  },
+  "policy_b": {
+    "kind": "mcts_checkpoint",
+    "name": "puct_s2048_n1",
+    "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "search_config": {"simulations": 2048, "determinizations": 1, "c_puct": 1.5, "seed": 9500000, "fold_forced_phases": true, "max_simulation_transitions": 512}
+  },
+  "pairs": 50,
+  "seed_start": 9800000,
+  "policy_seed_base": 9810000,
+  "workers": 8,
+  "device": "cpu",
+  "max_completed_turns": 400,
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 100000,
+  "bootstrap_seed": 9820000,
+  "metadata": {"purpose": "mcts_50pair_sweep", "matchup_order": 3, "search_protocol": "determinized-puct-v1"}
+}

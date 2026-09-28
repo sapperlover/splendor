@@ -1,0 +1,29 @@
+{
+  "protocol": "mcts-selfplay-v1",
+  "run_id": "az_selfplay_smoke",
+  "round_index": 0,
+  "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+  "num_games": 4,
+  "seed": 20260929,
+  "search_config": {
+    "simulations": 256,
+    "determinizations": 2,
+    "c_puct": 1.5,
+    "seed": 0,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512,
+    "root_noise_fraction": 0.25,
+    "dirichlet_alpha": 0.3
+  },
+  "add_root_noise": true,
+  "temperature_schedule": {
+    "opening_completed_turns": 10,
+    "opening_temperature": 1.0,
+    "late_temperature": 0.0
+  },
+  "validation_fraction": 0.1,
+  "split_seed": 20260930,
+  "workers": 2,
+  "device": "cpu",
+  "max_completed_turns": 400
+}

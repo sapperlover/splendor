@@ -1,10 +1,10 @@
 # Splendor AI：当前项目快照与导航
 
-> 最后更新：2026-09-23
+> 最后更新：2026-09-27
 >
 > 里程碑：WP5C / 首次 5M learning-decisions 主训练已完成
 >
-> 当前阶段：分析 5M 模型、完善搜索效率与深度实验、决定下一阶段实验
+> 当前阶段：已实现 PUCT/MCTS 搜索和冻结网络自我对弈数据采集；监督训练流程待实现
 
 本页是仓库的当前状态入口。新的 AI agent 应先读本页，再按任务跳转到对应文档和代码。
 
@@ -20,6 +20,8 @@
 - paired-seed CPU 多进程评测和可复用 worker 池；
 - 一次已完成的 5M 纯 terminal-reward 主训练；
 - 基于现有 checkpoint 的信息集安全 top-k / critic alpha-beta 搜索，以及向量化特征编码、state-only 叶节点评估、forced-phase folding 和可恢复深度阶梯；
+- 独立 determinization PUCT/MCTS 搜索，可返回完整根访问分布并通过统一评测器串行或多进程评测；见 [PUCT 搜索说明](puct_mcts_search_zh-CN.md)；
+- 基于同一冻结网络的可恢复 MCTS 自我对弈数据采集与数值读取接口；见 [自我对弈数据说明](mcts_selfplay_data_zh-CN.md)；首批 300 个完整对局已校验；
 - 完整的训练后分析导出和本地人机对战网页；网页可配置并调用 top-k 搜索策略作为对手。
 
 当前 DEV 协议下的最优 checkpoint：
@@ -36,7 +38,7 @@ runs/5c_main_seed1/checkpoints/local_004150000_lifetime_004662112.pt
 
 - 只实现本地规则定义的双人基础版 Splendor；
 - 不是 Splendor Duel，不包含 3–4 人、扩展或其他游戏模式；
-- 当前已有实验性 top-k / critic alpha-beta 搜索，完成了 500 局 search-vs-greedy 和 1,000 局 folded-depth 阶梯；没有 MCTS，也尚未完成多 checkpoint、多训练 seed 或 FINAL 协议复验。
+- 当前已有实验性 top-k / critic alpha-beta 搜索，完成了 500 局 search-vs-greedy 和 1,000 局 folded-depth 阶梯；另有独立 determinization PUCT/MCTS 搜索与冻结网络自我对弈数据生成，但尚无监督训练器，也尚未完成多 checkpoint、多训练 seed 或 FINAL 协议复验。
 
 ### 2.2 核心契约
 
@@ -321,7 +323,7 @@ folded-depth 阶梯的两级挑战都高于 54% 晋级阈值，因配置的 <cod
 | 5C 训练/评测 | <code>train_5c.py</code>, <code>evaluate_5c.py</code> |
 | multiprocessing | <code>multiprocess_collector.py</code>, <code>benchmark_5c_multiprocess.py</code> |
 | 5C 后分析 | <code>analyze_5c.py</code> |
-| policy/critic 搜索、通用评测与深度阶梯 | <code>search_policy.py</code>, <code>evaluation.py</code>, <code>ladder_search.py</code>；<code>evaluate_search.py</code> 为弃用兼容入口 |
+| policy/critic 与 PUCT 搜索、通用评测与深度阶梯 | <code>search_policy.py</code>, <code>mcts_policy.py</code>, <code>evaluation.py</code>, <code>ladder_search.py</code>；<code>evaluate_search.py</code> 为弃用兼容入口 |
 | 本地网页 | <code>web_app.py</code>, <code>web/</code> |
 | 测试 | <code>tests/</code> |
 
@@ -354,7 +356,7 @@ folded-depth 阶梯的两级挑战都高于 54% 晋级阈值，因配置的 <cod
 | 优化训练/评测/搜索性能 | [P0–P3 性能优化](performance_optimization_p0_p3_zh-CN.md) → 对应代码与测试 |
 | 理解 5C 实际协议 | [5C 现行协议](work_package_5c_current_protocol_zh-CN.md) |
 | 分析 5M 结果 | [5M 报告](work_package_5c_5m_training_report_zh-CN.md) → <code>artifacts/work_package_5c/</code> |
-| 评测固定策略对局 | [Policy + Critic 搜索](policy_value_search_zh-CN.md) → <code>evaluation.py</code> JSON 配置接口 |
+| 评测固定策略对局 | [Policy + Critic 搜索](policy_value_search_zh-CN.md)、[PUCT 搜索](puct_mcts_search_zh-CN.md) → <code>evaluation.py</code> JSON 配置接口 |
 | 运行人机网页 | [README](../README.md) → <code>web_app.py</code> |
 
 ### 12.2 工作包时间线
