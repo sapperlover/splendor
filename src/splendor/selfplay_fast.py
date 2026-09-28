@@ -463,9 +463,13 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
         "completed_games": len(committed), "missing_games": config.num_games - len(committed),
         "p0_wins": 0, "p1_wins": 0, "draws": 0,
         "samples": 0, "policy_samples": 0, "simulations": 0,
-        "data_bytes": 0, "search_seconds_sum": 0.0,
+        "data_bytes": 0, "search_seconds_sum": 0.0, "logical_model_positions": 0,
         "failed_games": 0, "exceptions": 0, "engineering_truncations": 0,
         "semantic_fingerprint": manifest["semantic_fingerprint"],
+        "statistics_scope": "unavailable", "statistics_complete": False,
+        "statistics_missing_game_ids": sorted(committed),
+        "games_per_wall_second": None, "policy_samples_per_wall_second": None,
+        "simulations_per_wall_second": None,
     }
     for game_id, metadata in committed.items():
         path = game_path(root, game_id)
@@ -482,6 +486,7 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
         summary["simulations"] += counts["simulations"]
         summary["data_bytes"] += path.stat().st_size
         summary["search_seconds_sum"] += sum(s["total_seconds"] for s in metadata["mcts_stats"])
+        summary["logical_model_positions"] += sum(s["model_positions"] for s in metadata["mcts_stats"])
         winners = metadata["terminal_result"]["winner_ids"]
         summary["draws" if len(winners) == 2 else ("p0_wins" if winners[0] == 0 else "p1_wins")] += 1
     for scene_path in (root / "failures").glob("game-*.json"):
@@ -502,12 +507,32 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
                                                     "decision_latency", "root_encoding_seconds",
                                                     "real_rule_seconds", "search_rule_seconds", "write_seconds",
                                                     "queue_wait_seconds", "worker_initialization_seconds_sum",
-                                                    "worker_collection_wall_seconds_max")
+                                                    "worker_collection_wall_seconds_max",
+                                                    "statistics_scope", "statistics_game_ids")
                         if key in status})
-        wall = summary.get("wall_seconds", 0.0)
-        summary["games_per_wall_second"] = len(committed) / wall if wall else 0.0
-        summary["policy_samples_per_wall_second"] = summary["policy_samples"] / wall if wall else 0.0
-        summary["simulations_per_wall_second"] = summary["simulations"] / wall if wall else 0.0
+        # Wall time and shared physical batches cannot be recovered by summing
+        # archived game durations: games/workers overlap. Only use the games
+        # covered by this collection session as throughput numerators.
+        measured_ids = status.get("statistics_game_ids")
+        if status.get("statistics_scope") == "collection_session" and isinstance(measured_ids, list):
+            measured = set(measured_ids)
+            if len(measured) != len(measured_ids) or not measured.issubset(committed):
+                raise ValueError("collection statistics refer to invalid game ids")
+            summary["statistics_complete"] = measured == set(committed)
+            summary["statistics_missing_game_ids"] = sorted(set(committed) - measured)
+            wall = summary.get("wall_seconds", 0.0)
+            summary["games_per_wall_second"] = len(measured) / wall if wall else 0.0
+            policy_samples = sum(committed[i]["policy_samples"] for i in measured)
+            simulations = sum(s["simulations"] for i in measured for s in committed[i]["mcts_stats"])
+            summary["policy_samples_per_wall_second"] = policy_samples / wall if wall else 0.0
+            summary["simulations_per_wall_second"] = simulations / wall if wall else 0.0
+        else:
+            # Legacy status files do not identify their coverage; resume may
+            # already have lost historical costs. Do not invent whole-run rates.
+            summary["statistics_scope"] = "unknown"
+            summary["statistics_complete"] = False
+            for metric in ("games", "policy_samples", "simulations"):
+                summary[f"{metric}_per_wall_second"] = None
     return summary
 
 
@@ -558,10 +583,9 @@ def generate(config: FastSelfPlayConfig, root: Path, *, resume: bool = False) ->
                         for future in futures:
                             future.cancel()
                         raise
-        prior_status = {}
+        # Each successful invocation reports its own cost and explicit coverage.
+        # Never merge an old session with possibly unmeasured committed games.
         status_path = root / "status.json"
-        if status_path.exists():
-            prior_status = json.loads(status_path.read_text(encoding="utf-8"))
         physical = {
             "physical_model_batches": sum(item["inference"]["physical_model_batches"] for item in results),
             "logical_model_positions": sum(item["inference"]["logical_model_positions"] for item in results),
@@ -573,19 +597,15 @@ def generate(config: FastSelfPlayConfig, root: Path, *, resume: bool = False) ->
         for item in results:
             for size, count in item["inference"]["batch_size_histogram"].items():
                 hist[size] = hist.get(size, 0) + count
-        old = prior_status.get("inference", {})
-        for key in ("physical_model_batches", "logical_model_positions", "feature_seconds", "forward_seconds"):
-            physical[key] += old.get(key, 0)
-        for size, count in old.get("batch_size_histogram", {}).items():
-            hist[size] = hist.get(size, 0) + count
-        physical["mean_batch_size"] = physical["logical_model_positions"] / physical["physical_model_batches"]
+        batches = physical["physical_model_batches"]
+        physical["mean_batch_size"] = physical["logical_model_positions"] / batches if batches else 0.0
         import statistics
-        latencies = prior_status.get("decision_latencies_ms", []) + [
-            value for result in results for value in result["decision_latencies_ms"]
-        ]
+        latencies = [value for result in results for value in result["decision_latencies_ms"]]
         ordered_latencies = sorted(latencies)
         status = {
-            "wall_seconds": prior_status.get("wall_seconds", 0.0) + time.perf_counter() - started,
+            "statistics_scope": "collection_session",
+            "statistics_game_ids": sorted(game["game_id"] for result in results for game in result["completed"]),
+            "wall_seconds": time.perf_counter() - started,
             "decision_latencies_ms": latencies,
             "decision_latency": {
                 "count": len(latencies),
@@ -593,23 +613,23 @@ def generate(config: FastSelfPlayConfig, root: Path, *, resume: bool = False) ->
                 "p95_ms": ordered_latencies[min(len(latencies) - 1, int(len(latencies) * 0.95))] if latencies else 0.0,
                 "max_ms": max(latencies) if latencies else 0.0,
             },
-            "root_encoding_seconds": prior_status.get("root_encoding_seconds", 0.0) + sum(
+            "root_encoding_seconds": sum(
                 game["root_encoding_seconds"] for result in results for game in result["completed"]),
-            "real_rule_seconds": prior_status.get("real_rule_seconds", 0.0) + sum(
+            "real_rule_seconds": sum(
                 game["real_rule_seconds"] for result in results for game in result["completed"]),
-            "search_rule_seconds": prior_status.get("search_rule_seconds", 0.0) + sum(
+            "search_rule_seconds": sum(
                 game["search_rule_seconds"] for result in results for game in result["completed"]),
-            "write_seconds": prior_status.get("write_seconds", 0.0) + sum(
+            "write_seconds": sum(
                 game["write_seconds"] for result in results for game in result["completed"]),
             "queue_wait_seconds": 0.0,
-            "worker_initialization_seconds_sum": prior_status.get("worker_initialization_seconds_sum", 0.0) + sum(
+            "worker_initialization_seconds_sum": sum(
                 result["initialization_seconds"] for result in results),
             "worker_collection_wall_seconds_max": max(result["wall_seconds"] for result in results),
             "inference": physical,
-            "peak_active_games": max([prior_status.get("peak_active_games", 0)] + [r["peak_active_games"] for r in results]),
-            "peak_pending_requests": max([prior_status.get("peak_pending_requests", 0)] + [r["peak_pending_requests"] for r in results]),
-            "cpu_peak_rss_kib": max([prior_status.get("cpu_peak_rss_kib", 0)] + [r["cpu_peak_rss_kib"] for r in results]),
-            "gpu_peak_bytes": max([prior_status.get("gpu_peak_bytes", 0)] + [r["gpu_peak_bytes"] for r in results]),
+            "peak_active_games": max(r["peak_active_games"] for r in results),
+            "peak_pending_requests": max(r["peak_pending_requests"] for r in results),
+            "cpu_peak_rss_kib": max(r["cpu_peak_rss_kib"] for r in results),
+            "gpu_peak_bytes": max(r["gpu_peak_bytes"] for r in results),
         }
         _atomic_json(status_path, status)
         summary = validate_run(root)

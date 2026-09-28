@@ -110,6 +110,7 @@ class _Edge:
     value_sum: float = 0.0
     child: _Node | None = None
     terminal: TerminalResult | None = None
+    actions: tuple[Action, ...] = ()
 
 
 @dataclass(slots=True)
@@ -426,8 +427,8 @@ class MCTSSearchJob:
                 path.append(edge)
                 depth = len(path)
                 action = node.request.legal_actions[index]
-                if edge.child is not None:
-                    self._branch_actions.append(action)
+                if edge.child is not None or edge.terminal is not None:
+                    self._branch_actions.extend(edge.actions)
                 if edge.terminal is not None:
                     self.policy.stats.terminal_hits += 1
                     self._backup(world_index, path, depth, float(edge.terminal.payoff(root_player)))
@@ -438,6 +439,7 @@ class MCTSSearchJob:
                 rule_started = time.perf_counter()
                 child = node.engine.fork()
                 self._attempted_action = action
+                branch_start = len(self._branch_actions)
                 if self.policy.config.fold_forced_phases:
                     try:
                         response, transitions, folded = child.apply_candidate_folded(
@@ -452,6 +454,7 @@ class MCTSSearchJob:
                     response = child.apply_candidate(index, state_version=node.state_version)
                     self._branch_actions.append(action)
                     transitions = 1
+                edge.actions = tuple(self._branch_actions[branch_start:])
                 self._attempted_action = None
                 self.policy.stats.state_transitions += transitions
                 self.policy.stats.rule_seconds += time.perf_counter() - rule_started
@@ -477,7 +480,7 @@ class MCTSSearchJob:
         if self._cancelled or self.done:
             raise RuntimeError("search job is cancelled or complete")
         try:
-            pending, leaf = self._pending.pop(request_id)
+            pending, leaf = self._pending[request_id]
         except KeyError as error:
             raise ValueError(f"unknown or already resolved search request {request_id}") from error
         if not math.isfinite(value):
@@ -485,12 +488,21 @@ class MCTSSearchJob:
         if pending.kind == "policy_value":
             if logits is None:
                 raise ValueError("policy/value request requires logits")
+            if len(logits) != len(pending.request.legal_actions):
+                raise ValueError("network logits must match legal actions")
             prior = tuple(logits) if prior_is_normalized else _softmax(tuple(logits))
+            if prior_is_normalized and (
+                any(not math.isfinite(p) or p < 0 for p in prior) or not any(p > 0 for p in prior)
+            ):
+                raise ValueError("network prior must be finite, nonnegative and nonempty")
         else:
             if logits is not None:
                 raise ValueError("value-only request cannot receive logits")
             prior = ()
         critic = max(-1.0, min(1.0, value))
+        # Preserve the pending branch on validation failure; after consumption,
+        # _advance_world failures must instead describe the newly advancing branch.
+        del self._pending[request_id]
         if leaf is None:
             self._start_worlds(prior)
             return

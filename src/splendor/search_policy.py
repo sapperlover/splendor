@@ -78,6 +78,7 @@ class SearchConfig:
     seed: int = 0
     leaf_value_clip: float | None = 1.0
     fold_forced_phases: bool = False
+    memoize: bool = True
 
     def __post_init__(self) -> None:
         if self.top_k <= 0:
@@ -88,6 +89,8 @@ class SearchConfig:
             raise ValueError("determinizations must be positive")
         if self.leaf_value_clip is not None and self.leaf_value_clip <= 0:
             raise ValueError("leaf_value_clip must be positive or None")
+        if type(self.memoize) is not bool:
+            raise ValueError("memoize must be bool")
 
 
 @dataclass(slots=True)
@@ -110,6 +113,15 @@ class SearchStats:
     chosen_rank_top3_count: int = 0
     chosen_rank_beyond3_count: int = 0
     chosen_rank_counts: dict[int, int] = field(default_factory=dict)
+    # Cache accounting: the ``model_*`` counters above stay logical (one per
+    # requested position, comparable with earlier runs); these physical/hit
+    # counters show what the memoized search actually executed.
+    physical_model_batches: int = 0
+    physical_model_positions: int = 0
+    cache_hits: int = 0
+    cached_policy_calls: int = 0
+    cached_value_calls: int = 0
+    cached_expansions: int = 0
 
     def to_dict(self) -> dict[str, int | float]:
         result: dict[str, int | float] = {
@@ -119,6 +131,12 @@ class SearchStats:
             "leaf_nodes": self.leaf_nodes,
             "model_batches": self.model_batches,
             "model_positions": self.model_positions,
+            "physical_model_batches": self.physical_model_batches,
+            "physical_model_positions": self.physical_model_positions,
+            "cache_hits": self.cache_hits,
+            "cached_policy_calls": self.cached_policy_calls,
+            "cached_value_calls": self.cached_value_calls,
+            "cached_expansions": self.cached_expansions,
             "inference_seconds": self.inference_seconds,
             "total_seconds": self.total_seconds,
             "folded_decisions": self.folded_decisions,
@@ -499,25 +517,49 @@ class PolicyValueSearchPolicy:
         )
         self.last_root_values: dict[Action, float] | None = None
         self.last_root_bound_values: dict[Action, float] | None = None
+        self._policy_cache: dict[DecisionRequest, tuple[float, ...]] = {}
+        self._value_cache: dict[Observation, float] = {}
+        self._expansion_cache: dict[
+            tuple[GameState, int], tuple[GameEngine, DecisionRequest | TerminalResult, int]
+        ] = {}
 
     # -- inference ---------------------------------------------------------
 
     def _infer_logits(self, request: DecisionRequest) -> list[float]:
         """Masked actor logits from the frozen policy-only path."""
-        before = self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds
-        logits = self.evaluator.policy_only((request,))[0]
         self.stats.model_batches += 1
         self.stats.model_positions += 1
+        if self.config.memoize:
+            cached = self._policy_cache.get(request)
+            if cached is not None:
+                self.stats.cache_hits += 1
+                self.stats.cached_policy_calls += 1
+                return list(cached)
+        before = self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds
+        logits = self.evaluator.policy_only((request,))[0]
+        self.stats.physical_model_batches += 1
+        self.stats.physical_model_positions += 1
         self.stats.inference_seconds += self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds - before
+        if self.config.memoize:
+            self._policy_cache[request] = tuple(logits)
         return list(logits)
 
     def _leaf_value(self, request: DecisionRequest, actor: int) -> float:
         """Critic value at the horizon, from a state-only encoding."""
-        before = self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds
-        value = self.evaluator.value_only((request,))[0]
         self.stats.model_batches += 1
         self.stats.model_positions += 1
-        self.stats.inference_seconds += self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds - before
+        value: float | None = self._value_cache.get(request.observation) if self.config.memoize else None
+        if value is None:
+            before = self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds
+            value = self.evaluator.value_only((request,))[0]
+            self.stats.physical_model_batches += 1
+            self.stats.physical_model_positions += 1
+            self.stats.inference_seconds += self.evaluator.stats.forward_seconds + self.evaluator.stats.feature_seconds - before
+            if self.config.memoize:
+                self._value_cache[request.observation] = value
+        else:
+            self.stats.cache_hits += 1
+            self.stats.cached_value_calls += 1
         if self.config.leaf_value_clip is not None:
             limit = self.config.leaf_value_clip
             value = max(-limit, min(limit, value))
@@ -571,12 +613,25 @@ class PolicyValueSearchPolicy:
     ) -> tuple[GameEngine, DecisionRequest | TerminalResult]:
         """Apply one cached candidate on a forked search engine."""
 
+        key = (engine.search_state_key, action_index) if self.config.memoize else None
+        if key is not None:
+            cached = self._expansion_cache.get(key)
+            if cached is not None:
+                child, response, folded = cached
+                self.stats.cached_expansions += 1
+                self.stats.folded_decisions += folded
+                return child, response
         child = _clone_engine(engine)
         if not self.config.fold_forced_phases:
-            return child, child.apply_candidate(action_index, state_version=engine.state_version)
-        response, _, folded = child.apply_candidate_folded(action_index, max_transitions=sys.maxsize,
-                                                            state_version=engine.state_version)
-        self.stats.folded_decisions += folded
+            response = child.apply_candidate(action_index, state_version=engine.state_version)
+            folded = 0
+        else:
+            response, _, folded = child.apply_candidate_folded(
+                action_index, max_transitions=sys.maxsize, state_version=engine.state_version,
+            )
+            self.stats.folded_decisions += folded
+        if key is not None:
+            self._expansion_cache[key] = (child, response, folded)
         return child, response
 
     def _child_value(
@@ -645,6 +700,10 @@ class PolicyValueSearchPolicy:
     def choose(self, request: DecisionRequest) -> Action:
         started = time.perf_counter()
         self.stats.decisions += 1
+        if self.config.memoize:
+            self._policy_cache.clear()
+            self._value_cache.clear()
+            self._expansion_cache.clear()
         self.last_root_values = None
         self.last_root_bound_values = None
         if len(request.legal_actions) == 1:
@@ -726,6 +785,7 @@ class PolicyValueSearchPolicy:
                 request,
                 seed=seed,
                 catalog=self.catalog,
+                engine_mode=self.engine_mode,
             )
             self.stats.determinizations += 1
             logits = self._infer_logits(request)

@@ -157,6 +157,18 @@ class GameEngine:
         return self.__state_version
 
     @property
+    def search_state_key(self) -> GameState:
+        """Hashable content identity for search-owned simulator caches.
+
+        Only search code that owns this engine may use the authoritative state
+        as a cache key (determinized simulation engines are never handed to a
+        live policy).  Live matches and UI consumers keep using
+        :meth:`observation_for`.
+        """
+
+        return self.__state
+
+    @property
     def current_state_digest(self) -> str:
         """Digest of the immutable current state, computed once per transition."""
 

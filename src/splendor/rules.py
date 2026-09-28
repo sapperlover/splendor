@@ -100,32 +100,66 @@ def _legal_main_actions(state: GameState, catalog: Catalog) -> tuple[Action, ...
             if state.decks.for_tier(tier)
         )
 
+    bonuses = player_bonuses(player, catalog)
     actions.extend(
         BuyMarket(card_id)
         for card_id in sorted(state.market.all_cards())
-        if legal_payments_for_card(player, catalog.card(card_id), catalog)
+        if payment_exists(player, catalog.card(card_id), catalog, bonuses=bonuses)
     )
     actions.extend(
         BuyReserved(card_id)
         for card_id in sorted(reserved.card_id for reserved in player.reserved_cards)
-        if legal_payments_for_card(player, catalog.card(card_id), catalog)
+        if payment_exists(player, catalog.card(card_id), catalog, bonuses=bonuses)
     )
     return tuple(actions)
 
 
-def discounted_need(player: PlayerState, card: CardDefinition, catalog: Catalog) -> GemVector:
+def discounted_need(
+    player: PlayerState,
+    card: CardDefinition,
+    catalog: Catalog,
+    *,
+    bonuses: GemVector | None = None,
+) -> GemVector:
     """Return the five-color cost remaining after permanent card bonuses."""
 
-    bonuses = player_bonuses(player, catalog)
+    if bonuses is None:
+        bonuses = player_bonuses(player, catalog)
     return GemVector(
         *(max(0, cost - bonus) for cost, bonus in zip(card.cost, bonuses, strict=True))
     )
+
+
+def payment_exists(
+    player: PlayerState,
+    card: CardDefinition,
+    catalog: Catalog,
+    *,
+    bonuses: GemVector | None = None,
+) -> bool:
+    """Cheap feasibility test matching ``bool(legal_payments_for_card(...))``.
+
+    Each gold token covers exactly one missing unit, so a legal payment exists
+    iff the ordinary-token deficit over the five colors does not exceed the
+    held gold.  The full enumeration in :func:`legal_payments_for_card` stays
+    the single source of candidate payments; this predicate only answers the
+    buyability question used while listing main actions.
+    """
+
+    need = tuple(discounted_need(player, card, catalog, bonuses=bonuses))
+    held = tuple(player.tokens)
+    deficit = sum(
+        max(0, value - held[index]) for index, value in enumerate(need)
+    )
+    return deficit <= player.tokens.gold
 
 
 def legal_payments_for_card(
     player: PlayerState,
     card: CardDefinition,
     catalog: Catalog,
+    *,
+    bonuses: GemVector | None = None,
 ) -> tuple[Pay, ...]:
     """Enumerate every distinct actual token payment for one purchase target.
 
@@ -133,7 +167,7 @@ def legal_payments_for_card(
     the same actual six-color payment are represented by one ``Pay`` action.
     """
 
-    need = tuple(discounted_need(player, card, catalog))
+    need = tuple(discounted_need(player, card, catalog, bonuses=bonuses))
     held = tuple(player.tokens)
     choices: set[Pay] = set()
 

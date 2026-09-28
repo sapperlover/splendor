@@ -92,3 +92,117 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src \
 运行中的物理批次只由共享 evaluator 统计一次；每局 `mcts_stats.model_positions` 是逻辑模型位置，`search_seconds_sum` 是重叠搜索任务时间之和，都不能冒充 run 墙钟。最终代码另增规则、真实根编码、写入、决策延迟和 worker 初始化统计；2 局多 worker smoke 的中位/95 分位决策延迟为 9.32/19.15 毫秒，根编码 0.058 秒、搜索规则 0.283 秒、真实规则 0.035 秒、推理编码 0.063 秒、物理前向 0.464 秒、归档写入 0.039 秒，队列等待 0。该 2 局 smoke 与上表 8 局不同，不据此计算上表提速。
 
 原 300 局 v1 数据已重新读取，共 26,109 个样本；v2 两局串行 CPU、两局批量 CPU、两局 CUDA、两局多 worker CPU 的 smoke 及 checked 重放通过。最后一次改动后又运行两局 CUDA 批量 smoke，得到 173 个 value 样本、115 个有效 policy 样本、920 次 simulation、平均 batch 3.38，checked 重放通过。测试覆盖 fast/checked 规则等价、陈旧候选拒绝、job 交错及等权 target、部分提交 resume、v2 Dataset、真实/分支故障重建及 CPU/CUDA 数值容差。没有降低 S/N、精度或样本定义来换取加速；本任务不包含训练器或新的搜索算法。
+
+## 第二轮：审计、大批量 GPU 对比与搜索记忆化（2026-09-28）
+
+本节记录对上一轮实现的审计结果与第二轮加速。上一轮的数字保留在上面，作为历史基线；本轮结论以本节的固定面板为准。
+
+### 审计：发现并修复的问题
+
+- **多 determinization 搜索没有走 fast 引擎。** `PolicyValueSearchPolicy._choose_combined_determinizations` 调用 `determinize_request` 时遗漏了 `engine_mode=self.engine_mode`，因此 N>1 的 D6 搜索始终使用 checked 引擎（逐转移 SHA-256、全量 invariant、完整 replay event），与"搜索默认 fast"的设计不符。已修复为与 N=1 相同，并加入回归测试 `test_combined_determinizations_use_requested_engine_mode`。
+- 全量测试通过，未发现 TODO/占位实现、被跳过的正确性断言、异常冒充平局或半局入库的路径；`apply_candidate` 的 `state_version` 校验、外部动作合法性校验仍在。`search_inference`、`selfplay_fast`、`match_stepper`、`compact_trace`、`reproduce_failure` 链路保持可用。
+- 上一轮文档中"`max_batch_wait_ms` 为预留上界、单进程协作实现实际等待为 0"的描述与代码一致；未发现未接通的配置项。
+
+### 大批量 CPU 与 GPU 对比
+
+新脚本 `scripts/benchmark_large_batch_inference.py` 用种子随机对局收集 1024 个**互不相同**的真实请求（main_action 644、payment 287、return_tokens 92、choose_noble 1），逐档测量包含特征编码、collate、传输与取回的每位置时间（中位数）。结果写入 `runtime/search_accel/large_batch_cpu_t1.json` 与 `runtime/search_accel/large_batch_cuda.json`：
+
+| batch | CPU 1 线程 policy_value | CPU value_only | CUDA policy_value | CUDA value_only |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.831 | 0.497 | 1.469 | 1.023 |
+| 8 | 0.346 | 0.180 | 0.384 | 0.248 |
+| 32 | 0.264 | 0.138 | 0.233 | 0.145 |
+| 64 | 0.260 | 0.129 | 0.213 | 0.131 |
+| 128 | 0.269 | 0.131 | 0.208 | 0.124 |
+| 256 | 0.338 | 0.129 | 0.203 | 0.121 |
+| 512 | 0.324 | 0.130 | 0.201 | 0.119 |
+
+单位毫秒/位置。结论：**batch=1/2/4 时 GPU 明显更慢**（batch=1 为 CPU 的 1.8 倍），**batch≥32 后 GPU 反超**并稳定在约 0.20 毫秒/位置；CPU 最佳区间是 32–128（约 0.26），更大 batch 因候选 padding 反而略慢。因此"D6 单次搜索改用 GPU"仍然不成立：搜索是逐叶顺序的 batch=1 调用，而把不同请求合并成 batch 会改变张量形状与浮点结果（实测最大 logit 差约 3.8e-6，近平分选招会翻转），与"优化前后结果完全一致"冲突。GPU 的优势只在真正的跨请求批量路径（`batched_cuda` 采集、`policy_value` 大 batch）中可用。
+
+### 新优化一：搜索内记忆化（transposition 去重）
+
+实测 D6/top-5 搜索内部有大量重复请求：开局局面的策略调用 54%、叶 critic 调用 65% 是重复内容（不同路径到达同一状态）；中盘约 7%/11%，后段约 16%/26%。
+
+`PolicyValueSearchPolicy` 现在在每次 `choose()` 内维护三个内容寻址缓存（`SearchConfig.memoize`，默认开启）：
+
+- 策略 logits：键为 `DecisionRequest`（冻结契约，可哈希，哈希约 6µs）；
+- 叶 critic 值：键为 `Observation`（critic 只看状态编码，与候选无关）；
+- 子扩展：键为 `(父 GameState, action_index)`，复用 fork 后的引擎与响应，跳过重复的规则推进。
+
+命中时返回的是与原 batch=1 调用**完全相同输入、相同形状**的结果，因此逐位相同；`choose()` 开始时清空缓存，内存随搜索树有界。统计口径保持可比：`model_batches` / `model_positions` 仍是逻辑计数（与优化前逐项相等），新增 `physical_model_batches` / `physical_model_positions` / `cache_hits` / `cached_policy_calls` / `cached_value_calls` / `cached_expansions` 反映真实执行量。
+
+### 新优化二：规则支付可行性快速判定
+
+`legal_actions` 列主行动时原本对每张可见卡都完整枚举 `legal_payments_for_card` 只为判断"是否买得起"，且每张卡都重算一次 `player_bonuses`。现在：
+
+- 每次列主行动只计算一次红利向量；
+- 用 `rules.payment_exists`（金 token 每个恰好补 1 点缺口，因此"可支付 ⟺ 五色普通 token 缺口之和 ≤ 持有金"）做 O(5) 判定；完整枚举仍是 PAYMENT 阶段候选的唯一来源。
+
+随机 4000 组（token 0–5、金 0–3、随机已购卡与目标卡）与 `bool(legal_payments_for_card(...))` 完全一致，已加入测试。
+
+### 性能结果（固定面板，CPU 单线程，中位数，3 次重复）
+
+优化前取 `runtime/search_accel/fixed_panel_cpu_final.json`，优化后取 `runtime/search_accel/fixed_panel_cpu_after_memo.json`（同一 checkpoint、同一固定局面与动作前缀、同一 `seed=9500000`）：
+
+| 局面 / 搜索 | 前 | 后 | 加速 | 选招一致 | 逻辑位置 | 实际位置 | 缓存命中 |
+| --- | ---: | ---: | ---: | :---: | ---: | ---: | ---: |
+| 开局 D6 检查模式 | 3.122 | 1.326 | 2.35× | 是 | 2802 | 1107 | 1695 |
+| 开局 D6 fast | 2.452 | 1.014 | 2.42× | 是 | 2802 | 1107 | 1695 |
+| 中盘 D6 fast | 0.682 | 0.579 | 1.18× | 是 | 778 | 701 | 77 |
+| 后段 D6 fast | 1.300 | 0.971 | 1.34× | 是 | 1355 | 1060 | 295 |
+| 开局 MCTS 1024/1 | 1.193 | 1.096 | 1.09× | 是 | 1025 | — | — |
+| 开局 MCTS 256/2 | 0.248 | 0.195 | 1.27× | 是 | 257 | — | — |
+
+MCTS 各档只有规则快速判定的收益（D6 记忆化不适用于 MCTS job），选招全部一致。全部 15 组（3 局面 × 5 搜索）的选招与逻辑 model positions 均与优化前一致。
+
+### 正确性验证
+
+- 固定面板与另取 10 个随机中盘局面（共 13 个）：`memoize=True` 与 `memoize=False` 的选招、`last_root_values`、`last_root_bound_values`、`expanded_nodes`、`model_positions`、`folded_decisions` 完全一致，0 处差异；
+- 固定面板 15 组前后选招全部一致，逻辑搜索量不变（没有通过少搜换速度）；
+- 新测试 `tests/test_search_memoization.py`：记忆化等价、统计关系、支付判定等价、N>1 引擎模式回归；
+- 全量 `pytest -q` 通过（349 项）；另跑两局 fast 自博弈 smoke（mcts-selfplay-v2、S=8/N=2、2 局）并用 `validate --replay` 通过 checked 重放。
+- 审计补注：`execution.max_batch_wait_ms` 仍是上一轮文档说明的预留上界（单进程协作调度不等待），不是未接通的功能。
+
+### 已评估、本轮未采用的方案
+
+- **搜索内跨请求批推理**（CPU 或 CUDA 都试了）：batch 形状会改变 FP32 结果，近平分选招会翻转，与"结果完全一致"冲突，故不用于 D6 搜索；只保留在真正的批采集路径。
+- **`torch.compile`**：本环境（torch 2.14 CPU）在 `encode_state` 上触发 Dynamo guard 断言错误，且无法保证逐位一致，未启用。
+- **根节点并行**（5 个根子节点同时搜索，进程或线程）：为并行必须给每个子节点全窗口。实测开局全窗口总代价 4.54s（顺序窗口 2.34s），并行墙钟由最慢子节点决定约 1.08s，与记忆化后的 1.07s 相当，没有收益；中盘全窗口 2.81s、最慢子节点 0.75s，也慢于记忆化后的 0.58s。放弃。
+- **跨决策持久缓存**：同一局 30 次决策的实测中，仅搜索内缓存已省 26.4% 的模型调用；把策略/值缓存跨决策保留只再省 0.7 个百分点（2048 条上限时 +40MiB 峰值内存），不值得增加复杂度和内存。因此缓存仍在每次 `choose()` 内清空。
+
+### 复现命令
+
+```bash
+# 大批量 CPU / GPU 推理对比（写入 runtime/search_accel/）
+conda run --no-capture-output -n splendor env PYTHONPATH=src python -u \
+  scripts/benchmark_large_batch_inference.py \
+  --checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --requests 1024 --max-batch 512 --repeats 3 \
+  --output runtime/search_accel/large_batch_cpu_t1.json --device cpu --threads 1
+
+conda run --no-capture-output -n splendor env PYTHONPATH=src python -u \
+  scripts/benchmark_large_batch_inference.py \
+  --checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --requests 1024 --max-batch 512 --repeats 3 \
+  --output runtime/search_accel/large_batch_cuda.json --device cuda --threads 1
+
+# 固定面板（开关记忆化对比：把 SearchConfig.memoize 改成 False 即优化前口径）
+conda run --no-capture-output -n splendor env PYTHONPATH=src python -u \
+  -m splendor.benchmark_search \
+  --checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --output runtime/search_accel/fixed_panel_cpu_after_memo.json \
+  --device cpu --repeats 3 --warmup 1
+
+# 全量测试
+conda run -n splendor env PYTHONPATH=src python -m pytest -q
+```
+
+推荐配置不变：CPU 批量采集用 `batched_cpu` + fast 引擎；只有真正跨局批量推理（batch≥32）才用 CUDA。D6 单步搜索保持 CPU 单线程 + `memoize=True`。
+
+
+## 故障重建与恢复统计修正（2026-09-28）
+
+- MCTS 边保存实际执行的完整动作序列，包括折叠的支付等动作；重访已有边时将完整序列加入故障路径，支持不依赖网络的 checked 重放。
+- `submit` 在校验 value/logits 后才移除 pending 请求。无效输出保留原请求的 world、determinization seed 和分支；消费请求后推进新分支发生异常时，仍记录正在推进的新分支。
+- summary 的 `logical_model_positions` 从全部已归档对局汇总。`wall_seconds`、`inference`、延迟和资源统计采用本次成功采集会话口径（`statistics_scope=collection_session`），由 `statistics_game_ids` 明确覆盖范围；三个吞吐指标也只使用这些对局作为分子。首次完整采集时覆盖全 run，部分完成后恢复时只覆盖恢复阶段。
+- `statistics_complete` 表示统计是否覆盖当前全部已归档对局，`statistics_missing_game_ids` 列出未覆盖对局。没有 status 时 scope 为 `unavailable`；旧 status 无覆盖信息时为 `unknown`，吞吐返回 null。历史未落盘的物理推理量和墙钟不能从并行对局耗时还原，不伪造累计值，也不增加逐步审计写入。

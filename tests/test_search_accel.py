@@ -11,7 +11,8 @@ import numpy as np
 import pytest
 import torch
 
-from splendor.actions import BuyMarket
+from splendor.actions import BuyMarket, BuyReserved, Pay
+from splendor.actor_critic import ActorCritic
 from splendor.compact_trace import decode_request, replay_trace
 from splendor.engine import GameEngine, IllegalActionError
 from splendor.contracts import DecisionRequest
@@ -108,6 +109,65 @@ def test_mcts_job_interleaving_preserves_visits_and_targets():
         job.submit("bad", None, 0.0)
 
 
+def test_revisited_folded_edges_preserve_replayable_branch():
+    from splendor.benchmark_search import fixed_requests
+
+    request = fixed_requests()[1][1]
+    job = PUCTSearchPolicy(ActorCritic().eval(), config=MCTSConfig(
+        simulations=128, determinizations=1, seed=53)).start_job(request)
+    saw_revisited_payment = False
+    while not job.done:
+        for item in job.pending_requests():
+            context = job.failure_context(item.request_id)
+            branch = context["branch_actions"]
+            saw_revisited_payment |= any(isinstance(action, Pay) for action in branch[:-2])
+            scene = {
+                "root_request": to_primitive(request),
+                "search_context": to_primitive(context),
+                "batch_requests": [{"request_id": item.request_id,
+                                    "request": to_primitive(item.request)}],
+            }
+            reproduce(scene)  # Also checks the reconstructed leaf request exactly.
+            logits = tuple(10.0 if isinstance(action, (BuyMarket, BuyReserved)) else 0.0
+                           for action in item.request.legal_actions)
+            job.submit(item.request_id, logits if item.kind == "policy_value" else None, 0.0)
+    assert saw_revisited_payment
+    assert job.result.simulations == 128
+
+
+@pytest.mark.parametrize("invalid", ["value", "missing_logits", "logit_count", "logit_nan", "prior_nan"])
+def test_invalid_submission_preserves_pending_world_context(invalid):
+    request = GameEngine.new(42, first_player=0).decision()
+    job = PUCTSearchPolicy(ActorCritic().eval(), config=MCTSConfig(
+        simulations=8, determinizations=2, seed=53)).start_job(request)
+    root = job.pending_requests()[0]
+    job.submit(root.request_id, (0.0,) * len(request.legal_actions), 0.0)
+    item = job.pending_requests()[0]
+    before = job.failure_context(item.request_id)
+    assert before["world_index"] == 0
+    assert job.failure_context()["world_index"] == 1
+    logits = (0.0,) * len(item.request.legal_actions)
+    bad_logits = logits
+    if invalid == "missing_logits":
+        bad_logits = None
+    elif invalid == "logit_count":
+        bad_logits = ()
+    elif invalid in ("logit_nan", "prior_nan"):
+        bad_logits = (float("nan"),) + logits[1:]
+    with pytest.raises(ValueError):
+        job.submit(item.request_id, bad_logits,
+                   float("nan") if invalid == "value" else 0.0,
+                   prior_is_normalized=invalid == "prior_nan")
+    assert job.failure_context(item.request_id) == before
+    assert item in job.pending_requests()
+    reproduce({"root_request": to_primitive(request), "search_context": to_primitive(before),
+               "batch_requests": [{"request_id": item.request_id,
+                                   "request": to_primitive(item.request)}]})
+    job.submit(item.request_id, logits, 0.0)
+    assert item not in job.pending_requests()
+    assert _fake_evaluation(job).simulations == 8
+
+
 def test_mcts_job_cancel_releases_pending():
     model = load_frozen_actor_critic_checkpoint(CHECKPOINT, device="cpu")
     request = GameEngine.new(42, first_player=0).decision()
@@ -152,6 +212,11 @@ def test_v2_collector_resume_dataset_and_reconstruction(tmp_path):
     summary = generate(config, root)
     assert summary["completed_games"] == 2
     assert summary["inference"]["mean_batch_size"] > 1
+    assert summary["statistics_scope"] == "collection_session"
+    assert summary["statistics_complete"] is True
+    assert summary["statistics_game_ids"] == [0, 1]
+    assert summary["logical_model_positions"] == summary["inference"]["logical_model_positions"]
+    assert summary["games_per_wall_second"] == pytest.approx(2 / summary["wall_seconds"])
     assert validate_run(root, replay=True)["samples"] == summary["samples"]
     assert generate(config, root, resume=True)["completed_games"] == 2
     dataset = SelfPlayDataset(root)
@@ -225,9 +290,42 @@ def test_partial_v2_resume_skips_committed_game(tmp_path):
                    manifest["checkpoint_identity"]["sha256"])
     first = (root / "games" / "game-000000.npz")
     before = first.stat().st_mtime_ns
-    assert generate(config, root, resume=True)["completed_games"] == 2
+    interrupted = validate_run(root)
+    assert interrupted["statistics_scope"] == "unavailable"
+    assert interrupted["statistics_missing_game_ids"] == [0]
+    assert interrupted["games_per_wall_second"] is None
+    summary = generate(config, root, resume=True)
+    assert summary["completed_games"] == 2
     assert first.stat().st_mtime_ns == before
     assert validate_run(root, replay=True)["missing_games"] == 0
+    from splendor.selfplay_data import load_game, game_path
+    metadata = [load_game(game_path(root, i))[1] for i in (0, 1)]
+    positions = [sum(s["model_positions"] for s in game["mcts_stats"]) for game in metadata]
+    assert summary["logical_model_positions"] == sum(positions)
+    assert summary["inference"]["logical_model_positions"] == positions[1]
+    assert summary["statistics_scope"] == "collection_session"
+    assert summary["statistics_complete"] is False
+    assert summary["statistics_game_ids"] == [1]
+    assert summary["statistics_missing_game_ids"] == [0]
+    assert summary["decision_latency"]["count"] == metadata[1]["decision_count"]
+    wall = summary["wall_seconds"]
+    assert summary["games_per_wall_second"] == pytest.approx(1 / wall)
+    assert summary["policy_samples_per_wall_second"] == pytest.approx(metadata[1]["policy_samples"] / wall)
+    simulations = sum(s["simulations"] for s in metadata[1]["mcts_stats"])
+    assert summary["simulations_per_wall_second"] == pytest.approx(simulations / wall)
+    assert generate(config, root, resume=True) == summary
+
+    # Old status files have no reliable coverage and must not publish run rates.
+    status_path = root / "status.json"
+    status = json.loads(status_path.read_text())
+    del status["statistics_scope"], status["statistics_game_ids"]
+    _atomic_json(status_path, status)
+    legacy = validate_run(root)
+    assert legacy["statistics_scope"] == "unknown"
+    assert legacy["statistics_complete"] is False
+    assert legacy["games_per_wall_second"] is None
+    assert legacy["policy_samples_per_wall_second"] is None
+    assert legacy["simulations_per_wall_second"] is None
 
 
 def test_search_branch_scene_decodes_and_replays(tmp_path):
