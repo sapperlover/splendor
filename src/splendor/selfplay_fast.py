@@ -27,7 +27,7 @@ from .mcts_policy import MCTSConfig, MCTSSearchJob, PUCTSearchPolicy
 from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .replay import REPLAY_SCHEMA_VERSION, RULESET_ID, to_primitive
 from .rng import RNG_ALGORITHM
-from .search_inference import FrozenSearchInference
+from .search_inference import FrozenSearchInference, InferenceConfig
 from .selfplay import TemperatureSchedule, derive_seed, label_terminal_values
 from .selfplay_data import (
     DATA_SCHEMA_V2, STATE_FIELDS, commit_game, game_path, load_game,
@@ -50,12 +50,40 @@ class ExecutionConfig:
     max_batch_wait_ms: float = 2.0
     torch_threads: int = 1
     precision: str = "float32"
+    batch_interface: str = "legacy"
+    inference_mode: str = "eager"
+    actor_projection: bool = False
+    candidate_buckets: tuple[int, ...] = (16, 32, 48)
+    compile_mode: str | None = None
+    compile_failure_policy: str = "fallback"
+    native_transport: str = "reused"
+    pipeline_slots: int = 1
 
     def __post_init__(self) -> None:
         if self.backend not in ("serial_cpu", "batched_cpu", "batched_cuda", "native_cpu", "native_cuda"):
             raise ValueError("backend must be serial_cpu, batched_cpu, batched_cuda, native_cpu or native_cuda")
         if self.engine_mode not in ("checked", "fast"):
             raise ValueError("engine_mode must be checked or fast")
+        if self.batch_interface not in ("legacy", "native"):
+            raise ValueError("batch_interface must be legacy or native")
+        if self.batch_interface == "native" and not self.backend.startswith("native_"):
+            raise ValueError("the native batch interface requires a native backend")
+        if self.inference_mode not in ("eager", "compiled"):
+            raise ValueError("inference_mode must be eager or compiled")
+        if type(self.actor_projection) is not bool:
+            raise ValueError("actor_projection must be bool")
+        if not self.candidate_buckets or tuple(sorted(set(self.candidate_buckets))) != tuple(self.candidate_buckets):
+            raise ValueError("candidate_buckets must be sorted, unique and nonempty")
+        if self.compile_mode is not None and not isinstance(self.compile_mode, str):
+            raise ValueError("compile_mode must be a string or None")
+        if self.compile_failure_policy not in ("fallback", "fail_fast"):
+            raise ValueError("compile_failure_policy must be fallback or fail_fast")
+        if self.native_transport not in ("reused", "packed"):
+            raise ValueError("native_transport must be reused or packed")
+        if self.pipeline_slots not in (1, 2):
+            raise ValueError("pipeline_slots must be 1 or 2")
+        if self.pipeline_slots > 1 and (self.backend != "native_cuda" or self.batch_interface != "native"):
+            raise ValueError("the two-slot native pipeline requires backend=native_cuda and batch_interface=native")
         if self.backend.startswith("native_") and self.engine_mode != "fast":
             raise ValueError("native real-game engine requires engine_mode=fast")
         if any(type(getattr(self, name)) is not int or getattr(self, name) <= 0 for name in
@@ -161,6 +189,13 @@ def build_manifest(config: FastSelfPlayConfig) -> dict[str, Any]:
                 "rules": RULESET_ID, "replay": REPLAY_SCHEMA_VERSION,
                 "rng": "splitmix64-world-mt19937-gamma-v1" if native else RNG_ALGORITHM,
                 **({"native_rules": "cpp17-native-game-v1"} if native else {}),
+                "inference": config.execution.inference_mode + (
+                    "-projection" if config.execution.actor_projection else "-stock"),
+                "batch_interface": config.execution.batch_interface,
+                **({"native_gpu_layout": "row-stride-v2"}
+                   if config.execution.backend == "native_cuda"
+                   and config.execution.batch_interface == "native"
+                   and config.execution.native_transport == "reused" else {}),
                 "feature": FEATURE_SCHEMA_VERSION,
                 "seed": "splendor-selfplay-seed-v1"}
     frozen = {"config": config.to_dict(), "checkpoint_identity": checkpoint_identity, "versions": versions}
@@ -336,12 +371,78 @@ def _committed_game_count(root: Path) -> int:
     return len(list(games_root.glob("game-*.npz"))) if games_root.is_dir() else 0
 
 
+def _cpu_seconds() -> float:
+    """CPU seconds (user+sys) consumed by this process so far."""
+
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    return usage.ru_utime + usage.ru_stime
+
+
+def _live_snapshot(evaluator: Any, batcher: Any, sessions: Any, finished_simulations: int,
+                   completed_games: int) -> dict[str, Any]:
+    """Uniform live counters for one worker; benchmarks never guess internals.
+
+    Simulations are counted when they complete inside the tree, including roots
+    that are still running, and are disjoint from the completed-game total.
+    Network positions count rows actually evaluated (terminal paths skip the
+    network), split into root / policy / value-only rows.
+    """
+
+    stats = evaluator.stats
+    snapshot: dict[str, Any] = {
+        "timestamp": time.perf_counter(),
+        "simulations": finished_simulations + sum(
+            policy.live_simulations() for session in sessions for policy in session.policies),
+        "network_positions": stats.positions,
+        "physical_batches": stats.batches,
+        "feature_seconds": stats.feature_seconds,
+        "forward_seconds": stats.forward_seconds,
+        "h2d_seconds": stats.h2d_seconds,
+        "d2h_seconds": stats.d2h_seconds,
+        "wait_seconds": stats.wait_seconds,
+        "batch_sizes": dict(stats.batch_sizes),
+        "compile_seconds": dict(stats.compile.get("compile_seconds", {})),
+        "disabled_graphs": dict(stats.compile.get("disabled_graphs", {})),
+        "active_games": len(sessions),
+        "completed_games": completed_games,
+    }
+    if batcher is not None:
+        snapshot.update({
+            "native_batch_rows": batcher.rows,
+            "native_batch_batches": batcher.batches,
+            "native_wide_batches": batcher.wide_batches,
+            "native_root_rows": batcher.root_rows,
+            "native_policy_rows": batcher.policy_rows,
+            "native_value_rows": batcher.value_rows,
+            "native_inflight_batches": batcher.inflight_batches,
+            "native_inflight_rows": batcher.inflight_rows,
+            "native_peak_inflight_rows": batcher.peak_inflight_rows,
+            "native_fill_seconds": batcher.fill_seconds,
+            "native_consume_seconds": batcher.consume_seconds,
+        })
+    return snapshot
+
+
 def _collect_group(
     config: FastSelfPlayConfig, root: Path, game_ids: tuple[int, ...],
     fingerprint: str, checkpoint_sha: str, stop_event: Any = None,
     completed_before: int = 0,
     on_game_complete: Callable[[int, int], None] | None = None,
+    stat_callback: Callable[[dict[str, Any]], None] | None = None,
+    evaluator: Any = None,
+    window_control: Any = None,
 ) -> dict[str, Any]:
+    """Collect one worker's share of games.
+
+    ``stat_callback`` receives a uniform counter snapshot (see
+    :func:`_live_snapshot`) once per scheduling round, so a timed window that
+    ends mid-game still measures real work.  ``window_control`` optionally
+    implements ``warmup_seconds``, ``ready(payload)``, ``wait_start()`` and
+    ``stop_requested()``: the worker warms up on the real configuration, reports
+    readiness, waits for the common start gate and stops when the control says
+    so, so model loading, warm-up, measurement and the tail are separate phases
+    with one shared clock rule.
+    """
     initialization_started = time.perf_counter()
     torch.set_num_threads(config.execution.torch_threads)
     try:
@@ -349,11 +450,46 @@ def _collect_group(
     except RuntimeError:
         pass
     device = "cuda" if config.execution.backend in ("batched_cuda", "native_cuda") else "cpu"
-    model = load_frozen_actor_critic_checkpoint(Path(config.checkpoint), device=device)
-    evaluator = FrozenSearchInference(model, device=device)
+    if evaluator is None:
+        model = load_frozen_actor_critic_checkpoint(Path(config.checkpoint), device=device)
+        evaluator = FrozenSearchInference(
+            model, device=device,
+            config=InferenceConfig(
+                mode=config.execution.inference_mode,
+                actor_projection=config.execution.actor_projection,
+                candidate_buckets=config.execution.candidate_buckets,
+                compile_mode=config.execution.compile_mode,
+                compile_failure_policy=config.execution.compile_failure_policy,
+                native_transport=config.execution.native_transport,
+            ),
+        )
     native = config.execution.backend.startswith("native_")
+    batcher = None
+    if native and config.execution.batch_interface == "native":
+        from .native_policy import NativeBatchRunner, _default_catalog
+        batcher = NativeBatchRunner(
+            evaluator, _default_catalog(), capacity=config.execution.max_batch_size,
+            buckets=config.execution.candidate_buckets, slots=config.execution.pipeline_slots,
+        )
     initialization_seconds = time.perf_counter() - initialization_started
+    compile_warmup_seconds = 0.0
+    if window_control is not None and window_control.warmup_seconds > 0:
+        compile_warmup_seconds = evaluator.warmup_native(config.execution.candidate_buckets)
     started = time.perf_counter()
+    window_cpu_started = _cpu_seconds()
+    window_start_snapshot = _live_snapshot(evaluator, batcher, (), 0, 0)
+    warmup_deadline: float | None = None
+    if window_control is not None:
+        if window_control.warmup_seconds > 0:
+            warmup_deadline = started + window_control.warmup_seconds
+        else:
+            window_control.ready({"initialization_seconds": initialization_seconds,
+                                  "warmup_seconds": 0.0,
+                                  "compile_warmup_seconds": compile_warmup_seconds})
+            window_control.wait_start()
+            started = time.perf_counter()
+            window_cpu_started = _cpu_seconds()
+            window_start_snapshot = _live_snapshot(evaluator, batcher, (), 0, 0)
     todo = iter(game_ids)
     active: dict[int, _GameSession] = {}
     completed: list[dict[str, Any]] = []
@@ -363,10 +499,27 @@ def _collect_group(
     batch_context: list[tuple[_GameSession, Any]] = []
     batch_outputs: Any = None
     active_request_id: str | None = None
+    job_sessions: dict[Any, _GameSession] = {}
+    in_batch = False
     decision_latencies_ms: list[float] = []
+    finished_simulations = 0
+    last_stat_time = 0.0
     try:
         while True:
-            if stop_event is not None and stop_event.is_set():
+            if window_control is not None:
+                if window_control.stop_requested():
+                    break
+                if warmup_deadline is not None and time.perf_counter() >= warmup_deadline:
+                    window_control.ready({"initialization_seconds": initialization_seconds,
+                                          "warmup_seconds": time.perf_counter() - started,
+                                          "compile_warmup_seconds": compile_warmup_seconds})
+                    window_control.wait_start()
+                    warmup_deadline = None
+                    started = time.perf_counter()
+                    window_cpu_started = _cpu_seconds()
+                    window_start_snapshot = _live_snapshot(evaluator, batcher, active.values(),
+                                                           finished_simulations, len(completed))
+            elif stop_event is not None and stop_event.is_set():
                 break
             while len(active) < config.execution.active_games_per_worker:
                 try:
@@ -383,11 +536,35 @@ def _collect_group(
                     session.take_result()
                 session.ensure_job()
                 if session.stepper.terminal is not None:
-                    completed.append(session.commit(root, fingerprint, checkpoint_sha))
+                    game_summary = session.commit(root, fingerprint, checkpoint_sha)
+                    finished_simulations += game_summary["simulations"]
+                    completed.append(game_summary)
                     decision_latencies_ms.extend(session.decision_latencies_ms)
                     del active[game_id]
                     if on_game_complete is not None:
                         on_game_complete(completed_before + len(completed), config.num_games)
+            if batcher is not None:
+                jobs = [session.job for session in active.values() if session.job is not None]
+                jobs = [job for job in jobs if job.pending_rows(False) or job.pending_rows(True)]
+                peak_pending = max(peak_pending, sum(
+                    job.pending_rows(False) + job.pending_rows(True) for job in jobs))
+                if not jobs:
+                    if active:
+                        raise RuntimeError("active games have no pending search work")
+                    continue
+                job_sessions = {session.job: session for session in active.values() if session.job is not None}
+                in_batch = True
+                batcher.run(jobs, context=job_sessions)
+                in_batch = False
+                failed = None
+                active_request_id = None
+                now = time.perf_counter()
+                if stat_callback is not None and now - last_stat_time >= 0.05:
+                    last_stat_time = now
+                    stat_callback({"worker_id": game_ids[0],
+                                   **_live_snapshot(evaluator, batcher, active.values(),
+                                                    finished_simulations, len(completed))})
+                continue
             pending = [(session, item) for session in active.values() if session.job is not None
                        for item in session.job.pending_requests()]
             peak_pending = max(peak_pending, len(pending))
@@ -429,39 +606,119 @@ def _collect_group(
                     batch_context = []
                     batch_outputs = None
                     active_request_id = None
+            now = time.perf_counter()
+            if stat_callback is not None and now - last_stat_time >= 0.05:
+                last_stat_time = now
+                stat_callback({"worker_id": game_ids[0],
+                               **_live_snapshot(evaluator, batcher, active.values(),
+                                                finished_simulations, len(completed))})
     except Exception as error:
-        if failed is not None:
-            import traceback
-            scene = {
-                "protocol": "search-accel-failure-v1", "game_id": failed.game_id,
-                "game_seed": failed.stepper.trace["game_seed"],
-                "first_player": failed.stepper.trace["first_player"],
-                "trace": failed.stepper.trace,
-                "root_decision_index": failed.stepper.decision_count,
-                "root_request": to_primitive(failed.stepper.request) if failed.stepper.terminal is None else None,
-                "search_config": asdict(config.search_config),
-                "checkpoint_sha256": checkpoint_sha,
-                "batch_requests": [
-                    {"request_id": item.request_id, "kind": item.kind,
-                     "game_id": session.game_id,
-                     "root_decision_index": session.stepper.decision_count,
-                     "request": to_primitive(item.request),
-                     "output": None if batch_outputs is None else to_primitive(batch_outputs[index])}
-                    for index, (session, item) in enumerate(batch_context)
-                ],
-                "search_context": (None if failed.job is None else to_primitive(failed.job.failure_context(active_request_id))),
-                "error_type": type(error).__name__, "error_detail": str(error),
-                "traceback": traceback.format_exc(),
-            }
-            _atomic_json(root / "failures" / f"game-{failed.game_id:06d}.json", scene)
+        import traceback
+        error_text = traceback.format_exc()
+        try:
+            report = None if batcher is None or not in_batch else batcher.failure_report(error)
+            if report is not None and report["scope"] == "row" and report["context"] is not None:
+                session = report["context"]
+                entry = report["entry"]
+                _atomic_json(root / "failures" / f"game-{session.game_id:06d}.json", {
+                    "protocol": "search-accel-failure-v1", "scope": "row",
+                    "game_id": session.game_id,
+                    "game_seed": session.stepper.trace["game_seed"],
+                    "first_player": session.stepper.trace["first_player"],
+                    "trace": session.stepper.trace,
+                    "root_decision_index": session.stepper.decision_count,
+                    "root_request": to_primitive(session.stepper.request) if session.stepper.terminal is None else None,
+                    "search_config": asdict(config.search_config),
+                    "checkpoint_sha256": checkpoint_sha,
+                    "batch_requests": [batcher.row_context(entry) | {"game_id": session.game_id,
+                                                                      "state_only": report["record"]["state_only"],
+                                                                      "batch": report["record"]["batch"]}],
+                    "search_context": (None if session.job is None else to_primitive(
+                        session.job.failure_context_for_world(None if entry.world < 0 else entry.world))),
+                    "error_type": type(error).__name__, "error_detail": str(error),
+                    "traceback": error_text,
+                })
+            elif report is not None:
+                batches = report["records"]
+                building = report["building"]
+                context = report["context"] or {}
+                requests = [
+                    batcher.row_context(entry) | {
+                        "game_id": getattr(context.get(entry.job), "game_id", None),
+                        "state_only": record["state_only"], "batch": record["batch"]}
+                    for record in batches for entry in record["entries"]
+                ]
+                if building is not None:
+                    requests.extend({"game_id": getattr(context.get(job), "game_id", None),
+                                     "job_id": job.job_id, "model_version": job.policy.model_version,
+                                     "state_only": building["state_only"], "batch": building["batch"]}
+                                    for job in building["chunk"])
+                game_ids = sorted({item["game_id"] for item in requests if item["game_id"] is not None})
+                scenes = [{"game_id": game_id,
+                           "game_seed": active[game_id].stepper.trace["game_seed"],
+                           "first_player": active[game_id].stepper.trace["first_player"],
+                           "trace": active[game_id].stepper.trace,
+                           "root_decision_index": active[game_id].stepper.decision_count,
+                           "root_request": to_primitive(active[game_id].stepper.request)
+                           if active[game_id].stepper.terminal is None else None}
+                          for game_id in game_ids]
+                batch_id = batches[0]["batch"] if batches else building["batch"]
+                _atomic_json(root / "failures" / f"batch-{batch_id:06d}.json", {
+                    "protocol": "search-accel-failure-v1", "scope": "batch",
+                    "game_ids": game_ids, "games": scenes,
+                    "batch_requests": requests,
+                    "search_config": asdict(config.search_config),
+                    "checkpoint_sha256": checkpoint_sha,
+                    "error_type": type(error).__name__, "error_detail": str(error),
+                    "traceback": error_text,
+                })
+            elif failed is not None:
+                scene = {
+                    "protocol": "search-accel-failure-v1", "scope": "row", "game_id": failed.game_id,
+                    "game_seed": failed.stepper.trace["game_seed"],
+                    "first_player": failed.stepper.trace["first_player"],
+                    "trace": failed.stepper.trace,
+                    "root_decision_index": failed.stepper.decision_count,
+                    "root_request": to_primitive(failed.stepper.request) if failed.stepper.terminal is None else None,
+                    "search_config": asdict(config.search_config),
+                    "checkpoint_sha256": checkpoint_sha,
+                    "batch_requests": [
+                        {"request_id": item.request_id, "kind": item.kind,
+                         "game_id": session.game_id,
+                         "root_decision_index": session.stepper.decision_count,
+                         "request": to_primitive(item.request),
+                         "output": None if batch_outputs is None else to_primitive(batch_outputs[index])}
+                        for index, (session, item) in enumerate(batch_context)
+                    ],
+                    "search_context": (None if failed.job is None else to_primitive(failed.job.failure_context(active_request_id))),
+                    "error_type": type(error).__name__, "error_detail": str(error),
+                    "traceback": error_text,
+                }
+                _atomic_json(root / "failures" / f"game-{failed.game_id:06d}.json", scene)
+        except Exception:
+            # Failure recording must never replace the search exception.
+            pass
         raise
+    window_ended = time.perf_counter()
+    window_cpu_ended = _cpu_seconds()
+    window_end_snapshot = _live_snapshot(evaluator, batcher, active.values(),
+                                         finished_simulations, len(completed))
     if device == "cuda":
         torch.cuda.synchronize()
+    tail_seconds = time.perf_counter() - window_ended
     return {
         "completed": completed, "wall_seconds": time.perf_counter() - started,
         "initialization_seconds": initialization_seconds,
         "decision_latencies_ms": decision_latencies_ms,
         "inference": evaluator.stats.to_dict(),
+        "counters": window_end_snapshot,
+        "window": None if window_control is None else {
+            "started_at": started, "ended_at": window_ended,
+            "cpu_start": window_cpu_started, "cpu_end": window_cpu_ended,
+            "cpu_seconds": window_cpu_ended - window_cpu_started,
+            "start": window_start_snapshot, "end": window_end_snapshot,
+            "tail_seconds": tail_seconds,
+        },
         "peak_active_games": peak_active, "peak_pending_requests": peak_pending,
         "cpu_peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
         "gpu_peak_bytes": torch.cuda.max_memory_allocated() if device == "cuda" else 0,
@@ -501,6 +758,7 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
         "samples": 0, "policy_samples": 0, "simulations": 0,
         "data_bytes": 0, "search_seconds_sum": 0.0, "logical_model_positions": 0,
         "failed_games": 0, "exceptions": 0, "engineering_truncations": 0,
+        "batch_failures": 0, "batch_failure_game_ids": [],
         "semantic_fingerprint": manifest["semantic_fingerprint"],
         "statistics_scope": "unavailable", "statistics_complete": False,
         "statistics_missing_game_ids": sorted(committed),
@@ -525,6 +783,10 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
         summary["logical_model_positions"] += sum(s["model_positions"] for s in metadata["mcts_stats"])
         winners = metadata["terminal_result"]["winner_ids"]
         summary["draws" if len(winners) == 2 else ("p0_wins" if winners[0] == 0 else "p1_wins")] += 1
+    for scene_path in (root / "failures").glob("batch-*.json"):
+        scene = json.loads(scene_path.read_text(encoding="utf-8"))
+        summary["batch_failures"] += 1
+        summary["batch_failure_game_ids"].extend(scene.get("game_ids", []))
     for scene_path in (root / "failures").glob("game-*.json"):
         game_id = int(scene_path.stem.removeprefix("game-"))
         if game_id in committed:
@@ -545,6 +807,10 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
                                                     "native_compute_seconds", "write_seconds",
                                                     "queue_wait_seconds", "worker_initialization_seconds_sum",
                                                     "worker_collection_wall_seconds_max",
+                                                    "native_batch_rows", "native_batch_batches", "native_root_rows",
+                                                    "native_policy_rows", "native_value_rows", "native_wide_batches",
+                                                    "peak_inflight_rows", "native_fill_seconds", "native_consume_seconds",
+                                                    "pipeline_slots", "compile_failure_policy",
                                                     "statistics_scope", "statistics_game_ids")
                         if key in status})
         # Wall time and shared physical batches cannot be recovered by summing
@@ -662,6 +928,9 @@ def generate(
             "logical_model_positions": sum(item["inference"]["logical_model_positions"] for item in results),
             "feature_seconds": sum(item["inference"]["feature_seconds"] for item in results),
             "forward_seconds": sum(item["inference"]["forward_seconds"] for item in results),
+            "h2d_seconds": sum(item["inference"]["h2d_seconds"] for item in results),
+            "d2h_seconds": sum(item["inference"]["d2h_seconds"] for item in results),
+            "wait_seconds": sum(item["inference"]["wait_seconds"] for item in results),
             "batch_size_histogram": {},
         }
         hist = physical["batch_size_histogram"]
@@ -701,6 +970,17 @@ def generate(
                 result["initialization_seconds"] for result in results),
             "worker_collection_wall_seconds_max": max(result["wall_seconds"] for result in results),
             "inference": physical,
+            "native_batch_rows": sum(item["counters"].get("native_batch_rows", 0) for item in results),
+            "native_batch_batches": sum(item["counters"].get("native_batch_batches", 0) for item in results),
+            "native_root_rows": sum(item["counters"].get("native_root_rows", 0) for item in results),
+            "native_policy_rows": sum(item["counters"].get("native_policy_rows", 0) for item in results),
+            "native_value_rows": sum(item["counters"].get("native_value_rows", 0) for item in results),
+            "native_wide_batches": sum(item["counters"].get("native_wide_batches", 0) for item in results),
+            "peak_inflight_rows": max(item["counters"].get("native_peak_inflight_rows", 0) for item in results),
+            "native_fill_seconds": sum(item["counters"].get("native_fill_seconds", 0.0) for item in results),
+            "native_consume_seconds": sum(item["counters"].get("native_consume_seconds", 0.0) for item in results),
+            "pipeline_slots": config.execution.pipeline_slots,
+            "compile_failure_policy": config.execution.compile_failure_policy,
             "peak_active_games": max(r["peak_active_games"] for r in results),
             "peak_pending_requests": max(r["peak_pending_requests"] for r in results),
             "cpu_peak_rss_kib": max(r["cpu_peak_rss_kib"] for r in results),

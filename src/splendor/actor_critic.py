@@ -73,6 +73,33 @@ class TorchDecisionBatch:
 
 
 @dataclass(frozen=True, slots=True)
+class ActorProjection:
+    """Frozen actor first layer split into state and action projections.
+
+    ``h_i = ReLU(W @ concat(state, action_i) + b)`` becomes
+    ``h_i = ReLU((W_state @ state + b) + W_action @ action_i)`` so the state
+    half is computed once per decision instead of once per candidate.  The bias
+    and the ReLU apply to the combined sum exactly as before.  Copies are
+    contiguous so no per-forward slicing is needed.
+    """
+
+    state_weight: Tensor
+    action_weight: Tensor
+    bias: Tensor
+    output_weight: Tensor
+    output_bias: Tensor
+
+    def to(self, device: torch.device | str) -> ActorProjection:
+        return ActorProjection(
+            state_weight=self.state_weight.to(device),
+            action_weight=self.action_weight.to(device),
+            bias=self.bias.to(device),
+            output_weight=self.output_weight.to(device),
+            output_bias=self.output_bias.to(device),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class TorchStateBatch:
     """Tensor-only counterpart of :class:`EncodedStateBatch` (no candidates)."""
 
@@ -352,6 +379,24 @@ class ActorCritic(nn.Module):
         )
         return torch.cat((meta, card_embedding, noble_embedding), dim=-1)
 
+    def build_actor_projection(self) -> ActorProjection:
+        """Contiguous state/action views of the frozen actor's first layer."""
+
+        first, _activation, last = self.actor
+        if not isinstance(first, nn.Linear) or not isinstance(last, nn.Linear):
+            raise TypeError("actor projection requires Linear, ReLU, Linear")
+        weight = first.weight.detach()
+        if weight.shape[1] != self.actor_input_dim:
+            raise ValueError("actor first layer does not match the configured input width")
+        state_hidden = self.config.state_hidden
+        return ActorProjection(
+            state_weight=weight[:, :state_hidden].contiguous(),
+            action_weight=weight[:, state_hidden:].contiguous(),
+            bias=first.bias.detach().contiguous(),
+            output_weight=last.weight.detach().contiguous(),
+            output_bias=last.bias.detach().contiguous(),
+        )
+
     def _actor_logits(self, prepared: TorchDecisionBatch, state: Tensor) -> Tensor:
         candidate_raw = torch.where(
             prepared.candidate_mask.unsqueeze(-1),
@@ -362,18 +407,44 @@ class ActorCritic(nn.Module):
         expanded_state = state.unsqueeze(1).expand(-1, actions.shape[1], -1)
         return self.actor(torch.cat((expanded_state, actions), dim=-1)).squeeze(-1)
 
-    def _forward_prepared(self, prepared: TorchDecisionBatch) -> tuple[Tensor, Tensor]:
+    def _actor_logits_projected(
+        self, prepared: TorchDecisionBatch, state: Tensor, projection: ActorProjection
+    ) -> Tensor:
+        candidate_raw = torch.where(
+            prepared.candidate_mask.unsqueeze(-1),
+            prepared.candidate_features,
+            torch.zeros_like(prepared.candidate_features),
+        )
+        actions = self.encode_actions(candidate_raw)
+        hidden = state @ projection.state_weight.transpose(0, 1) + projection.bias
+        hidden = hidden.unsqueeze(1) + actions @ projection.action_weight.transpose(0, 1)
+        hidden = torch.relu(hidden)
+        return (hidden @ projection.output_weight.transpose(0, 1) + projection.output_bias).squeeze(-1)
+
+    def _forward_prepared(
+        self, prepared: TorchDecisionBatch, *, projection: ActorProjection | None = None
+    ) -> tuple[Tensor, Tensor]:
         """Trusted tensor core used by frozen search after encoding checks."""
         state = self.encode_state(prepared)
-        return self._actor_logits(prepared, state), self.critic(state).squeeze(-1)
+        logits = (
+            self._actor_logits(prepared, state) if projection is None
+            else self._actor_logits_projected(prepared, state, projection)
+        )
+        return logits, self.critic(state).squeeze(-1)
 
     def forward(
         self, batch: EncodedDecisionBatch | TorchDecisionBatch
     ) -> tuple[Tensor, Tensor]:
         return self._forward_prepared(self._prepare(batch))
 
-    def _policy_logits_prepared(self, prepared: TorchDecisionBatch) -> Tensor:
-        return self._actor_logits(prepared, self.encode_state(prepared))
+    def _policy_logits_prepared(
+        self, prepared: TorchDecisionBatch, *, projection: ActorProjection | None = None
+    ) -> Tensor:
+        state = self.encode_state(prepared)
+        return (
+            self._actor_logits(prepared, state) if projection is None
+            else self._actor_logits_projected(prepared, state, projection)
+        )
 
     def policy_logits(
         self, batch: EncodedDecisionBatch | TorchDecisionBatch

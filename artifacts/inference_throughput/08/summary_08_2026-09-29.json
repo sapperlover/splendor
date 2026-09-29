@@ -1,0 +1,751 @@
+{
+  "work_package": "08_native_gpu_layout_fix_and_rebaseline",
+  "measured_at": "2026-09-29",
+  "reason": "The 07 CUDA reused transport read multi-row fields without the row stride; every throughput number produced before the fix describes a wrong input layout.",
+  "machine": {
+    "cpu_cores": 16,
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU, 6141 MiB, 580.178.04",
+    "torch": "2.14.0+cu130",
+    "cuda": "13.0",
+    "python": "3.12.14",
+    "git_revision": "86235841bd731c3310532e16c83869a21a8bb35e",
+    "git_dirty": true
+  },
+  "checkpoint": {
+    "path": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "sha256": "009d17d2e9bc0d879142d7ca3ff1777a6f8caa9dda9243c6a2d5eb3538b5d5b0"
+  },
+  "search": {
+    "simulations": 1024,
+    "determinizations": 1,
+    "c_puct": 1.5,
+    "root_noise_fraction": 0.25,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512
+  },
+  "protocol": {
+    "window": "35 s common start gate after 2 s search warm-up plus explicit candidate-bucket compile warm-up",
+    "cpu": "resource.getrusage(RUSAGE_SELF) sampled inside each worker at the window boundaries",
+    "counters": "live snapshot; simulations counted on completion including unfinished roots",
+    "transport": "reused = pinned row-major staging with stride views; packed = pre-reuse concatenate + fresh tensors"
+  },
+  "runs": {
+    "reused_128_128_slots1": [
+      {
+        "source": "reused_128_128_slots1.json",
+        "simulations_per_second": 43822.28945452423,
+        "positions_per_second": 43862.51687537041,
+        "cpu_us_per_simulation": 23.001026193357262,
+        "cpu_cores_busy": 1.0079576275963955,
+        "common_seconds": 35.00100106799982,
+        "mean_batch_size": 128.0,
+        "native_fill_seconds_sum_workers": 5.376850709029895,
+        "native_consume_seconds_sum_workers": 10.686289359095099,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 8.082017889862982,
+        "h2d_seconds_sum_workers": 0.657833851988471,
+        "d2h_seconds_sum_workers": 0.5603848549817485,
+        "wait_seconds_sum_workers": 0.2556300291471416,
+        "native_wide_batches": 42,
+        "peak_inflight_rows": 128,
+        "batch_sizes": {
+          "128": 11994
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 128,
+          "max_batch_size": 128,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      }
+    ],
+    "reused_256_256_slots1": [
+      {
+        "source": "reused_256_256_slots1.json",
+        "simulations_per_second": 56442.92164695354,
+        "positions_per_second": 56494.120357790474,
+        "cpu_us_per_simulation": 17.846388756155243,
+        "cpu_cores_busy": 1.007302322244743,
+        "common_seconds": 35.00088128599964,
+        "mean_batch_size": 256.0,
+        "native_fill_seconds_sum_workers": 6.537471324985745,
+        "native_consume_seconds_sum_workers": 12.399709105004149,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 5.060119057949123,
+        "h2d_seconds_sum_workers": 0.4119873279341846,
+        "d2h_seconds_sum_workers": 0.3383770669643127,
+        "wait_seconds_sum_workers": 0.39723494397730974,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 256,
+        "batch_sizes": {
+          "256": 7724
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 256,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      },
+      {
+        "source": "reused_256_256_slots1_rerun.json",
+        "simulations_per_second": 52434.04951224251,
+        "positions_per_second": 52485.24749614343,
+        "cpu_us_per_simulation": 19.156127401834283,
+        "cpu_cores_busy": 1.0044333326506043,
+        "common_seconds": 35.00137824700141,
+        "mean_batch_size": 256.0,
+        "native_fill_seconds_sum_workers": 6.259649176041421,
+        "native_consume_seconds_sum_workers": 12.317153691936255,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 5.318561436966775,
+        "h2d_seconds_sum_workers": 0.48549262086089584,
+        "d2h_seconds_sum_workers": 0.35451891002594493,
+        "wait_seconds_sum_workers": 0.1778058949366823,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 256,
+        "batch_sizes": {
+          "256": 7176
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 256,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      },
+      {
+        "source": "reused_256_256_slots1_rerun2.json",
+        "simulations_per_second": 53810.75622884284,
+        "positions_per_second": 53861.95580660577,
+        "cpu_us_per_simulation": 18.669016858943863,
+        "cpu_cores_busy": 1.0045939152287853,
+        "common_seconds": 35.000288641000225,
+        "mean_batch_size": 256.0,
+        "native_fill_seconds_sum_workers": 6.341139755955737,
+        "native_consume_seconds_sum_workers": 12.372169902990208,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 5.237703448001412,
+        "h2d_seconds_sum_workers": 0.45918059381983767,
+        "d2h_seconds_sum_workers": 0.3497436140605714,
+        "wait_seconds_sum_workers": 0.19314061695149576,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 256,
+        "batch_sizes": {
+          "256": 7364
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 256,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      }
+    ],
+    "reused_512_512_slots1": [
+      {
+        "source": "reused_512_512_slots1.json",
+        "simulations_per_second": 58873.49882492673,
+        "positions_per_second": 58917.37969361612,
+        "cpu_us_per_simulation": 17.073900427018632,
+        "cpu_cores_busy": 1.0052002567269975,
+        "common_seconds": 35.00386491599966,
+        "mean_batch_size": 512.0,
+        "native_fill_seconds_sum_workers": 6.9934405609874375,
+        "native_consume_seconds_sum_workers": 14.008754697028053,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 3.3519154800051183,
+        "h2d_seconds_sum_workers": 0.35232265805097995,
+        "d2h_seconds_sum_workers": 0.21853930992801907,
+        "wait_seconds_sum_workers": 1.2108492400275281,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 512,
+        "batch_sizes": {
+          "512": 4028
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 512,
+          "max_batch_size": 512,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      },
+      {
+        "source": "reused_512_512_slots1_rerun.json",
+        "simulations_per_second": 58062.20895276547,
+        "positions_per_second": 58106.08467741492,
+        "cpu_us_per_simulation": 17.331395623425692,
+        "cpu_cores_busy": 1.0062991141303874,
+        "common_seconds": 35.00796880899907,
+        "mean_batch_size": 512.0,
+        "native_fill_seconds_sum_workers": 6.996823860949007,
+        "native_consume_seconds_sum_workers": 13.917149773978963,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 3.3383582220103563,
+        "h2d_seconds_sum_workers": 0.3579561820079107,
+        "d2h_seconds_sum_workers": 0.2152735860672692,
+        "wait_seconds_sum_workers": 1.186283495002499,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 512,
+        "batch_sizes": {
+          "512": 3973
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 512,
+          "max_batch_size": 512,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      }
+    ],
+    "packed_256_256_slots1": [
+      {
+        "source": "packed_256_256_slots1.json",
+        "simulations_per_second": 40403.065524733676,
+        "positions_per_second": 40439.629384937056,
+        "cpu_us_per_simulation": 24.95819499434389,
+        "cpu_cores_busy": 1.0083875877355564,
+        "common_seconds": 35.00724466400061,
+        "mean_batch_size": 256.0,
+        "native_fill_seconds_sum_workers": 4.655604443023549,
+        "native_consume_seconds_sum_workers": 9.282982424932925,
+        "feature_seconds_sum_workers": 8.867933331064705,
+        "forward_seconds_sum_workers": 4.179225275966019,
+        "h2d_seconds_sum_workers": 0.0,
+        "d2h_seconds_sum_workers": 0.8285114770133077,
+        "wait_seconds_sum_workers": 0.0,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 256,
+        "batch_sizes": {
+          "256": 5530
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 256,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "packed",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      }
+    ],
+    "reused_256_128_slots1": [
+      {
+        "source": "reused_256_128_slots1.json",
+        "simulations_per_second": 48317.36918906032,
+        "positions_per_second": 48361.254174699796,
+        "cpu_us_per_simulation": 20.87167265080987,
+        "cpu_cores_busy": 1.0084643130623938,
+        "common_seconds": 35.000581124000746,
+        "mean_batch_size": 128.0,
+        "native_fill_seconds_sum_workers": 5.993170856067081,
+        "native_consume_seconds_sum_workers": 10.698168229011571,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 7.277996946088024,
+        "h2d_seconds_sum_workers": 0.5579916808528651,
+        "d2h_seconds_sum_workers": 0.5304186140401725,
+        "wait_seconds_sum_workers": 0.29418389688908064,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 128,
+        "batch_sizes": {
+          "128": 13224
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 128,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      },
+      {
+        "source": "reused_256_128_slots1_rerun.json",
+        "simulations_per_second": 49808.77468114264,
+        "positions_per_second": 49852.65906412162,
+        "cpu_us_per_simulation": 20.15003326908957,
+        "cpu_cores_busy": 1.0036484669176104,
+        "common_seconds": 35.00106178399983,
+        "mean_batch_size": 128.0,
+        "native_fill_seconds_sum_workers": 5.708244729132275,
+        "native_consume_seconds_sum_workers": 10.81890927281529,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 7.332223082057681,
+        "h2d_seconds_sum_workers": 0.5293865398543858,
+        "d2h_seconds_sum_workers": 0.5293803758759168,
+        "wait_seconds_sum_workers": 0.16088682179361058,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 128,
+        "batch_sizes": {
+          "128": 13632
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 128,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      }
+    ],
+    "reused_256_128_slots2": [
+      {
+        "source": "reused_256_128_slots2.json",
+        "simulations_per_second": 45302.0966010951,
+        "positions_per_second": 45345.97980736029,
+        "cpu_us_per_simulation": 22.299680134000642,
+        "cpu_cores_busy": 1.0102222636040183,
+        "common_seconds": 35.00200032599969,
+        "mean_batch_size": 128.0,
+        "native_fill_seconds_sum_workers": 5.489813763007987,
+        "native_consume_seconds_sum_workers": 10.52474512196568,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 7.66889303807875,
+        "h2d_seconds_sum_workers": 0.5945027891120844,
+        "d2h_seconds_sum_workers": 0.5362050509229448,
+        "wait_seconds_sum_workers": 0.0722377220481576,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 256,
+        "batch_sizes": {
+          "128": 12400
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 128,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 2
+        },
+        "evaluator": "real"
+      },
+      {
+        "source": "reused_256_128_slots2_rerun.json",
+        "simulations_per_second": 48936.46579077241,
+        "positions_per_second": 48980.34843832056,
+        "cpu_us_per_simulation": 20.51143677140935,
+        "cpu_cores_busy": 1.0037572238836652,
+        "common_seconds": 35.002445973999784,
+        "mean_batch_size": 128.0,
+        "native_fill_seconds_sum_workers": 5.712377858990294,
+        "native_consume_seconds_sum_workers": 10.658131801976197,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 7.479781980944608,
+        "h2d_seconds_sum_workers": 0.5618019339708553,
+        "d2h_seconds_sum_workers": 0.5393517531883845,
+        "wait_seconds_sum_workers": 0.07044724401202984,
+        "native_wide_batches": 0,
+        "peak_inflight_rows": 256,
+        "batch_sizes": {
+          "128": 13394
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 128,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 2
+        },
+        "evaluator": "real"
+      }
+    ],
+    "cpu_8x4_eager": [
+      {
+        "source": "cpu_8x4_eager.json",
+        "simulations_per_second": 16432.558961977415,
+        "positions_per_second": 16448.44455372984,
+        "cpu_us_per_simulation": 469.48401965420834,
+        "cpu_cores_busy": 7.7148238346739415,
+        "common_seconds": 35.00026997199893,
+        "mean_batch_size": 4.0,
+        "native_fill_seconds_sum_workers": 4.159937773893034,
+        "native_consume_seconds_sum_workers": 9.094011221190158,
+        "feature_seconds_sum_workers": 11.426746290679148,
+        "forward_seconds_sum_workers": 209.44325931086678,
+        "h2d_seconds_sum_workers": 0.0,
+        "d2h_seconds_sum_workers": 0.0,
+        "wait_seconds_sum_workers": 0.0,
+        "native_wide_batches": 42,
+        "peak_inflight_rows": 4,
+        "batch_sizes": {
+          "4": 17951
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cpu",
+          "engine_mode": "fast",
+          "workers": 8,
+          "active_games_per_worker": 4,
+          "max_batch_size": 4,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "eager",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      }
+    ],
+    "cpu_8x4_compiled": [
+      {
+        "source": "cpu_8x4_compiled.json",
+        "simulations_per_second": 14423.131471876306,
+        "positions_per_second": 14436.960087176358,
+        "cpu_us_per_simulation": 532.9818643920064,
+        "cpu_cores_busy": 7.6872675022516574,
+        "common_seconds": 34.999888962000114,
+        "mean_batch_size": 4.0,
+        "native_fill_seconds_sum_workers": 5.299350119421433,
+        "native_consume_seconds_sum_workers": 11.482846015353061,
+        "feature_seconds_sum_workers": 13.897999940105365,
+        "forward_seconds_sum_workers": 185.18723112407315,
+        "h2d_seconds_sum_workers": 0.0,
+        "d2h_seconds_sum_workers": 0.0,
+        "wait_seconds_sum_workers": 0.0,
+        "native_wide_batches": 36,
+        "peak_inflight_rows": 4,
+        "batch_sizes": {
+          "4": 16054
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cpu",
+          "engine_mode": "fast",
+          "workers": 8,
+          "active_games_per_worker": 4,
+          "max_batch_size": 4,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "real"
+      }
+    ],
+    "fixed_evaluator_256_256": [
+      {
+        "source": "fixed_evaluator_256_256.json",
+        "simulations_per_second": 70019.33744427153,
+        "positions_per_second": 70085.15883940402,
+        "cpu_us_per_simulation": 14.278764427094213,
+        "cpu_cores_busy": 0.9997896247079701,
+        "common_seconds": 35.003815938000116,
+        "mean_batch_size": 256.0,
+        "native_fill_seconds_sum_workers": 7.912438775007104,
+        "native_consume_seconds_sum_workers": 11.816979375966184,
+        "feature_seconds_sum_workers": 0.0,
+        "forward_seconds_sum_workers": 0.0,
+        "h2d_seconds_sum_workers": 0.0,
+        "d2h_seconds_sum_workers": 0.0,
+        "wait_seconds_sum_workers": 0.0,
+        "native_wide_batches": 1531,
+        "peak_inflight_rows": 256,
+        "batch_sizes": {
+          "256": 9583
+        },
+        "recompiled_graphs_in_window": [],
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 256,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        },
+        "evaluator": "fixed"
+      }
+    ]
+  },
+  "headline": {
+    "reused_128_128_slots1": {
+      "mean": 43822.28945452423,
+      "min": 43822.28945452423,
+      "max": 43822.28945452423,
+      "n": 1
+    },
+    "reused_256_256_slots1": {
+      "mean": 54229.24246267963,
+      "min": 52434.04951224251,
+      "max": 56442.92164695354,
+      "n": 3
+    },
+    "reused_512_512_slots1": {
+      "mean": 58467.853888846104,
+      "min": 58062.20895276547,
+      "max": 58873.49882492673,
+      "n": 2
+    },
+    "packed_256_256_slots1": {
+      "mean": 40403.065524733676,
+      "min": 40403.065524733676,
+      "max": 40403.065524733676,
+      "n": 1
+    },
+    "reused_256_128_slots1": {
+      "mean": 49063.071935101485,
+      "min": 48317.36918906032,
+      "max": 49808.77468114264,
+      "n": 2
+    },
+    "reused_256_128_slots2": {
+      "mean": 47119.281195933756,
+      "min": 45302.0966010951,
+      "max": 48936.46579077241,
+      "n": 2
+    },
+    "cpu_8x4_eager": {
+      "mean": 16432.558961977415,
+      "min": 16432.558961977415,
+      "max": 16432.558961977415,
+      "n": 1
+    },
+    "cpu_8x4_compiled": {
+      "mean": 14423.131471876306,
+      "min": 14423.131471876306,
+      "max": 14423.131471876306,
+      "n": 1
+    },
+    "fixed_evaluator_256_256": {
+      "mean": 70019.33744427153,
+      "min": 70019.33744427153,
+      "max": 70019.33744427153,
+      "n": 1
+    },
+    "reused_over_packed_256_256_mean": 1.342206136053759,
+    "slots2_over_slots1_256_128_mean": 0.9603817970929563,
+    "cpu_compiled_over_eager_cpu_us": 1.1352502791992078
+  },
+  "conclusions": {
+    "best_measured_config": "native_cuda single owner, active/batch=512/512, reused transport, compiled + projection, pipeline_slots=1: 58,468 sim/s mean over two windows (58,873 / 58,062), CPU 17.1-17.3 us/simulation.",
+    "tier_ranking": "128/128 43,822 < 256/256 54,229 (52,434-56,443 over three windows) < 512/512 58,468 (58,062-58,873). The 256 and 512 samples do not overlap, so 512 is the best measured point; the 07 claim that they were indistinguishable came from wrong inputs and is withdrawn.",
+    "buffer_reuse": "reused 54,229 sim/s (mean) vs packed 40,403 sim/s at 256/256 (+34% on means, +40% on the single paired windows), CPU 25.0 -> 17.8-19.2 us/simulation.",
+    "cpu_tier": "native CPU 8x4 eager 16,433 sim/s / 469.5 us per simulation; compiled 14,423 sim/s / 533.0 us (-12% throughput, +13.5% CPU per simulation) -> keep eager on CPU.",
+    "dual_slot": "256/128 slots=1 49,063 vs slots=2 47,119 sim/s (two windows each) -> no repeatable gain; overlap is real (D2H wait 0.29 -> 0.07 s, peak in-flight 256 vs 128 rows). Keep pipeline_slots=1.",
+    "artificial_ceiling": "instant fixed evaluator at 256/256 reaches 70,019 sim/s at 14.3 us/simulation, but that window had 1,531 over-width batches, so it is a different workload and only a reference.",
+    "bottleneck": "host CPU supply: 35.16 CPU s in a 35.0 s window at 256/256 (fill 18%, submit/advance 35%, compiled forward host time 15%, transfers 2%, GPU wait 0.6%, scheduling remainder ~29%).",
+    "next_step": "reduce per-batch host work (pending scanning, per-chunk Python objects, native batched advance); persistent multi-batch pipelining and multi-core supply for one GPU owner stay conditional."
+  }
+}

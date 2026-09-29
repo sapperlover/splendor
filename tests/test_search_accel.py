@@ -382,3 +382,332 @@ def test_cuda_batched_inference_matches_cpu_with_fp32_tolerance():
     for (cpu_logits, cpu_value), (cuda_logits, cuda_value) in zip(cpu_rows, cuda_rows):
         np.testing.assert_allclose(cpu_logits, cuda_logits, atol=1e-5, rtol=1e-5)
         assert cpu_value == pytest.approx(cuda_value, abs=1e-5)
+
+
+def _native_worker_config(run_id, *, simulations=2, games=2, active=2, batch=2, seed=4200):
+    return FastSelfPlayConfig.from_dict({
+        "protocol": "mcts-selfplay-v2", "run_id": run_id, "round_index": 0,
+        "checkpoint": str(CHECKPOINT), "num_games": games, "seed": seed,
+        "search_config": {"simulations": simulations, "determinizations": 1, "seed": 7,
+                          "root_noise_fraction": 0.0},
+        "execution": {"backend": "native_cpu", "engine_mode": "fast", "workers": 1,
+                      "active_games_per_worker": active, "max_batch_size": batch,
+                      "batch_interface": "native"},
+    })
+
+
+def test_live_simulation_count_includes_unfinished_roots():
+    from splendor.catalog import load_default_catalog
+    from splendor.native_policy import NativePUCTSearchPolicy
+    catalog = load_default_catalog()
+    request = GameEngine.new(42, first_player=0, catalog=catalog, mode="fast").decision()
+    policy = NativePUCTSearchPolicy(
+        ActorCritic(), config=MCTSConfig(simulations=8, determinizations=1, seed=155,
+                                         root_noise_fraction=0.0), catalog=catalog)
+    job = policy.start_job(request)
+    assert policy.live_simulations() == 0 and policy.stats.simulations == 0
+    root = job.pending_requests()[0]
+    job.submit(root.request_id, (0.0,) * len(root.encoded.candidate_actions), 0.0)
+    leaf = job.pending_requests()[0]
+    job.submit(leaf.request_id, (0.0,) * len(leaf.encoded.candidate_actions), 0.0)
+    completed = int(job.core.stats()["simulations"])
+    assert completed == 1 and not job.done
+    assert policy.stats.simulations == 0, "the root result has not been collected yet"
+    assert policy.live_simulations() == completed
+    while not job.done:
+        for item in job.pending_requests():
+            logits = None if item.kind == "value_only" else (0.0,) * len(item.encoded.candidate_actions)
+            job.submit(item.request_id, logits, 0.0)
+    assert policy.stats.simulations == 8
+    assert policy.live_simulations() == policy.stats.simulations
+
+
+def test_native_batch_failure_attributes_the_second_row(tmp_path, monkeypatch):
+    config = _native_worker_config("native-row-failure", simulations=4, games=2, active=2, batch=4)
+    root = tmp_path / "native-row-failure"
+    original = FrozenSearchInference.policy_value_native
+
+    def corrupt(self, arrays):
+        logits, values = original(self, arrays)
+        if logits.shape[0] > 1:
+            logits = np.array(logits, copy=True)
+            logits[1, 0] = np.nan
+        return logits, values
+
+    monkeypatch.setattr(FrozenSearchInference, "policy_value_native", corrupt)
+    with pytest.raises(ValueError, match="batch row 1"):
+        generate(config, root)
+    scene = json.loads((root / "failures" / "game-000001.json").read_text())
+    assert scene["scope"] == "row" and scene["game_id"] == 1
+    assert scene["trace"]["game_seed"]
+    request = scene["batch_requests"][0]
+    assert request["game_id"] == 1 and request["kind"] == "root"
+    assert request["batch_world"] == -1 and request["simulation"] == -1
+    assert request["job_id"] >= 0 and request["model_version"]
+    assert scene["search_context"]["root_request"] is not None
+
+
+def test_native_batch_failure_records_the_whole_batch(tmp_path, monkeypatch):
+    config = _native_worker_config("native-batch-failure", simulations=4, games=2, active=2, batch=4)
+    root = tmp_path / "native-batch-failure"
+
+    def broken(self, arrays):
+        raise ValueError("injected device failure")
+
+    monkeypatch.setattr(FrozenSearchInference, "policy_value_native", broken)
+    with pytest.raises(ValueError, match="injected device failure"):
+        generate(config, root)
+    scene = json.loads((root / "failures" / "batch-000000.json").read_text())
+    assert scene["scope"] == "batch" and scene["game_ids"] == [0, 1]
+    assert {item["game_id"] for item in scene["batch_requests"]} == {0, 1}
+    assert all(item["kind"] == "root" for item in scene["batch_requests"])
+    summary = validate_run(root)
+    assert summary["batch_failures"] == 1
+    assert summary["failed_games"] == 0
+
+
+def _pipeline_run(evaluator, decisions, *, slots, capacity=2, simulations=8):
+    from splendor.catalog import load_default_catalog
+    from splendor.native_policy import NativeBatchRunner, NativePUCTSearchPolicy
+    catalog = load_default_catalog()
+    policies = [
+        NativePUCTSearchPolicy(
+            ActorCritic(),
+            config=MCTSConfig(simulations=simulations, determinizations=1, seed=2100 + index,
+                              root_noise_fraction=0.0),
+            catalog=catalog, evaluator=evaluator)
+        for index in range(len(decisions))
+    ]
+    jobs = [policy.start_job(decision) for policy, decision in zip(policies, decisions)]
+    batcher = NativeBatchRunner(evaluator, catalog, capacity=capacity,
+                                buckets=(16, 32, 48), slots=slots)
+    guard = 0
+    while any(not job.done for job in jobs):
+        guard += 1
+        assert guard < 200, "native pipeline made no progress"
+        batcher.run([job for job in jobs if not job.done])
+    return [job.result for job in jobs], batcher
+
+
+def test_two_slot_pipeline_matches_sync_with_controlled_evaluator():
+    from splendor.benchmark_search import fixed_requests
+    from splendor.search_inference import FixedValueSearchInference
+    decisions = [decision for _name, decision, _trace in fixed_requests()[:4]]
+    expected, sync_batcher = _pipeline_run(FixedValueSearchInference(), decisions, slots=1)
+    actual, pipeline_batcher = _pipeline_run(FixedValueSearchInference(), decisions, slots=2)
+    assert [job.chosen_candidate_index for job in actual] == [job.chosen_candidate_index for job in expected]
+    assert [list(job.root_visit_counts) for job in actual] == [list(job.root_visit_counts) for job in expected]
+    assert [list(job.simulation_budgets) for job in actual] == [list(job.simulation_budgets) for job in expected]
+    assert pipeline_batcher.batches == sync_batcher.batches
+    assert pipeline_batcher.rows == sync_batcher.rows
+    assert pipeline_batcher.peak_inflight_rows > 0
+    assert pipeline_batcher.root_rows == sync_batcher.root_rows == len(decisions)
+
+
+def test_two_slot_pipeline_reports_row_failure_without_deadlock():
+    from splendor.benchmark_search import fixed_requests
+    from splendor.search_inference import FixedValueSearchInference
+
+    class SecondRowNaN(FixedValueSearchInference):
+        def policy_value_native(self, arrays):
+            logits, values = super().policy_value_native(arrays)
+            if logits.shape[0] > 1:
+                logits = logits.copy()
+                logits[1, 0] = np.nan
+            return logits, values
+
+    decisions = [decision for _name, decision, _trace in fixed_requests()[:4]]
+    from splendor.native_policy import NativeBatchRunner, NativePUCTSearchPolicy
+    from splendor.catalog import load_default_catalog
+    catalog = load_default_catalog()
+    evaluator = SecondRowNaN()
+    policies = [NativePUCTSearchPolicy(ActorCritic(),
+                                       config=MCTSConfig(simulations=8, determinizations=1,
+                                                         seed=2200 + index, root_noise_fraction=0.0),
+                                       catalog=catalog, evaluator=evaluator)
+                for index in range(len(decisions))]
+    jobs = [policy.start_job(decision) for policy, decision in zip(policies, decisions)]
+    context = {job: (policy, index) for index, (job, policy) in enumerate(zip(jobs, policies))}
+    batcher = NativeBatchRunner(evaluator, catalog, capacity=2, buckets=(16, 32, 48), slots=2)
+    with pytest.raises(ValueError, match="batch row 1") as info:
+        guard = 0
+        while any(not job.done for job in jobs):
+            guard += 1
+            assert guard < 200, "native pipeline made no progress"
+            batcher.run([job for job in jobs if not job.done], context=context)
+    report = batcher.failure_report(info.value)
+    assert report["scope"] == "row" and report["entry"].row == 1
+    assert report["entry"].kind == 0 and report["entry"].world == -1
+    assert report["context"] is not None and report["context"][1] >= 0
+    failed = [record for record in batcher.batch_records if record["status"] == "failed"]
+    assert len(failed) == 1 and failed[0]["error"]["stage"] in ("evaluate", "submit")
+
+
+def test_collect_group_reports_a_consistent_window(tmp_path):
+    from splendor.search_inference import FixedValueSearchInference
+    from splendor.selfplay_fast import _atomic_json, _collect_group, build_manifest
+    config = _native_worker_config("window-report", simulations=2, games=2, active=2, batch=2)
+    root = tmp_path / "window-report"
+    manifest = build_manifest(config)
+    _atomic_json(root / "manifest.json", manifest)
+    events: list[str] = []
+
+    class Window:
+        warmup_seconds = 0.0
+
+        def ready(self, payload):
+            events.append("ready")
+            assert payload["initialization_seconds"] >= 0
+
+        def wait_start(self):
+            events.append("start")
+
+        def stop_requested(self):
+            return False
+
+    class Stop:
+        def __init__(self):
+            self.calls = 0
+
+        def is_set(self):
+            self.calls += 1
+            return self.calls > 1
+
+    samples: list[dict] = []
+    result = _collect_group(
+        config, root, (0, 1), manifest["semantic_fingerprint"],
+        manifest["checkpoint_identity"]["sha256"], Stop(), stat_callback=samples.append,
+        evaluator=FixedValueSearchInference(), window_control=Window())
+    assert events == ["ready", "start"]
+    window = result["window"]
+    assert window["cpu_seconds"] >= 0 and window["ended_at"] >= window["started_at"]
+    assert window["end"]["simulations"] >= window["start"]["simulations"]
+    assert window["end"]["network_positions"] >= window["start"]["network_positions"]
+    assert window["end"]["simulations"] == result["counters"]["simulations"]
+    assert result["counters"]["simulations"] >= 0
+
+@pytest.mark.parametrize("stage", ("game", "batch"))
+def test_native_failures_keep_original_error_and_replay_context(tmp_path, monkeypatch, stage):
+    from splendor.search_inference import FixedValueSearchInference
+    from splendor.selfplay_fast import _GameSession, _collect_group, build_manifest
+
+    config = _native_worker_config(f"failure-{stage}", simulations=2, games=2, active=2, batch=2)
+    root = tmp_path / config.run_id
+    manifest = build_manifest(config)
+    evaluator = FixedValueSearchInference()
+    if stage == "game":
+        def fail_game(self):
+            raise LookupError("injected game advance")
+        monkeypatch.setattr(_GameSession, "ensure_job", fail_game)
+        expected_type, expected_message = LookupError, "injected game advance"
+    else:
+        def fail_batch(**kwargs):
+            raise MemoryError("injected batch allocation")
+        monkeypatch.setattr(evaluator, "new_native_transfer", fail_batch)
+        expected_type, expected_message = MemoryError, "injected batch allocation"
+    with pytest.raises(expected_type, match=expected_message):
+        _collect_group(config, root, (0, 1), manifest["semantic_fingerprint"],
+                       manifest["checkpoint_identity"]["sha256"], evaluator=evaluator)
+    failures = list((root / "failures").glob("*.json"))
+    assert len(failures) == 1
+    scene = json.loads(failures[0].read_text())
+    assert scene["error_type"] == expected_type.__name__
+    assert expected_message in scene["traceback"]
+    if stage == "game":
+        assert scene["game_id"] == 0 and scene["trace"]["game_seed"] == scene["game_seed"]
+        assert scene["root_request"] is not None
+    else:
+        assert scene["scope"] == "batch" and scene["game_ids"] == [0, 1]
+        assert len(scene["games"]) == 2
+        assert all(item["trace"]["game_seed"] == item["game_seed"] for item in scene["games"])
+        assert all(item["root_request"] is not None for item in scene["games"])
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is required")
+def test_real_cuda_two_slot_search_matches_one_slot():
+    from splendor.benchmark_search import fixed_requests
+    from splendor.search_inference import InferenceConfig
+
+    model = load_frozen_actor_critic_checkpoint(CHECKPOINT, device="cuda")
+    evaluator = FrozenSearchInference(model, device="cuda", config=InferenceConfig(
+        mode="eager", actor_projection=True, native_transport="reused"))
+    decisions = [decision for _name, decision, _trace in fixed_requests()[:4]]
+    expected, _ = _pipeline_run(evaluator, decisions, slots=1, capacity=2)
+    actual, batcher = _pipeline_run(evaluator, decisions, slots=2, capacity=2)
+    assert batcher.peak_inflight_rows >= 2
+    assert [job.chosen_candidate_index for job in actual] == [job.chosen_candidate_index for job in expected]
+    assert [list(job.root_visit_counts) for job in actual] == [list(job.root_visit_counts) for job in expected]
+
+
+def test_failure_file_error_does_not_hide_search_error(tmp_path, monkeypatch):
+    import splendor.selfplay_fast as selfplay
+    from splendor.search_inference import FixedValueSearchInference
+
+    config = _native_worker_config("failure-write", simulations=2, games=1, active=1, batch=1)
+    manifest = selfplay.build_manifest(config)
+
+    def fail_game(self):
+        raise LookupError("original search failure")
+
+    def fail_write(*args, **kwargs):
+        raise OSError("failure file unavailable")
+
+    monkeypatch.setattr(selfplay._GameSession, "ensure_job", fail_game)
+    monkeypatch.setattr(selfplay, "_atomic_json", fail_write)
+    with pytest.raises(LookupError, match="original search failure"):
+        selfplay._collect_group(config, tmp_path, (0,), manifest["semantic_fingerprint"],
+                                manifest["checkpoint_identity"]["sha256"],
+                                evaluator=FixedValueSearchInference())
+
+
+def test_shipped_native_loop_configs_parse_with_expected_execution():
+    from splendor.alphazero_loop import LoopConfig
+
+    expected = {
+        "alphazero_loop_cpu.json": ("native_cpu", 8, 4, 4),
+        "alphazero_loop_cuda.json": ("native_cuda", 1, 256, 256),
+        "alphazero_loop_smoke.json": ("native_cpu", 2, 2, 2),
+    }
+    from splendor.selfplay_fast import ExecutionConfig
+
+    for name, (backend, workers, active, batch) in expected.items():
+        raw = json.loads((ROOT / "configs/native_search" / name).read_text(encoding="utf-8"))
+        config = LoopConfig.from_dict(raw)
+        # LoopConfig validates the section through ExecutionConfig already; the
+        # rebuilt config is what the collector actually runs with.
+        execution = ExecutionConfig(**config.selfplay.execution)
+        assert (execution.backend, execution.workers,
+                execution.active_games_per_worker, execution.max_batch_size) == (backend, workers, active, batch)
+        assert execution.batch_interface == "native"
+        assert execution.pipeline_slots == 1
+        if backend == "native_cuda":
+            assert execution.native_transport == "reused"
+        # No stray duplicate keys are tolerated at the selfplay level.
+        assert set(raw["selfplay"]) == {"protocol", "search_config", "execution", "add_root_noise",
+                                        "temperature_schedule", "validation_fraction", "max_completed_turns"}
+
+
+def test_fixed_value_evaluator_skips_compile_warmup():
+    from splendor.search_inference import FixedValueSearchInference
+
+    evaluator = FixedValueSearchInference()
+    assert evaluator.warmup_native((16, 32, 48)) == 0.0
+    transfer = evaluator.new_native_transfer(state_only=False, capacity=4, width=32,
+                                             float_stride=0, mask_stride=0)
+    assert getattr(transfer, "float_staging", None) is None
+    assert getattr(transfer, "mask_staging", None) is None
+
+
+def test_window_delta_accepts_legacy_snapshots_without_native_metrics():
+    from scripts.benchmark_collect_throughput import _window_delta
+
+    start = {"timestamp": 1.0, "simulations": 10, "network_positions": 20, "physical_batches": 5,
+             "feature_seconds": 0.5, "forward_seconds": 0.25, "h2d_seconds": 0.0, "d2h_seconds": 0.0,
+             "wait_seconds": 0.0, "batch_sizes": {"64": 3}, "active_games": 4, "completed_games": 1}
+    end = dict(start, timestamp=2.0, simulations=30, network_positions=60, physical_batches=15,
+               feature_seconds=1.5, forward_seconds=0.75, batch_sizes={"64": 9}, completed_games=2)
+    window = {"start": start, "end": end, "cpu_seconds": 0.9, "started_at": 10.0, "ended_at": 12.0,
+              "tail_seconds": 0.01}
+    delta = _window_delta(window)
+    assert delta["simulations"] == 20 and delta["network_positions"] == 40
+    assert delta["native_batch_rows"] == 0 and delta["native_wide_batches"] == 0
+    assert delta["native_fill_seconds"] == 0.0 and delta["cpu_seconds"] == 0.9

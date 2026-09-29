@@ -32,6 +32,8 @@ conda run -n splendor env PYTHONPATH=src python -m pytest -q tests/test_native_s
 
 ## 已运行验证与性能
 
+> 本节记录 06 之前的 native 后端 32 局对照（8 局批=1 等形状），方法有效但**不代表 07/08 之后的整批 + 缓冲复用路径**；当前吞吐结论、最佳已测配置与限制见 [`native_inference_throughput_zh-CN.md`](native_inference_throughput_zh-CN.md) 顶部“当前结论”一节。
+
 - 原生规则完整轨迹差分：3 个固定随机种子，每步比较有序候选、完整可比状态和所有特征字段；另有 2 个种子核对 native 真实对局重建的请求、终局与 checked trace。覆盖购买支付、保留/盲留、超额归还、贵族及真实终局。
 - 受控搜索差分：N=1/2、S=17 的非整除预算、相同采样世界和相同 evaluator 输出，逐叶编码、根访问、选招一致。
 - 5.5M 初始 checkpoint 与已有 AlphaZero round-004 checkpoint 均可加载原生搜索。2 局 native CPU 与 2 局 native CUDA smoke 归档成功，checked replay 通过；拷贝出的一局缺失 run 只补采缺失 game_id。故意提交非有限 value 的失败分支可由 `reproduce_failure` 重建。

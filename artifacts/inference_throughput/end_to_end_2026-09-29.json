@@ -1,0 +1,144 @@
+{
+  "measured_at": "2026-09-29",
+  "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+  "search": {
+    "simulations": 1024,
+    "determinizations": 1
+  },
+  "doc_reference": {
+    "python_cpu_8": {
+      "wall_seconds": 186.38678084899948,
+      "games_per_minute": 2.575289931043286,
+      "simulations_per_second": 2823.8912523866647,
+      "mean_batch_size": 1.0,
+      "execution": {
+        "backend": "batched_cpu",
+        "workers": 8,
+        "active_games_per_worker": 4,
+        "max_batch_size": 4
+      }
+    },
+    "native_cpu_8": {
+      "wall_seconds": 97.62046640900007,
+      "games_per_minute": 4.917001707295127,
+      "simulations_per_second": 5632.917155877298,
+      "mean_batch_size": 1.0,
+      "execution": {
+        "backend": "native_cpu",
+        "workers": 8,
+        "active_games_per_worker": 4,
+        "max_batch_size": 4
+      }
+    },
+    "native_cpu_batch_8": {
+      "wall_seconds": 103.31468822199895,
+      "games_per_minute": 4.64599959851394,
+      "simulations_per_second": 5322.45714005757,
+      "mean_batch_size": 3.5123781476316216,
+      "execution": {
+        "backend": "native_cpu",
+        "workers": 2,
+        "active_games_per_worker": 4,
+        "max_batch_size": 8
+      }
+    },
+    "native_cuda_batch_8": {
+      "wall_seconds": 114.0549103609992,
+      "games_per_minute": 4.208499208677076,
+      "simulations_per_second": 4821.256693460458,
+      "mean_batch_size": 6.756458268081108,
+      "execution": {
+        "backend": "native_cuda",
+        "workers": 1,
+        "active_games_per_worker": 8,
+        "max_batch_size": 16
+      }
+    }
+  },
+  "now": {
+    "cpu_8games_docshape": {
+      "backend": "native_cpu",
+      "execution": {
+        "workers": 8,
+        "active_games_per_worker": 4,
+        "max_batch_size": 4,
+        "batch_interface": "native",
+        "actor_projection": true,
+        "inference_mode": "eager"
+      },
+      "completed_games": 8,
+      "wall_seconds": 90.61249944799783,
+      "games_per_minute": 5.29728241604758,
+      "inference_seconds_per_second": 5.458923574420252,
+      "mean_batch_size": 1.0,
+      "peak_active_games": 1,
+      "logical_model_positions": 496147,
+      "simulations_per_second": 6068.566735824108,
+      "source": "runtime/inference_throughput/e2e_cpu_docshape/status.json",
+      "simulations": 549888
+    },
+    "cuda_8games_docshape": {
+      "backend": "native_cuda",
+      "execution": {
+        "workers": 1,
+        "active_games_per_worker": 8,
+        "max_batch_size": 16,
+        "batch_interface": "native",
+        "actor_projection": true,
+        "inference_mode": "compiled"
+      },
+      "completed_games": 8,
+      "wall_seconds": 70.29023576100008,
+      "games_per_minute": 6.8288289945717295,
+      "inference_seconds_per_second": 0.5970360812604204,
+      "mean_batch_size": 6.33358189081225,
+      "peak_active_games": 8,
+      "logical_model_positions": 475652,
+      "simulations_per_second": 7458.902283137548,
+      "source": "runtime/inference_throughput/e2e_cuda_docshape/status.json",
+      "simulations": 524288
+    },
+    "cpu_32games_production": {
+      "backend": "native_cpu",
+      "execution": {
+        "workers": 8,
+        "active_games_per_worker": 4,
+        "max_batch_size": 4,
+        "batch_interface": "native",
+        "actor_projection": true,
+        "inference_mode": "eager"
+      },
+      "completed_games": 32,
+      "wall_seconds": 129.24168880700017,
+      "games_per_minute": 14.855887583356974,
+      "inference_seconds_per_second": 5.768274953745207,
+      "mean_batch_size": 3.566523867469009,
+      "peak_active_games": 4,
+      "logical_model_positions": 1925634,
+      "simulations_per_second": 16385.053611937186,
+      "source": "runtime/inference_throughput/e2e_cpu_prod/status.json",
+      "simulations": 2117632
+    },
+    "cuda_64games_production": {
+      "backend": "native_cuda",
+      "execution": {
+        "workers": 1,
+        "active_games_per_worker": 64,
+        "max_batch_size": 64,
+        "batch_interface": "native",
+        "actor_projection": true,
+        "inference_mode": "compiled"
+      },
+      "completed_games": 64,
+      "wall_seconds": 137.40359971700673,
+      "games_per_minute": 27.94686607853634,
+      "inference_seconds_per_second": 0.3431367996806048,
+      "mean_batch_size": 52.218626849389786,
+      "peak_active_games": 64,
+      "logical_model_positions": 3829453,
+      "simulations_per_second": 30659.575212559594,
+      "source": "runtime/inference_throughput/e2e_cuda_prod/status.json",
+      "simulations": 4212736
+    }
+  }
+}

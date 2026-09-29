@@ -182,6 +182,14 @@ class PUCTSearchPolicy:
         self.catalog = catalog or load_default_catalog()
         self.stats = MCTSStats()
         self.last_search_result: MCTSSearchResult | None = None
+        self._active_jobs: set[MCTSSearchJob] = set()
+
+    def live_simulations(self) -> int:
+        """Completed simulations, including roots that have not been collected."""
+
+        return self.stats.simulations + sum(
+            world.completed for job in self._active_jobs for world in job._worlds
+        )
 
     def _infer(self, requests: tuple[DecisionRequest, ...]) -> tuple[tuple[tuple[float, ...], float], ...]:
         before_features = self.evaluator.stats.feature_seconds
@@ -314,6 +322,7 @@ class MCTSSearchJob:
             self._complete(MCTSSearchResult(0, False, (1.0,), (1.0,), (), (), (0,), (1.0,), (1.0,), 0, 0, 0))
         else:
             policy.stats.searchable_decisions += 1
+            policy._active_jobs.add(self)
             self._emit("policy_value", request, None, root_encoded)
 
     @property
@@ -367,6 +376,7 @@ class MCTSSearchJob:
         self.policy.stats.model_positions += 1
 
     def _complete(self, result: MCTSSearchResult) -> None:
+        self.policy._active_jobs.discard(self)
         self._result = result
         self.policy.stats.total_seconds += time.perf_counter() - self.started
         self.policy.last_search_result = result

@@ -8,7 +8,7 @@ import os
 import time
 from concurrent.futures import ProcessPoolExecutor
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from statistics import median
 from typing import Any, Mapping
@@ -42,6 +42,7 @@ class SerializablePolicySpec:
     checkpoint: str | None = None
     search_config: dict[str, Any] | None = None
     search_backend: str = "python"
+    inference: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if self.search_backend not in ("python", "native"):
@@ -127,27 +128,32 @@ class SerializablePolicySpec:
         checkpoint = value.get("checkpoint")
         if not isinstance(checkpoint, str) or not checkpoint:
             raise ValueError(f"policy {name!r} requires a checkpoint path")
+        inference = value.get("inference")
+        if inference is not None and not isinstance(inference, Mapping):
+            raise ValueError(f"policy {name!r} inference settings must be a mapping")
         if kind == "greedy_checkpoint":
             return cls.greedy_checkpoint(name, checkpoint)
         if kind == "search_checkpoint":
             search_config = value.get("search_config")
             if not isinstance(search_config, Mapping):
                 raise ValueError(f"search policy {name!r} requires search_config")
-            return cls.search_checkpoint(
-                name, checkpoint, search_config=dict(search_config)
-            )
+            spec = cls.search_checkpoint(name, checkpoint, search_config=dict(search_config))
+            return replace(spec, inference=None if inference is None else dict(inference))
         if kind == "mcts_checkpoint":
             search_config = value.get("search_config")
             if not isinstance(search_config, Mapping):
                 raise ValueError(f"MCTS policy {name!r} requires search_config")
-            return cls.mcts_checkpoint(
+            spec = cls.mcts_checkpoint(
                 name, checkpoint, search_config=dict(search_config),
                 search_backend=backend,
             )
+            return replace(spec, inference=None if inference is None else dict(inference))
         raise ValueError(f"unsupported policy kind: {kind!r}")
 
     def to_dict(self) -> dict[str, object]:
         result: dict[str, object] = {"name": self.name, "kind": self.kind}
+        if self.inference is not None:
+            result["inference"] = dict(self.inference)
         if self.baseline_name is not None:
             result["baseline_name"] = self.baseline_name
         if self.checkpoint is not None:
@@ -715,6 +721,13 @@ def _create_serializable_policy(
         raise AssertionError("search policy lost its configuration")
     values = dict(spec.search_config)
     values["seed"] = int(values.get("seed", 0)) ^ seed
+    evaluator = None
+    if spec.inference is not None:
+        from .search_inference import FrozenSearchInference, InferenceConfig
+
+        evaluator = FrozenSearchInference(
+            model, device=device, config=InferenceConfig(**spec.inference)  # type: ignore[arg-type]
+        )
     if spec.kind == "mcts_checkpoint":
         from .mcts_policy import MCTSConfig, PUCTSearchPolicy
         if spec.search_backend == "native":
@@ -733,14 +746,14 @@ def _create_serializable_policy(
         return policy_cls(
             model,  # type: ignore[arg-type]
             config=MCTSConfig(**values),
-            device=device, **kwargs,
+            device=device, evaluator=evaluator, **kwargs,
         )
     from .search_policy import PolicyValueSearchPolicy, SearchConfig
 
     return PolicyValueSearchPolicy(
         model,  # type: ignore[arg-type]
         config=SearchConfig(**values),
-        device=device,
+        device=device, evaluator=evaluator,
     )
 
 

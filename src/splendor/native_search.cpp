@@ -518,6 +518,7 @@ struct Leaf {
     std::vector<std::pair<int,int>> path;
     std::vector<Action> branch;
     int transitions=0,simulation=0;bool cap=false;
+    bool exported=false; // claimed by a batch row until that row is submitted
 };
 struct World {
     int budget=0,completed=0;
@@ -546,7 +547,7 @@ class SearchJob {
     std::vector<World> worlds;
     std::vector<double> network_prior,used_prior;
     uint64_t public_word,base_seed,sampling_seed;
-    bool noise,root_pending=true,finished=false;
+    bool noise,root_pending=true,finished=false,root_exported=false;
     double temperature;
     int max_depth=0,cap_hits=0,expanded=0,terminal_hits=0,transitions=0,folded=0,model_positions=0;
     double rule_seconds=0,feature_seconds=0,compute_seconds=0;
@@ -725,6 +726,74 @@ public:
         }
         py::gil_scoped_release release;advance(world);
     }
+    // -- batch export/import -------------------------------------------------
+    // The batch interface exposes the pending leaves of one job so that several
+    // jobs can fill one contiguous buffer, and consumes results in the same
+    // stable order.  Row identity is (world, leaf) captured at fill time.
+    bool root_pending_now() const{return root_pending&&!finished;}
+    bool root_exportable() const{return root_pending && !finished && !root_exported;}
+    void mark_root_exported(){root_exported=true;}
+    const State& root_state_ref() const{return root_state;}
+    const std::vector<Action>& root_actions_ref() const{return root_actions;}
+    int world_count() const{return int(worlds.size());}
+    bool world_has_leaf(int world) const{return worlds.at(world).has_leaf;}
+    bool world_leaf_exportable(int world) const{
+        const World& w=worlds.at(world);return w.has_leaf && !w.leaf.exported;
+    }
+    void mark_leaf_exported(int world){worlds.at(world).leaf.exported=true;}
+    bool world_leaf_cap(int world) const{return worlds.at(world).leaf.cap;}
+    int world_leaf_simulation(int world) const{return worlds.at(world).leaf.simulation;}
+    const State& world_leaf_state(int world) const{return worlds.at(world).leaf.state;}
+    const std::vector<Action>& world_leaf_actions(int world) const{return worlds.at(world).leaf.actions;}
+    int pending_rows(bool state_only) const {
+        int count=0;
+        if(!state_only && root_exportable())++count;
+        for(auto& w:worlds)if(w.has_leaf && !w.leaf.exported && w.leaf.cap==state_only)++count;
+        return count;
+    }
+    // Policy rows report their widest candidate list; value-only rows carry no
+    // candidates, so they only report whether any row is waiting.
+    int pending_width(bool state_only) const {
+        if(state_only)return pending_rows(true)>0?1:0;
+        int best=0;
+        if(root_exportable())best=int(root_actions.size());
+        for(auto& w:worlds)if(w.has_leaf && !w.leaf.exported && !w.leaf.cap)best=std::max(best,int(w.leaf.actions.size()));
+        return best;
+    }
+    // Rejects stale or duplicated rows for one exported (world, simulation) tag
+    // without touching the tree.  A batch verifies every row before any of them
+    // is applied, so a bad row cannot leave a half-applied batch behind.
+    void verify_exported(int world,int simulation,bool has_logits,int width) const {
+        int count=0;
+        if(world<0){
+            if(!root_pending_now())throw std::logic_error("root request already resolved");
+            if(!has_logits)throw std::invalid_argument("root request needs logits");
+            count=int(root_actions.size());
+        } else {
+            if(!world_has_leaf(world))throw std::logic_error("world has no pending leaf");
+            if(world_leaf_simulation(world)!=simulation)throw std::logic_error("stale batch row for this world");
+            if(!worlds.at(world).leaf.exported)throw std::logic_error("batch row was not exported by this buffer");
+            bool cap=world_leaf_cap(world);
+            if(cap && has_logits)throw std::invalid_argument("value-only leaf cannot receive logits");
+            if(!cap && !has_logits)throw std::invalid_argument("policy leaf needs logits");
+            count=cap?0:int(world_leaf_actions(world).size());
+        }
+        if(has_logits && width<count)throw std::invalid_argument("batch row is narrower than the leaf action list");
+    }
+    // Consumes the exported row that ``verify_exported`` accepted.
+    void submit_exported(int world,int simulation,const float* logits,int width,double value) {
+        verify_exported(world,simulation,logits!=nullptr,width);
+        if(world<0)root_exported=false;
+        else worlds.at(world).leaf.exported=false;
+        int count=0;
+        if(logits!=nullptr){
+            count = world<0 ? int(root_actions.size())
+                            : (world_leaf_cap(world)?0:int(world_leaf_actions(world).size()));
+        }
+        std::vector<double> copied;
+        if(logits!=nullptr){copied.assign(logits,logits+count);}
+        submit(world,copied,value);
+    }
     // Root worlds need an observation only at construction. Instantiate before returning
     // the first root evaluation; no Python object is retained in the search tree.
     void initialize_worlds(py::object request) {
@@ -775,6 +844,296 @@ public:
         out["rule_seconds"]=rule_seconds;out["feature_seconds"]=feature_seconds;
         out["native_compute_seconds"]=compute_seconds;
         return out;
+    }
+};
+// One contiguous batch of encoded pending leaves.  Every float field lives in
+// one packed blob and every mask in a second packed uint8 blob, so a native fill
+// writes the final transport layout directly and a device copy only needs the
+// used prefix.  Storage is either allocated here or borrowed from Python
+// (pinned staging tensors on the CUDA path); the returned views keep the owner
+// alive, and ``submit``/``submit_fused`` consume exactly the filled rows.
+class NativeBatch {
+    const Catalog& catalog;
+    bool state_only;
+    int capacity;
+    int width;
+    int rows=0;
+    int float_stride=0, mask_stride=0;
+    int global_off=0, self_off=0, opponent_off=0, noble_off=0, pending_off=0, candidate_off=0;
+    std::array<int,3> market_off{};
+    int market_mask_off_[3]={0,0,0};
+    int self_mask_off=0, opponent_mask_off=0, noble_mask_off=0, pending_mask_off=0, candidate_mask_off=0;
+    std::vector<float> owned_float;
+    std::vector<uint8_t> owned_mask;
+    py::object float_owner, mask_owner;  // borrowed staging arrays; none -> owned blobs
+    float* float_base=nullptr;
+    uint8_t* mask_base=nullptr;
+    std::vector<std::shared_ptr<SearchJob>> owners;
+    std::vector<int> worlds, simulations, kinds, counts;
+
+    // Views borrow the packed blobs; the passed owner keeps them alive.
+    static py::array_t<float> float_view(const float* data,int rows_,int cols,int depth,py::ssize_t row_stride,py::handle base){
+        if(depth<0)return py::array_t<float>({(py::ssize_t)rows_,(py::ssize_t)cols},
+                                             {(py::ssize_t)(row_stride*py::ssize_t(sizeof(float))),(py::ssize_t)sizeof(float)},data,base);
+        return py::array_t<float>({(py::ssize_t)rows_,(py::ssize_t)cols,(py::ssize_t)depth},
+                                  {(py::ssize_t)(row_stride*py::ssize_t(sizeof(float))),(py::ssize_t)(depth*py::ssize_t(sizeof(float))),(py::ssize_t)sizeof(float)},data,base);
+    }
+    static py::array_t<float> float_view_1d(const float* data,py::ssize_t count,py::handle base){
+        return py::array_t<float>({count},{(py::ssize_t)sizeof(float)},data,base);
+    }
+    static py::array_t<bool> mask_view(const uint8_t* data,int rows_,int cols,py::ssize_t row_stride,py::handle base){
+        if(cols<0)return py::array_t<bool>({(py::ssize_t)rows_},{(py::ssize_t)row_stride},reinterpret_cast<const bool*>(data),base);
+        return py::array_t<bool>({(py::ssize_t)rows_,(py::ssize_t)cols},
+                                 {(py::ssize_t)row_stride,(py::ssize_t)sizeof(bool)},reinterpret_cast<const bool*>(data),base);
+    }
+    static py::array_t<uint8_t> mask_view_1d(const uint8_t* data,py::ssize_t count,py::handle base){
+        return py::array_t<uint8_t>({count},{(py::ssize_t)sizeof(uint8_t)},data,base);
+    }
+    static py::tuple field(const std::string& name,int offset,int count,std::initializer_list<int> shape){
+        py::tuple dims(shape.size());size_t index=0;
+        for(int value:shape)dims[index++]=value;
+        return py::make_tuple(name,offset,count,dims);
+    }
+    static void require_staging(py::array& raw,size_t count,const char* label,bool mask){
+        std::string prefix=std::string(label)+" staging must be ";
+        if(raw.ndim()!=1)throw std::invalid_argument(prefix+"one dimensional");
+        if(!(raw.flags()&py::array::c_style))throw std::invalid_argument(prefix+"contiguous");
+        if(size_t(raw.shape(0))<count)throw std::invalid_argument(prefix+"large enough for the batch capacity");
+        if(!py::cast<bool>(raw.attr("flags").attr("writeable")))throw std::invalid_argument(prefix+"writable");
+        bool dtype_ok = mask ? (raw.dtype().is(py::dtype::of<uint8_t>())||raw.dtype().is(py::dtype::of<bool>()))
+                             : raw.dtype().is(py::dtype::of<float>());
+        if(!dtype_ok)throw std::invalid_argument(prefix+std::string(mask?"uint8 or bool":"float32"));
+    }
+    void write_cards(float* features,uint8_t* mask,const std::vector<CardRow>& rows_,int slot_capacity,const State& s,int observer){
+        std::fill(features,features+size_t(slot_capacity)*CARD_DIM,0.0f);
+        std::fill(mask,mask+slot_capacity,uint8_t(0));
+        for(size_t i=0;i<rows_.size();++i){
+            auto f=card_features(rows_[i],s,catalog,observer);
+            std::copy(f.begin(),f.end(),features+size_t(i)*CARD_DIM);
+            mask[i]=1;
+        }
+    }
+    void fill_row(int row,const State& s,const std::vector<Action>& acts){
+        int observer=s.actor;
+        float* features=float_base+size_t(row)*float_stride;
+        uint8_t* mask=mask_base+size_t(row)*mask_stride;
+        auto g=global_features(s,catalog,observer);
+        std::copy(g.begin(),g.end(),features+global_off);
+        for(int t=0;t<3;++t){
+            std::vector<int> ids=s.market[t];
+            std::sort(ids.begin(),ids.end(),[&](int a,int b){return card_less(a,b,catalog);});
+            std::vector<CardRow> card_rows;for(int id:ids)card_rows.push_back({id,t,0});
+            write_cards(features+market_off[t],mask+market_mask_off_[t],card_rows,4,s,observer);
+        }
+        auto own=reservation_rows(s,catalog,observer,observer),opp=reservation_rows(s,catalog,1-observer,observer);
+        write_cards(features+self_off,mask+self_mask_off,own,3,s,observer);
+        write_cards(features+opponent_off,mask+opponent_mask_off,opp,3,s,observer);
+        auto nob=sorted_nobles(s.nobles,catalog);
+        if(nob.size()>3)throw std::invalid_argument("native noble row exceeds feature capacity");
+        float* noble_block=features+noble_off;
+        uint8_t* noble_mask=mask+noble_mask_off;
+        std::fill(noble_block,noble_block+3*NOBLE_DIM,0.0f);std::fill(noble_mask,noble_mask+3,uint8_t(0));
+        for(size_t i=0;i<nob.size();++i){
+            auto f=noble_features(nob[i],s,catalog,observer);
+            std::copy(f.begin(),f.end(),noble_block+i*NOBLE_DIM);noble_mask[i]=1;
+        }
+        bool pending=s.phase==1;
+        CardRow pending_row;
+        if(pending){Action payment;payment.type=6;pending_row=target_card(s,catalog,observer,payment);}
+        auto pf=card_features(pending_row,s,catalog,observer);
+        std::copy(pf.begin(),pf.end(),features+pending_off);
+        mask[pending_mask_off]=pending?1:0;
+        if(state_only)return;
+        float* dst=features+candidate_off;
+        uint8_t* candidate=candidate_mask_off+mask;
+        std::fill(dst,dst+size_t(width)*ACTION_DIM,0.0f);std::fill(candidate,candidate+width,uint8_t(0));
+        if(acts.size()>size_t(width))throw std::invalid_argument("candidate count exceeds the batch width bucket");
+        for(size_t i=0;i<acts.size();++i){
+            auto f=action_features(s,catalog,observer,acts[i]);
+            std::copy(f.begin(),f.end(),dst+i*ACTION_DIM);candidate[i]=1;
+        }
+    }
+    static std::string row_message(int row,const std::string& detail){
+        return "batch row "+std::to_string(row)+": "+detail;
+    }
+    void check_row(int row,const float* logits,double value) const {
+        if(!std::isfinite(value))throw std::invalid_argument(row_message(row,"nonfinite network value"));
+        if(logits!=nullptr){
+            for(int i=0;i<counts[row];++i)
+                if(!std::isfinite(logits[i]))throw std::invalid_argument(row_message(row,"nonfinite network logits"));
+        }
+        try{ owners[row]->verify_exported(worlds[row],simulations[row],logits!=nullptr,width); }
+        catch(const std::exception& error){ throw std::invalid_argument(row_message(row,error.what())); }
+    }
+    template <typename LogitsAt,typename ValueAt>
+    void apply_batch(LogitsAt logits_at,ValueAt value_at,bool has_logits){
+        for(int row=0;row<rows;++row)check_row(row,has_logits?logits_at(row):nullptr,value_at(row));
+        for(int row=0;row<rows;++row)
+            owners[row]->submit_exported(worlds[row],simulations[row],has_logits?logits_at(row):nullptr,width,value_at(row));
+        reset();
+    }
+public:
+    NativeBatch(const Catalog& catalog_,bool state_only_,int capacity_,int width_,
+                py::object float_staging=py::none(),py::object mask_staging=py::none())
+        :catalog(catalog_),state_only(state_only_),capacity(capacity_),width(width_) {
+        if(capacity<=0)throw std::invalid_argument("batch capacity must be positive");
+        if(width<=0)throw std::invalid_argument("batch width must be positive");
+        int cursor=0;
+        global_off=cursor;cursor+=GLOBAL_DIM;
+        for(int t=0;t<3;++t){market_off[t]=cursor;cursor+=4*CARD_DIM;}
+        self_off=cursor;cursor+=3*CARD_DIM;
+        opponent_off=cursor;cursor+=3*CARD_DIM;
+        noble_off=cursor;cursor+=3*NOBLE_DIM;
+        pending_off=cursor;cursor+=CARD_DIM;
+        if(!state_only){candidate_off=cursor;cursor+=width*ACTION_DIM;}
+        float_stride=cursor;
+        cursor=0;
+        for(int t=0;t<3;++t){market_mask_off_[t]=cursor;cursor+=4;}
+        self_mask_off=cursor;cursor+=3;
+        opponent_mask_off=cursor;cursor+=3;
+        noble_mask_off=cursor;cursor+=3;
+        pending_mask_off=cursor;cursor+=1;
+        if(!state_only){candidate_mask_off=cursor;cursor+=width;}
+        mask_stride=cursor;
+        if(float_staging.is_none()){
+            owned_float.assign(size_t(capacity)*float_stride,0.0f);
+            float_base=owned_float.data();
+        } else {
+            py::array raw=py::reinterpret_borrow<py::array>(float_staging);
+            require_staging(raw,size_t(capacity)*float_stride,"float",false);
+            float_owner=float_staging;float_base=static_cast<float*>(raw.mutable_data());
+        }
+        if(mask_staging.is_none()){
+            owned_mask.assign(size_t(capacity)*mask_stride,uint8_t(0));
+            mask_base=owned_mask.data();
+        } else {
+            py::array raw=py::reinterpret_borrow<py::array>(mask_staging);
+            require_staging(raw,size_t(capacity)*mask_stride,"mask",true);
+            mask_owner=mask_staging;mask_base=static_cast<uint8_t*>(raw.mutable_data());
+        }
+        owners.reserve(capacity);worlds.reserve(capacity);
+    }
+    bool is_state_only() const{return state_only;}
+    int row_count() const{return rows;}
+    int padded_width() const{return state_only?0:width;}
+    int row_capacity() const{return capacity;}
+    int float_stride_elements() const{return float_stride;}
+    int mask_stride_elements() const{return mask_stride;}
+    void reset(){rows=0;owners.clear();worlds.clear();simulations.clear();kinds.clear();counts.clear();}
+    // Each pending leaf is claimed at most once between fills and submits.
+    int fill(std::shared_ptr<SearchJob> job) {
+        int start=rows;
+        if(rows<capacity && !state_only && job->root_exportable()){
+            job->mark_root_exported();
+            append(job,-1,-1,0,int(job->root_actions_ref().size()),job->root_state_ref(),job->root_actions_ref());
+        }
+        for(int world=0;world<job->world_count() && rows<capacity;++world){
+            if(!job->world_leaf_exportable(world))continue;
+            if(job->world_leaf_cap(world)!=state_only)continue;
+            int simulation=job->world_leaf_simulation(world);
+            bool cap=job->world_leaf_cap(world);
+            job->mark_leaf_exported(world);
+            append(job,world,simulation,cap?2:1,cap?0:int(job->world_leaf_actions(world).size()),
+                   job->world_leaf_state(world),job->world_leaf_actions(world));
+        }
+        return rows-start;
+    }
+    void append(std::shared_ptr<SearchJob> job,int world,int simulation,int kind,int count,const State& s,const std::vector<Action>& acts) {
+        if(rows>=capacity)throw std::logic_error("batch buffer is full");
+        int row=rows++;
+        owners.push_back(job);worlds.push_back(world);simulations.push_back(simulation);
+        kinds.push_back(kind);counts.push_back(count);
+        fill_row(row,s,acts);
+    }
+    // (world, simulation, kind, valid candidate count) per filled row.
+    py::list row_ids() const {
+        py::list result;
+        for(int row=0;row<rows;++row)
+            result.append(py::make_tuple(worlds[row],simulations[row],kinds[row],counts[row]));
+        return result;
+    }
+    py::dict arrays(py::handle base) const {
+        py::object fbase=float_owner.is_none()?py::reinterpret_borrow<py::object>(base):float_owner;
+        py::object mbase=mask_owner.is_none()?py::reinterpret_borrow<py::object>(base):mask_owner;
+        py::dict out;
+        out["feature_schema_version"]="splendor-observation-action-v1";
+        out["global_features"]=float_view(float_base+global_off,rows,GLOBAL_DIM,-1,float_stride,fbase);
+        for(int t=0;t<3;++t){
+            std::string key="market_t"+std::to_string(t+1);
+            out[py::str(key)]=float_view(float_base+market_off[t],rows,4,CARD_DIM,float_stride,fbase);
+            out[py::str(key+"_mask")]=mask_view(mask_base+market_mask_off_[t],rows,4,mask_stride,mbase);
+        }
+        out["self_reserved"]=float_view(float_base+self_off,rows,3,CARD_DIM,float_stride,fbase);
+        out["self_reserved_mask"]=mask_view(mask_base+self_mask_off,rows,3,mask_stride,mbase);
+        out["opponent_reserved"]=float_view(float_base+opponent_off,rows,3,CARD_DIM,float_stride,fbase);
+        out["opponent_reserved_mask"]=mask_view(mask_base+opponent_mask_off,rows,3,mask_stride,mbase);
+        out["nobles"]=float_view(float_base+noble_off,rows,3,NOBLE_DIM,float_stride,fbase);
+        out["nobles_mask"]=mask_view(mask_base+noble_mask_off,rows,3,mask_stride,mbase);
+        out["pending_card"]=float_view(float_base+pending_off,rows,CARD_DIM,-1,float_stride,fbase);
+        out["pending_card_mask"]=mask_view(mask_base+pending_mask_off,rows,-1,mask_stride,mbase);
+        if(!state_only){
+            out["candidate_features"]=float_view(float_base+candidate_off,rows,width,ACTION_DIM,float_stride,fbase);
+            out["candidate_mask"]=mask_view(mask_base+candidate_mask_off,rows,width,mask_stride,mbase);
+        }
+        return out;
+    }
+    py::dict packed(py::handle base) const {
+        py::object fbase=float_owner.is_none()?py::reinterpret_borrow<py::object>(base):float_owner;
+        py::object mbase=mask_owner.is_none()?py::reinterpret_borrow<py::object>(base):mask_owner;
+        py::dict out;
+        out["rows"]=rows;out["width"]=state_only?0:width;out["state_only"]=state_only;
+        out["capacity"]=capacity;out["float_stride"]=float_stride;out["mask_stride"]=mask_stride;
+        out["float_blob"]=float_view_1d(float_base,(py::ssize_t)capacity*float_stride,fbase);
+        out["mask_blob"]=mask_view_1d(mask_base,(py::ssize_t)capacity*mask_stride,mbase);
+        py::list float_fields,mask_fields;
+        float_fields.append(field("global_features",global_off,GLOBAL_DIM,{GLOBAL_DIM}));
+        for(int t=0;t<3;++t)
+            float_fields.append(field("market_t"+std::to_string(t+1),market_off[t],4*CARD_DIM,{4,CARD_DIM}));
+        float_fields.append(field("self_reserved",self_off,3*CARD_DIM,{3,CARD_DIM}));
+        float_fields.append(field("opponent_reserved",opponent_off,3*CARD_DIM,{3,CARD_DIM}));
+        float_fields.append(field("nobles",noble_off,3*NOBLE_DIM,{3,NOBLE_DIM}));
+        float_fields.append(field("pending_card",pending_off,CARD_DIM,{CARD_DIM}));
+        for(int t=0;t<3;++t)
+            mask_fields.append(field("market_t"+std::to_string(t+1)+"_mask",market_mask_off_[t],4,{4}));
+        mask_fields.append(field("self_reserved_mask",self_mask_off,3,{3}));
+        mask_fields.append(field("opponent_reserved_mask",opponent_mask_off,3,{3}));
+        mask_fields.append(field("nobles_mask",noble_mask_off,3,{3}));
+        mask_fields.append(field("pending_card_mask",pending_mask_off,1,{}));
+        if(!state_only){
+            float_fields.append(field("candidate_features",candidate_off,width*ACTION_DIM,{width,ACTION_DIM}));
+            mask_fields.append(field("candidate_mask",candidate_mask_off,width,{width}));
+        }
+        out["float_fields"]=float_fields;out["mask_fields"]=mask_fields;
+        return out;
+    }
+    void submit(py::object logits,py::object values) {
+        // The converted arrays outlive the whole submission: a forcecast of a
+        // float64 or non-contiguous input owns temporary storage.
+        auto value_array=py::array_t<float,py::array::c_style|py::array::forcecast>(values);
+        if(value_array.ndim()!=1 || value_array.shape(0)!=rows)
+            throw std::invalid_argument("batch values must have one entry per row");
+        py::array_t<float,py::array::c_style|py::array::forcecast> logit_array;
+        const float* logits_ptr=nullptr;
+        if(!state_only){
+            logit_array=py::array_t<float,py::array::c_style|py::array::forcecast>(logits);
+            if(logit_array.ndim()!=2 || logit_array.shape(0)!=rows || logit_array.shape(1)!=width)
+                throw std::invalid_argument("batch logits must have shape (rows, padded width)");
+            logits_ptr=logit_array.data();
+        } else if(!logits.is_none()){
+            throw std::invalid_argument("value-only batches take no logits");
+        }
+        const float* values_ptr=value_array.data();
+        apply_batch([&](int row){return logits_ptr==nullptr?nullptr:logits_ptr+size_t(row)*width;},
+                    [&](int row){return double(values_ptr[row]);},logits_ptr!=nullptr);
+    }
+    void submit_fused(py::object fused) {
+        if(state_only)throw std::invalid_argument("value-only batches take no fused logits");
+        auto array=py::array_t<float,py::array::c_style|py::array::forcecast>(fused);
+        if(array.ndim()!=2 || array.shape(0)!=rows || array.shape(1)!=width+1)
+            throw std::invalid_argument("fused batch must have shape (rows, padded width + 1)");
+        const float* data=array.data();
+        apply_batch([&](int row){return data+size_t(row)*(width+1);},
+                    [&](int row){return double(data[size_t(row)*(width+1)+width]);},true);
     }
 };
 static State truth_state(py::object source,const Catalog& c) {
@@ -854,7 +1213,25 @@ PYBIND11_MODULE(_native_search,m) {
         .def("apply_index",&NativeGame::apply_index)
         .def("snapshot",&NativeGame::snapshot)
         .def("encoded",&NativeGame::encoded);
-    py::class_<SearchJob>(m,"SearchJob")
+    py::class_<NativeBatch,std::shared_ptr<NativeBatch>>(m,"NativeBatch")
+        .def(py::init<const Catalog&,bool,int,int,py::object,py::object>(),
+             py::arg("catalog"),py::arg("state_only"),py::arg("capacity"),py::arg("width"),
+             py::arg("float_staging")=py::none(),py::arg("mask_staging")=py::none(),
+             py::keep_alive<1,2>())
+        .def("is_state_only",&NativeBatch::is_state_only)
+        .def("row_count",&NativeBatch::row_count)
+        .def("row_ids",&NativeBatch::row_ids)
+        .def("padded_width",&NativeBatch::padded_width)
+        .def("row_capacity",&NativeBatch::row_capacity)
+        .def("float_stride",&NativeBatch::float_stride_elements)
+        .def("mask_stride",&NativeBatch::mask_stride_elements)
+        .def("reset",&NativeBatch::reset)
+        .def("fill",&NativeBatch::fill)
+        .def("arrays",[](const std::shared_ptr<NativeBatch>& self){return self->arrays(py::cast(self));})
+        .def("packed",[](const std::shared_ptr<NativeBatch>& self){return self->packed(py::cast(self));})
+        .def("submit",&NativeBatch::submit)
+        .def("submit_fused",&NativeBatch::submit_fused);
+    py::class_<SearchJob,std::shared_ptr<SearchJob>>(m,"SearchJob")
         .def(py::init<const Catalog&,py::object,py::object,uint64_t,uint64_t,bool,double>(),py::keep_alive<1,2>())
         .def("done",&SearchJob::done)
         .def("pending",&SearchJob::pending)
@@ -863,5 +1240,8 @@ PYBIND11_MODULE(_native_search,m) {
         .def("initialize_worlds",&SearchJob::initialize_worlds)
         .def("result",&SearchJob::result)
         .def("stats",&SearchJob::stats)
-        .def("failure_context",&SearchJob::failure_context);
+        .def("failure_context",&SearchJob::failure_context)
+        .def("pending_width",&SearchJob::pending_width)
+        .def("pending_rows",&SearchJob::pending_rows)
+        .def("root_pending_now",&SearchJob::root_pending_now);
 }

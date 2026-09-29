@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
 import time
+from collections import deque
 from functools import cache
 from dataclasses import dataclass
 from itertools import count
-from typing import Any
+from typing import Any, Mapping, Sequence
 
 from .catalog import Catalog, load_default_catalog
 from .contracts import DecisionRequest
@@ -81,6 +83,7 @@ class NativeSearchJob:
             self._collect_result()
         else:
             policy.stats.searchable_decisions += 1
+            policy._active_jobs.add(self)
 
     @property
     def done(self) -> bool:
@@ -148,9 +151,34 @@ class NativeSearchJob:
                       key=lambda i: (result["root_network_prior"][i], -i))
             self.policy.stats.changed_action_count += raw != result["chosen_candidate_index"]
         self._finished = True
+        self.policy._active_jobs.discard(self)
 
     def cancel(self) -> None:
         self._pending = {}
+
+    # -- contiguous batch interface ---------------------------------------
+
+    @property
+    def core(self):
+        return self._core
+
+    def pending_rows(self, state_only: bool) -> int:
+        return self._core.pending_rows(state_only)
+
+    def pending_width(self, state_only: bool) -> int:
+        return self._core.pending_width(state_only)
+
+    def root_pending(self) -> bool:
+        return self._core.root_pending_now()
+
+    def collect_if_done(self) -> None:
+        """Archive the result when a batch submit completed the last simulation."""
+
+        if self.done and not self._finished:
+            self._collect_result()
+
+    def initialize_worlds(self) -> None:
+        self._core.initialize_worlds(self.request)
 
     def _action_from_native(self, raw):
         from .actions import (TakeDistinct, TakePair, ReserveMarket, ReserveDeck,
@@ -179,6 +207,14 @@ class NativeSearchJob:
     def failure_context(self, request_id: str | None = None) -> dict[str, Any]:
         world = (-1 if request_id is None or self._pending is None or request_id not in self._pending
                  else self._pending[request_id].world_index)
+        return self._failure_context(world, request_id)
+
+    def failure_context_for_world(self, world: int | None) -> dict[str, Any]:
+        """Failure context for a batch row identified by world (no request ids)."""
+
+        return self._failure_context(-1 if world is None else world, None)
+
+    def _failure_context(self, world: int, request_id: str | None) -> dict[str, Any]:
         native = self._core.failure_context(world)
         return {
             "algorithm": "determinized-puct-native-v1",
@@ -193,6 +229,245 @@ class NativeSearchJob:
                                  self._action_from_native(native["attempted_action"])),
             "request_id": request_id,
         }
+
+
+@dataclass(frozen=True, slots=True)
+class NativeBatchRow:
+    """Identity of one exported batch row, kept for failure attribution."""
+
+    row: int
+    world: int
+    kind: int
+    simulation: int
+    candidates: int
+    job: NativeSearchJob
+
+    @property
+    def kind_name(self) -> str:
+        return {0: "root", 1: "policy_value", 2: "value_only"}[self.kind]
+
+
+class NativeBatchRunner:
+    """Drive native search jobs through reusable contiguous batch buffers.
+
+    Rows keep the per-leaf order of the legacy adapter (policy rows first, then
+    value-only rows, jobs in scheduling order) so batch composition matches the
+    reference path; only the transport changes.  ``slots=1`` is the synchronous
+    order, ``slots=2`` is a bounded pipeline: while one slot's input transfer and
+    forward are in flight the CPU fills the next slot, and each slot's result is
+    consumed in fill order before the slot is reused.
+    """
+
+    def __init__(self, evaluator, catalog: Catalog, *, capacity: int,
+                 buckets: tuple[int, ...], slots: int = 1) -> None:
+        if capacity <= 0:
+            raise ValueError("native batch capacity must be positive")
+        if not buckets or tuple(sorted(set(buckets))) != tuple(buckets):
+            raise ValueError("native batch buckets must be sorted and unique")
+        if slots not in (1, 2):
+            raise ValueError("native batch pipeline supports one or two slots")
+        self.evaluator = evaluator
+        self.catalog = catalog
+        self.native_catalog = _native_catalog(catalog)
+        self.capacity = capacity
+        self.buckets = tuple(buckets)
+        self.slots = slots
+        self._entries: dict[tuple[int, bool, int], tuple[Any, Any]] = {}
+        self.rows = 0
+        self.batches = 0
+        self.wide_batches = 0
+        self.root_rows = 0
+        self.policy_rows = 0
+        self.value_rows = 0
+        self.inflight_batches = 0
+        self.inflight_rows = 0
+        self.peak_inflight_rows = 0
+        self.fill_seconds = 0.0
+        self.consume_seconds = 0.0
+        self.batch_records: list[dict[str, Any]] = []
+        self._error_record: dict[str, Any] | None = None
+        self._building: dict[str, Any] | None = None
+
+    # -- buffers -----------------------------------------------------------
+
+    def _buffer_width(self, width: int) -> int:
+        for bucket in self.buckets:
+            if width <= bucket:
+                return bucket
+        self.wide_batches += 1
+        return width
+
+    def _buffer(self, slot: int, state_only: bool, width: int):
+        bucket = self._buffer_width(width)
+        key = (slot, state_only, bucket)
+        entry = self._entries.get(key)
+        if entry is None:
+            probe = _extension().NativeBatch(self.native_catalog, state_only, 1, bucket)
+            transfer = self.evaluator.new_native_transfer(
+                state_only=state_only, capacity=self.capacity, width=bucket,
+                float_stride=probe.float_stride(), mask_stride=probe.mask_stride())
+            staging = getattr(transfer, "float_staging", None)
+            if staging is None:
+                buffer = _extension().NativeBatch(self.native_catalog, state_only, self.capacity, bucket)
+            else:
+                buffer = _extension().NativeBatch(self.native_catalog, state_only, self.capacity, bucket,
+                                                  staging, transfer.mask_staging)
+            entry = (buffer, transfer)
+            self._entries[key] = entry
+        return entry
+
+    # -- scheduling --------------------------------------------------------
+
+    def run(self, jobs: Sequence[NativeSearchJob], *,
+            context: Mapping[NativeSearchJob, Any] | None = None) -> int:
+        """Evaluate every pending row of ``jobs`` once; returns the row count."""
+
+        self.batch_records = []
+        self._error_record = None
+        self._building = None
+        processed = 0
+        for state_only in (False, True):
+            chunks = self._plan(jobs, state_only)
+            if chunks:
+                processed += self._run_phase(chunks, state_only, context)
+        return processed
+
+    def _plan(self, jobs: Sequence[NativeSearchJob], state_only: bool) -> list[tuple[NativeSearchJob, ...]]:
+        handles = [job for job in jobs for _ in range(job.pending_rows(state_only))]
+        return [tuple(dict.fromkeys(handles[start:start + self.capacity]))
+                for start in range(0, len(handles), self.capacity)]
+
+    def _run_phase(self, chunks, state_only: bool, context) -> int:
+        free = list(range(self.slots))
+        inflight: deque[dict[str, Any]] = deque()
+        processed = 0
+        try:
+            for chunk in chunks:
+                if not free:
+                    record = inflight.popleft()
+                    self._consume(record)
+                    free.append(record["slot"])
+                record = self._fill(free.pop(0), state_only, chunk, context)
+                inflight.append(record)
+                processed += record["rows"]
+            while inflight:
+                record = inflight.popleft()
+                self._consume(record)
+                free.append(record["slot"])
+            return processed
+        except Exception:
+            # Outstanding CUDA copies must finish before their slot can die.
+            # Their outputs are deliberately not submitted after another failure.
+            for record in inflight:
+                handle = record["handle"]
+                if handle is not None:
+                    try:
+                        handle.discard()
+                    except Exception:
+                        # Keep the original batch error; this slot is abandoned.
+                        pass
+                record["status"] = "discarded"
+            raise
+
+    def _fill(self, slot: int, state_only: bool, chunk, context) -> dict[str, Any]:
+        self._building = {"batch": len(self.batch_records), "slot": slot,
+                          "state_only": state_only, "chunk": tuple(chunk),
+                          "context": context}
+        width = max(job.pending_width(state_only) for job in chunk)
+        buffer, transfer = self._buffer(slot, state_only, width)
+        assert buffer.row_count() == 0
+        roots = [job for job in chunk if job.root_pending()]
+        row_jobs: list[NativeSearchJob] = []
+        fill_started = time.perf_counter()
+        for job in chunk:
+            row_jobs.extend([job] * buffer.fill(job.core))
+        self.fill_seconds += time.perf_counter() - fill_started
+        rows = buffer.row_count()
+        if rows == 0:
+            raise RuntimeError("native batch chunk exported no rows")
+        entries = tuple(
+            NativeBatchRow(row=index, world=world, kind=kind, simulation=simulation,
+                           candidates=candidates, job=job)
+            for index, ((world, simulation, kind, candidates), job)
+            in enumerate(zip(buffer.row_ids(), row_jobs))
+        )
+        record = {"batch": len(self.batch_records), "slot": slot, "state_only": state_only,
+                  "rows": rows, "width": buffer.padded_width(), "chunk": tuple(chunk),
+                  "roots": tuple(roots), "entries": entries, "buffer": buffer,
+                  "transfer": transfer, "context": context, "handle": None,
+                  "error": None, "status": "filled"}
+        self.batch_records.append(record)
+        self._building = None
+        self.root_rows += sum(1 for entry in entries if entry.kind == 0)
+        self.policy_rows += sum(1 for entry in entries if entry.kind != 2)
+        self.value_rows += sum(1 for entry in entries if entry.kind == 2)
+        self.rows += rows
+        self.batches += 1
+        self.inflight_batches += 1
+        self.inflight_rows += rows
+        self.peak_inflight_rows = max(self.peak_inflight_rows, self.inflight_rows)
+        try:
+            record["handle"] = (transfer.begin_value_only(buffer) if state_only
+                                else transfer.begin_policy_value(buffer))
+        except Exception as error:
+            self._mark_failed(record, "evaluate", error)
+            raise
+        return record
+
+    def _consume(self, record: dict[str, Any]) -> None:
+        started = time.perf_counter()
+        try:
+            record["handle"].finish()
+            for job in record["roots"]:
+                job.initialize_worlds()
+            for job in dict.fromkeys(record["chunk"]):
+                job.collect_if_done()
+        except Exception as error:
+            self._mark_failed(record, "submit", error)
+            raise
+        finally:
+            self.inflight_batches -= 1
+            self.inflight_rows -= record["rows"]
+            self.consume_seconds += time.perf_counter() - started
+        record["status"] = "submitted"
+
+    def _mark_failed(self, record: dict[str, Any], stage: str, error: BaseException) -> None:
+        record["status"] = "failed"
+        record["error"] = {"stage": stage, "error_type": type(error).__name__, "error": str(error)}
+        self._error_record = record
+
+    # -- failure attribution ----------------------------------------------
+
+    def row_context(self, report_row: NativeBatchRow) -> dict[str, Any]:
+        job = report_row.job
+        return {
+            "row": report_row.row,
+            "batch_world": report_row.world,
+            "kind": report_row.kind_name,
+            "simulation": report_row.simulation,
+            "candidates": report_row.candidates,
+            "job_id": job.job_id,
+            "model_version": job.policy.model_version,
+            "root_decision_index": getattr(job.request.observation, "own_completed_turns", None),
+        }
+
+    def failure_report(self, error: BaseException) -> dict[str, Any]:
+        """Locate the failed row when possible; otherwise report the batch scope."""
+
+        record = self._error_record
+        row = getattr(error, "row", None)
+        if row is None:
+            match = re.search(r"batch row (\d+)", str(error))
+            row = int(match.group(1)) if match else None
+        if record is not None and row is not None and 0 <= row < len(record["entries"]):
+            entry = record["entries"][row]
+            context = None if record["context"] is None else record["context"].get(entry.job)
+            return {"scope": "row", "row": row, "record": record, "entry": entry,
+                    "job": entry.job, "context": context}
+        pending = [item for item in self.batch_records if item["status"] != "submitted"]
+        return {"scope": "batch", "row": None, "records": pending,
+                "building": self._building,
+                "context": (record or self._building or {}).get("context")}
 
 
 class NativePUCTSearchPolicy:
@@ -210,6 +485,14 @@ class NativePUCTSearchPolicy:
         self.stats = MCTSStats()
         self.native_compute_seconds = 0.0
         self.last_search_result = None
+        self._active_jobs: set[NativeSearchJob] = set()
+
+    def live_simulations(self) -> int:
+        """Completed simulations, including roots that have not been collected."""
+
+        return self.stats.simulations + sum(
+            int(job.core.stats()["simulations"]) for job in self._active_jobs
+        )
 
     def start_job(self, request: DecisionRequest, *, add_root_noise: bool = False,
                   temperature: float = 0.0, sampling_seed: int | None = None,
