@@ -30,10 +30,15 @@
 - MCTS 四组 50 pairs 顺序评测脚本与输出约定：[`docs/mcts_50pair_sweep_zh-CN.md`](docs/mcts_50pair_sweep_zh-CN.md)
 - 冻结搜索与自博弈采集加速：[`docs/search_throughput_optimization_zh-CN.md`](docs/search_throughput_optimization_zh-CN.md)
 - P0–P3 训练、评测与搜索性能优化：[`docs/performance_optimization_p0_p3_zh-CN.md`](docs/performance_optimization_p0_p3_zh-CN.md)
+- AlphaZero 式多轮搜索-训练循环：[`docs/alphazero_training_loop_zh-CN.md`](docs/alphazero_training_loop_zh-CN.md)
 
 当前代码已完成工作包 1、2A～2D、3A、3B、4A～4C、5A、5B Stage 1–4，以及
 5C 首次 5M learning-decisions 主训练。该 run 的 DEV 最优 checkpoint 为
 `local_004150000_lifetime_004662112.pt`；详细结果、训练节点和局限见上方 5C 完成报告。
+
+AlphaZero 式循环（MCTS 采集 → 跨代 replay → 监督 policy/value 训练 → 固定评测）
+已实现并跑通微型 smoke，生产规模长训练尚未执行；启动、恢复与产物约定见上方
+AlphaZero 文档：`configs/alphazero_loop.json`、`python -m splendor.alphazero_loop --resume`。
 
 目录约定：[`artifacts/`](artifacts/README.md) 只放值得随仓库保留的实验交付物，默认纳入 Git；
 `runtime/` 放日志、断点进度、失败现场和其他程序运行状态，整体忽略。专用训练运行目录

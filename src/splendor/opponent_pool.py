@@ -11,6 +11,7 @@ from typing import Literal
 import torch
 
 from .actor_critic import ActorCritic, ActorCriticConfig
+from .alphazero_checkpoint import is_alphazero_payload, normalize_actor_critic_payload
 from .contracts import Policy
 from .features import FEATURE_SCHEMA_VERSION
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
@@ -57,6 +58,13 @@ def _now_utc() -> str:
 
 def _checkpoint_payload(path: Path, device: torch.device | str) -> dict[str, object]:
     payload = torch.load(path, map_location=device, weights_only=True)
+    if is_alphazero_payload(payload):
+        # AlphaZero checkpoints are read-only model sources here; their
+        # optimizer state stays with the AlphaZero learner.
+        normalized = normalize_actor_critic_payload(payload)
+        if normalized.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+            raise ValueError("neural opponent feature schema mismatch")
+        return normalized
     if payload.get("format_version") != TRAINING_CHECKPOINT_FORMAT_VERSION:
         raise ValueError("unsupported neural opponent checkpoint format")
     if payload.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:

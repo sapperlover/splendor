@@ -1,0 +1,84 @@
+{
+  "protocol": "alphazero-loop-v1",
+  "run_id": "az_loop_smoke",
+  "num_rounds": 2,
+  "new_games_per_round": 4,
+  "initial_checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+  "replay_max_games": 64,
+  "replay_cache_bytes": 67108864,
+  "seeds": {
+    "collection": 9600000,
+    "split": 9601000,
+    "sampling": 9602000
+  },
+  "selfplay": {
+    "protocol": "mcts-selfplay-v2",
+    "search_config": {
+      "simulations": 8,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "seed": 9500000,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "dirichlet_alpha": 0.3
+    },
+    "execution": {
+      "backend": "batched_cpu",
+      "engine_mode": "fast",
+      "workers": 2,
+      "active_games_per_worker": 2,
+      "max_batch_size": 2,
+      "max_batch_wait_ms": 2,
+      "torch_threads": 1,
+      "precision": "float32"
+    },
+    "add_root_noise": true,
+    "temperature_schedule": {
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0,
+      "late_temperature": 0.0
+    },
+    "validation_fraction": 0.1,
+    "max_completed_turns": 400
+  },
+  "learner": {
+    "device": "cpu",
+    "batch_size": 16,
+    "history_batch_size": 8,
+    "learning_rate": 1e-4,
+    "weight_decay": 1e-4,
+    "policy_loss_weight": 1.0,
+    "value_loss_weight": 1.0,
+    "max_grad_norm": 1.0,
+    "steps_per_new_position": 4.0,
+    "checkpoint_every_steps": 4,
+    "validation_batch_size": 16,
+    "max_steps_per_round": 4
+  },
+  "evaluation": {
+    "workers": 2,
+    "device": "cpu",
+    "adjudicate_deterministic_policy_cycles": true,
+    "mcts_vs_parent": {
+      "pairs": 1,
+      "seed_start": 9300000,
+      "policy_seed_base": 9400000,
+      "search_config": {
+        "simulations": 8,
+        "determinizations": 1,
+        "c_puct": 1.5,
+        "seed": 9300000,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "dirichlet_alpha": 0.3
+      }
+    },
+    "greedy_vs_initial": {
+      "pairs": 1,
+      "seed_start": 9310000,
+      "policy_seed_base": 9410000
+    }
+  }
+}

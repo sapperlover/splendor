@@ -12,10 +12,10 @@ import os
 import resource
 import subprocess
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, as_completed, wait
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 import numpy as np
 import torch
@@ -37,6 +37,7 @@ from .selfplay_data import (
 PROTOCOL = "mcts-selfplay-v2"
 SEARCH_PROTOCOL = "determinized-puct-v2-batched"
 NUMERIC_VERSION = "frozen-fp32-card-merged-v1"
+PROGRESS_POLL_SECONDS = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -309,9 +310,18 @@ class _GameSession:
                 "search_rule_seconds": sum(p.stats.rule_seconds for p in self.policies)}
 
 
+def _committed_game_count(root: Path) -> int:
+    """Count archived games without validating them; progress reporting only."""
+
+    games_root = root / "games"
+    return len(list(games_root.glob("game-*.npz"))) if games_root.is_dir() else 0
+
+
 def _collect_group(
     config: FastSelfPlayConfig, root: Path, game_ids: tuple[int, ...],
     fingerprint: str, checkpoint_sha: str, stop_event: Any = None,
+    completed_before: int = 0,
+    on_game_complete: Callable[[int, int], None] | None = None,
 ) -> dict[str, Any]:
     initialization_started = time.perf_counter()
     torch.set_num_threads(config.execution.torch_threads)
@@ -356,6 +366,8 @@ def _collect_group(
                     completed.append(session.commit(root, fingerprint, checkpoint_sha))
                     decision_latencies_ms.extend(session.decision_latencies_ms)
                     del active[game_id]
+                    if on_game_complete is not None:
+                        on_game_complete(completed_before + len(completed), config.num_games)
             pending = [(session, item) for session in active.values() if session.job is not None
                        for item in session.job.pending_requests()]
             peak_pending = max(peak_pending, len(pending))
@@ -536,7 +548,25 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
     return summary
 
 
-def generate(config: FastSelfPlayConfig, root: Path, *, resume: bool = False) -> dict[str, Any]:
+def generate(
+    config: FastSelfPlayConfig,
+    root: Path,
+    *,
+    resume: bool = False,
+    progress_callback: Callable[[int, int], None] | None = None,
+    progress_interval_seconds: float = PROGRESS_POLL_SECONDS,
+) -> dict[str, Any]:
+    """Collect the missing games of one run.
+
+    ``progress_callback`` runs in the parent process with
+    ``(completed_games, total_games)``: single-worker runs report every commit,
+    multi-worker runs poll the archive directory every
+    ``progress_interval_seconds`` so partial progress stays visible while the
+    pool is still working.
+    """
+
+    if progress_interval_seconds <= 0:
+        raise ValueError("progress_interval_seconds must be positive")
     root = Path(root).resolve()
     root.mkdir(parents=True, exist_ok=True)
     descriptor = os.open(root, os.O_RDONLY)
@@ -568,7 +598,10 @@ def generate(config: FastSelfPlayConfig, root: Path, *, resume: bool = False) ->
         groups = tuple(group for group in groups if group)
         checkpoint_sha = manifest["checkpoint_identity"]["sha256"]
         if len(groups) == 1:
-            results = [_collect_group(config, root, groups[0], manifest["semantic_fingerprint"], checkpoint_sha)]
+            results = [_collect_group(
+                config, root, groups[0], manifest["semantic_fingerprint"], checkpoint_sha,
+                completed_before=len(complete), on_game_complete=progress_callback,
+            )]
         else:
             with mp.Manager() as manager:
                 stop_event = manager.Event()
@@ -577,7 +610,20 @@ def generate(config: FastSelfPlayConfig, root: Path, *, resume: bool = False) ->
                                            manifest["semantic_fingerprint"], checkpoint_sha,
                                            stop_event) for group in groups]
                     try:
-                        results = [future.result() for future in as_completed(futures)]
+                        if progress_callback is None:
+                            results = [future.result() for future in as_completed(futures)]
+                        else:
+                            results = []
+                            pending = set(futures)
+                            while pending:
+                                finished, pending = wait(
+                                    pending,
+                                    timeout=progress_interval_seconds,
+                                    return_when=FIRST_COMPLETED,
+                                )
+                                for future in finished:
+                                    results.append(future.result())
+                                progress_callback(_committed_game_count(root), config.num_games)
                     except Exception:
                         stop_event.set()
                         for future in futures:
