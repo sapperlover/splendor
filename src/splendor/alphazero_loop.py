@@ -224,10 +224,13 @@ class EvaluationSection:
     adjudicate_deterministic_policy_cycles: bool
     mcts_vs_parent: EvaluationPanel
     greedy_vs_initial: EvaluationPanel
+    mcts_backend: str = "python"
 
     def __post_init__(self) -> None:
         if type(self.workers) is not int or self.workers <= 0:
             raise ValueError("evaluation workers must be a positive integer")
+        if self.mcts_backend not in ("python", "native"):
+            raise ValueError("mcts_backend must be python or native")
         if self.device not in ("cpu", "cuda"):
             raise ValueError("evaluation device must be cpu or cuda")
         if self.workers > 1 and self.device != "cpu":
@@ -240,7 +243,10 @@ class EvaluationSection:
             raise ValueError("adjudicate_deterministic_policy_cycles must be bool")
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        value = asdict(self)
+        if self.mcts_backend == "python":
+            value.pop("mcts_backend")
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -302,6 +308,7 @@ class LoopConfig:
                 adjudicate_deterministic_policy_cycles=evaluation["adjudicate_deterministic_policy_cycles"],
                 mcts_vs_parent=EvaluationPanel(**evaluation["mcts_vs_parent"]),
                 greedy_vs_initial=EvaluationPanel(**evaluation["greedy_vs_initial"]),
+                mcts_backend=evaluation.get("mcts_backend", "python"),
             ),
         )
 
@@ -946,10 +953,12 @@ class LoopRunner:
         mcts_run = run_fixed_evaluation(
             FixedEvaluationConfig(
                 policy_a=SerializablePolicySpec.mcts_checkpoint(
-                    "theta_new_mcts", theta_new["path"], search_config=search_config
+                    "theta_new_mcts", theta_new["path"], search_config=search_config,
+                    search_backend=self.config.evaluation.mcts_backend
                 ),
                 policy_b=SerializablePolicySpec.mcts_checkpoint(
-                    "theta_parent_mcts", theta_parent["path"], search_config=search_config
+                    "theta_parent_mcts", theta_parent["path"], search_config=search_config,
+                    search_backend=self.config.evaluation.mcts_backend
                 ),
                 game_seeds=parent_panel.game_seeds,
                 policy_seed_base=parent_panel.policy_seed_base,

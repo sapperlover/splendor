@@ -1,0 +1,1623 @@
+{
+  "measured_at": "2026-09-29",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+  "python": "3.12.2",
+  "runs": {
+    "python_cpu_8": {
+      "summary": {
+        "completed_games": 8,
+        "cpu_peak_rss_kib": 541652,
+        "data_bytes": 360972,
+        "decision_latency": {
+          "count": 690,
+          "max_ms": 3400.0217040011194,
+          "p50_ms": 2691.2364269992395,
+          "p95_ms": 3066.0038519999944
+        },
+        "draws": 0,
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "expected_games": 8,
+        "failed_games": 0,
+        "games_per_wall_second": 0.04292149885072144,
+        "gpu_peak_bytes": 0,
+        "inference": {
+          "batch_size_histogram": {
+            "1": 475276
+          },
+          "feature_seconds": 76.02589468131191,
+          "forward_seconds": 614.3270462524961,
+          "logical_model_positions": 475276,
+          "mean_batch_size": 1.0,
+          "physical_model_batches": 475276
+        },
+        "logical_model_positions": 475276,
+        "missing_games": 0,
+        "p0_wins": 3,
+        "p1_wins": 5,
+        "peak_active_games": 1,
+        "peak_pending_requests": 1,
+        "policy_samples": 514,
+        "policy_samples_per_wall_second": 2.7577063011588523,
+        "protocol": "mcts-selfplay-v2",
+        "queue_wait_seconds": 0.0,
+        "real_rule_seconds": 0.20562960999814095,
+        "root_encoding_seconds": 0.38325221598279313,
+        "samples": 690,
+        "search_rule_seconds": 173.23489198134848,
+        "search_seconds_sum": 1297.9344246250075,
+        "semantic_fingerprint": "f974c8f34b4f2458c9e164f91030c3d2b0fccb7b87491931e64841822af407fa",
+        "simulations": 526336,
+        "simulations_per_wall_second": 2823.8912523866647,
+        "statistics_complete": true,
+        "statistics_game_ids": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "statistics_missing_game_ids": [],
+        "statistics_scope": "collection_session",
+        "wall_seconds": 186.38678084899948,
+        "worker_collection_wall_seconds_max": 183.91280894100055,
+        "worker_initialization_seconds_sum": 0.14565639199281577,
+        "write_seconds": 0.2442998449987499
+      },
+      "config": {
+        "add_root_noise": true,
+        "checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "execution": {
+          "active_games_per_worker": 4,
+          "backend": "batched_cpu",
+          "engine_mode": "fast",
+          "max_batch_size": 4,
+          "max_batch_wait_ms": 2,
+          "precision": "float32",
+          "torch_threads": 1,
+          "workers": 8
+        },
+        "max_completed_turns": 400,
+        "num_games": 8,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 0,
+        "run_id": "native-before-python-s1024",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 9500000,
+          "simulations": 1024
+        },
+        "seed": 12345000,
+        "split_seed": 71,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "checkpoint_identity": {
+        "path": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "sha256": "009d17d2e9bc0d879142d7ca3ff1777a6f8caa9dda9243c6a2d5eb3538b5d5b0"
+      },
+      "versions": {
+        "data": "splendor-mcts-selfplay-v2",
+        "feature": "splendor-observation-action-v1",
+        "numeric": "frozen-fp32-card-merged-v1",
+        "replay": 2,
+        "rng": "splitmix64-v1",
+        "rules": "splendor-base-two-player-v2-forced-skip",
+        "search": "determinized-puct-v2-batched",
+        "seed": "splendor-selfplay-seed-v1"
+      },
+      "archived_thread_seconds": {
+        "native_encoding_or_python_search_features": 0.0,
+        "search_rule": 173.23489198134848
+      }
+    },
+    "native_cpu_8": {
+      "summary": {
+        "completed_games": 8,
+        "cpu_peak_rss_kib": 536020,
+        "data_bytes": 362985,
+        "decision_latency": {
+          "count": 715,
+          "max_ms": 1730.4777290009952,
+          "p50_ms": 1332.8646939989994,
+          "p95_ms": 1574.5926649979083
+        },
+        "draws": 0,
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "expected_games": 8,
+        "failed_games": 0,
+        "games_per_wall_second": 0.08195002845491879,
+        "gpu_peak_bytes": 0,
+        "inference": {
+          "batch_size_histogram": {
+            "1": 496147
+          },
+          "feature_seconds": 66.60862398637255,
+          "forward_seconds": 499.7092226774439,
+          "logical_model_positions": 496147,
+          "mean_batch_size": 1.0,
+          "physical_model_batches": 496147
+        },
+        "logical_model_positions": 496147,
+        "missing_games": 0,
+        "p0_wins": 6,
+        "p1_wins": 2,
+        "peak_active_games": 1,
+        "peak_pending_requests": 1,
+        "policy_samples": 537,
+        "policy_samples_per_wall_second": 5.500895660036424,
+        "protocol": "mcts-selfplay-v2",
+        "queue_wait_seconds": 0.0,
+        "real_rule_seconds": 0.2110115749455872,
+        "root_encoding_seconds": 0.42463231903820997,
+        "samples": 715,
+        "search_rule_seconds": 2.337495163,
+        "search_seconds_sum": 682.1178771930536,
+        "semantic_fingerprint": "6f5d945fe58903dd8dfef6684c1aeed30a2f83ff5e50712907d0630abdf4343e",
+        "simulations": 549888,
+        "simulations_per_wall_second": 5632.917155877298,
+        "statistics_complete": true,
+        "statistics_game_ids": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "statistics_missing_game_ids": [],
+        "statistics_scope": "collection_session",
+        "wall_seconds": 97.62046640900007,
+        "worker_collection_wall_seconds_max": 95.50610869800221,
+        "worker_initialization_seconds_sum": 0.13024489100280334,
+        "write_seconds": 0.2091637490048015
+      },
+      "config": {
+        "add_root_noise": true,
+        "checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "execution": {
+          "active_games_per_worker": 4,
+          "backend": "native_cpu",
+          "engine_mode": "fast",
+          "max_batch_size": 4,
+          "max_batch_wait_ms": 2,
+          "precision": "float32",
+          "torch_threads": 1,
+          "workers": 8
+        },
+        "max_completed_turns": 400,
+        "num_games": 8,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 0,
+        "run_id": "native_cpu_main",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 9500000,
+          "simulations": 1024
+        },
+        "seed": 12345000,
+        "split_seed": 71,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "checkpoint_identity": {
+        "path": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "sha256": "009d17d2e9bc0d879142d7ca3ff1777a6f8caa9dda9243c6a2d5eb3538b5d5b0"
+      },
+      "versions": {
+        "data": "splendor-mcts-selfplay-v2",
+        "feature": "splendor-observation-action-v1",
+        "numeric": "native-cpp-fp32-v1",
+        "replay": 2,
+        "rng": "splitmix64-v1",
+        "rules": "splendor-base-two-player-v2-forced-skip",
+        "search": "determinized-puct-native-v1",
+        "seed": "splendor-selfplay-seed-v1"
+      },
+      "archived_thread_seconds": {
+        "native_encoding_or_python_search_features": 10.504155401,
+        "search_rule": 2.337495163
+      }
+    },
+    "native_cpu_batch_8": {
+      "summary": {
+        "completed_games": 8,
+        "cpu_peak_rss_kib": 577636,
+        "data_bytes": 362992,
+        "decision_latency": {
+          "count": 715,
+          "max_ms": 2176.2023590017634,
+          "p50_ms": 1248.5154739988502,
+          "p95_ms": 1793.3221780003805
+        },
+        "draws": 0,
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "expected_games": 8,
+        "failed_games": 0,
+        "games_per_wall_second": 0.077433326641899,
+        "gpu_peak_bytes": 0,
+        "inference": {
+          "batch_size_histogram": {
+            "1": 15770,
+            "2": 4552,
+            "3": 12466,
+            "4": 108469
+          },
+          "feature_seconds": 19.500965985447692,
+          "forward_seconds": 135.86501232316368,
+          "logical_model_positions": 496148,
+          "mean_batch_size": 3.5123781476316216,
+          "physical_model_batches": 141257
+        },
+        "logical_model_positions": 496148,
+        "missing_games": 0,
+        "p0_wins": 6,
+        "p1_wins": 2,
+        "peak_active_games": 4,
+        "peak_pending_requests": 4,
+        "policy_samples": 537,
+        "policy_samples_per_wall_second": 5.19771205083747,
+        "protocol": "mcts-selfplay-v2",
+        "queue_wait_seconds": 0.0,
+        "real_rule_seconds": 0.2043776379468909,
+        "root_encoding_seconds": 0.42389475000527455,
+        "samples": 715,
+        "search_rule_seconds": 1.2173052149999999,
+        "search_seconds_sum": 697.0179082880604,
+        "semantic_fingerprint": "1dbd3e33d961daaefed2a5920e374cfe97708a38590964662ead00a6a4857b84",
+        "simulations": 549888,
+        "simulations_per_wall_second": 5322.45714005757,
+        "statistics_complete": true,
+        "statistics_game_ids": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "statistics_missing_game_ids": [],
+        "statistics_scope": "collection_session",
+        "wall_seconds": 103.31468822199895,
+        "worker_collection_wall_seconds_max": 101.74419079099971,
+        "worker_initialization_seconds_sum": 0.026330022999900393,
+        "write_seconds": 0.1942905179967056
+      },
+      "config": {
+        "add_root_noise": true,
+        "checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "execution": {
+          "active_games_per_worker": 4,
+          "backend": "native_cpu",
+          "engine_mode": "fast",
+          "max_batch_size": 8,
+          "max_batch_wait_ms": 0,
+          "precision": "float32",
+          "torch_threads": 1,
+          "workers": 2
+        },
+        "max_completed_turns": 400,
+        "num_games": 8,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 0,
+        "run_id": "native_cpu_tuned",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 9500000,
+          "simulations": 1024
+        },
+        "seed": 12345000,
+        "split_seed": 71,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "checkpoint_identity": {
+        "path": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "sha256": "009d17d2e9bc0d879142d7ca3ff1777a6f8caa9dda9243c6a2d5eb3538b5d5b0"
+      },
+      "versions": {
+        "data": "splendor-mcts-selfplay-v2",
+        "feature": "splendor-observation-action-v1",
+        "numeric": "native-cpp-fp32-v1",
+        "replay": 2,
+        "rng": "splitmix64-v1",
+        "rules": "splendor-base-two-player-v2-forced-skip",
+        "search": "determinized-puct-native-v1",
+        "seed": "splendor-selfplay-seed-v1"
+      },
+      "archived_thread_seconds": {
+        "native_encoding_or_python_search_features": 6.801905979,
+        "search_rule": 1.2173052149999997
+      }
+    },
+    "native_cuda_batch_8": {
+      "summary": {
+        "completed_games": 8,
+        "cpu_peak_rss_kib": 863312,
+        "data_bytes": 363050,
+        "decision_latency": {
+          "count": 715,
+          "max_ms": 2138.594127998658,
+          "p50_ms": 1518.4895700003835,
+          "p95_ms": 1856.6514500016638
+        },
+        "draws": 0,
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "expected_games": 8,
+        "failed_games": 0,
+        "games_per_wall_second": 0.07014165347795127,
+        "gpu_peak_bytes": 11306496,
+        "inference": {
+          "batch_size_histogram": {
+            "1": 5609,
+            "2": 4869,
+            "3": 423,
+            "4": 1503,
+            "5": 914,
+            "6": 209,
+            "7": 11553,
+            "8": 48353
+          },
+          "feature_seconds": 23.12211597089481,
+          "forward_seconds": 71.61750037024467,
+          "logical_model_positions": 496147,
+          "mean_batch_size": 6.756458268081108,
+          "physical_model_batches": 73433
+        },
+        "logical_model_positions": 496147,
+        "missing_games": 0,
+        "native_compute_seconds": 3.035135688,
+        "native_encoding_seconds": 4.996863491,
+        "p0_wins": 6,
+        "p1_wins": 2,
+        "peak_active_games": 8,
+        "peak_pending_requests": 8,
+        "policy_samples": 537,
+        "policy_samples_per_wall_second": 4.708258489707479,
+        "protocol": "mcts-selfplay-v2",
+        "queue_wait_seconds": 0.0,
+        "real_rule_seconds": 0.14949345204149722,
+        "root_encoding_seconds": 0.45811746502658934,
+        "samples": 715,
+        "search_rule_seconds": 0.902333745,
+        "search_seconds_sum": 782.3046906570344,
+        "semantic_fingerprint": "f7a6bce9aecbd81dceb23bb9f35576b1340e07051dba23648fd5d8f09c154671",
+        "simulations": 549888,
+        "simulations_per_wall_second": 4821.256693460458,
+        "statistics_complete": true,
+        "statistics_game_ids": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "statistics_missing_game_ids": [],
+        "statistics_scope": "collection_session",
+        "wall_seconds": 114.0549103609992,
+        "worker_collection_wall_seconds_max": 113.92664210599833,
+        "worker_initialization_seconds_sum": 0.1249105030001374,
+        "write_seconds": 0.1616626470022311
+      },
+      "config": {
+        "add_root_noise": true,
+        "checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "execution": {
+          "active_games_per_worker": 8,
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "max_batch_size": 16,
+          "max_batch_wait_ms": 0,
+          "precision": "float32",
+          "torch_threads": 1,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 8,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 0,
+        "run_id": "native_cuda_tuned",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 9500000,
+          "simulations": 1024
+        },
+        "seed": 12345000,
+        "split_seed": 71,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "checkpoint_identity": {
+        "path": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "sha256": "009d17d2e9bc0d879142d7ca3ff1777a6f8caa9dda9243c6a2d5eb3538b5d5b0"
+      },
+      "versions": {
+        "data": "splendor-mcts-selfplay-v2",
+        "feature": "splendor-observation-action-v1",
+        "numeric": "native-cpp-fp32-v1",
+        "replay": 2,
+        "rng": "splitmix64-v1",
+        "rules": "splendor-base-two-player-v2-forced-skip",
+        "search": "determinized-puct-native-v1",
+        "seed": "splendor-selfplay-seed-v1"
+      },
+      "archived_thread_seconds": {
+        "native_encoding_or_python_search_features": 4.996863491,
+        "search_rule": 0.902333745
+      }
+    }
+  },
+  "fixed_panel": {
+    "checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "device": "cpu",
+    "simulations": 1024,
+    "determinizations": 1,
+    "repeats": 3,
+    "warmup": 1,
+    "cases": {
+      "opening": {
+        "python": {
+          "seconds": [
+            1.7331216620004852,
+            1.47255672999745,
+            1.3206754079983511
+          ],
+          "median_seconds": 1.47255672999745,
+          "samples": [
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          ]
+        },
+        "native": {
+          "seconds": [
+            0.5008461510005873,
+            0.5060885790007887,
+            0.5266398419989855
+          ],
+          "median_seconds": 0.5060885790007887,
+          "samples": [
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          ]
+        }
+      },
+      "middle": {
+        "python": {
+          "seconds": [
+            1.1848100239985797,
+            1.175401205997332,
+            1.190947466999205
+          ],
+          "median_seconds": 1.1848100239985797,
+          "samples": [
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          ]
+        },
+        "native": {
+          "seconds": [
+            0.47819534900190774,
+            0.4772872579997056,
+            0.4848513239994645
+          ],
+          "median_seconds": 0.47819534900190774,
+          "samples": [
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          ]
+        }
+      },
+      "late": {
+        "python": {
+          "seconds": [
+            1.2865151210025942,
+            1.2905301639984827,
+            1.3430703060002998
+          ],
+          "median_seconds": 1.2905301639984827,
+          "samples": [
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            }
+          ]
+        },
+        "native": {
+          "seconds": [
+            0.5234587259983527,
+            0.5339639159974467,
+            0.5262903679977171
+          ],
+          "median_seconds": 0.5262903679977171,
+          "samples": [
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "peak_rss_kib": 538856
+  },
+  "notes": [
+    "wall_seconds includes model initialization and archive writes",
+    "worker and game search seconds overlap; do not add to wall time",
+    "same game IDs and S/N; native RNG changes actual game lengths and work",
+    "8 workers and 8 games means each worker holds one game in the main comparison",
+    "The 32-game runs were collected before final boundary and request-ID fixes; no extra performance games were run after the 32-game cap.",
+    "Native performance-run manifests used the previous generic RNG label; the current manifest names the unchanged native noise and behavior RNG explicitly.",
+    "Fixed_panel_final was rerun after final C++ fixes; both panels are retained to show run-to-run variability.",
+    "The 32-game performance runs predate NativeMatchStepper; native authoritative real-game integration was checked with complete smoke games and checked replay, not a new 8-game performance run."
+  ],
+  "fixed_panel_final": {
+    "checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "device": "cpu",
+    "simulations": 1024,
+    "determinizations": 1,
+    "repeats": 3,
+    "warmup": 1,
+    "cases": {
+      "opening": {
+        "python": {
+          "seconds": [
+            1.0968575590013643,
+            1.0905696600020747,
+            1.1063518100017973
+          ],
+          "median_seconds": 1.0968575590013643,
+          "samples": [
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          ]
+        },
+        "native": {
+          "seconds": [
+            0.49174429699996836,
+            0.48887531199943624,
+            0.48913656099830405
+          ],
+          "median_seconds": 0.48913656099830405,
+          "samples": [
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 6,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                78,
+                77,
+                61,
+                85,
+                69,
+                77,
+                301,
+                82,
+                82,
+                92,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          ]
+        }
+      },
+      "middle": {
+        "python": {
+          "seconds": [
+            1.0873896590019285,
+            1.0680606379974051,
+            1.0670663050004805
+          ],
+          "median_seconds": 1.0680606379974051,
+          "samples": [
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          ]
+        },
+        "native": {
+          "seconds": [
+            0.46553413400033605,
+            0.4689337620002334,
+            0.4686110609982279
+          ],
+          "median_seconds": 0.4686110609982279,
+          "samples": [
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 0,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                850,
+                1,
+                1,
+                1,
+                1,
+                159,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          ]
+        }
+      },
+      "late": {
+        "python": {
+          "seconds": [
+            1.1009398179994605,
+            1.1202066549994925,
+            1.1408099309992394
+          ],
+          "median_seconds": 1.1202066549994925,
+          "samples": [
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            }
+          ]
+        },
+        "native": {
+          "seconds": [
+            0.48655214599784813,
+            0.48274588899948867,
+            0.5013787249990855
+          ],
+          "median_seconds": 0.48655214599784813,
+          "samples": [
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            },
+            {
+              "chosen_candidate_index": 5,
+              "simulations": 1024,
+              "model_positions": 1025,
+              "root_visit_counts": [
+                1,
+                7,
+                19,
+                1,
+                1,
+                602,
+                10,
+                20,
+                17,
+                17,
+                328,
+                1
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "peak_rss_kib": 539780
+  }
+}

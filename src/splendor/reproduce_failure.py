@@ -47,7 +47,7 @@ def reproduce(scene: Mapping[str, Any]) -> dict[str, Any]:
                 raise ValueError(f"search branch action {index}: action is illegal")
             branch = engine.apply(action)
         for batched in scene.get("batch_requests", ()):
-            if batched.get("request_id") == search.get("request_id"):
+            if batched.get("request_id") == search.get("request_id") and batched.get("request") is not None:
                 expected = decode_request(batched["request"])
                 if branch != expected:
                     raise ValueError("search branch diverges before pending evaluator request")

@@ -52,10 +52,12 @@ class ExecutionConfig:
     precision: str = "float32"
 
     def __post_init__(self) -> None:
-        if self.backend not in ("serial_cpu", "batched_cpu", "batched_cuda"):
-            raise ValueError("backend must be serial_cpu, batched_cpu or batched_cuda")
+        if self.backend not in ("serial_cpu", "batched_cpu", "batched_cuda", "native_cpu", "native_cuda"):
+            raise ValueError("backend must be serial_cpu, batched_cpu, batched_cuda, native_cpu or native_cuda")
         if self.engine_mode not in ("checked", "fast"):
             raise ValueError("engine_mode must be checked or fast")
+        if self.backend.startswith("native_") and self.engine_mode != "fast":
+            raise ValueError("native real-game engine requires engine_mode=fast")
         if any(type(getattr(self, name)) is not int or getattr(self, name) <= 0 for name in
                ("workers", "active_games_per_worker", "max_batch_size", "torch_threads")):
             raise ValueError("workers, active games, batch size and torch threads must be positive")
@@ -63,9 +65,9 @@ class ExecutionConfig:
             raise ValueError("max_batch_wait_ms must be finite and nonnegative")
         if self.precision != "float32":
             raise ValueError("only float32 inference is supported")
-        if self.backend == "batched_cuda":
+        if self.backend in ("batched_cuda", "native_cuda"):
             if self.workers != 1:
-                raise ValueError("batched_cuda uses one GPU owner; set execution.workers=1")
+                raise ValueError("CUDA inference uses one GPU owner; set execution.workers=1")
         if self.backend == "serial_cpu" and (self.active_games_per_worker != 1 or self.max_batch_size != 1):
             raise ValueError("serial_cpu requires active_games_per_worker=1 and max_batch_size=1")
 
@@ -153,9 +155,13 @@ def _search_seeds(config: FastSelfPlayConfig, game_id: int) -> tuple[int, int]:
 def build_manifest(config: FastSelfPlayConfig) -> dict[str, Any]:
     checkpoint = Path(config.checkpoint)
     checkpoint_identity = {"path": str(checkpoint), "sha256": _sha256(checkpoint)}
-    versions = {"data": DATA_SCHEMA_V2, "search": SEARCH_PROTOCOL, "numeric": NUMERIC_VERSION,
+    native = config.execution.backend.startswith("native_")
+    versions = {"data": DATA_SCHEMA_V2, "search": "determinized-puct-native-v1" if native else SEARCH_PROTOCOL,
+                "numeric": "native-cpp-fp32-v1" if native else NUMERIC_VERSION,
                 "rules": RULESET_ID, "replay": REPLAY_SCHEMA_VERSION,
-                "rng": RNG_ALGORITHM, "feature": FEATURE_SCHEMA_VERSION,
+                "rng": "splitmix64-world-mt19937-gamma-v1" if native else RNG_ALGORITHM,
+                **({"native_rules": "cpp17-native-game-v1"} if native else {}),
+                "feature": FEATURE_SCHEMA_VERSION,
                 "seed": "splendor-selfplay-seed-v1"}
     frozen = {"config": config.to_dict(), "checkpoint_identity": checkpoint_identity, "versions": versions}
     fingerprint = hashlib.sha256(json.dumps(frozen, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
@@ -206,6 +212,7 @@ class _GameSession:
     config: FastSelfPlayConfig
     game_id: int
     evaluator: FrozenSearchInference
+    model_version: str = ""
     started: float = field(default_factory=time.perf_counter)
     stepper: MatchStepper = field(init=False)
     policies: tuple[PUCTSearchPolicy, PUCTSearchPolicy] = field(init=False)
@@ -221,14 +228,23 @@ class _GameSession:
 
     def __post_init__(self) -> None:
         game_seed = derive_seed(self.config.seed, self.config.round_index, self.game_id, "game")
-        self.stepper = MatchStepper(self.game_id, game_seed, self.game_id % 2,
-                                    mode=self.config.execution.engine_mode)
+        stepper_cls = MatchStepper
+        if self.config.execution.backend.startswith("native_"):
+            from .native_match_stepper import NativeMatchStepper
+            stepper_cls = NativeMatchStepper
+        self.stepper = stepper_cls(self.game_id, game_seed, self.game_id % 2,
+                                   mode=self.config.execution.engine_mode)
         seeds = _search_seeds(self.config, self.game_id)
+        policy_cls = PUCTSearchPolicy
+        if self.config.execution.backend.startswith("native_"):
+            from .native_policy import NativePUCTSearchPolicy
+            policy_cls = NativePUCTSearchPolicy
         self.policies = tuple(
-            PUCTSearchPolicy(self.evaluator.model,
+            policy_cls(self.evaluator.model,
                              config=MCTSConfig(**(asdict(self.config.search_config) | {"seed": seeds[p]})),
                              device=self.evaluator.device,
-                             engine_mode=self.config.execution.engine_mode,
+                             **({"model_version": self.model_version} if self.config.execution.backend.startswith("native_") else
+                                {"engine_mode": self.config.execution.engine_mode}),
                              evaluator=self.evaluator)
             for p in (0, 1)
         )  # type: ignore[assignment]
@@ -287,7 +303,8 @@ class _GameSession:
             "decision_count": len(self.records),
             "player_decisions": [sum(r["player_id"] == p for r in self.records) for p in (0, 1)],
             "policy_samples": sum(r["searchable"] for r in self.records),
-            "mcts_stats": [policy.stats.to_dict() | {"rule_seconds": policy.stats.rule_seconds}
+            "mcts_stats": [policy.stats.to_dict() | {"rule_seconds": policy.stats.rule_seconds,
+                                               "native_compute_seconds": getattr(policy, "native_compute_seconds", 0.0)}
                            for policy in self.policies],
             "forced_skips": self.stepper.engine.forced_skip_count,
             "trace": self.stepper.trace,
@@ -307,7 +324,9 @@ class _GameSession:
                 "write_seconds": time.perf_counter() - write_started,
                 "root_encoding_seconds": self.root_encoding_seconds,
                 "real_rule_seconds": self.real_rule_seconds,
-                "search_rule_seconds": sum(p.stats.rule_seconds for p in self.policies)}
+                "search_rule_seconds": sum(p.stats.rule_seconds for p in self.policies),
+                "native_encoding_seconds": sum(p.stats.feature_seconds for p in self.policies),
+                "native_compute_seconds": sum(getattr(p, "native_compute_seconds", 0.0) for p in self.policies)}
 
 
 def _committed_game_count(root: Path) -> int:
@@ -329,9 +348,10 @@ def _collect_group(
         torch.set_num_interop_threads(1)
     except RuntimeError:
         pass
-    device = "cuda" if config.execution.backend == "batched_cuda" else "cpu"
+    device = "cuda" if config.execution.backend in ("batched_cuda", "native_cuda") else "cpu"
     model = load_frozen_actor_critic_checkpoint(Path(config.checkpoint), device=device)
     evaluator = FrozenSearchInference(model, device=device)
+    native = config.execution.backend.startswith("native_")
     initialization_seconds = time.perf_counter() - initialization_started
     started = time.perf_counter()
     todo = iter(game_ids)
@@ -353,7 +373,7 @@ def _collect_group(
                     game_id = next(todo)
                 except StopIteration:
                     break
-                active[game_id] = _GameSession(config, game_id, evaluator)
+                active[game_id] = _GameSession(config, game_id, evaluator, checkpoint_sha)
             if not active:
                 break
             peak_active = max(peak_active, len(active))
@@ -383,11 +403,14 @@ def _collect_group(
                     active_request_id = group[0][1].request_id
                     batch_context = group
                     batch_outputs = None
-                    requests = tuple(item.request for _, item in group)
+                    requests = tuple(item.request for _, item in group) if not native else ()
+                    if native and any(item.model_version != checkpoint_sha for _, item in group):
+                        raise RuntimeError("native inference batch model version mismatch")
                     if kind == "policy_value":
                         encoded = tuple(item.encoded if item.encoded is not None else encode_decision(item.request)
                                         for _, item in group)
-                        results = evaluator.policy_value(requests, encoded=encoded)
+                        results = (evaluator.policy_value_encoded(encoded) if native else
+                                   evaluator.policy_value(requests, encoded=encoded))
                         batch_outputs = results
                         for (session, item), (logits, value) in zip(group, results):
                             failed = session
@@ -395,7 +418,8 @@ def _collect_group(
                             assert session.job is not None
                             session.job.submit(item.request_id, logits, value)
                     else:
-                        results = evaluator.value_only(requests)
+                        results = (evaluator.value_only_encoded(tuple(item.encoded for _, item in group))
+                                   if native else evaluator.value_only(requests))
                         batch_outputs = results
                         for (session, item), value in zip(group, results):
                             failed = session
@@ -517,7 +541,8 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
         summary.update({key: status[key] for key in ("wall_seconds", "inference", "cpu_peak_rss_kib",
                                                     "gpu_peak_bytes", "peak_active_games", "peak_pending_requests",
                                                     "decision_latency", "root_encoding_seconds",
-                                                    "real_rule_seconds", "search_rule_seconds", "write_seconds",
+                                                    "real_rule_seconds", "search_rule_seconds", "native_encoding_seconds",
+                                                    "native_compute_seconds", "write_seconds",
                                                     "queue_wait_seconds", "worker_initialization_seconds_sum",
                                                     "worker_collection_wall_seconds_max",
                                                     "statistics_scope", "statistics_game_ids")
@@ -591,8 +616,8 @@ def generate(
         missing = tuple(game_id for game_id in range(config.num_games) if game_id not in complete)
         if not missing:
             return validate_run(root)
-        if config.execution.backend == "batched_cuda" and not torch.cuda.is_available():
-            raise RuntimeError("batched_cuda requested but CUDA is unavailable; use batched_cpu")
+        if config.execution.backend in ("batched_cuda", "native_cuda") and not torch.cuda.is_available():
+            raise RuntimeError(f"{config.execution.backend} requested but CUDA is unavailable")
         started = time.perf_counter()
         groups = tuple(tuple(missing[i::config.execution.workers]) for i in range(config.execution.workers))
         groups = tuple(group for group in groups if group)
@@ -665,6 +690,10 @@ def generate(
                 game["real_rule_seconds"] for result in results for game in result["completed"]),
             "search_rule_seconds": sum(
                 game["search_rule_seconds"] for result in results for game in result["completed"]),
+            "native_encoding_seconds": sum(
+                game["native_encoding_seconds"] for result in results for game in result["completed"]),
+            "native_compute_seconds": sum(
+                game["native_compute_seconds"] for result in results for game in result["completed"]),
             "write_seconds": sum(
                 game["write_seconds"] for result in results for game in result["completed"]),
             "queue_wait_seconds": 0.0,

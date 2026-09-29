@@ -41,8 +41,13 @@ class SerializablePolicySpec:
     baseline_name: str | None = None
     checkpoint: str | None = None
     search_config: dict[str, Any] | None = None
+    search_backend: str = "python"
 
     def __post_init__(self) -> None:
+        if self.search_backend not in ("python", "native"):
+            raise ValueError("search_backend must be python or native")
+        if self.search_backend == "native" and self.kind != "mcts_checkpoint":
+            raise ValueError("native search backend requires mcts_checkpoint")
         if self.kind == "baseline":
             if self.baseline_name not in _BASELINES:
                 raise ValueError("parallel baseline policy is unknown")
@@ -98,13 +103,14 @@ class SerializablePolicySpec:
 
     @classmethod
     def mcts_checkpoint(
-        cls, name: str, checkpoint: Path | str, *, search_config: dict[str, Any]
+        cls, name: str, checkpoint: Path | str, *, search_config: dict[str, Any],
+        search_backend: str = "python",
     ) -> SerializablePolicySpec:
         return cls(
             name=name,
             kind="mcts_checkpoint",
             checkpoint=str(Path(checkpoint).resolve()),
-            search_config=dict(search_config),
+            search_config=dict(search_config), search_backend=search_backend,
         )
 
     @classmethod
@@ -112,6 +118,9 @@ class SerializablePolicySpec:
         """Build a policy description from evaluator JSON configuration."""
 
         kind = str(value.get("kind", ""))
+        backend = str(value.get("search_backend", "python"))
+        if backend not in ("python", "native") or (backend == "native" and kind != "mcts_checkpoint"):
+            raise ValueError("native search backend requires mcts_checkpoint")
         name = str(value.get("name", kind))
         if kind == "baseline":
             return cls.baseline(str(value.get("baseline_name", name)))
@@ -132,7 +141,8 @@ class SerializablePolicySpec:
             if not isinstance(search_config, Mapping):
                 raise ValueError(f"MCTS policy {name!r} requires search_config")
             return cls.mcts_checkpoint(
-                name, checkpoint, search_config=dict(search_config)
+                name, checkpoint, search_config=dict(search_config),
+                search_backend=backend,
             )
         raise ValueError(f"unsupported policy kind: {kind!r}")
 
@@ -144,6 +154,8 @@ class SerializablePolicySpec:
             result["checkpoint"] = str(Path(self.checkpoint).resolve())
         if self.search_config is not None:
             result["search_config"] = dict(self.search_config)
+        if self.search_backend != "python":
+            result["search_backend"] = self.search_backend
         return result
 
 
@@ -657,6 +669,7 @@ def atomic_write_json(path: Path, payload: Mapping[str, Any]) -> None:
 
 
 _PARALLEL_MODEL_CACHE: dict[tuple[str, str], object] = {}
+_PARALLEL_MODEL_HASH_CACHE: dict[str, str] = {}
 _PARALLEL_POLICY_DEVICE = "cpu"
 
 
@@ -704,11 +717,23 @@ def _create_serializable_policy(
     values["seed"] = int(values.get("seed", 0)) ^ seed
     if spec.kind == "mcts_checkpoint":
         from .mcts_policy import MCTSConfig, PUCTSearchPolicy
+        if spec.search_backend == "native":
+            from .native_policy import NativePUCTSearchPolicy
+            policy_cls = NativePUCTSearchPolicy
+        else:
+            policy_cls = PUCTSearchPolicy
 
-        return PUCTSearchPolicy(
+        kwargs = {}
+        if spec.search_backend == "native":
+            version = _PARALLEL_MODEL_HASH_CACHE.get(spec.checkpoint)
+            if version is None:
+                version = hashlib.sha256(Path(spec.checkpoint).read_bytes()).hexdigest()
+                _PARALLEL_MODEL_HASH_CACHE[spec.checkpoint] = version
+            kwargs["model_version"] = version
+        return policy_cls(
             model,  # type: ignore[arg-type]
             config=MCTSConfig(**values),
-            device=device,
+            device=device, **kwargs,
         )
     from .search_policy import PolicyValueSearchPolicy, SearchConfig
 

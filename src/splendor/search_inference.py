@@ -102,6 +102,36 @@ class FrozenSearchInference:
             result.append((tuple(float(x) for x in logits_row), value))
         return tuple(result)
 
+    def policy_value_encoded(self, encoded: Sequence[EncodedDecision]) -> tuple[tuple[tuple[float, ...], float], ...]:
+        if not encoded:
+            return ()
+        started = time.perf_counter()
+        batch = collate_encoded_decisions(encoded)
+        prepared = self._tensor_batch(batch, state_only=False)
+        self.stats.feature_seconds += time.perf_counter() - started
+        started = time.perf_counter()
+        with torch.inference_mode():
+            logits, critics = self.model._forward_prepared(prepared)
+            joined = torch.cat((logits, critics.unsqueeze(1)), dim=1).detach().cpu().numpy()
+        self._record(len(encoded), started)
+        return tuple(
+            (tuple(float(x) for x in row[:len(item.candidate_actions)]), float(row[-1]))
+            for item, row in zip(encoded, joined)
+        )
+
+    def value_only_encoded(self, encoded: Sequence[EncodedState]) -> tuple[float, ...]:
+        if not encoded:
+            return ()
+        started = time.perf_counter()
+        batch = collate_encoded_states(encoded)
+        prepared = self._tensor_batch(batch, state_only=True)
+        self.stats.feature_seconds += time.perf_counter() - started
+        started = time.perf_counter()
+        with torch.inference_mode():
+            values = self.model.critic(self.model.encode_state(prepared)).squeeze(-1).detach().cpu().numpy()
+        self._record(len(encoded), started)
+        return tuple(float(x) for x in values)
+
     def policy_only(self, requests: Sequence[DecisionRequest]) -> tuple[tuple[float, ...], ...]:
         if not requests:
             return ()

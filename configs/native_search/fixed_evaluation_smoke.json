@@ -1,0 +1,30 @@
+{
+  "policy_a": {
+    "name": "native_mcts",
+    "kind": "mcts_checkpoint",
+    "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "search_backend": "native",
+    "search_config": {
+      "simulations": 8,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "seed": 9300000,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "dirichlet_alpha": 0.3
+    }
+  },
+  "policy_b": {
+    "name": "greedy",
+    "kind": "greedy_checkpoint",
+    "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt"
+  },
+  "pairs": 1,
+  "seed_start": 9300000,
+  "policy_seed_base": 9400000,
+  "workers": 1,
+  "device": "cpu",
+  "max_completed_turns": 400,
+  "adjudicate_deterministic_policy_cycles": true
+}
