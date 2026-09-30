@@ -377,30 +377,31 @@ class NativeBatchRunner:
         buffer, transfer = self._buffer(slot, state_only, width)
         assert buffer.row_count() == 0
         roots = [job for job in chunk if job.root_pending()]
-        row_jobs: list[NativeSearchJob] = []
+        segments: list[tuple[int, int, NativeSearchJob]] = []
         fill_started = time.perf_counter()
         for job in chunk:
-            row_jobs.extend([job] * buffer.fill(job.core))
+            start = buffer.row_count()
+            added = buffer.fill(job.core)
+            if added:
+                segments.append((start, added, job))
         self.fill_seconds += time.perf_counter() - fill_started
         rows = buffer.row_count()
         if rows == 0:
             raise RuntimeError("native batch chunk exported no rows")
-        entries = tuple(
-            NativeBatchRow(row=index, world=world, kind=kind, simulation=simulation,
-                           candidates=candidates, job=job)
-            for index, ((world, simulation, kind, candidates), job)
-            in enumerate(zip(buffer.row_ids(), row_jobs))
-        )
+        # Lightweight identity: one array for the happy path, readable rows only
+        # when a failure has to be logged.
+        identity = buffer.row_ids_array()
+        kinds = identity[:, 2]
         record = {"batch": len(self.batch_records), "slot": slot, "state_only": state_only,
                   "rows": rows, "width": buffer.padded_width(), "chunk": tuple(chunk),
-                  "roots": tuple(roots), "entries": entries, "buffer": buffer,
-                  "transfer": transfer, "context": context, "handle": None,
+                  "roots": tuple(roots), "identity": identity, "segments": tuple(segments),
+                  "buffer": buffer, "transfer": transfer, "context": context, "handle": None,
                   "error": None, "status": "filled"}
         self.batch_records.append(record)
         self._building = None
-        self.root_rows += sum(1 for entry in entries if entry.kind == 0)
-        self.policy_rows += sum(1 for entry in entries if entry.kind != 2)
-        self.value_rows += sum(1 for entry in entries if entry.kind == 2)
+        self.root_rows += int((kinds == 0).sum())
+        self.policy_rows += int((kinds != 2).sum())
+        self.value_rows += int((kinds == 2).sum())
         self.rows += rows
         self.batches += 1
         self.inflight_batches += 1
@@ -451,6 +452,26 @@ class NativeBatchRunner:
             "root_decision_index": getattr(job.request.observation, "own_completed_turns", None),
         }
 
+    @staticmethod
+    def _row_at(record: dict[str, Any], index: int) -> NativeBatchRow | None:
+        """Expand one lightweight identity row; only used on failure paths."""
+
+        identity = record.get("identity")
+        if identity is None or not 0 <= index < record["rows"]:
+            return None
+        world, simulation, kind, candidates = (int(value) for value in identity[index])
+        for start, count, job in record["segments"]:
+            if start <= index < start + count:
+                return NativeBatchRow(row=index, world=world, kind=kind,
+                                      simulation=simulation, candidates=candidates, job=job)
+        return None
+
+    def rows_of(self, record: dict[str, Any]) -> tuple[NativeBatchRow, ...]:
+        """Expand a record's cheap identity into readable rows (failure paths)."""
+
+        return tuple(row for row in (self._row_at(record, index)
+                                    for index in range(record["rows"])) if row is not None)
+
     def failure_report(self, error: BaseException) -> dict[str, Any]:
         """Locate the failed row when possible; otherwise report the batch scope."""
 
@@ -459,11 +480,12 @@ class NativeBatchRunner:
         if row is None:
             match = re.search(r"batch row (\d+)", str(error))
             row = int(match.group(1)) if match else None
-        if record is not None and row is not None and 0 <= row < len(record["entries"]):
-            entry = record["entries"][row]
-            context = None if record["context"] is None else record["context"].get(entry.job)
-            return {"scope": "row", "row": row, "record": record, "entry": entry,
-                    "job": entry.job, "context": context}
+        if record is not None and row is not None and 0 <= row < record["rows"]:
+            entry = self._row_at(record, row)
+            if entry is not None:
+                context = None if record["context"] is None else record["context"].get(entry.job)
+                return {"scope": "row", "row": row, "record": record, "entry": entry,
+                        "job": entry.job, "context": context}
         pending = [item for item in self.batch_records if item["status"] != "submitted"]
         return {"scope": "batch", "row": None, "records": pending,
                 "building": self._building,

@@ -1052,6 +1052,17 @@ public:
             result.append(py::make_tuple(worlds[row],simulations[row],kinds[row],counts[row]));
         return result;
     }
+    // Same identity without per-row Python objects; the scheduling hot path
+    // uses this and expands readable rows only when a failure has to be logged.
+    py::array_t<int64_t> row_ids_array() const {
+        py::array_t<int64_t> out({(py::ssize_t)rows,(py::ssize_t)4});
+        int64_t* data=out.mutable_data();
+        for(int row=0;row<rows;++row){
+            data[row*4+0]=worlds[row];data[row*4+1]=simulations[row];
+            data[row*4+2]=kinds[row];data[row*4+3]=counts[row];
+        }
+        return out;
+    }
     py::dict arrays(py::handle base) const {
         py::object fbase=float_owner.is_none()?py::reinterpret_borrow<py::object>(base):float_owner;
         py::object mbase=mask_owner.is_none()?py::reinterpret_borrow<py::object>(base):mask_owner;
@@ -1221,6 +1232,7 @@ PYBIND11_MODULE(_native_search,m) {
         .def("is_state_only",&NativeBatch::is_state_only)
         .def("row_count",&NativeBatch::row_count)
         .def("row_ids",&NativeBatch::row_ids)
+        .def("row_ids_array",&NativeBatch::row_ids_array)
         .def("padded_width",&NativeBatch::padded_width)
         .def("row_capacity",&NativeBatch::row_capacity)
         .def("float_stride",&NativeBatch::float_stride_elements)

@@ -541,6 +541,12 @@ def test_two_slot_pipeline_reports_row_failure_without_deadlock():
     assert report["context"] is not None and report["context"][1] >= 0
     failed = [record for record in batcher.batch_records if record["status"] == "failed"]
     assert len(failed) == 1 and failed[0]["error"]["stage"] in ("evaluate", "submit")
+    record = failed[0]
+    assert record["identity"].shape == (record["rows"], 4) and record["segments"]
+    expanded = batcher.rows_of(record)
+    assert len(expanded) == record["rows"]
+    assert {row.job for row in expanded} == set(record["chunk"])
+    assert expanded[1].row == 1 and expanded[1].kind_name == "root"
 
 
 def test_collect_group_reports_a_consistent_window(tmp_path):
@@ -664,7 +670,7 @@ def test_shipped_native_loop_configs_parse_with_expected_execution():
 
     expected = {
         "alphazero_loop_cpu.json": ("native_cpu", 8, 4, 4),
-        "alphazero_loop_cuda.json": ("native_cuda", 1, 256, 256),
+        "alphazero_loop_cuda.json": ("native_cuda", 1, 500, 500),
         "alphazero_loop_smoke.json": ("native_cpu", 2, 2, 2),
     }
     from splendor.selfplay_fast import ExecutionConfig
@@ -711,3 +717,38 @@ def test_window_delta_accepts_legacy_snapshots_without_native_metrics():
     assert delta["simulations"] == 20 and delta["network_positions"] == 40
     assert delta["native_batch_rows"] == 0 and delta["native_wide_batches"] == 0
     assert delta["native_fill_seconds"] == 0.0 and delta["cpu_seconds"] == 0.9
+
+
+def test_collection_status_preserves_worker_compile_diagnostics(tmp_path, monkeypatch):
+    from splendor.search_inference import InferenceStats
+
+    config = FastSelfPlayConfig.from_dict({
+        "protocol": "mcts-selfplay-v2", "run_id": "compile-status", "round_index": 0,
+        "checkpoint": str(CHECKPOINT), "num_games": 1, "seed": 4100,
+        "search_config": {"simulations": 1, "determinizations": 1, "seed": 42},
+        "execution": {"backend": "batched_cpu", "engine_mode": "fast", "workers": 1,
+                      "active_games_per_worker": 1, "max_batch_size": 1},
+    })
+    diagnostics = {
+        "compile_seconds": {"policy_value:16": 0.25},
+        "compiled_calls": {"policy_value:16": 3},
+        "eager_fallbacks": 1,
+        "compile_failure_fallbacks": 1,
+        "compile_failures": [{"stage": "execute", "error_type": "InductorError"}],
+        "disabled_graphs": {"policy_value:16": "injected failure"},
+        "effective_mode": {"policy_value:16": "eager"},
+    }
+    original = InferenceStats.to_dict
+
+    def with_compile(self):
+        return original(self) | {"compile": diagnostics}
+
+    monkeypatch.setattr(InferenceStats, "to_dict", with_compile)
+    root = tmp_path / "run"
+    summary = generate(config, root)
+    status = json.loads((root / "status.json").read_text())
+    assert status["worker_compile"] == [{"worker_id": 0,
+                                          "inference": status["worker_compile"][0]["inference"],
+                                          "compile": diagnostics}]
+    assert summary["worker_compile"] == status["worker_compile"]
+    assert validate_run(root)["worker_compile"] == status["worker_compile"]

@@ -646,7 +646,7 @@ def _collect_group(
                     batcher.row_context(entry) | {
                         "game_id": getattr(context.get(entry.job), "game_id", None),
                         "state_only": record["state_only"], "batch": record["batch"]}
-                    for record in batches for entry in record["entries"]
+                    for record in batches for entry in batcher.rows_of(record)
                 ]
                 if building is not None:
                     requests.extend({"game_id": getattr(context.get(job), "game_id", None),
@@ -707,6 +707,7 @@ def _collect_group(
         torch.cuda.synchronize()
     tail_seconds = time.perf_counter() - window_ended
     return {
+        "worker_id": game_ids[0],
         "completed": completed, "wall_seconds": time.perf_counter() - started,
         "initialization_seconds": initialization_seconds,
         "decision_latencies_ms": decision_latencies_ms,
@@ -811,7 +812,7 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
                                                     "native_policy_rows", "native_value_rows", "native_wide_batches",
                                                     "peak_inflight_rows", "native_fill_seconds", "native_consume_seconds",
                                                     "pipeline_slots", "compile_failure_policy",
-                                                    "statistics_scope", "statistics_game_ids")
+                                                    "worker_compile", "statistics_scope", "statistics_game_ids")
                         if key in status})
         # Wall time and shared physical batches cannot be recovered by summing
         # archived game durations: games/workers overlap. Only use the games
@@ -970,6 +971,12 @@ def generate(
                 result["initialization_seconds"] for result in results),
             "worker_collection_wall_seconds_max": max(result["wall_seconds"] for result in results),
             "inference": physical,
+            "worker_compile": [
+                {"worker_id": item["worker_id"],
+                 "inference": item["inference"]["inference"],
+                 "compile": item["inference"]["compile"]}
+                for item in sorted(results, key=lambda result: result["worker_id"])
+            ],
             "native_batch_rows": sum(item["counters"].get("native_batch_rows", 0) for item in results),
             "native_batch_batches": sum(item["counters"].get("native_batch_batches", 0) for item in results),
             "native_root_rows": sum(item["counters"].get("native_root_rows", 0) for item in results),

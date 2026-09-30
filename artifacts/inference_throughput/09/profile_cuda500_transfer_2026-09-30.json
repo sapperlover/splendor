@@ -1,0 +1,319 @@
+{
+  "config": {
+    "backend": "native_cuda",
+    "engine_mode": "fast",
+    "workers": 1,
+    "active_games_per_worker": 500,
+    "max_batch_size": 500,
+    "max_batch_wait_ms": 0,
+    "torch_threads": 1,
+    "precision": "float32",
+    "batch_interface": "native",
+    "inference_mode": "compiled",
+    "actor_projection": true,
+    "candidate_buckets": [
+      16,
+      32,
+      48
+    ],
+    "compile_mode": null,
+    "compile_failure_policy": "fallback",
+    "native_transport": "reused",
+    "pipeline_slots": 1
+  },
+  "num_games": 500,
+  "max_possible_active_games": 500,
+  "replay_transport": "numpy_packed_microbenchmark",
+  "timing_clocks": "wall seconds; CUDA stages synchronize on completion; stages are measured separately",
+  "capture": {
+    "window": {
+      "process_seconds": 30.589358356999583,
+      "worker_inference": [
+        {
+          "physical_model_batches": 3076,
+          "logical_model_positions": 1538000,
+          "feature_seconds": 0.0,
+          "forward_seconds": 6.57135028500079,
+          "h2d_seconds": 0.3146331080060918,
+          "d2h_seconds": 0.17984661899845378,
+          "wait_seconds": 1.3070297199806191,
+          "batch_size_histogram": {
+            "500": 3076
+          },
+          "mean_batch_size": 500.0,
+          "inference": {
+            "mode": "compiled",
+            "actor_projection": true,
+            "candidate_buckets": [
+              16,
+              32,
+              48
+            ],
+            "compile_mode": null,
+            "compile_failure_policy": "fallback",
+            "native_transport": "reused"
+          },
+          "compile": {
+            "compile_seconds": {
+              "policy_value:32": 3.238601686000038
+            },
+            "compiled_calls": {
+              "policy_value:32": 3076
+            },
+            "eager_fallbacks": 0,
+            "compile_failure_fallbacks": 0,
+            "compile_failures": [],
+            "disabled_graphs": {},
+            "effective_mode": {
+              "policy_value:32": "compiled"
+            },
+            "dynamo_delta": {
+              "calls_captured": 131,
+              "unique_graphs": 1
+            }
+          }
+        }
+      ],
+      "clock": {
+        "requested_window_seconds": 30.0,
+        "warmup_seconds": 0.0,
+        "common_seconds": 30.57423286500034,
+        "workers_measured": 1,
+        "workers_exhausted_games": 0,
+        "tails_seconds": [
+          0.001382158999604144
+        ],
+        "recompiled_graphs_in_window": [
+          "policy_value:32"
+        ],
+        "batch_sizes": {
+          "500": 3076
+        },
+        "workers": [
+          {
+            "worker_id": 0,
+            "initialization_seconds": 0.0051749680001194065,
+            "wall_seconds": 30.57561650300022,
+            "peak_active_games": 500,
+            "peak_pending_requests": 500,
+            "simulations": 1536000,
+            "network_positions": 1538000,
+            "physical_batches": 3076,
+            "completed_games": 0,
+            "native_batch_rows": 1538000,
+            "native_batch_batches": 3076,
+            "native_wide_batches": 0,
+            "native_root_rows": 2000,
+            "native_policy_rows": 1538000,
+            "native_value_rows": 0,
+            "feature_seconds": 0.0,
+            "forward_seconds": 6.57135028500079,
+            "h2d_seconds": 0.3146331080060918,
+            "d2h_seconds": 0.17984661899845378,
+            "wait_seconds": 1.3070297199806191,
+            "native_fill_seconds": 5.516633477000141,
+            "native_consume_seconds": 10.89408002100754,
+            "batch_sizes": {
+              "500": 3076
+            },
+            "batches": 3076,
+            "in_window_compile_graphs": [
+              "policy_value:32"
+            ],
+            "cpu_seconds": 30.913767,
+            "measured_seconds": 30.57423286500034,
+            "tail_seconds": 0.001382158999604144,
+            "peak_inflight_rows": 500,
+            "active_games_last": 500
+          }
+        ],
+        "totals": {
+          "simulations": 1536000.0,
+          "network_positions": 1538000.0,
+          "physical_batches": 3076.0,
+          "completed_games": 0.0,
+          "native_batch_rows": 1538000.0,
+          "native_batch_batches": 3076.0,
+          "native_wide_batches": 0.0,
+          "native_root_rows": 2000.0,
+          "native_policy_rows": 1538000.0,
+          "native_value_rows": 0.0,
+          "batches": 3076.0,
+          "feature_seconds": 0.0,
+          "forward_seconds": 6.57135028500079,
+          "h2d_seconds": 0.3146331080060918,
+          "d2h_seconds": 0.17984661899845378,
+          "wait_seconds": 1.3070297199806191,
+          "native_fill_seconds": 5.516633477000141,
+          "native_consume_seconds": 10.89408002100754
+        },
+        "rates": {
+          "simulations_per_second": 50238.382326129475,
+          "network_positions_per_second": 50303.796886449956,
+          "physical_batches_per_second": 100.6075937728999,
+          "batches_per_second": 100.6075937728999,
+          "mean_batch_size": 500.0,
+          "simulations_per_second_sum_of_workers": 50238.382326129475
+        },
+        "cpu_seconds": 30.913767,
+        "cpu_seconds_per_simulation": 2.0126150390625e-05,
+        "cpu_us_per_simulation": 20.126150390625
+      }
+    },
+    "recorded_batches": 24,
+    "recorded_rows": 12000,
+    "recorded_widths": [
+      32
+    ],
+    "recorded_batch_sizes": [
+      500
+    ]
+  },
+  "replay": {
+    "cuda:eager:rows=500": {
+      "batches": 24,
+      "rows": 12000,
+      "mean_rows": 500.0,
+      "padded_width": 32,
+      "pack_seconds": 0.0006064327082905644,
+      "h2d_seconds": 0.0008701314166614793,
+      "forward_seconds": 0.0011853725916428934,
+      "output_device_copy_seconds": 0.00016375595834006162,
+      "d2h_seconds": 2.8586541645836405e-05,
+      "full_seconds": 0.003138333416700334,
+      "forward_positions_per_second": 424103.6185425673,
+      "full_positions_per_second": 159471.42773867204,
+      "compile": {}
+    },
+    "cuda:eager:rows=1000": {
+      "batches": 12,
+      "rows": 12000,
+      "mean_rows": 1000.0,
+      "padded_width": 32,
+      "pack_seconds": 0.001220136999980544,
+      "h2d_seconds": 0.0016848001666858181,
+      "forward_seconds": 0.0023605159999988243,
+      "output_device_copy_seconds": 0.00041834199998902477,
+      "d2h_seconds": 3.970149987253535e-05,
+      "full_seconds": 0.005680950000017522,
+      "forward_positions_per_second": 423764.71636185376,
+      "full_positions_per_second": 176170.3646058637,
+      "compile": {}
+    },
+    "cuda:eager:rows=4000": {
+      "batches": 3,
+      "rows": 12000,
+      "mean_rows": 4000.0,
+      "padded_width": 32,
+      "pack_seconds": 0.004095643333130283,
+      "h2d_seconds": 0.006699012333380476,
+      "forward_seconds": 0.011720166733327158,
+      "output_device_copy_seconds": 0.00018002566654710486,
+      "d2h_seconds": 7.788266672529669e-05,
+      "full_seconds": 0.022468628666653483,
+      "forward_positions_per_second": 341568.25684751576,
+      "full_positions_per_second": 178037.52745491196,
+      "compile": {}
+    },
+    "cuda:compiled:rows=500": {
+      "batches": 24,
+      "rows": 12000,
+      "mean_rows": 500.0,
+      "padded_width": 32,
+      "pack_seconds": 0.0006471679165921765,
+      "h2d_seconds": 0.000852912750019641,
+      "forward_seconds": 0.0007480893583230379,
+      "output_device_copy_seconds": 0.000173857708318792,
+      "d2h_seconds": 3.1301416716663276e-05,
+      "full_seconds": 0.0028493631249943974,
+      "forward_positions_per_second": 681383.1239755658,
+      "full_positions_per_second": 176171.32314708212,
+      "compile": {
+        "compile_seconds": {
+          "policy_value:32": 1.9006999830003224
+        },
+        "compiled_calls": {
+          "policy_value:32": 264
+        },
+        "eager_fallbacks": 0,
+        "compile_failure_fallbacks": 0,
+        "compile_failures": [],
+        "disabled_graphs": {},
+        "effective_mode": {
+          "policy_value:32": "compiled"
+        },
+        "dynamo_delta": {
+          "calls_captured": 131,
+          "unique_graphs": 1
+        }
+      }
+    },
+    "cuda:compiled:rows=1000": {
+      "batches": 12,
+      "rows": 12000,
+      "mean_rows": 1000.0,
+      "padded_width": 32,
+      "pack_seconds": 0.0012439521667223137,
+      "h2d_seconds": 0.0016761748333162056,
+      "forward_seconds": 0.0013257649166613797,
+      "output_device_copy_seconds": 0.00031148241665353754,
+      "d2h_seconds": 4.2473000007703376e-05,
+      "full_seconds": 0.004799800500033295,
+      "forward_positions_per_second": 754912.8204104706,
+      "full_positions_per_second": 208514.13317966598,
+      "compile": {
+        "compile_seconds": {
+          "policy_value:32": 1.9006999830003224
+        },
+        "compiled_calls": {
+          "policy_value:32": 396
+        },
+        "eager_fallbacks": 0,
+        "compile_failure_fallbacks": 0,
+        "compile_failures": [],
+        "disabled_graphs": {},
+        "effective_mode": {
+          "policy_value:32": "compiled"
+        },
+        "dynamo_delta": {
+          "calls_captured": 131,
+          "unique_graphs": 1
+        }
+      }
+    },
+    "cuda:compiled:rows=4000": {
+      "batches": 3,
+      "rows": 12000,
+      "mean_rows": 4000.0,
+      "padded_width": 32,
+      "pack_seconds": 0.004252909666623357,
+      "h2d_seconds": 0.0064243996666846215,
+      "forward_seconds": 0.006808502733292698,
+      "output_device_copy_seconds": 0.00023665500005639237,
+      "d2h_seconds": 9.659466665349707e-05,
+      "full_seconds": 0.018010024333155645,
+      "forward_positions_per_second": 588145.6344808637,
+      "full_positions_per_second": 222215.6534446677,
+      "compile": {
+        "compile_seconds": {
+          "policy_value:32": 1.9006999830003224
+        },
+        "compiled_calls": {
+          "policy_value:32": 429
+        },
+        "eager_fallbacks": 0,
+        "compile_failure_fallbacks": 0,
+        "compile_failures": [],
+        "disabled_graphs": {},
+        "effective_mode": {
+          "policy_value:32": "compiled"
+        },
+        "dynamo_delta": {
+          "calls_captured": 131,
+          "unique_graphs": 1
+        }
+      }
+    }
+  },
+  "recorded_rows_total": 12000
+}

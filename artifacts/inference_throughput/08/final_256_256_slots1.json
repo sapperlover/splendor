@@ -1,0 +1,222 @@
+{
+  "run_id": "throughput_cuda_256",
+  "backend": "native_cuda",
+  "checkpoint": "/home/lc/\u4e0b\u8f7d/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+  "simulations": 1024,
+  "determinizations": 1,
+  "execution": {
+    "backend": "native_cuda",
+    "engine_mode": "fast",
+    "workers": 1,
+    "active_games_per_worker": 256,
+    "max_batch_size": 256,
+    "max_batch_wait_ms": 0,
+    "torch_threads": 1,
+    "precision": "float32",
+    "batch_interface": "native",
+    "inference_mode": "compiled",
+    "actor_projection": true,
+    "candidate_buckets": [
+      16,
+      32,
+      48
+    ],
+    "compile_mode": null,
+    "compile_failure_policy": "fallback",
+    "native_transport": "reused",
+    "pipeline_slots": 1
+  },
+  "evaluator": "real",
+  "torch_threads": 1,
+  "games_per_worker": 400,
+  "process_seconds": 42.16200654900058,
+  "worker_wall_seconds": [
+    35.00322747700011
+  ],
+  "worker_initialization_seconds": [
+    1.0810551239992492
+  ],
+  "worker_inference": [
+    {
+      "physical_model_batches": 7321,
+      "logical_model_positions": 1874176,
+      "feature_seconds": 0.0,
+      "forward_seconds": 7.090739610976016,
+      "h2d_seconds": 0.5387212299665407,
+      "d2h_seconds": 0.3844363760690612,
+      "wait_seconds": 0.6397757819304388,
+      "batch_size_histogram": {
+        "256": 7321
+      },
+      "mean_batch_size": 256.0,
+      "inference": {
+        "mode": "compiled",
+        "actor_projection": true,
+        "candidate_buckets": [
+          16,
+          32,
+          48
+        ],
+        "compile_mode": null,
+        "compile_failure_policy": "fallback",
+        "native_transport": "reused"
+      },
+      "compile": {
+        "compile_seconds": {
+          "policy_value:16": 1.7034266629998456,
+          "policy_value:32": 1.0849914390000777,
+          "policy_value:48": 0.000609812999755377,
+          "value_only": 0.560315269000057
+        },
+        "compiled_calls": {
+          "policy_value:16": 1,
+          "policy_value:32": 6835,
+          "policy_value:48": 488,
+          "value_only": 1
+        },
+        "eager_fallbacks": 0,
+        "compile_failure_fallbacks": 0,
+        "compile_failures": [],
+        "disabled_graphs": {},
+        "effective_mode": {
+          "policy_value:16": "compiled",
+          "policy_value:32": "compiled",
+          "policy_value:48": "compiled",
+          "value_only": "compiled"
+        },
+        "dynamo_delta": {
+          "calls_captured": 485,
+          "unique_graphs": 4
+        }
+      }
+    }
+  ],
+  "worker_peak_active_games": [
+    256
+  ],
+  "worker_peak_pending_requests": [
+    256
+  ],
+  "worker_gpu_peak_bytes": [
+    31214592
+  ],
+  "worker_compile": [
+    {
+      "compile_seconds": {
+        "policy_value:16": 1.7034266629998456,
+        "policy_value:32": 1.0849914390000777,
+        "policy_value:48": 0.000609812999755377,
+        "value_only": 0.560315269000057
+      },
+      "compiled_calls": {
+        "policy_value:16": 1,
+        "policy_value:32": 6835,
+        "policy_value:48": 488,
+        "value_only": 1
+      },
+      "eager_fallbacks": 0,
+      "compile_failure_fallbacks": 0,
+      "compile_failures": [],
+      "disabled_graphs": {},
+      "effective_mode": {
+        "policy_value:16": "compiled",
+        "policy_value:32": "compiled",
+        "policy_value:48": "compiled",
+        "value_only": "compiled"
+      },
+      "dynamo_delta": {
+        "calls_captured": 485,
+        "unique_graphs": 4
+      }
+    }
+  ],
+  "worker_ready": [
+    {
+      "initialization_seconds": 1.0810551239992492,
+      "warmup_seconds": 2.003223675999834,
+      "compile_warmup_seconds": 4.063149276000331
+    }
+  ],
+  "cpu_peak_rss_kib": 2012180,
+  "clock": {
+    "requested_window_seconds": 35.0,
+    "warmup_seconds": 2.0,
+    "common_seconds": 35.00251892199958,
+    "workers_measured": 1,
+    "workers_exhausted_games": 0,
+    "tails_seconds": [
+      0.0007076239999150857
+    ],
+    "recompiled_graphs_in_window": [],
+    "batch_sizes": {
+      "256": 7201
+    },
+    "workers": [
+      {
+        "worker_id": 0,
+        "initialization_seconds": 1.0810551239992492,
+        "wall_seconds": 35.00322747700011,
+        "peak_active_games": 256,
+        "peak_pending_requests": 256,
+        "simulations": 1841664,
+        "network_positions": 1843456,
+        "physical_batches": 7201,
+        "completed_games": 0,
+        "native_batch_rows": 1843456,
+        "native_batch_batches": 7201,
+        "native_wide_batches": 0,
+        "native_root_rows": 1792,
+        "native_policy_rows": 1843456,
+        "native_value_rows": 0,
+        "feature_seconds": 0.0,
+        "forward_seconds": 5.70796690696443,
+        "h2d_seconds": 0.5285857809667505,
+        "d2h_seconds": 0.3773447330804629,
+        "wait_seconds": 0.6286527639203996,
+        "native_fill_seconds": 6.635938794019239,
+        "native_consume_seconds": 13.16505278101613,
+        "batch_sizes": {
+          "256": 7201
+        },
+        "batches": 7201,
+        "in_window_compile_graphs": [],
+        "cpu_seconds": 35.518263000000005,
+        "measured_seconds": 35.00251892199958,
+        "tail_seconds": 0.0007076239999150857,
+        "peak_inflight_rows": 256,
+        "active_games_last": 256
+      }
+    ],
+    "totals": {
+      "simulations": 1841664.0,
+      "network_positions": 1843456.0,
+      "physical_batches": 7201.0,
+      "completed_games": 0.0,
+      "native_batch_rows": 1843456.0,
+      "native_batch_batches": 7201.0,
+      "native_wide_batches": 0.0,
+      "native_root_rows": 1792.0,
+      "native_policy_rows": 1843456.0,
+      "native_value_rows": 0.0,
+      "batches": 7201.0,
+      "feature_seconds": 0.0,
+      "forward_seconds": 5.70796690696443,
+      "h2d_seconds": 0.5285857809667505,
+      "d2h_seconds": 0.3773447330804629,
+      "wait_seconds": 0.6286527639203996,
+      "native_fill_seconds": 6.635938794019239,
+      "native_consume_seconds": 13.16505278101613
+    },
+    "rates": {
+      "simulations_per_second": 52615.18475581733,
+      "network_positions_per_second": 52666.381071259464,
+      "physical_batches_per_second": 205.72805105960728,
+      "batches_per_second": 205.72805105960728,
+      "mean_batch_size": 256.0,
+      "simulations_per_second_sum_of_workers": 52615.18475581733
+    },
+    "cpu_seconds": 35.518263000000005,
+    "cpu_seconds_per_simulation": 1.9285962586009178e-05,
+    "cpu_us_per_simulation": 19.285962586009177
+  }
+}

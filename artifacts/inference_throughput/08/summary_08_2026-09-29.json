@@ -677,6 +677,160 @@
         },
         "evaluator": "fixed"
       }
+    ],
+    "host_optimization_256_256": [
+      {
+        "source": "opt_256_256_slots1.json",
+        "simulations_per_second": 54451.089171047584,
+        "cpu_us_per_simulation": 18.63798795332438,
+        "native_fill_seconds": 6.718936817960639,
+        "forward_seconds": 5.5890069490214955,
+        "wait_seconds": 0.68243787006395,
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 256,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        }
+      },
+      {
+        "source": "opt_256_256_slots1_rerun.json",
+        "simulations_per_second": 53826.62328425529,
+        "cpu_us_per_simulation": 18.87113673997962,
+        "native_fill_seconds": 6.76622783102539,
+        "forward_seconds": 5.643167767006162,
+        "wait_seconds": 0.6211386769373348,
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 256,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        }
+      },
+      {
+        "source": "final_256_256_slots1.json",
+        "simulations_per_second": 52615.18475581733,
+        "cpu_us_per_simulation": 19.285962586009177,
+        "native_fill_seconds": 6.635938794019239,
+        "forward_seconds": 5.70796690696443,
+        "wait_seconds": 0.6286527639203996,
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 256,
+          "max_batch_size": 256,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        }
+      }
+    ],
+    "host_optimization_512_512": [
+      {
+        "source": "opt_512_512_slots1.json",
+        "simulations_per_second": 58583.81598535149,
+        "cpu_us_per_simulation": 17.322317805867662,
+        "native_fill_seconds": 7.333771978974255,
+        "forward_seconds": 3.5982667549360485,
+        "wait_seconds": 1.7749514260849537,
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 512,
+          "max_batch_size": 512,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        }
+      },
+      {
+        "source": "final_512_512_slots1.json",
+        "simulations_per_second": 58028.10283846643,
+        "cpu_us_per_simulation": 17.485950497857324,
+        "native_fill_seconds": 7.376705930912067,
+        "forward_seconds": 3.6711216969652014,
+        "wait_seconds": 1.6511995490200206,
+        "execution": {
+          "backend": "native_cuda",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 512,
+          "max_batch_size": 512,
+          "max_batch_wait_ms": 0,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_mode": null,
+          "compile_failure_policy": "fallback",
+          "native_transport": "reused",
+          "pipeline_slots": 1
+        }
+      }
     ]
   },
   "headline": {
@@ -747,5 +901,55 @@
     "artificial_ceiling": "instant fixed evaluator at 256/256 reaches 70,019 sim/s at 14.3 us/simulation, but that window had 1,531 over-width batches, so it is a different workload and only a reference.",
     "bottleneck": "host CPU supply: 35.16 CPU s in a 35.0 s window at 256/256 (fill 18%, submit/advance 35%, compiled forward host time 15%, transfers 2%, GPU wait 0.6%, scheduling remainder ~29%).",
     "next_step": "reduce per-batch host work (pending scanning, per-chunk Python objects, native batched advance); persistent multi-batch pipelining and multi-core supply for one GPU owner stay conditional."
+  },
+  "host_optimization": {
+    "attempted": [
+      "row_ids_array + lazy readable row expansion (kept)",
+      "cached packed layout and per-rows device views in the reused transfer (kept)",
+      "frozen per-job scheduling plan replacing live pending scans (tried, reverted)"
+    ],
+    "profile_before_seconds_per_15s_window": {
+      "compiled_forward_host": 3.59,
+      "cpp_submit_and_search": 4.3,
+      "cpp_native_encoding": 2.77,
+      "python_fill_glue": 2.3,
+      "plan_and_job_scans": 0.8,
+      "h2d_d2h_host_submit": 0.37,
+      "start_job_and_encode": 0.55,
+      "gpu_wait": 0.31
+    },
+    "profile_after_seconds_per_15s_window": {
+      "python_fill_glue": 0.22,
+      "device_batch_views": 0.01,
+      "plan_and_job_scans": 0.92,
+      "gpu_wait": 0.31
+    },
+    "ab_256_256_simulations_per_second": {
+      "before": [
+        56443,
+        52434,
+        53811
+      ],
+      "after": [
+        54451,
+        53827,
+        52615
+      ]
+    },
+    "ab_512_512_simulations_per_second": {
+      "before": [
+        58873,
+        58062
+      ],
+      "after": [
+        58584,
+        58028
+      ]
+    },
+    "verdict": "no measurable gain (within the machine's +/-3% run-to-run spread); CPU per simulation unchanged. The binding cost is the C++ search plus native encoding (~46%) and the compiled-forward host path (~24%), not the Python row/job bookkeeping. Per prompt 08 the micro-tuning stops here; the two kept changes only reduce allocation churn and were re-verified byte-for-byte on the real GPU.",
+    "next_steps": {
+      "persistent_pipeline": "not started: GPU wait is only 0.6%-3.4% of the window and the host CPU is ~100% busy, so additional overlap cannot raise throughput; start only if wait share exceeds ~10%.",
+      "multi_core_supply": "plan only: N independent search executors with per-game ownership feeding one GPU owner through a bounded queue; validation points are per-game determinism, unchanged peak batch and near-linear sim/s scaling."
+    }
   }
 }

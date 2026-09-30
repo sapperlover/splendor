@@ -1,0 +1,372 @@
+{
+  "config": {
+    "backend": "native_cuda",
+    "engine_mode": "fast",
+    "workers": 1,
+    "active_games_per_worker": 64,
+    "max_batch_size": 64,
+    "max_batch_wait_ms": 0,
+    "torch_threads": 1,
+    "precision": "float32",
+    "batch_interface": "native",
+    "inference_mode": "compiled",
+    "actor_projection": true,
+    "candidate_buckets": [
+      16,
+      32,
+      48
+    ],
+    "compile_mode": null,
+    "compile_failure_policy": "fallback",
+    "native_transport": "reused",
+    "pipeline_slots": 1
+  },
+  "num_games": 64,
+  "max_possible_active_games": 64,
+  "replay_transport": "numpy_packed_microbenchmark",
+  "timing_clocks": "wall seconds; CUDA stages synchronize on completion; stages are measured separately",
+  "capture": {
+    "window": {
+      "process_seconds": 40.01082687099961,
+      "worker_inference": [
+        {
+          "physical_model_batches": 16892,
+          "logical_model_positions": 1081088,
+          "feature_seconds": 0.0,
+          "forward_seconds": 21.119945025024208,
+          "h2d_seconds": 0.6570444029835016,
+          "d2h_seconds": 0.6910066300138169,
+          "wait_seconds": 0.7324418129965125,
+          "batch_size_histogram": {
+            "64": 16892
+          },
+          "mean_batch_size": 64.0,
+          "inference": {
+            "mode": "compiled",
+            "actor_projection": true,
+            "candidate_buckets": [
+              16,
+              32,
+              48
+            ],
+            "compile_mode": null,
+            "compile_failure_policy": "fallback",
+            "native_transport": "reused"
+          },
+          "compile": {
+            "compile_seconds": {
+              "policy_value:32": 6.231544354999642,
+              "policy_value:48": 5.144756775000133
+            },
+            "compiled_calls": {
+              "policy_value:32": 15901,
+              "policy_value:48": 964
+            },
+            "eager_fallbacks": 27,
+            "compile_failure_fallbacks": 0,
+            "compile_failures": [],
+            "disabled_graphs": {},
+            "effective_mode": {
+              "policy_value:32": "compiled",
+              "policy_value:48": "compiled"
+            },
+            "dynamo_delta": {
+              "calls_captured": 262,
+              "unique_graphs": 2
+            }
+          }
+        }
+      ],
+      "clock": {
+        "requested_window_seconds": 40.0,
+        "warmup_seconds": 0.0,
+        "common_seconds": 40.000615944999936,
+        "workers_measured": 1,
+        "workers_exhausted_games": 0,
+        "tails_seconds": [
+          0.0002098370000567229
+        ],
+        "recompiled_graphs_in_window": [
+          "policy_value:32",
+          "policy_value:48"
+        ],
+        "batch_sizes": {
+          "64": 16892
+        },
+        "workers": [
+          {
+            "worker_id": 0,
+            "initialization_seconds": 0.003589610000290122,
+            "wall_seconds": 40.00082651699995,
+            "peak_active_games": 64,
+            "peak_pending_requests": 64,
+            "simulations": 1080000,
+            "network_positions": 1081088,
+            "physical_batches": 16892,
+            "completed_games": 0,
+            "native_batch_rows": 1081088,
+            "native_batch_batches": 16892,
+            "native_wide_batches": 27,
+            "native_root_rows": 1088,
+            "native_policy_rows": 1081088,
+            "native_value_rows": 0,
+            "feature_seconds": 0.0,
+            "forward_seconds": 21.119945025024208,
+            "h2d_seconds": 0.6570444029835016,
+            "d2h_seconds": 0.6910066300138169,
+            "wait_seconds": 0.7324418129965125,
+            "native_fill_seconds": 3.844559131015103,
+            "native_consume_seconds": 7.968660171040028,
+            "batch_sizes": {
+              "64": 16892
+            },
+            "batches": 16892,
+            "in_window_compile_graphs": [
+              "policy_value:32",
+              "policy_value:48"
+            ],
+            "cpu_seconds": 40.165006000000005,
+            "measured_seconds": 40.000615944999936,
+            "tail_seconds": 0.0002098370000567229,
+            "peak_inflight_rows": 64,
+            "active_games_last": 64
+          }
+        ],
+        "totals": {
+          "simulations": 1080000.0,
+          "network_positions": 1081088.0,
+          "physical_batches": 16892.0,
+          "completed_games": 0.0,
+          "native_batch_rows": 1081088.0,
+          "native_batch_batches": 16892.0,
+          "native_wide_batches": 27.0,
+          "native_root_rows": 1088.0,
+          "native_policy_rows": 1081088.0,
+          "native_value_rows": 0.0,
+          "batches": 16892.0,
+          "feature_seconds": 0.0,
+          "forward_seconds": 21.119945025024208,
+          "h2d_seconds": 0.6570444029835016,
+          "d2h_seconds": 0.6910066300138169,
+          "wait_seconds": 0.7324418129965125,
+          "native_fill_seconds": 3.844559131015103,
+          "native_consume_seconds": 7.968660171040028
+        },
+        "rates": {
+          "simulations_per_second": 26999.584243527122,
+          "network_positions_per_second": 27026.78382469097,
+          "physical_batches_per_second": 422.2934972607964,
+          "batches_per_second": 422.2934972607964,
+          "mean_batch_size": 64.0,
+          "simulations_per_second_sum_of_workers": 26999.584243527122
+        },
+        "cpu_seconds": 40.165006000000005,
+        "cpu_seconds_per_simulation": 3.7189820370370376e-05,
+        "cpu_us_per_simulation": 37.18982037037038
+      }
+    },
+    "recorded_batches": 96,
+    "recorded_rows": 6144,
+    "recorded_widths": [
+      32
+    ],
+    "recorded_batch_sizes": [
+      64
+    ]
+  },
+  "replay": {
+    "cuda:eager:rows=64": {
+      "batches": 96,
+      "rows": 6144,
+      "mean_rows": 64.0,
+      "padded_width": 32,
+      "pack_seconds": 0.00012591492707277516,
+      "h2d_seconds": 0.00022231040627692286,
+      "forward_seconds": 0.0008420476416688416,
+      "output_device_copy_seconds": 4.230643749281171e-05,
+      "d2h_seconds": 2.2094479163570213e-05,
+      "full_seconds": 0.001391385625003257,
+      "forward_positions_per_second": 76069.2849387153,
+      "full_positions_per_second": 46138.83887581949,
+      "compile": {}
+    },
+    "cuda:eager:rows=256": {
+      "batches": 24,
+      "rows": 6144,
+      "mean_rows": 256.0,
+      "padded_width": 32,
+      "pack_seconds": 0.00032163466666664436,
+      "h2d_seconds": 0.0005254357083686045,
+      "forward_seconds": 0.0008696888500026034,
+      "output_device_copy_seconds": 5.344083336922267e-05,
+      "d2h_seconds": 2.2804458372623532e-05,
+      "full_seconds": 0.0020301149166736345,
+      "forward_positions_per_second": 294452.37707752775,
+      "full_positions_per_second": 126192.10021409889,
+      "compile": {}
+    },
+    "cuda:eager:rows=1024": {
+      "batches": 6,
+      "rows": 6144,
+      "mean_rows": 1024.0,
+      "padded_width": 32,
+      "pack_seconds": 0.0028063313334314444,
+      "h2d_seconds": 0.0017631548333459552,
+      "forward_seconds": 0.002450653700013087,
+      "output_device_copy_seconds": 0.00034901733329206763,
+      "d2h_seconds": 4.064983325709667e-05,
+      "full_seconds": 0.005698191666700343,
+      "forward_positions_per_second": 418135.0945611047,
+      "full_positions_per_second": 179900.33825044674,
+      "compile": {}
+    },
+    "cuda:eager:rows=4096": {
+      "batches": 2,
+      "rows": 6144,
+      "mean_rows": 3072.0,
+      "padded_width": 32,
+      "pack_seconds": 0.008906349999961094,
+      "h2d_seconds": 0.005075561000012385,
+      "forward_seconds": 0.008791844499955914,
+      "output_device_copy_seconds": 0.00019453549998615927,
+      "d2h_seconds": 6.384350012922368e-05,
+      "full_seconds": 0.02121213999998872,
+      "forward_positions_per_second": 362699.8561077259,
+      "full_positions_per_second": 156333.03620553354,
+      "compile": {}
+    },
+    "cuda:compiled:rows=64": {
+      "batches": 96,
+      "rows": 6144,
+      "mean_rows": 64.0,
+      "padded_width": 32,
+      "pack_seconds": 0.00011299596872049733,
+      "h2d_seconds": 0.00016810695835545175,
+      "forward_seconds": 0.0003933241791628461,
+      "output_device_copy_seconds": 4.0649812499774875e-05,
+      "d2h_seconds": 1.759470831549e-05,
+      "full_seconds": 0.0008607867292009056,
+      "forward_positions_per_second": 163350.35937847054,
+      "full_positions_per_second": 74813.37826607941,
+      "compile": {
+        "compile_seconds": {
+          "policy_value:32": 5.068434215999787
+        },
+        "compiled_calls": {
+          "policy_value:32": 1056
+        },
+        "eager_fallbacks": 0,
+        "compile_failure_fallbacks": 0,
+        "compile_failures": [],
+        "disabled_graphs": {},
+        "effective_mode": {
+          "policy_value:32": "compiled"
+        },
+        "dynamo_delta": {
+          "calls_captured": 131,
+          "unique_graphs": 1
+        }
+      }
+    },
+    "cuda:compiled:rows=256": {
+      "batches": 24,
+      "rows": 6144,
+      "mean_rows": 256.0,
+      "padded_width": 32,
+      "pack_seconds": 0.000386914958350341,
+      "h2d_seconds": 0.0005361107083672323,
+      "forward_seconds": 0.00047260100832697085,
+      "output_device_copy_seconds": 6.752170833124183e-05,
+      "d2h_seconds": 2.5652666693076753e-05,
+      "full_seconds": 0.0018334104167365695,
+      "forward_positions_per_second": 554989.5777707911,
+      "full_positions_per_second": 145410.44860041715,
+      "compile": {
+        "compile_seconds": {
+          "policy_value:32": 5.068434215999787
+        },
+        "compiled_calls": {
+          "policy_value:32": 1320
+        },
+        "eager_fallbacks": 0,
+        "compile_failure_fallbacks": 0,
+        "compile_failures": [],
+        "disabled_graphs": {},
+        "effective_mode": {
+          "policy_value:32": "compiled"
+        },
+        "dynamo_delta": {
+          "calls_captured": 131,
+          "unique_graphs": 1
+        }
+      }
+    },
+    "cuda:compiled:rows=1024": {
+      "batches": 6,
+      "rows": 6144,
+      "mean_rows": 1024.0,
+      "padded_width": 32,
+      "pack_seconds": 0.0012178046666425264,
+      "h2d_seconds": 0.0016392234999784705,
+      "forward_seconds": 0.0011614982666742436,
+      "output_device_copy_seconds": 6.938133325699407e-05,
+      "d2h_seconds": 3.806283325502591e-05,
+      "full_seconds": 0.00460398933326663,
+      "forward_positions_per_second": 883637.1244527848,
+      "full_positions_per_second": 222828.58543236912,
+      "compile": {
+        "compile_seconds": {
+          "policy_value:32": 5.068434215999787
+        },
+        "compiled_calls": {
+          "policy_value:32": 1386
+        },
+        "eager_fallbacks": 0,
+        "compile_failure_fallbacks": 0,
+        "compile_failures": [],
+        "disabled_graphs": {},
+        "effective_mode": {
+          "policy_value:32": "compiled"
+        },
+        "dynamo_delta": {
+          "calls_captured": 131,
+          "unique_graphs": 1
+        }
+      }
+    },
+    "cuda:compiled:rows=4096": {
+      "batches": 2,
+      "rows": 6144,
+      "mean_rows": 3072.0,
+      "padded_width": 32,
+      "pack_seconds": 0.0034034805000828783,
+      "h2d_seconds": 0.004628245000048992,
+      "forward_seconds": 0.0043358361999707995,
+      "output_device_copy_seconds": 6.069899995964079e-05,
+      "d2h_seconds": 6.185949996506679e-05,
+      "full_seconds": 0.016025033500227437,
+      "forward_positions_per_second": 732024.4811700681,
+      "full_positions_per_second": 202945.02203638817,
+      "compile": {
+        "compile_seconds": {
+          "policy_value:32": 5.068434215999787
+        },
+        "compiled_calls": {
+          "policy_value:32": 1408
+        },
+        "eager_fallbacks": 0,
+        "compile_failure_fallbacks": 0,
+        "compile_failures": [],
+        "disabled_graphs": {},
+        "effective_mode": {
+          "policy_value:32": "compiled"
+        },
+        "dynamo_delta": {
+          "calls_captured": 131,
+          "unique_graphs": 1
+        }
+      }
+    }
+  },
+  "recorded_rows_total": 6144
+}

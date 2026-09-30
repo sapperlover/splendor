@@ -513,6 +513,27 @@ class NativePackedTransfer:
             self.out_host = torch.empty((capacity, width + 1), dtype=torch.float32, pin_memory=True)
             self.out_numpy = self.out_host.numpy()
         self.event = torch.cuda.Event()
+        # The blob views, field offsets and strides of one native batch never
+        # change; only the number of filled rows does.  Cache the layout once and
+        # reuse the device views per row count instead of rebuilding them.
+        self._layout: Mapping[str, object] | None = None
+        self._views: dict[int, object] = {}
+
+    def _layout_for(self, buffer) -> Mapping[str, object]:
+        layout = self._layout
+        if layout is None:
+            layout = buffer.packed()
+            self._layout = layout
+        return layout
+
+    def _prepared(self, layout: Mapping[str, object], rows: int):
+        prepared = self._views.get(rows)
+        if prepared is None:
+            prepared = self._device_batch(layout, rows)
+            if len(self._views) >= 8:
+                self._views.clear()
+            self._views[rows] = prepared
+        return prepared
 
     def _device_batch(self, packed: Mapping[str, object], rows: int):
         values: dict[str, torch.Tensor] = {}
@@ -537,10 +558,10 @@ class NativePackedTransfer:
         return time.perf_counter() - started
 
     def begin_policy_value(self, buffer) -> NativeForwardHandle:
-        packed = buffer.packed()
-        rows = int(packed["rows"])
-        h2d = self._stage_inputs(packed, rows)
-        prepared = self._device_batch(packed, rows)
+        layout = self._layout_for(buffer)
+        rows = buffer.row_count()
+        h2d = self._stage_inputs(layout, rows)
+        prepared = self._prepared(layout, rows)
         started = time.perf_counter()
         with torch.inference_mode():
             logits, values = self.evaluator._forward(prepared)
@@ -562,10 +583,10 @@ class NativePackedTransfer:
         return NativeForwardHandle(rows, self.width, False, consume, self.event, stats)
 
     def begin_value_only(self, buffer) -> NativeForwardHandle:
-        packed = buffer.packed()
-        rows = int(packed["rows"])
-        h2d = self._stage_inputs(packed, rows)
-        prepared = self._device_batch(packed, rows)
+        layout = self._layout_for(buffer)
+        rows = buffer.row_count()
+        h2d = self._stage_inputs(layout, rows)
+        prepared = self._prepared(layout, rows)
         started = time.perf_counter()
         with torch.inference_mode():
             values = self.evaluator._forward_value(prepared)

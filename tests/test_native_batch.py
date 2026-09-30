@@ -456,3 +456,19 @@ def test_cuda_compiled_reused_multiline_matches_eager(native_catalog):
                                    rtol=2e-4, atol=2e-4)
     np.testing.assert_allclose(actual[:, 32], values.cpu().numpy(), rtol=2e-4, atol=2e-4)
     handle.finish()
+
+
+def test_row_ids_array_matches_row_ids(native_catalog):
+    _name, decision, _trace = fixed_requests()[0]
+    config = _config(simulations=8, determinizations=2)
+    job = native.SearchJob(native_catalog, decision, config, 0x777, 12345, False, 0.0)
+    batch = native.NativeBatch(native_catalog, False, 8, 32)
+    assert batch.fill(job) == 1
+    batch.submit(np.zeros((1, 32), dtype=np.float32), np.zeros(1, dtype=np.float32))
+    job.initialize_worlds(decision)
+    assert batch.fill(job) == 2
+    readable = batch.row_ids()
+    compact = batch.row_ids_array()
+    assert compact.shape == (len(readable), 4)
+    for row, item in zip(compact, readable):
+        assert tuple(int(value) for value in row) == item
