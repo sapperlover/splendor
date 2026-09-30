@@ -1,0 +1,49 @@
+{
+  "protocol": "mcts-selfplay-v2",
+  "run_id": "selfplay_cuda_pool_smoke",
+  "round_index": 0,
+  "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+  "num_games": 2,
+  "seed": 12345000,
+  "search_config": {
+    "simulations": 8,
+    "determinizations": 2,
+    "c_puct": 1.5,
+    "seed": 9500000,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512
+  },
+  "execution": {
+    "backend": "native_cuda_pool",
+    "engine_mode": "fast",
+    "workers": 1,
+    "active_games_per_worker": 1,
+    "max_batch_size": 3,
+    "max_batch_wait_ms": 1,
+    "torch_threads": 1,
+    "precision": "float32",
+    "batch_interface": "native",
+    "inference_mode": "compiled",
+    "actor_projection": true,
+    "candidate_buckets": [
+      16,
+      32,
+      48
+    ],
+    "search_workers": 2,
+    "total_active_games": 2,
+    "local_microbatch": 2,
+    "shared_slots": 2,
+    "shared_candidate_width": 256,
+    "native_transport": "reused"
+  },
+  "add_root_noise": true,
+  "temperature_schedule": {
+    "opening_completed_turns": 10,
+    "opening_temperature": 1.0,
+    "late_temperature": 0.0
+  },
+  "validation_fraction": 0.1,
+  "split_seed": 71,
+  "max_completed_turns": 400
+}

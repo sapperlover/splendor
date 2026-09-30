@@ -1,6 +1,6 @@
 """Timed-window throughput benchmark over the real self-play workers.
 
-Runs the production ``_collect_group`` scheduling loop for one common
+Runs the production collection loop (legacy or pooled) for one common
 wall-clock window and reports live increments (simulations, network positions,
 physical batches, native batch rows) instead of whole-game totals, so a window
 that ends mid-game still measures real work.  Phases are separated and each is
@@ -177,9 +177,128 @@ def _summarize(results: list[dict[str, Any]], groups: tuple[tuple[int, ...], ...
     }
 
 
+def _run_pool(config: FastSelfPlayConfig, *, seconds: float, scratch: Path,
+              warmup_seconds: float, label: str) -> dict[str, Any]:
+    from splendor.multiworker_gpu import FixedPoolOwner, collect
+
+    root = scratch / f"{config.run_id}-{time.time_ns()}"
+    root.mkdir(parents=True)
+    manifest = build_manifest(config)
+    started = time.perf_counter()
+    results, owner = collect(
+        config, root, tuple(range(config.num_games)), manifest["semantic_fingerprint"],
+        manifest["checkpoint_identity"]["sha256"],
+        evaluator=FixedPoolOwner() if label == "fixed" else None,
+        benchmark_seconds=seconds, warmup_seconds=warmup_seconds,
+    )
+    elapsed = time.perf_counter() - started
+    benchmark = owner["benchmark"]
+    owner_start = benchmark["owner_window"]["start"]
+    owner_end = benchmark["owner_window"]["end"]
+    if owner_start is None:
+        measured = 0.0
+        positions = batches = 0
+        owner_cpu = 0.0
+        histogram = {}
+        owner_timings = {}
+    else:
+        measured = owner_end["at"] - owner_start["at"]
+        first, last = owner_start["inference"], owner_end["inference"]
+        positions = last["logical_model_positions"] - first["logical_model_positions"]
+        batches = last["physical_model_batches"] - first["physical_model_batches"]
+        owner_cpu = owner_end["cpu_seconds"] - owner_start["cpu_seconds"]
+        histogram = {
+            key: value - first["batch_size_histogram"].get(key, 0)
+            for key, value in last["batch_size_histogram"].items()
+            if value - first["batch_size_histogram"].get(key, 0)
+        }
+        owner_timings = {
+            name: owner_end[name] - owner_start[name]
+            for name in ("gather_seconds", "dispatch_seconds", "wait_input_seconds",
+                         "wait_coalesce_seconds")
+        }
+        owner_timings.update({
+            name: last[name] - first[name]
+            for name in ("h2d_seconds", "forward_seconds", "d2h_seconds", "wait_seconds")
+        })
+    workers = []
+    simulations = worker_cpu = 0.0
+    for item in benchmark["worker_windows"]:
+        first, last = item["start"], item["end"]
+        if first is None:
+            continue
+        delta_sim = last["simulations"] - first["simulations"]
+        delta_cpu = last["cpu_seconds"] - first["cpu_seconds"]
+        simulations += delta_sim
+        worker_cpu += delta_cpu
+        workers.append({
+            "worker_id": item["worker_id"],
+            "started_at": first["at"], "ended_at": last["at"],
+            "measured_seconds": last["at"] - first["at"],
+            "simulations": delta_sim, "cpu_seconds": delta_cpu,
+            "completed_games": last["completed_games"] - first["completed_games"],
+            "network_requests": last["exported_rows"] - first["exported_rows"],
+            "native_batches": last["batches"] - first["batches"],
+            "wait_result_seconds": last["wait_result_seconds"] - first["wait_result_seconds"],
+            "queue_backpressure_seconds": (
+                last["queue_backpressure_seconds"] - first["queue_backpressure_seconds"]),
+            "active_games_start": first["active_games"],
+            "active_games_end": last["active_games"],
+            "root_decisions": last["root_decisions"] - first["root_decisions"],
+        })
+    common_start = max([owner_start["at"]] + [item["started_at"] for item in workers]) if owner_start and workers else 0
+    common_end = min([owner_end["at"]] + [item["ended_at"] for item in workers]) if owner_start and workers else 0
+    common = max(0.0, common_end - common_start)
+    worker_rate = sum(item["simulations"] / item["measured_seconds"]
+                      for item in workers if item["measured_seconds"] > 0)
+    return {
+        "run_id": config.run_id, "backend": config.execution.backend,
+        "checkpoint": config.checkpoint, "execution": asdict(config.execution),
+        "simulations": config.search_config.simulations,
+        "determinizations": config.search_config.determinizations,
+        "evaluator": label, "process_seconds": elapsed,
+        "worker_compile": [owner["inference"]["compile"]],
+        "worker_wall_seconds": [item["wall_seconds"] for item in results],
+        "worker_initialization_seconds": [item["initialization_seconds"] for item in results],
+        "worker_gpu_peak_bytes": [0] * owner["actual_search_workers"],
+        "gpu_owner": owner, "workers": workers,
+        "clock": {
+            "requested_window_seconds": seconds,
+            "warmup_seconds": warmup_seconds,
+            "common_seconds": common,
+            "owner_measured_seconds": measured,
+            "worker_measured_seconds": {str(item["worker_id"]): item["measured_seconds"]
+                                        for item in workers},
+            "rate_basis": "owner counts / owner interval; summed worker rates / individual worker intervals",
+            "batch_sizes": histogram,
+            "owner_timings": owner_timings,
+            "cpu_seconds": worker_cpu + owner_cpu,
+            "owner_cpu_seconds": owner_cpu,
+            "worker_cpu_seconds": worker_cpu,
+            "cpu_us_per_simulation": None,
+            "worker_cpu_us_per_simulation": (1e6 * worker_cpu / simulations
+                                              if simulations else None),
+            "owner_cpu_us_per_network_position": (1e6 * owner_cpu / positions
+                                                   if positions else None),
+            "totals": {"simulations": simulations, "network_positions": positions,
+                       "physical_batches": batches,
+                       "completed_games": sum(item["completed_games"] for item in workers)},
+            "rates": {
+                "simulations_per_second": worker_rate,
+                "network_positions_per_second": positions / measured if measured else 0.0,
+                "physical_batches_per_second": batches / measured if measured else 0.0,
+                "mean_batch_size": positions / batches if batches else 0.0,
+            },
+        },
+    }
+
+
 def run(config: FastSelfPlayConfig, *, seconds: float, scratch: Path,
         warmup_seconds: float = 0.0, dump_samples: bool = False,
         evaluator: Any = None, label: str = "real") -> dict[str, Any]:
+    if config.execution.backend == "native_cuda_pool":
+        return _run_pool(config, seconds=seconds, scratch=scratch,
+                         warmup_seconds=warmup_seconds, label=label)
     workers = config.execution.workers
     root = scratch / config.run_id
     root.mkdir(parents=True, exist_ok=True)
@@ -288,7 +407,12 @@ def main() -> None:
     parser.add_argument("--compile-mode", default=None)
     parser.add_argument("--compile-failure-policy", default=None, choices=("fallback", "fail_fast"))
     parser.add_argument("--native-transport", default=None, choices=("reused", "packed"))
-    parser.add_argument("--slots", type=int, default=None, help="native batch pipeline slots (1 or 2)")
+    parser.add_argument("--slots", type=int, default=None, help="legacy native pipeline slots")
+    parser.add_argument("--search-workers", type=int, default=None)
+    parser.add_argument("--total-active", type=int, default=None)
+    parser.add_argument("--local-microbatch", type=int, default=None)
+    parser.add_argument("--shared-slots", type=int, default=None)
+    parser.add_argument("--shared-candidate-width", type=int, default=None)
     parser.add_argument("--dump-samples", action="store_true")
     parser.add_argument("--evaluator", default="real", choices=("real", "fixed"),
                         help="real network or the instant fixed policy/value double")
@@ -305,18 +429,25 @@ def main() -> None:
                         ("compile_mode", args.compile_mode),
                         ("compile_failure_policy", args.compile_failure_policy),
                         ("native_transport", args.native_transport),
-                        ("pipeline_slots", args.slots)):
+                        ("pipeline_slots", args.slots),
+                        ("search_workers", args.search_workers),
+                        ("total_active_games", args.total_active),
+                        ("local_microbatch", args.local_microbatch),
+                        ("shared_slots", args.shared_slots),
+                        ("shared_candidate_width", args.shared_candidate_width)):
         if value is not None:
             execution[name] = value
     if args.actor_projection is not None:
         execution["actor_projection"] = args.actor_projection == "on"
     if args.candidate_buckets is not None:
         execution["candidate_buckets"] = [int(part) for part in args.candidate_buckets.split(",")]
-    workers = execution.get("workers", 1)
-    active = execution.get("active_games_per_worker", 1)
-    if args.games_per_worker < active:
+    pooled = execution.get("backend") == "native_cuda_pool"
+    workers = execution.get("search_workers", 1) if pooled else execution.get("workers", 1)
+    active = execution.get("total_active_games", 1) if pooled else execution.get("active_games_per_worker", 1)
+    supplied_games = workers * args.games_per_worker if pooled else args.games_per_worker
+    if supplied_games < active:
         raise SystemExit(
-            f"games-per-worker={args.games_per_worker} is below active_games_per_worker={active}; "
+            f"available games={supplied_games} is below active={active}; "
             "the run would never reach the configured concurrency"
         )
     raw["num_games"] = workers * args.games_per_worker
@@ -330,6 +461,9 @@ def main() -> None:
     clock = result["clock"]
     print(json.dumps({**clock["rates"], "cpu_seconds": clock["cpu_seconds"],
                       "cpu_us_per_simulation": clock["cpu_us_per_simulation"],
+                      **({"worker_cpu_us_per_simulation": clock["worker_cpu_us_per_simulation"],
+                          "owner_cpu_us_per_network_position": clock["owner_cpu_us_per_network_position"]}
+                         if "worker_cpu_us_per_simulation" in clock else {}),
                       "common_seconds": clock["common_seconds"],
                       "requested_window_seconds": clock["requested_window_seconds"]},
                      sort_keys=True))

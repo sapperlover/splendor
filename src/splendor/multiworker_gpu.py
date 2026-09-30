@@ -1,0 +1,816 @@
+"""Spawned native search workers feeding one CUDA inference owner.
+
+Only descriptors travel through queues.  The parent creates and unlinks every
+shared segment; a worker owns each slot from fill until it consumes its reply.
+Queue synchronization publishes writes before the peer reads them.
+"""
+from __future__ import annotations
+
+import multiprocessing as mp
+import os
+import queue
+import resource
+import time
+import traceback
+from collections import deque
+from dataclasses import dataclass
+from multiprocessing.shared_memory import SharedMemory
+from pathlib import Path
+from typing import Any, Callable
+
+import numpy as np
+import torch
+
+from .native_policy import _default_catalog, _extension, _native_catalog
+from .opponent_pool import load_frozen_actor_critic_checkpoint
+from .search_inference import FrozenSearchInference, InferenceConfig
+from .selfplay_fast import (
+    FastSelfPlayConfig, _GameSession, _atomic_json, _cpu_seconds,
+)
+from .replay import to_primitive
+
+
+@dataclass(frozen=True)
+class SlotNames:
+    floats: str
+    masks: str
+    results: str
+    float_count: int
+    mask_count: int
+    result_count: int
+
+
+class _Slot:
+    def __init__(self, names: SlotNames, *, create: bool = False) -> None:
+        segments = []
+        try:
+            for name, count, size in (
+                (names.floats, names.float_count, 4),
+                (names.masks, names.mask_count, 1),
+                (names.results, names.result_count, 4),
+            ):
+                segments.append(SharedMemory(
+                    name=name, create=create, size=count * size if create else 0))
+        except BaseException:
+            for segment in segments:
+                segment.close()
+                if create:
+                    segment.unlink()
+            raise
+        self.segments = tuple(segments)
+        self.floats = np.ndarray((names.float_count,), np.float32, buffer=self.segments[0].buf)
+        self.masks = np.ndarray((names.mask_count,), np.uint8, buffer=self.segments[1].buf)
+        self.results = np.ndarray((names.result_count,), np.float32, buffer=self.segments[2].buf)
+
+    def close(self) -> None:
+        del self.floats, self.masks, self.results
+        for segment in self.segments:
+            segment.close()
+
+    def unlink(self) -> None:
+        for segment in self.segments:
+            segment.unlink()
+
+
+class _RemoteEvaluator:
+    """Search-policy adapter; workers never construct a model or CUDA context."""
+    model = None
+    device = torch.device("cpu")
+
+
+def _worker_failure(root: Path, worker_id: int, error: BaseException,
+                    active: dict[int, _GameSession], outstanding: dict[int, Any],
+                    failed_game_id: int | None) -> None:
+    scenes = []
+    for session in active.values():
+        scenes.append({
+            "game_id": session.game_id,
+            "game_seed": session.stepper.trace["game_seed"],
+            "first_player": session.stepper.trace["first_player"],
+            "trace": session.stepper.trace,
+            "root_decision_index": session.stepper.decision_count,
+            "root_request": (None if session.stepper.terminal is not None else
+                             to_primitive(session.stepper.request)),
+            "search_context": (None if session.job is None else
+                               to_primitive(session.job.failure_context_for_world(None))),
+        })
+    def slot_report(slot: int, item: Any) -> dict[str, Any]:
+        ids = item[1].row_ids_array()
+        rows = [
+            {
+                "row": row, "game_id": game_id,
+                "world": int(ids[row, 0]), "simulation": int(ids[row, 1]),
+                "kind": int(ids[row, 2]), "candidates": int(ids[row, 3]),
+            }
+            for start, count, game_id in item[2]
+            for row in range(start, start + count)
+        ]
+        return {"slot": slot, "generation": item[0], "rows": rows}
+
+    _atomic_json(root / "failures" / f"worker-{worker_id}.json", {
+        "protocol": "native-cuda-pool-failure-v1", "worker_id": worker_id,
+        "error_type": type(error).__name__, "error_detail": str(error),
+        "failed_game_id": failed_game_id,
+        "traceback": traceback.format_exc(), "games": scenes,
+        "outstanding": [slot_report(slot, item) for slot, item in outstanding.items()],
+    })
+
+
+def _checked_result(outstanding: dict[int, Any], worker_id: int,
+                    slot_index: int, generation: int) -> Any:
+    current = outstanding.get(slot_index)
+    if current is None or current[0] != generation:
+        raise RuntimeError(
+            f"stale or duplicate result worker={worker_id} slot={slot_index} generation={generation}")
+    return current
+
+
+def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
+            slots: tuple[SlotNames, ...], tasks: Any, ready: Any, replies: Any,
+            fingerprint: str, checkpoint_sha: str, parent_pid: int,
+            start_event: Any = None, stop_event: Any = None) -> None:
+    initialization_started = time.perf_counter()
+    torch.set_num_threads(1)
+    try:
+        torch.set_num_interop_threads(1)
+    except RuntimeError:
+        pass
+    attached = [_Slot(names) for names in slots]
+    catalog = _native_catalog(_default_catalog())
+    execution = config.execution
+    micro = execution.local_microbatch
+    width_limit = execution.shared_candidate_width
+    evaluator = _RemoteEvaluator()
+    active: dict[int, _GameSession] = {}
+    completed: list[dict[str, Any]] = []
+    outstanding: dict[int, tuple[int, Any, list[int], list[Any], list[Any]]] = {}
+    generations = [0] * len(slots)
+    buffers: dict[tuple[int, bool, int], Any] = {}
+    peak_active = peak_pending = peak_inflight = exported_rows = batches = root_rows = policy_rows = value_rows = 0
+    wide_batches = 0
+    fill_seconds = wait_seconds = backpressure_seconds = 0.0
+    decision_latencies: list[float] = []
+    kind_turn = 0
+    exhausted = False
+    current_game_id: int | None = None
+    started = time.perf_counter()
+    initialization_seconds = started - initialization_started
+    cpu_started = _cpu_seconds()
+    window_start = window_end = None
+
+    def snapshot() -> dict[str, Any]:
+        return {
+            "at": time.perf_counter(), "cpu_seconds": _cpu_seconds(),
+            "simulations": (sum(item["simulations"] for item in completed) +
+                            sum(policy.live_simulations() for session in active.values()
+                                for policy in session.policies)),
+            "exported_rows": exported_rows, "batches": batches,
+            "wait_result_seconds": wait_seconds,
+            "queue_backpressure_seconds": backpressure_seconds,
+            "completed_games": len(completed), "active_games": len(active),
+            "root_decisions": (sum(item["decisions"] for item in completed) +
+                               sum(len(session.records) for session in active.values())),
+        }
+
+    def advance() -> None:
+        nonlocal peak_active, peak_pending, exhausted, current_game_id
+        while len(active) < quota and not exhausted:
+            try:
+                game_id = tasks.get(timeout=0.02)
+            except queue.Empty:
+                break
+            if game_id is None:
+                exhausted = True
+                break
+            active[game_id] = _GameSession(config, game_id, evaluator, checkpoint_sha)
+        peak_active = max(peak_active, len(active))
+        for game_id, session in tuple(active.items()):
+            current_game_id = game_id
+            if session.job is not None and session.job.done:
+                session.take_result()
+            session.ensure_job()
+            if session.stepper.terminal is not None:
+                summary = session.commit(root, fingerprint, checkpoint_sha)
+                completed.append(summary)
+                decision_latencies.extend(session.decision_latencies_ms)
+                del active[game_id]
+                ready.put(("complete", worker_id, game_id), timeout=30)
+            current_game_id = None
+        peak_pending = max(
+            peak_pending,
+            sum(session.job.pending_rows(False) + session.job.pending_rows(True)
+                for session in active.values() if session.job is not None),
+        )
+
+    def publish(slot_index: int) -> bool:
+        nonlocal kind_turn, peak_inflight, exported_rows, batches, root_rows, policy_rows, value_rows, wide_batches
+        nonlocal fill_seconds, backpressure_seconds
+        for state_only in ((kind_turn % 2) == 1, (kind_turn % 2) == 0):
+            jobs = [session.job for session in active.values()
+                    if session.job is not None and session.job.pending_rows(state_only)]
+            if not jobs:
+                continue
+            job_set = set(jobs)
+            kind_turn += 1
+            width = 1 if state_only else max(job.pending_width(False) for job in jobs)
+            if width > width_limit:
+                raise ValueError(f"candidate width {width} exceeds configured shared_candidate_width={width_limit}")
+            key = (slot_index, state_only, width)
+            batch = buffers.get(key)
+            if batch is None:
+                batch = _extension().NativeBatch(catalog, state_only, micro, width,
+                                                 attached[slot_index].floats,
+                                                 attached[slot_index].masks)
+                buffers[key] = batch
+            if batch.row_count():
+                raise RuntimeError("slot reused before result consumption")
+            roots = [job for job in jobs if job.root_pending()]
+            started_fill = time.perf_counter()
+            used_jobs = []
+            segments = []
+            for session in active.values():
+                if session.job not in job_set:
+                    continue
+                start_row = batch.row_count()
+                added = batch.fill(session.job.core)
+                if added:
+                    used_jobs.append(session.job)
+                    segments.append((start_row, added, session.game_id))
+                if batch.row_count() == micro:
+                    break
+            fill_seconds += time.perf_counter() - started_fill
+            rows = batch.row_count()
+            if not rows:
+                return False
+            roots = [job for job in used_jobs if job in roots]
+            ids = batch.row_ids_array()
+            generations[slot_index] += 1
+            generation = generations[slot_index]
+            outstanding[slot_index] = (generation, batch, segments, roots, used_jobs)
+            desc = (worker_id, slot_index, generation, rows,
+                    "value" if state_only else "policy", width, config.round_index)
+            before_put = time.perf_counter()
+            ready.put(("batch", desc), timeout=30)
+            backpressure_seconds += time.perf_counter() - before_put
+            peak_inflight = max(peak_inflight, sum(item[1].row_count() for item in outstanding.values()))
+            exported_rows += rows
+            batches += 1
+            wide_batches += int(not state_only and width > execution.candidate_buckets[-1])
+            root_rows += int((ids[:, 2] == 0).sum())
+            policy_rows += int((ids[:, 2] != 2).sum())
+            value_rows += int((ids[:, 2] == 2).sum())
+            return True
+        return False
+
+    try:
+        ready.put(("hello", worker_id, checkpoint_sha))
+        while True:
+            if start_event is not None and start_event.is_set() and window_start is None:
+                window_start = snapshot()
+            stopping = stop_event is not None and stop_event.is_set()
+            if stopping and window_end is None:
+                window_end = snapshot()
+            if not stopping:
+                advance()
+                for slot_index in range(len(slots)):
+                    if slot_index not in outstanding:
+                        publish(slot_index)
+            if (not active and not outstanding and exhausted) or (stopping and not outstanding):
+                break
+            before_wait = time.perf_counter()
+            try:
+                reply = replies.get(timeout=0.25)
+            except queue.Empty:
+                wait_seconds += time.perf_counter() - before_wait
+                if os.getppid() != parent_pid:
+                    raise RuntimeError("GPU owner exited while search worker was waiting")
+                continue
+            wait_seconds += time.perf_counter() - before_wait
+            if reply[0] == "abort":
+                raise RuntimeError(f"GPU owner failed: {reply[1]}")
+            _, slot_index, generation = reply
+            current = _checked_result(outstanding, worker_id, slot_index, generation)
+            _, batch, _, roots, used_jobs = current
+            rows, width = batch.row_count(), batch.padded_width()
+            if batch.is_state_only():
+                batch.submit(None, attached[slot_index].results[:rows])
+            else:
+                batch.submit_fused(attached[slot_index].results[:rows * (width + 1)].reshape(rows, width + 1))
+            for job in roots:
+                job.initialize_worlds()
+            for job in used_jobs:
+                job.collect_if_done()
+            del outstanding[slot_index]
+    except BaseException as error:
+        try:
+            _worker_failure(root, worker_id, error, active, outstanding, current_game_id)
+        except Exception:
+            pass
+        ready.put(("error", worker_id, error, traceback.format_exc()))
+        return
+    finally:
+        buffers.clear()
+        outstanding.clear()
+        for slot in attached:
+            slot.close()
+    live_at_exit = snapshot()["simulations"]
+    ready.put(("done", {
+        "worker_id": worker_id, "completed": completed,
+        "live_simulations_at_exit": live_at_exit,
+        "in_progress_simulations_at_exit": (
+            live_at_exit - sum(item["simulations"] for item in completed)),
+        "wall_seconds": time.perf_counter() - started,
+        "cpu_seconds": _cpu_seconds() - cpu_started,
+        "initialization_seconds": initialization_seconds,
+        "decision_latencies_ms": decision_latencies,
+        "inference": {"physical_model_batches": 0, "logical_model_positions": 0,
+                      "feature_seconds": 0.0, "forward_seconds": 0.0,
+                      "h2d_seconds": 0.0, "d2h_seconds": 0.0, "wait_seconds": 0.0,
+                      "batch_size_histogram": {}, "inference": {}, "compile": {}},
+        "counters": {"native_batch_rows": exported_rows, "native_batch_batches": batches,
+                     "native_root_rows": root_rows, "native_policy_rows": policy_rows,
+                     "native_value_rows": value_rows, "native_wide_batches": wide_batches,
+                     "native_peak_inflight_rows": peak_inflight,
+                     "native_fill_seconds": fill_seconds, "native_consume_seconds": 0.0},
+        "peak_active_games": peak_active, "peak_pending_requests": peak_pending,
+        "cpu_peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+        "gpu_peak_bytes": 0, "wait_result_seconds": wait_seconds,
+        "queue_backpressure_seconds": backpressure_seconds,
+        "window": {"start": window_start, "end": window_end or snapshot()}
+                  if start_event is not None else None,
+    }))
+
+
+class _FixedPoolHandle:
+    def __init__(self, owner: Any, sink: Any, width: int, state_only: bool) -> None:
+        self.owner, self.sink, self.width, self.state_only = owner, sink, width, state_only
+
+    def finish(self) -> None:
+        rows = self.sink.row_count()
+        if self.state_only:
+            self.sink.submit(None, np.zeros(rows, dtype=np.float32))
+        else:
+            self.sink.submit_fused(np.zeros((rows, self.width + 1), dtype=np.float32))
+        stats = self.owner.stats
+        stats.batches += 1
+        stats.positions += rows
+        stats.batch_sizes[rows] += 1
+
+
+class _FixedPoolTransfer:
+    def __init__(self, owner: Any, capacity: int, width: int,
+                 float_stride: int, mask_stride: int) -> None:
+        self.owner, self.width = owner, width
+        self.float_staging = np.empty(capacity * float_stride, dtype=np.float32)
+        self.mask_staging = np.empty(capacity * mask_stride, dtype=np.bool_)
+
+    def begin_policy_value(self, sink: Any) -> _FixedPoolHandle:
+        return _FixedPoolHandle(self.owner, sink, self.width, False)
+
+    def begin_value_only(self, sink: Any) -> _FixedPoolHandle:
+        return _FixedPoolHandle(self.owner, sink, self.width, True)
+
+
+class FixedPoolOwner:
+    """Deterministic owner for bounded correctness tests and supply profiling."""
+    device = torch.device("cpu")
+
+    def __init__(self) -> None:
+        from .search_inference import InferenceStats
+        self.stats = InferenceStats(config={"mode": "fixed-value"})
+
+    def warmup_native(self, widths: Any) -> float:
+        return 0.0
+
+    def new_native_transfer(self, *, state_only: bool, capacity: int, width: int,
+                            float_stride: int, mask_stride: int) -> _FixedPoolTransfer:
+        return _FixedPoolTransfer(self, capacity, width, float_stride, mask_stride)
+
+
+class _OutputSink:
+    def __init__(self, rows: int, layout: dict[str, Any]) -> None:
+        self.rows = rows
+        self.layout = layout
+        self.output: np.ndarray | None = None
+
+    def row_count(self) -> int:
+        return self.rows
+
+    def packed(self) -> dict[str, Any]:
+        return self.layout
+
+    def submit_fused(self, values: np.ndarray) -> None:
+        self.output = values
+
+    def submit(self, _logits: None, values: np.ndarray) -> None:
+        self.output = values
+
+
+def _gather(src: _Slot, src_width: int, dst: Any,
+            kind: str, src_offset: int, dst_offset: int, rows: int,
+            src_float_stride: int, src_mask_stride: int,
+            dst_float_stride: int, dst_mask_stride: int,
+            base_float: int, base_mask: int, action_dim: int) -> None:
+    sf = src.floats[:(src_offset + rows) * src_float_stride].reshape(src_offset + rows, src_float_stride)[src_offset:]
+    sm = src.masks[:(src_offset + rows) * src_mask_stride].reshape(src_offset + rows, src_mask_stride)[src_offset:]
+    df = dst.float_staging.reshape(-1, dst_float_stride)[dst_offset:dst_offset + rows]
+    dm = dst.mask_staging.reshape(-1, dst_mask_stride)[dst_offset:dst_offset + rows]
+    np.copyto(df[:, :base_float], sf[:, :base_float])
+    np.copyto(dm[:, :base_mask], sm[:, :base_mask], casting="unsafe")
+    if kind == "policy":
+        df[:, base_float:].fill(0)
+        dm[:, base_mask:].fill(0)
+        count = src_width * action_dim
+        np.copyto(df[:, base_float:base_float + count], sf[:, base_float:base_float + count])
+        np.copyto(dm[:, base_mask:base_mask + src_width], sm[:, base_mask:base_mask + src_width], casting="unsafe")
+
+
+def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+            fingerprint: str, checkpoint_sha: str,
+            progress_callback: Callable[[int, int], None] | None = None,
+            completed_before: int = 0, evaluator: Any = None,
+            benchmark_seconds: float | None = None,
+            warmup_seconds: float = 0.0) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Run one collection session.  Parent is the sole CUDA owner."""
+    session_started = time.perf_counter()
+    execution = config.execution
+    if benchmark_seconds is not None and benchmark_seconds <= 0:
+        raise ValueError("benchmark_seconds must be positive")
+    if warmup_seconds < 0:
+        raise ValueError("warmup_seconds must be nonnegative")
+    active_limit = min(execution.total_active_games, len(missing))
+    worker_count = min(execution.search_workers, active_limit)
+    quotas = [active_limit // worker_count + (i < active_limit % worker_count)
+              for i in range(worker_count)]
+    micro = execution.local_microbatch
+    width_limit = execution.shared_candidate_width
+    ctx = mp.get_context("spawn")
+    tasks = ctx.Queue()
+    ready = ctx.Queue(maxsize=worker_count * execution.shared_slots * 2)
+    replies = [ctx.Queue(maxsize=execution.shared_slots * 2) for _ in range(worker_count)]
+    start_event = ctx.Event() if benchmark_seconds is not None else None
+    stop_event = ctx.Event() if benchmark_seconds is not None else None
+    created: list[_Slot] = []
+    slot_names: list[tuple[SlotNames, ...]] = []
+    processes = []
+    succeeded = False
+    try:
+        unassigned = iter(missing)
+        for _ in range(active_limit):
+            tasks.put(next(unassigned))
+        all_assigned = active_limit == len(missing)
+        if all_assigned:
+            for _ in range(worker_count):
+                tasks.put(None)
+        native_catalog = _native_catalog(_default_catalog())
+        policy_probe = _extension().NativeBatch(native_catalog, False, 1, width_limit)
+        float_count = micro * policy_probe.float_stride()
+        mask_count = micro * policy_probe.mask_stride()
+        result_count = micro * (width_limit + 1)
+        for worker_id in range(worker_count):
+            names_for_worker = []
+            for slot_index in range(execution.shared_slots):
+                prefix = f"spgpu_{os.getpid()}_{worker_id}_{slot_index}"
+                names = SlotNames(prefix + "_f", prefix + "_m", prefix + "_r",
+                                  float_count, mask_count, result_count)
+                created.append(_Slot(names, create=True))
+                names_for_worker.append(names)
+            slot_names.append(tuple(names_for_worker))
+        thread_variables = ("OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "OMP_NUM_THREADS")
+        previous_threads = {name: os.environ.get(name) for name in thread_variables}
+        try:
+            for name in thread_variables:
+                os.environ[name] = "1"
+            for worker_id in range(worker_count):
+                process = ctx.Process(
+                    target=_worker,
+                    args=(config, root, worker_id, quotas[worker_id], slot_names[worker_id],
+                          tasks, ready, replies[worker_id], fingerprint, checkpoint_sha, os.getpid(),
+                          start_event, stop_event),
+                    name=f"native-search-{worker_id}",
+                )
+                process.start()
+                processes.append(process)
+        finally:
+            for name, previous in previous_threads.items():
+                if previous is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = previous
+        torch.set_num_threads(1)
+        if evaluator is None:
+            model = load_frozen_actor_critic_checkpoint(Path(config.checkpoint), device="cuda")
+            evaluator = FrozenSearchInference(model, device="cuda", config=InferenceConfig(
+                mode=execution.inference_mode, actor_projection=execution.actor_projection,
+                candidate_buckets=execution.candidate_buckets, compile_mode=execution.compile_mode,
+                compile_failure_policy=execution.compile_failure_policy, native_transport="reused"))
+            torch.cuda.reset_peak_memory_stats()
+        init_done = time.perf_counter()
+        compile_warmup_seconds = (evaluator.warmup_native(execution.candidate_buckets)
+                                  if benchmark_seconds is not None else 0.0)
+        transfers: dict[tuple[str, int], tuple[Any, Any, dict[str, Any]]] = {}
+        pending: deque[dict[str, Any]] = deque()
+        results: list[dict[str, Any]] = []
+        active_workers = set(range(worker_count))
+        online_workers: set[int] = set()
+        warmup_deadline = None
+        window_start = window_end = None
+        owner_cpu_start = _cpu_seconds()
+        owner_wait = owner_coalesce_wait = owner_gather = owner_dispatch = 0.0
+        peak_inflight = padding_positions = 0
+        width_hist: dict[str, int] = {}
+        batches_waited = batches_full = 0
+        wait_reasons = {"full": 0, "deadline": 0, "drain": 0}
+        completed_count = 0
+
+        def ready_for_full_batch() -> bool:
+            batches = [item for item in pending if item["event"][0] == "batch"]
+            if not batches:
+                return False
+            first_kind = batches[0]["event"][1][4]
+            return sum(item["event"][1][3] - item["offset"]
+                       for item in batches if item["event"][1][4] == first_kind) >= execution.max_batch_size
+
+        while active_workers or pending:
+            now = time.perf_counter()
+            if benchmark_seconds is not None and len(online_workers) == worker_count:
+                if warmup_deadline is None:
+                    warmup_deadline = now + warmup_seconds
+                if window_start is None and now >= warmup_deadline:
+                    window_start = {
+                        "at": now, "cpu_seconds": _cpu_seconds(),
+                        "gather_seconds": owner_gather,
+                        "dispatch_seconds": owner_dispatch,
+                        "wait_input_seconds": owner_wait,
+                        "wait_coalesce_seconds": owner_coalesce_wait,
+                        "inference": evaluator.stats.to_dict(),
+                    }
+                    start_event.set()
+                if window_start is not None and window_end is None and (
+                        now >= window_start["at"] + benchmark_seconds or not active_workers):
+                    window_end = {
+                        "at": now, "cpu_seconds": _cpu_seconds(),
+                        "gather_seconds": owner_gather,
+                        "dispatch_seconds": owner_dispatch,
+                        "wait_input_seconds": owner_wait,
+                        "wait_coalesce_seconds": owner_coalesce_wait,
+                        "inference": evaluator.stats.to_dict(),
+                    }
+                    stop_event.set()
+            before_wait = time.perf_counter()
+            if not pending:
+                try:
+                    event = ready.get(timeout=0.25)
+                except queue.Empty:
+                    owner_wait += time.perf_counter() - before_wait
+                    for worker_id in active_workers:
+                        if not processes[worker_id].is_alive():
+                            raise RuntimeError(f"search worker {worker_id} exited without completion")
+                    continue
+                owner_wait += time.perf_counter() - before_wait
+                pending.append({"event": event, "offset": 0})
+            deadline = time.perf_counter() + execution.max_batch_wait_ms / 1000
+            while (time.perf_counter() < deadline and
+                   len(pending) < worker_count * execution.shared_slots and
+                   not ready_for_full_batch()):
+                coalesce_started = time.perf_counter()
+                try:
+                    pending.append({"event": ready.get(timeout=max(0, deadline - coalesce_started)),
+                                    "offset": 0})
+                except queue.Empty:
+                    owner_coalesce_wait += time.perf_counter() - coalesce_started
+                    break
+                owner_coalesce_wait += time.perf_counter() - coalesce_started
+            while True:
+                try:
+                    pending.append({"event": ready.get_nowait(), "offset": 0})
+                except queue.Empty:
+                    break
+            for entry in tuple(pending):
+                event = entry["event"]
+                if event[0] == "hello":
+                    pending.remove(entry)
+                    if event[2] != checkpoint_sha:
+                        raise RuntimeError(f"search worker {event[1]} checkpoint identity mismatch")
+                    online_workers.add(event[1])
+                    continue
+                if event[0] == "complete":
+                    pending.remove(entry)
+                    completed_count += 1
+                    if not all_assigned:
+                        tasks.put(next(unassigned))
+                        if completed_count + active_limit == len(missing):
+                            all_assigned = True
+                            for _ in range(worker_count):
+                                tasks.put(None)
+                    if progress_callback is not None:
+                        progress_callback(completed_before + completed_count, config.num_games)
+                    continue
+                if event[0] == "error":
+                    _, worker_id, error, trace = event
+                    raise type(error)(f"search worker {worker_id}: {error}\n{trace}")
+                if event[0] == "done":
+                    pending.remove(entry)
+                    data = event[1]
+                    active_workers.remove(data["worker_id"])
+                    results.append(data)
+            if not pending:
+                continue
+            candidates = [entry for entry in pending if entry["event"][0] == "batch"]
+            if not candidates:
+                continue
+            reason = ("full" if ready_for_full_batch() else
+                      "drain" if not active_workers else "deadline")
+            wait_reasons[reason] += 1
+            if reason != "full":
+                batches_waited += 1
+            kind = candidates[0]["event"][1][4]
+            chosen = [entry for entry in candidates if entry["event"][1][4] == kind]
+            parts = []
+            used = 0
+            for entry in chosen:
+                desc = entry["event"][1]
+                wid, slot_index, generation, rows, _, src_width, version = desc
+                if version != config.round_index:
+                    raise RuntimeError("pooled inference model version mismatch")
+                take = min(rows - entry["offset"], execution.max_batch_size - used)
+                if not take:
+                    break
+                parts.append((entry, wid, slot_index, generation, entry["offset"], used, take, src_width))
+                used += take
+                if used == execution.max_batch_size:
+                    break
+            if used == execution.max_batch_size:
+                batches_full += 1
+            width = 0 if kind == "value" else max(part[7] for part in parts)
+            bucket = (next((item for item in execution.candidate_buckets if width <= item),
+                           width_limit) if kind == "policy" else 0)
+            key = (kind, bucket)
+            cached = transfers.get(key)
+            if cached is None:
+                probe = _extension().NativeBatch(native_catalog, kind == "value", 1, bucket or 1)
+                transfer = evaluator.new_native_transfer(
+                    state_only=kind == "value", capacity=execution.max_batch_size,
+                    width=bucket or 1, float_stride=probe.float_stride(),
+                    mask_stride=probe.mask_stride())
+                layout = probe.packed()
+                cached = (probe, transfer, layout)
+                transfers[key] = cached
+            probe, transfer, layout = cached
+            peak_inflight = max(peak_inflight, sum(
+                item["event"][1][3] - item["offset"] for item in candidates))
+            started_gather = time.perf_counter()
+            float_fields = layout["float_fields"]
+            mask_fields = layout["mask_fields"]
+            base_float = next((field[1] for field in float_fields if field[0] == "candidate_features"),
+                              probe.float_stride())
+            base_mask = next((field[1] for field in mask_fields if field[0] == "candidate_mask"),
+                             probe.mask_stride())
+            action_dim = (next((field[2] // bucket for field in float_fields
+                                if field[0] == "candidate_features"), 0) if bucket else 0)
+            for entry, wid, slot_index, generation, src_offset, dst_offset, take, src_width in parts:
+                src = created[wid * execution.shared_slots + slot_index]
+                src_float_stride = base_float + (src_width * action_dim if kind == "policy" else 0)
+                src_mask_stride = base_mask + (src_width if kind == "policy" else 0)
+                _gather(src, src_width, transfer, kind, src_offset, dst_offset, take,
+                        src_float_stride, src_mask_stride,
+                        probe.float_stride(), probe.mask_stride(),
+                        base_float, base_mask, action_dim)
+                padding_positions += take * max(0, bucket - src_width)
+            owner_gather += time.perf_counter() - started_gather
+            sink = _OutputSink(used, layout)
+            try:
+                handle = (transfer.begin_value_only(sink) if kind == "value"
+                          else transfer.begin_policy_value(sink))
+                handle.finish()
+                output = sink.output
+                assert output is not None
+                finite = np.isfinite(output)
+                bad = np.flatnonzero(~finite if finite.ndim == 1 else ~finite.all(axis=1))
+                if len(bad):
+                    physical_row = int(bad[0])
+                    affected = next(part for part in parts
+                                    if part[5] <= physical_row < part[5] + part[6])
+                    raise ValueError(
+                        f"nonfinite pooled output worker={affected[1]} slot={affected[2]} "
+                        f"generation={affected[3]} row={affected[4] + physical_row - affected[5]}")
+                started_dispatch = time.perf_counter()
+                for entry, wid, slot_index, generation, src_offset, dst_offset, take, src_width in parts:
+                    dest = created[wid * execution.shared_slots + slot_index].results
+                    if kind == "value":
+                        dest[src_offset:src_offset + take] = output[dst_offset:dst_offset + take]
+                    else:
+                        dest_view = dest[:micro * (src_width + 1)].reshape(micro, src_width + 1)
+                        dest_view[src_offset:src_offset + take, :src_width] = output[
+                            dst_offset:dst_offset + take, :src_width]
+                        dest_view[src_offset:src_offset + take, src_width] = output[
+                            dst_offset:dst_offset + take, bucket]
+                    entry["offset"] += take
+                    if entry["offset"] == entry["event"][1][3]:
+                        pending.remove(entry)
+                        replies[wid].put(("result", slot_index, generation), timeout=30)
+                    else:
+                        pending.remove(entry)
+                        pending.append(entry)
+                owner_dispatch += time.perf_counter() - started_dispatch
+                width_hist[str(bucket)] = width_hist.get(str(bucket), 0) + used
+            except BaseException as error:
+                try:
+                    _atomic_json(root / "failures" / "owner.json", {
+                        "protocol": "native-cuda-pool-failure-v1", "origin": "inference",
+                        "error_type": type(error).__name__, "error_detail": str(error),
+                        "traceback": traceback.format_exc(),
+                        "requests": [{"worker_id": p[1], "slot": p[2], "generation": p[3],
+                                      "row_offset": p[4], "rows": p[6]} for p in parts],
+                    })
+                except Exception:
+                    pass
+                raise
+        owner_stats = {
+            "requested_search_workers": execution.search_workers, "actual_search_workers": worker_count,
+            "requested_active_games": execution.total_active_games,
+            "actual_active_limit": active_limit,
+            "global_max_batch": execution.max_batch_size, "local_microbatch": micro,
+            "shared_slots_per_worker": execution.shared_slots,
+            "shared_bytes": sum(sum(seg.size for seg in slot.segments) for slot in created),
+            "owner_cpu_seconds": _cpu_seconds() - owner_cpu_start,
+            "owner_wait_input_seconds": owner_wait,
+            "owner_wait_coalesce_seconds": owner_coalesce_wait,
+            "owner_gather_seconds": owner_gather,
+            "owner_dispatch_seconds": owner_dispatch,
+            "peak_ready_rows": peak_inflight, "padding_positions": padding_positions,
+            "width_histogram": width_hist, "batches_waited": batches_waited,
+            "batches_full": batches_full, "batch_wait_reasons": wait_reasons,
+            "owner_initialization_seconds": init_done - session_started,
+            "inference": evaluator.stats.to_dict(),
+            "benchmark": ({
+                "compile_warmup_seconds": compile_warmup_seconds,
+                "warmup_seconds": warmup_seconds,
+                "requested_seconds": benchmark_seconds,
+                "owner_window": {"start": window_start, "end": window_end or {
+                    "at": time.perf_counter(), "cpu_seconds": _cpu_seconds(),
+                    "gather_seconds": owner_gather,
+                    "dispatch_seconds": owner_dispatch,
+                    "wait_input_seconds": owner_wait,
+                    "wait_coalesce_seconds": owner_coalesce_wait,
+                    "inference": evaluator.stats.to_dict()}},
+                "worker_windows": [
+                    {"worker_id": item["worker_id"], **item["window"]}
+                    for item in sorted(results, key=lambda result: result["worker_id"])
+                ],
+            } if benchmark_seconds is not None else None),
+            "workers": [
+                {"worker_id": item["worker_id"],
+                 "game_ids": [game["game_id"] for game in item["completed"]],
+                 "cpu_seconds": item["cpu_seconds"],
+                 "completed_simulations": sum(game["simulations"] for game in item["completed"]),
+                 "in_progress_simulations_at_exit": item["in_progress_simulations_at_exit"],
+                 "peak_active_games": item["peak_active_games"],
+                 "wait_result_seconds": item["wait_result_seconds"],
+                 "queue_backpressure_seconds": item["queue_backpressure_seconds"]}
+                for item in sorted(results, key=lambda result: result["worker_id"])
+            ],
+            "gpu_peak_bytes": (torch.cuda.max_memory_allocated() if evaluator.device.type == "cuda" else 0),
+            "owner_cpu_peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+        }
+        succeeded = True
+        return results, owner_stats
+    except BaseException as error:
+        failure_path = root / "failures" / "owner.json"
+        if not failure_path.exists():
+            try:
+                _atomic_json(failure_path, {
+                    "protocol": "native-cuda-pool-failure-v1", "origin": "collector",
+                    "error_type": type(error).__name__, "error_detail": str(error),
+                    "traceback": traceback.format_exc(),
+                    "requests": [
+                        {"worker_id": part[1], "slot": part[2], "generation": part[3],
+                         "row_offset": part[4], "rows": part[6]}
+                        for part in locals().get("parts", [])
+                    ],
+                })
+            except Exception:
+                pass
+        for reply in replies:
+            try:
+                reply.put_nowait(("abort", f"{type(error).__name__}: {error}"))
+            except queue.Full:
+                pass
+        raise
+    finally:
+        if not succeeded or benchmark_seconds is not None:
+            tasks.cancel_join_thread()
+            for reply in replies:
+                reply.cancel_join_thread()
+        for process in processes:
+            process.join(timeout=5)
+            if process.is_alive():
+                process.terminate()
+                process.join(timeout=5)
+        for slot in created:
+            slot.close()
+            slot.unlink()
+        tasks.close()
+        ready.close()
+        for reply in replies:
+            reply.close()

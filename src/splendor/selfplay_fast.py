@@ -58,10 +58,15 @@ class ExecutionConfig:
     compile_failure_policy: str = "fallback"
     native_transport: str = "reused"
     pipeline_slots: int = 1
+    search_workers: int = 1
+    total_active_games: int = 8
+    local_microbatch: int = 8
+    shared_slots: int = 2
+    shared_candidate_width: int = 256
 
     def __post_init__(self) -> None:
-        if self.backend not in ("serial_cpu", "batched_cpu", "batched_cuda", "native_cpu", "native_cuda"):
-            raise ValueError("backend must be serial_cpu, batched_cpu, batched_cuda, native_cpu or native_cuda")
+        if self.backend not in ("serial_cpu", "batched_cpu", "batched_cuda", "native_cpu", "native_cuda", "native_cuda_pool"):
+            raise ValueError("unknown self-play backend")
         if self.engine_mode not in ("checked", "fast"):
             raise ValueError("engine_mode must be checked or fast")
         if self.batch_interface not in ("legacy", "native"):
@@ -89,6 +94,14 @@ class ExecutionConfig:
         if any(type(getattr(self, name)) is not int or getattr(self, name) <= 0 for name in
                ("workers", "active_games_per_worker", "max_batch_size", "torch_threads")):
             raise ValueError("workers, active games, batch size and torch threads must be positive")
+        if any(type(getattr(self, name)) is not int or getattr(self, name) <= 0 for name in
+               ("search_workers", "total_active_games", "local_microbatch", "shared_slots", "shared_candidate_width")):
+            raise ValueError("pooled search capacities must be positive integers")
+        if self.backend == "native_cuda_pool":
+            if self.workers != 1 or self.batch_interface != "native" or self.native_transport != "reused":
+                raise ValueError("native_cuda_pool requires workers=1, batch_interface=native and native_transport=reused")
+            if self.shared_candidate_width < max(self.candidate_buckets):
+                raise ValueError("shared_candidate_width must cover candidate_buckets")
         if not math.isfinite(self.max_batch_wait_ms) or self.max_batch_wait_ms < 0:
             raise ValueError("max_batch_wait_ms must be finite and nonnegative")
         if self.precision != "float32":
@@ -149,7 +162,12 @@ class FastSelfPlayConfig:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        raw = asdict(self)
+        if self.execution.backend != "native_cuda_pool":
+            for name in ("search_workers", "total_active_games", "local_microbatch",
+                         "shared_slots", "shared_candidate_width"):
+                raw["execution"].pop(name)
+        return raw
 
 
 def _sha256(path: Path) -> str:
@@ -192,6 +210,8 @@ def build_manifest(config: FastSelfPlayConfig) -> dict[str, Any]:
                 "inference": config.execution.inference_mode + (
                     "-projection" if config.execution.actor_projection else "-stock"),
                 "batch_interface": config.execution.batch_interface,
+                **({"native_gpu_pool": "shared-slots-v1"}
+                   if config.execution.backend == "native_cuda_pool" else {}),
                 **({"native_gpu_layout": "row-stride-v2"}
                    if config.execution.backend == "native_cuda"
                    and config.execution.batch_interface == "native"
@@ -784,20 +804,53 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
         summary["logical_model_positions"] += sum(s["model_positions"] for s in metadata["mcts_stats"])
         winners = metadata["terminal_result"]["winner_ids"]
         summary["draws" if len(winners) == 2 else ("p0_wins" if winners[0] == 0 else "p1_wins")] += 1
-    for scene_path in (root / "failures").glob("batch-*.json"):
+    failure_root = root / "failures"
+    batch_game_ids: set[int] = set()
+    failures_by_game: dict[int, str] = {}
+    outstanding_rows: dict[tuple[int, int, int], dict[int, int]] = {}
+    for scene_path in failure_root.glob("batch-*.json"):
         scene = json.loads(scene_path.read_text(encoding="utf-8"))
         summary["batch_failures"] += 1
-        summary["batch_failure_game_ids"].extend(scene.get("game_ids", []))
-    for scene_path in (root / "failures").glob("game-*.json"):
+        batch_game_ids.update(scene.get("game_ids", []))
+    for scene_path in failure_root.glob("game-*.json"):
         game_id = int(scene_path.stem.removeprefix("game-"))
+        scene = json.loads(scene_path.read_text(encoding="utf-8"))
+        failures_by_game[game_id] = scene.get("error_detail", "")
+    for scene_path in failure_root.glob("worker-*.json"):
+        scene = json.loads(scene_path.read_text(encoding="utf-8"))
+        detail = scene.get("error_detail", "")
+        failed_game_id = scene.get("failed_game_id")
+        for game in scene.get("games", []):
+            game_id = game["game_id"]
+            failures_by_game[game_id] = (detail if failed_game_id is None or
+                                         game_id == failed_game_id else "interrupted by worker failure")
+        for slot in scene.get("outstanding", []):
+            rows = {row["row"]: row["game_id"] for row in slot.get("rows", [])}
+            outstanding_rows[scene["worker_id"], slot["slot"], slot["generation"]] = rows
+            for game_id in rows.values():
+                failures_by_game.setdefault(game_id, detail)
+    owner_path = failure_root / "owner.json"
+    if owner_path.exists():
+        owner_scene = json.loads(owner_path.read_text(encoding="utf-8"))
+        if owner_scene.get("origin") == "inference" or (
+                "origin" not in owner_scene and owner_scene.get("requests") and
+                not owner_scene.get("error_detail", "").startswith("search worker ")):
+            summary["batch_failures"] += 1
+            for request in owner_scene.get("requests", []):
+                rows = outstanding_rows.get((request["worker_id"], request["slot"],
+                                             request["generation"]), {})
+                batch_game_ids.update(rows[row] for row in range(
+                    request["row_offset"], request["row_offset"] + request["rows"])
+                    if row in rows)
+    for game_id, detail in failures_by_game.items():
         if game_id in committed:
             continue
-        scene = json.loads(scene_path.read_text(encoding="utf-8"))
         summary["failed_games"] += 1
-        if scene.get("error_detail") == "engineering turn limit reached without formal terminal":
+        if detail == "engineering turn limit reached without formal terminal":
             summary["engineering_truncations"] += 1
         else:
             summary["exceptions"] += 1
+    summary["batch_failure_game_ids"] = sorted(batch_game_ids)
     status_path = root / "status.json"
     if status_path.exists():
         status = json.loads(status_path.read_text(encoding="utf-8"))
@@ -883,13 +936,20 @@ def generate(
         missing = tuple(game_id for game_id in range(config.num_games) if game_id not in complete)
         if not missing:
             return validate_run(root)
-        if config.execution.backend in ("batched_cuda", "native_cuda") and not torch.cuda.is_available():
+        if config.execution.backend in ("batched_cuda", "native_cuda", "native_cuda_pool") and not torch.cuda.is_available():
             raise RuntimeError(f"{config.execution.backend} requested but CUDA is unavailable")
         started = time.perf_counter()
+        owner_stats = None
         groups = tuple(tuple(missing[i::config.execution.workers]) for i in range(config.execution.workers))
         groups = tuple(group for group in groups if group)
         checkpoint_sha = manifest["checkpoint_identity"]["sha256"]
-        if len(groups) == 1:
+        if config.execution.backend == "native_cuda_pool":
+            from .multiworker_gpu import collect as collect_gpu_pool
+            results, owner_stats = collect_gpu_pool(
+                config, root, missing, manifest["semantic_fingerprint"], checkpoint_sha,
+                progress_callback, len(complete))
+            results[0]["inference"] = owner_stats["inference"]
+        elif len(groups) == 1:
             results = [_collect_group(
                 config, root, groups[0], manifest["semantic_fingerprint"], checkpoint_sha,
                 completed_before=len(complete), on_game_complete=progress_callback,
@@ -993,6 +1053,21 @@ def generate(
             "cpu_peak_rss_kib": max(r["cpu_peak_rss_kib"] for r in results),
             "gpu_peak_bytes": max(r["gpu_peak_bytes"] for r in results),
         }
+        if owner_stats is not None:
+            status["gpu_owner"] = owner_stats
+            status["worker_compile"] = [{
+                "worker_id": "gpu_owner", "inference": owner_stats["inference"]["inference"],
+                "compile": owner_stats["inference"]["compile"],
+            }]
+            status["peak_active_games"] = sum(item["peak_active_games"] for item in results)
+            status["gpu_peak_bytes"] = owner_stats["gpu_peak_bytes"]
+            status["cpu_peak_rss_kib"] = max(
+                status["cpu_peak_rss_kib"], owner_stats["owner_cpu_peak_rss_kib"])
+            status["queue_wait_seconds"] = sum(item["wait_result_seconds"] for item in results)
+            status["worker_cpu_seconds"] = [item["cpu_seconds"] for item in results]
+            status["wait_result_seconds"] = sum(item["wait_result_seconds"] for item in results)
+            status["queue_backpressure_seconds"] = sum(
+                item["queue_backpressure_seconds"] for item in results)
         _atomic_json(status_path, status)
         summary = validate_run(root)
         _atomic_json(root / "summary.json", summary)
