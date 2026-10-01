@@ -1,0 +1,83 @@
+{
+  "reviewed_on": "2026-10-01",
+  "matchups": [
+    {
+      "name": "01_s256_n2_vs_s1024_n1",
+      "status": "valid",
+      "evidence": "artifacts/mcts_50pair_sweep/01_s256_n2_vs_s1024_n1.json",
+      "sha256": "e863259ed2ca0036e25483e035d83d958dba1ad1e6ade0af7a0f9c4c01b5882f",
+      "completed_pairs": 50,
+      "total_pairs": 50,
+      "valid_games": 100,
+      "passed": true,
+      "score": 0.2,
+      "bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.2,
+        "lower": 0.12,
+        "pair_count": 50,
+        "resamples": 100000,
+        "seed": 9820000,
+        "upper": 0.29
+      }
+    },
+    {
+      "name": "02_s1024_n1_vs_s1024_n2",
+      "status": "valid",
+      "evidence": "artifacts/mcts_50pair_sweep/02_s1024_n1_vs_s1024_n2.json",
+      "sha256": "6f0194da5d925f5d4e573372f16291866416dcf12ae29c4fe23a3ad125a4e8de",
+      "completed_pairs": 50,
+      "total_pairs": 50,
+      "valid_games": 100,
+      "passed": true,
+      "score": 0.56,
+      "bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.56,
+        "lower": 0.46,
+        "pair_count": 50,
+        "resamples": 100000,
+        "seed": 9820000,
+        "upper": 0.66
+      }
+    },
+    {
+      "name": "03_s1024_n2_vs_s2048_n1",
+      "status": "incomplete",
+      "evidence": "artifacts/mcts_50pair_sweep/03_s1024_n2_vs_s2048_n1.json",
+      "sha256": "733d5eea71ff548dc80b9562eaf6397de6eaee544938fae41b7d002717beb54d",
+      "completed_pairs": 0,
+      "total_pairs": 50,
+      "valid_games": 4,
+      "passed": false,
+      "score": 0.625,
+      "bootstrap": null
+    },
+    {
+      "name": "04_s1024_n1_vs_ab_d6_top5",
+      "status": "not_found",
+      "evidence": null
+    },
+    {
+      "name": "05_s1024_n1_vs_greedy",
+      "status": "valid",
+      "evidence": "artifacts/mcts_50pair_sweep/05_s1024_n1_vs_greedy.json",
+      "sha256": "5d5075289809de6bcc91eec3460eda46001166e96334a5c8807ff84ef6fe98b6",
+      "completed_pairs": 50,
+      "total_pairs": 50,
+      "valid_games": 100,
+      "passed": true,
+      "score": 0.92,
+      "bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.92,
+        "lower": 0.865,
+        "pair_count": 50,
+        "resamples": 100000,
+        "seed": 9820000,
+        "upper": 0.97
+      }
+    }
+  ],
+  "note": "Group 05 is additional; do not call the original four-group sweep complete. Group 03 completed_pairs is recorded as zero even with four valid games; no inference or repair."
+}

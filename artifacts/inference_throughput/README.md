@@ -1,18 +1,10 @@
-# inference_throughput 交付物
+# 推理与采集吞吐交付物
 
-本目录只保留可长期引用、能复核报告结论的汇总与基线：
+统一报告：[单 owner / 传输基线](../../docs/reports/inference_throughput_zh-CN.md)、[多 worker GPU](../../docs/reports/multiworker_gpu_zh-CN.md)。所有状态及适用范围见 [实验索引](../experiment_index.json)。
 
-- `08/summary_08_2026-09-29.json` 及 `08/*.json`：当前唯一有效的推理吞吐基线（08 修复多行布局后的重测）。
-- `summary_2026-09-29.json`、`end_to_end_2026-09-29.json`、`pure_forward_{cpu,cuda}.json`、`profile_2026-09-29.json`：
-  06 工作包的汇总/完整对局/微基准，被 `docs/native_inference_throughput_zh-CN.md` 引用（历史口径，文档已标注失效范围）。其中 `profile_2026-09-29.json` 的输入准备误标为 H2D，推导的 D2H 占比无效，需重跑 profiler；原文件保留。
+- `08/`：正确 row-stride 后的单 owner 稳态窗口、CPU eager/compiled、slot 对照、汇总和 500 局生产形状；完整 manifest/summary 副本与原件关联见保全清单。
+- `09/`：2026-09-30 的传输与 replay 分项微基准，不能替代完整采集吞吐。
+- `multiworker_gpu/`：七份窗口、两组完整 500 局 manifest/summary 和比较摘要；单轮收益不当作重复稳定收益。
+- `invalid_records.json`：06 旧测量的原位置、本地保留位置、哈希和失效/被替代状态。
 
-不入库的本地数据（`runtime/` 整体被 Git 忽略）：
-
-- `runtime/inference_throughput/07/`：07 的原始窗口与 `summary_07.json`。它们产自 CUDA reused 多行布局缺陷，
-  数字与结论均无效，只作本地审计保留。
-- `runtime/inference_throughput/06_stage_logs/`：06 的 `stage_*` / `baseline_*` / `rerun_*` / `profile_fixed_*` /
-  `profile_pipeline_*` 等中间分片，可由脚本重生成，不属于交付物；`summary_2026-09-29.json` 的 `source`
-  字段引用这些文件名，对应文件在同一目录本地保留。
-
-规则：交付物随仓库长期保留；被取代或失效的运行数据移入 `runtime/` 本地保留，不新开逐文件 `.gitignore`
-白名单（与 `artifacts/README.md` 一致）。
+06 原件现在位于 `runtime/inference_throughput/06_archived/`；07 错误输入窗口仍位于 `runtime/inference_throughput/07/`。中间分片继续位于 `runtime/inference_throughput/06_stage_logs/`。这些只作本地审计，不是当前基线；迁移机器时自行备份。规则与上层 artifacts README 一致。

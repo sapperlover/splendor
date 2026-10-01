@@ -1,0 +1,75 @@
+{
+  "checkpoint_identity": {
+    "path": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "sha256": "009d17d2e9bc0d879142d7ca3ff1777a6f8caa9dda9243c6a2d5eb3538b5d5b0"
+  },
+  "config": {
+    "add_root_noise": true,
+    "checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "execution": {
+      "active_games_per_worker": 500,
+      "actor_projection": true,
+      "backend": "native_cuda",
+      "batch_interface": "native",
+      "candidate_buckets": [
+        16,
+        32,
+        48
+      ],
+      "compile_failure_policy": "fallback",
+      "compile_mode": null,
+      "engine_mode": "fast",
+      "inference_mode": "compiled",
+      "max_batch_size": 500,
+      "max_batch_wait_ms": 0,
+      "native_transport": "reused",
+      "pipeline_slots": 1,
+      "precision": "float32",
+      "torch_threads": 1,
+      "workers": 1
+    },
+    "max_completed_turns": 400,
+    "num_games": 500,
+    "protocol": "mcts-selfplay-v2",
+    "round_index": 0,
+    "run_id": "selfplay_cuda_baseline_500",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "seed": 9500000,
+      "simulations": 1024
+    },
+    "seed": 12347000,
+    "split_seed": 12348000,
+    "temperature_schedule": {
+      "late_temperature": 0.0,
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0
+    },
+    "validation_fraction": 0.1
+  },
+  "protocol": "mcts-selfplay-v2",
+  "semantic_fingerprint": "7167bf0b37355ab150c2508ec9ca3308969b48e854d5cd213f76bec60b19e44a",
+  "source": {
+    "git_dirty": true,
+    "git_revision": "638a06eaa2dfce76abac4d2188c1b33584c99734"
+  },
+  "versions": {
+    "batch_interface": "native",
+    "data": "splendor-mcts-selfplay-v2",
+    "feature": "splendor-observation-action-v1",
+    "inference": "compiled-projection",
+    "native_gpu_layout": "row-stride-v2",
+    "native_rules": "cpp17-native-game-v1",
+    "numeric": "native-cpp-fp32-v1",
+    "replay": 2,
+    "rng": "splitmix64-world-mt19937-gamma-v1",
+    "rules": "splendor-base-two-player-v2-forced-skip",
+    "search": "determinized-puct-native-v1",
+    "seed": "splendor-selfplay-seed-v1"
+  }
+}

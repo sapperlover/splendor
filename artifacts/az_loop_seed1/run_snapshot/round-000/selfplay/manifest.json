@@ -1,0 +1,59 @@
+{
+  "checkpoint_identity": {
+    "path": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "sha256": "009d17d2e9bc0d879142d7ca3ff1777a6f8caa9dda9243c6a2d5eb3538b5d5b0"
+  },
+  "config": {
+    "add_root_noise": true,
+    "checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "execution": {
+      "active_games_per_worker": 4,
+      "backend": "batched_cpu",
+      "engine_mode": "fast",
+      "max_batch_size": 4,
+      "max_batch_wait_ms": 2,
+      "precision": "float32",
+      "torch_threads": 1,
+      "workers": 8
+    },
+    "max_completed_turns": 400,
+    "num_games": 500,
+    "protocol": "mcts-selfplay-v2",
+    "round_index": 0,
+    "run_id": "az_loop_seed1-round-000",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "seed": 9500000,
+      "simulations": 1024
+    },
+    "seed": 16920688414588420463,
+    "split_seed": 3404252104235156204,
+    "temperature_schedule": {
+      "late_temperature": 0.0,
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0
+    },
+    "validation_fraction": 0.1
+  },
+  "protocol": "mcts-selfplay-v2",
+  "semantic_fingerprint": "b73715e9e0b16c354ed16a11b0a400269e7e140579aaa5af7b572f7cf9809597",
+  "source": {
+    "git_dirty": true,
+    "git_revision": "edcfb239653d68d9e85b9b2707aa5fd45d2763ea"
+  },
+  "versions": {
+    "data": "splendor-mcts-selfplay-v2",
+    "feature": "splendor-observation-action-v1",
+    "numeric": "frozen-fp32-card-merged-v1",
+    "replay": 2,
+    "rng": "splitmix64-v1",
+    "rules": "splendor-base-two-player-v2-forced-skip",
+    "search": "determinized-puct-v2-batched",
+    "seed": "splendor-selfplay-seed-v1"
+  }
+}

@@ -1,19 +1,11 @@
-# 实验交付物
+# 长期实验交付物
 
-`artifacts/` 只保存值得随仓库长期留存的实验交付物，例如：
+本目录保存报告引用、值得长期复核的配置快照、汇总与统计表，默认纳入 Git。入口为 [实验索引](experiment_index.json)，按 valid、historical_valid、invalid_or_superseded、incomplete、unverified 明确适用范围；有效不等于“已证明棋力提升”。
 
-- 最终验收统计；
-- 完成报告引用的 CSV / JSON；
-- 用于复核结论的 matchup matrix 和分析表。
+日志、失败现场、cache、分片运行状态和可恢复 `*.games/` sidecar 放在忽略的 `runtime/` 或相邻被忽略的 sidecar 目录。训练 NPZ、checkpoint、TensorBoard 放在忽略的 `runs/`。新报告引用的必要汇总不能只存于 runtime；重型 sidecar/模型不因此纳管。
 
-这个目录默认纳入 Git，不再使用逐文件 `.gitignore` 白名单。例外是长实验为
-了断点恢复生成的 `<summary>.games/` 逐局 sidecar：它们是可再生成的运行状态，
-由根目录 `.gitignore` 统一忽略；同名汇总 JSON 仍作为实验交付物跟踪。
+失效或被替代的原始测量移入 runtime 本地保留，随仓库只保留失效原因、原/新位置、哈希与替代依据；历史有效的实验交付物继续保留，限定版本。未完成评测 summary 可在原恢复路径保留并明确 incomplete，不能当成完成结果。这两类与有效基线分开索引。
 
-除上述与汇总结果紧邻的可恢复 sidecar 外，日志、临时 checkpoint、失败现场、
-分片运行目录、cache 和其他程序运行状态仍应统一放入 `runtime/`，且
-`runtime/` 整体被 Git 忽略。
+既有 `work_package_*` 产物目录是历史实验身份，暂保留路径以兼容 manifest 和工具。docs 中的工作包原文已本地打包，不作为现行说明。归档位于 `runtime/document_archive/2026-10-01/`，被 Git 忽略；迁移环境需要另行备份。
 
-被取代或确认失效的运行数据（例如旧输入布局、旧计时口径下的窗口）同样移入 `runtime/` 本地保留，不留在本目录、也不新开逐文件 `.gitignore` 白名单。
-
-大型训练运行仍保留在历史上专用的 `runs/` 目录，该目录同样被 Git 忽略。
+[2026-10-01 保全清单](retention_manifest_2026-10-01.json) 记录新增原件副本的来源、字节数与 SHA-256。副本 JSON 内保留测量时绝对路径，不能据此认定复制后的目录缺失；外部清单定位长期副本。不用当前代码版本或硬件补填缺失的历史信息。

@@ -1,4 +1,4 @@
-"""Run per-generation FINAL-style comparisons of AZ-loop checkpoints vs the initial net.
+"""Run per-generation fixed comparisons of AZ-loop checkpoints vs the initial net.
 
 For every selected generation (theta1 = the checkpoint after AZ loop round 1) this
 script runs two fixed matchups against the initial 5M checkpoint:
@@ -11,11 +11,11 @@ from training (9.5M/9.51M/9.52M), the loop DEV panels (9.3M/9.31M/9.4M/9.41M),
 the smoke run (9.6M) and the 50-pair sweep (9.8M), so every generation - including
 older artifacts produced with the same block - is directly comparable per seed.
 
-Heavy per-pair summaries and their resumable ``*.games/`` sidecars go to the
-git-ignored ``runtime/az_loop_seed1_evals/`` by default; only the compact digest
-``artifacts/az_loop_seed1/generation_scores.json`` is meant for the repository.
+Per-pair summary JSON goes to ``artifacts/az_loop_seed1/evaluations/`` by default
+so published conclusions remain auditable. Resumable ``*.games/`` sidecars are
+git-ignored; the compact digest lives in ``artifacts/az_loop_seed1/generation_scores.json``.
 Generated evaluation configs are written with repository-relative paths under the
-git-ignored ``configs/az_loop_seed1_evals/``.  Use ``--digest-only`` to rebuild
+git-ignored ``runtime/az_loop_seed1_evals/configs/``. Use ``--digest-only`` to rebuild
 the digest from already finished outputs without running anything.
 """
 
@@ -37,8 +37,8 @@ INITIAL_CHECKPOINT = (
 DEFAULT_SEED_START = 9_900_000
 DEFAULT_POLICY_SEED_BASE = 9_910_000
 DEFAULT_BOOTSTRAP_SEED = 9_920_000
-DEFAULT_OUTPUT_DIR = Path("runtime/az_loop_seed1_evals")
-DEFAULT_CONFIG_DIR = Path("configs/az_loop_seed1_evals")
+DEFAULT_OUTPUT_DIR = Path("artifacts/az_loop_seed1/evaluations")
+DEFAULT_CONFIG_DIR = Path("runtime/az_loop_seed1_evals/configs")
 DEFAULT_DIGEST = Path("artifacts/az_loop_seed1/generation_scores.json")
 PANEL_ORDER = ("greedy", "mcts")
 MCTS_SEARCH_CONFIG = {
@@ -266,9 +266,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--policy-seed-base", type=int, default=DEFAULT_POLICY_SEED_BASE)
     parser.add_argument("--bootstrap-seed", type=int, default=DEFAULT_BOOTSTRAP_SEED)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR,
-                        help="heavy summaries + resumable game logs (default: runtime/, git-ignored)")
+                        help="auditable summaries (default: artifacts/az_loop_seed1/evaluations/); game sidecars are git-ignored")
     parser.add_argument("--config-dir", type=Path, default=DEFAULT_CONFIG_DIR,
-                        help="generated evaluation configs (default: configs/az_loop_seed1_evals/, git-ignored)")
+                        help="generated evaluation configs (default: runtime/az_loop_seed1_evals/configs/, git-ignored)")
     parser.add_argument("--digest-out", type=Path, default=DEFAULT_DIGEST,
                         help="compact aggregate meant for git (default: artifacts/az_loop_seed1/generation_scores.json)")
     parser.add_argument("--digest-only", action="store_true",
@@ -322,7 +322,7 @@ def main(argv: list[str] | None = None) -> int:
             f"(workers={args.workers}, device={args.device})",
             flush=True,
         )
-        print(f"heavy outputs -> {output_dir} (git-ignored); digest -> {digest_out}", flush=True)
+        print(f"summaries -> {output_dir}; game sidecars are git-ignored; digest -> {digest_out}", flush=True)
 
     if not args.dry_run:
         config_dir.mkdir(parents=True, exist_ok=True)
@@ -405,7 +405,7 @@ def main(argv: list[str] | None = None) -> int:
         "initial_checkpoint": repo_relative(INITIAL_CHECKPOINT),
         "seed_start": args.seed_start,
         "policy_seed_base": args.policy_seed_base,
-        "heavy_outputs": repo_relative(output_dir) + " (git-ignored)",
+        "heavy_outputs": repo_relative(output_dir),
         "rows": rows,
         "paired": [
             paired_stats(panel, generations, summaries.get(panel, {}))
@@ -421,7 +421,7 @@ def main(argv: list[str] | None = None) -> int:
     for row in rows:
         print(format_row(row), flush=True)
     print(f"\ndigest: {digest_out}", flush=True)
-    print(f"heavy per-pair data: {output_dir} (git-ignored)", flush=True)
+    print(f"per-pair summaries: {output_dir}; game sidecars are git-ignored", flush=True)
     if failures:
         print("\nfailures:", flush=True)
         for item in failures:

@@ -1,0 +1,129 @@
+{
+  "protocol": "experiment-index-v1",
+  "reviewed_on": "2026-10-01",
+  "entries": [
+    {
+      "id": "python-engine-rules-v2",
+      "status": "historical_valid",
+      "report": "docs/reports/engine_validation_zh-CN.md",
+      "evidence": [
+        "artifacts/work_package_2d/stress-10000-rules-v2.json"
+      ],
+      "scope": "Python checked engine; not latest regression or native coverage",
+      "evidence_hashes": {
+        "artifacts/work_package_2d/stress-10000-rules-v2.json": "6a59a8e36d86db6ff275cfae840b7ba83c96e7324a00f707aaa830dbf7bbb7fa"
+      }
+    },
+    {
+      "id": "ppo-5m-seed1",
+      "status": "historical_valid",
+      "report": "docs/reports/ppo_5m_zh-CN.md",
+      "evidence": [
+        "artifacts/work_package_5c/run_snapshot/summary.json",
+        "artifacts/work_package_5c/formal_candidates.csv"
+      ],
+      "scope": "single_process frozen run; DEV best, no reserved FINAL claim",
+      "evidence_hashes": {
+        "artifacts/work_package_5c/run_snapshot/summary.json": "fac844d017f838465ac75b55fbee8b6258031209223d9a9b8972254ca2d11816",
+        "artifacts/work_package_5c/formal_candidates.csv": "ede0405a61ed0d2010def2cd53bd5155d15e5b16fc7cfc954c8a747327a4cb10"
+      }
+    },
+    {
+      "id": "az-loop-seed1",
+      "status": "valid",
+      "report": "docs/reports/alphazero_seed1_zh-CN.md",
+      "evidence": [
+        "artifacts/az_loop_seed1/training_summary.json",
+        "artifacts/az_loop_seed1/generation_scores.json"
+      ],
+      "scope": "Python batched_cpu 5x500; single training seed",
+      "evidence_hashes": {
+        "artifacts/az_loop_seed1/training_summary.json": "715e6abb2035de0b48d9562a214f0197cef154786c2f5b765d390120f871f170",
+        "artifacts/az_loop_seed1/generation_scores.json": "baa385307869cc4752b5cb99ceac8f2f4842f9ba51e84ba99ef2f9e1a001987f"
+      }
+    },
+    {
+      "id": "native-inference-08",
+      "status": "valid",
+      "report": "docs/reports/inference_throughput_zh-CN.md",
+      "evidence": [
+        "artifacts/inference_throughput/08/summary_08_2026-09-29.json",
+        "artifacts/inference_throughput/08/round500_compare.json"
+      ],
+      "scope": "correct-row-stride single-owner windows and one full round per shape",
+      "evidence_hashes": {
+        "artifacts/inference_throughput/08/summary_08_2026-09-29.json": "a95875df1a9d520248ced5afbc74767b041c30e8da84ee7b88f37dfdef9930a6",
+        "artifacts/inference_throughput/08/round500_compare.json": "6d28ef0bdb02ee025a11282263677e2e2c6415cf4d994c978aef20ceeb333dc8"
+      }
+    },
+    {
+      "id": "transfer-profile-09",
+      "status": "valid",
+      "report": "docs/reports/inference_throughput_zh-CN.md",
+      "evidence": [
+        "artifacts/inference_throughput/09/profile_cuda500_transfer_2026-09-30.json"
+      ],
+      "scope": "replay microbenchmark; historical provenance incomplete",
+      "evidence_hashes": {
+        "artifacts/inference_throughput/09/profile_cuda500_transfer_2026-09-30.json": "3d977dfce4693ded9b95925142721cf2cfe3eec96e3feca6d8982073eb858a03"
+      }
+    },
+    {
+      "id": "gpu-pool-09",
+      "status": "valid",
+      "report": "docs/reports/multiworker_gpu_zh-CN.md",
+      "evidence": [
+        "artifacts/inference_throughput/multiworker_gpu/comparison_summary.json"
+      ],
+      "scope": "windows plus one full 500-game run per backend; no repeated production gain claim",
+      "evidence_hashes": {
+        "artifacts/inference_throughput/multiworker_gpu/comparison_summary.json": "5ad56e28ca77eb86502126462da53062c6f512ec4b8465d07a7d490257296137"
+      }
+    },
+    {
+      "id": "native-early-panel",
+      "status": "historical_valid",
+      "report": "docs/reports/inference_throughput_zh-CN.md",
+      "evidence": [
+        "artifacts/native_search/performance_2026-09-29.json"
+      ],
+      "scope": "early 8-game/batch1 implementation",
+      "evidence_hashes": {
+        "artifacts/native_search/performance_2026-09-29.json": "7ec2c08ad5f0179e4d2860236d54c3fbb0999d05eb7691d71c411b4e80359789"
+      }
+    },
+    {
+      "id": "inference-06-07",
+      "status": "invalid_or_superseded",
+      "report": "docs/reports/inference_throughput_zh-CN.md",
+      "evidence": [
+        "artifacts/inference_throughput/invalid_records.json"
+      ],
+      "scope": "raw records local only; no current baseline claims",
+      "evidence_hashes": {
+        "artifacts/inference_throughput/invalid_records.json": "8840fe7ae6d578ed244cc3ab02793bcf2c0ed1d7265599c1a32e148bcf674762"
+      }
+    },
+    {
+      "id": "mcts-sweep",
+      "status": "incomplete",
+      "report": "docs/reports/mcts_sweep_zh-CN.md",
+      "evidence": [
+        "artifacts/mcts_50pair_sweep/status_index.json"
+      ],
+      "scope": "01,02,05 complete; 03 incomplete, 04 not found",
+      "evidence_hashes": {
+        "artifacts/mcts_50pair_sweep/status_index.json": "b9a6c31a6876a157e03749c1a70457ec5572688b1fddaeb8b18edd99e5ae933f"
+      }
+    },
+    {
+      "id": "native-multi-round-training",
+      "status": "unverified",
+      "report": "docs/guides/alphazero_zh-CN.md",
+      "evidence": [],
+      "scope": "native smoke and standalone collection do not establish multi-round training performance",
+      "evidence_hashes": {}
+    }
+  ],
+  "other_retained_results": "Existing baseline and search aggregates remain under their original paths; absence from this focused index is not an invalidity judgment."
+}
