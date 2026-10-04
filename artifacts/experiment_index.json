@@ -123,6 +123,40 @@
       "evidence": [],
       "scope": "native smoke and standalone collection do not establish multi-round training performance",
       "evidence_hashes": {}
+    },
+    {
+      "id": "pipeline-profile-2026-10-02",
+      "recorded_on": "2026-10-03",
+      "status": "valid",
+      "report": "docs/reports/pipeline_profile_zh-CN.md",
+      "evidence": [
+        "artifacts/speed_profile_2026-10-02/summary.json",
+        "artifacts/speed_profile_2026-10-02/manifest.json"
+      ],
+      "scope": "bounded statistics only: old full-run phases, 24 learner steps per case, one native CPU pair, 35s opening and 16 full games; no production optimization or speed acceptance",
+      "evidence_hashes": {
+        "artifacts/speed_profile_2026-10-02/summary.json": "e1801bb470d9353b29408668258aed2bd0d639ded73291ed50b946b626726524",
+        "artifacts/speed_profile_2026-10-02/manifest.json": "3c5bb6c669ac7213dd04dae2494621cb3e60a72ad99a8f1e4e20ef40ac34e69a"
+      }
+    },
+    {
+      "id": "end-to-end-speed-2026-10-03",
+      "recorded_on": "2026-10-03",
+      "status": "valid",
+      "report": "docs/reports/end_to_end_speed_optimization_zh-CN.md",
+      "evidence": [
+        "artifacts/end_to_end_speed_2026-10-03/summary.json",
+        "artifacts/end_to_end_speed_2026-10-03/manifest.json",
+        "artifacts/end_to_end_speed_2026-10-03/learner_equivalence.json",
+        "artifacts/end_to_end_speed_2026-10-03/tests_final.json"
+      ],
+      "scope": "single-host one full run per case: baseline/optimized each 1000 production games + checked replay, each 50 pairs fixed theta5/theta4; independent fifth-replay learner 8 warmup + 128 measured steps with 256 MiB/2 GiB; no new strength or multi-round training claim",
+      "evidence_hashes": {
+        "artifacts/end_to_end_speed_2026-10-03/summary.json": "41388287fe6aec1c01f15cefb53410eee09c9b88eafe6b84cc8fce9a7695a90d",
+        "artifacts/end_to_end_speed_2026-10-03/manifest.json": "9f2c422f1284e0b3f75f299ab6e73934d665b1a245e843acc496a09d02ff7d2e",
+        "artifacts/end_to_end_speed_2026-10-03/learner_equivalence.json": "e5d537fb3bd71c6caac92e88924fcbd1893bd6afd11b82c1e6784dc530dfd182",
+        "artifacts/end_to_end_speed_2026-10-03/tests_final.json": "f38698a11e0751dcfd9b6cf8cc932f2cec5aea7aa74c4c5229c48ce2e568af93"
+      }
     }
   ],
   "other_retained_results": "Existing baseline and search aggregates remain under their original paths; absence from this focused index is not an invalidity judgment."

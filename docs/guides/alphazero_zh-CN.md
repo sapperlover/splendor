@@ -258,9 +258,19 @@ runs/az_loop_seed1/
 
 ## 10. 指标记录
 
+有限性能归因可使用 [`profile_speed_pipeline.py`](../../scripts/profile_speed_pipeline.py) 的 `learner`/`replay` 模式，复用冻结 replay 与本轮抽样种子，更新和诊断 checkpoint 仅写新 runtime。2026-10-02 的 [分项报告](../reports/pipeline_profile_zh-CN.md) 区分训练步、数据准备、checkpoint/validation 和 cache 冷启动；缓存对照不代表生产配置已经改动，旧 loop 的完整配置指纹仍必须保持一致。
+
 - 每步 JSONL：`policy_loss`、`value_loss`、`total_loss`、合法动作策略熵、`grad_norm`、`learning_rate`、`total_train_step`、current/history 抽样数。
 - 每轮：验证 split 的局数、样本数与 policy CE / value MSE；无验证局时记为 `available=false`，不从训练池冒充。
 - 终端周期进度（默认每 30 秒一条，`DEFAULT_PROGRESS_INTERVAL_SECONDS`，首个事件立即输出）：`collect_start`/`collect_progress`（已完成局数、本会话新增、局/分钟）、`train_start`/`train_progress`（轮内与全局步数、loss、步/秒、ETA）、`evaluate_progress`（面板、已完成 pairs、pairs/分钟）；阶段结束仍输出 `collect_complete`/`train_complete`/`evaluate_complete`。
 - TensorBoard：`train/*`（x 轴为全局步）；`validation/policy_ce`、`validation/value_mse`、`validation/policy_entropy`、`validation/games`、`validation/positions`（轮末全局步）；`collect/round-XXX/games_completed`、`collect/round-XXX/games_per_minute`（轮内相对秒，按轮分标签）；`collect/completed_games`、`collect/samples`、`collect/policy_samples`、`collect/simulations`、`collect/wall_seconds`、`collect/games_per_second`、`collect/policy_samples_per_second`、`collect/simulations_per_second`（以该轮入口全局步为 x 轴）；`eval/mcts_vs_parent_score_rate`、`eval/greedy_vs_initial_score_rate`、`system/eval_*_seconds_this_session`。
 - 采集吞吐沿用 selfplay 既有会话口径：`*_per_second` 的分子只含本次会话实际采集的对局，跨会话恢复不会伪造整轮速率。
 - 跨轮 target 熵会变化，CE 单独下降不构成棋力证据；不要求单个 minibatch loss 单调下降。
+
+## 大 replay cache 与批量评测配置
+
+新示例 `configs/speed_2026-10-03/alphazero_cached_example.json` 使用 2 GiB 有界整局 LRU cache；历史 run/config 与恢复指纹不改写。容量限制约束 cache 保留的数组，进程 RSS 还含模型、索引、批次及被样本继续引用的已淘汰数组。训练记录增加 `replay_cache`：hits/misses、decode_count/decoded_bytes、load_seconds、实际条目与字节。load 包含 ZIP/NPY 读取、解析与构造，不能全部解释为磁盘 I/O。
+
+固定第五轮replay的独立8步预热+128步对照已完成：测量84.04→5.06秒，含准备/预热/checkpoint/validation的总时间92.25→11.41秒；抽样序列、loss、模型和optimizer一致。大cache最后32步仍有约40.6% collate成本，但绝对约4.8ms/步；当前没有引入数据库或预取。新1000局真实归档另已通过两步训练与验证。结果和全局Torch RNG快照差异说明见[专题报告](../reports/end_to_end_speed_optimization_zh-CN.md)，不能将短对照加速外推到任意完整训练轮。
+
+`evaluation.mcts_execution` 可启用单 owner 的跨局 native 批量路径；该字段参与 loop 恢复身份，只用于MCTS vs parent面板，greedy面板继续原路径。此示例用于新目录，不能替换既有冻结配置后直接 resume。新native示例的极小闭环已经通过，但本次没有开展新的多轮棋力训练。

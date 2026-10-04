@@ -7,6 +7,7 @@ import importlib
 import math
 import time
 from collections import Counter
+from contextlib import nullcontext
 from dataclasses import dataclass, field
 from typing import Callable, Mapping, Sequence
 
@@ -138,6 +139,7 @@ def _compile_failure_types() -> tuple[type[BaseException], ...]:
 
     types: list[type[BaseException]] = []
     for module_name, class_name in (("torch._dynamo.exc", "TorchDynamoException"),
+                                    ("torch._dynamo.exc", "FailOnRecompileLimitHit"),
                                     ("torch._inductor.exc", "InductorError")):
         try:
             module = importlib.import_module(module_name)
@@ -307,7 +309,12 @@ class CompiledForward:
         def timed(*tensors):
             started = time.perf_counter()
             try:
-                result = graph(*tensors)
+                # Torch otherwise silently executes eager code when its guard
+                # cache limit is reached. Honor the explicit fail-fast contract.
+                strict = (torch._dynamo.config.patch(fail_on_recompile_limit_hit=True)
+                          if self.failure_policy == "fail_fast" else nullcontext())
+                with strict:
+                    result = graph(*tensors)
             except self.failure_types as error:
                 self._graphs.pop(name, None)
                 self._record_failure(name, "execute", error)

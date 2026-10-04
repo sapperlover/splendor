@@ -199,6 +199,11 @@ def test_whole_game_cache_serves_repeats_without_reloading(replay_runs, monkeypa
         assert sample.arrays is arrays and sample.index == position
     assert loads == [game.path]
     assert index.cache.entries == 1 and index.cache.bytes > 0
+    stats = index.cache.stats()
+    assert stats['hits'] == min(game.decision_count, 3)
+    assert stats['misses'] == stats['decode_count'] == 1
+    assert stats['decoded_bytes'] == stats['cache_bytes']
+    assert stats['load_seconds'] > 0
 
 
 def test_whole_game_cache_evicts_oldest_and_skips_oversized_games(replay_runs):
@@ -221,6 +226,8 @@ def test_whole_game_cache_evicts_oldest_and_skips_oversized_games(replay_runs):
     oversized = alphazero_replay._GameCache(max_bytes=1)
     assert oversized.sample(games[0], 0).index == 0
     assert oversized.entries == 0 and oversized.bytes == 0
+    assert oversized.stats()['decode_count'] == 1
+    assert oversized.stats()['decoded_bytes'] == sizes[0]
 
 
 def test_collection_reports_committed_game_progress(tmp_path):

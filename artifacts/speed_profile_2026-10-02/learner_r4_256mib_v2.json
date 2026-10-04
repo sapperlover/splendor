@@ -1,0 +1,1739 @@
+{
+  "protocol": "speed-pipeline-profile-v1",
+  "provenance": {
+    "command": [
+      "scripts/profile_speed_pipeline.py",
+      "--output",
+      "artifacts/speed_profile_2026-10-02/learner_r4_256mib_v2.json",
+      "--scratch",
+      "runtime/speed_profile_2026-10-02/learner_r4_256mib_v2",
+      "learner",
+      "--round",
+      "4",
+      "--cache-mib",
+      "256",
+      "--warmup-steps",
+      "8",
+      "--steps",
+      "24"
+    ],
+    "git_revision": "f213e6378559322d38ac5a3845118de1816950e2",
+    "git_status": "?? artifacts/speed_profile_2026-10-02/\n?? scripts/profile_speed_pipeline.py\n",
+    "script_sha256": "ab5cc93be7fea14281e9f5d1f63d195218ed01a4cd2cbceeb317cf0d367040f4",
+    "python": "3.12.14",
+    "torch": "2.14.0+cu130",
+    "cuda_build": "13.0",
+    "cuda_available": true,
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "cpu_count": 16,
+    "torch_threads": 1,
+    "meminfo": {
+      "MemTotal": "32597816 kB",
+      "MemAvailable": "24473912 kB"
+    }
+  },
+  "total_command_body_seconds": 22.921242604001236,
+  "result": {
+    "round": 4,
+    "cache_mib": 256,
+    "device": "cuda",
+    "learner_config": {
+      "device": "cuda",
+      "batch_size": 256,
+      "history_batch_size": 128,
+      "learning_rate": 0.0001,
+      "weight_decay": 0.0001,
+      "policy_loss_weight": 1.0,
+      "value_loss_weight": 1.0,
+      "max_grad_norm": 1.0,
+      "steps_per_new_position": 4.0,
+      "checkpoint_every_steps": 100,
+      "validation_batch_size": 256,
+      "max_steps_per_round": null
+    },
+    "sampling_seed": 7472986141618057342,
+    "parent_checkpoint": {
+      "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+      "sha256": "c4e85e27c1242c640c1504fe10d158a7817efd6c0ceed7e165dbb8b68aa26e7c"
+    },
+    "replay_identity": {
+      "protocol": "alphazero-replay-index-v1",
+      "total_games": 2500,
+      "train_games": 2238,
+      "validation_games": 262,
+      "train_positions": 190660,
+      "evicted_games": 0,
+      "digest": "b13060726f79b8f5bfdbca7d20457cd467c5947bd9c4e2fd7e0d1ca35f565f46",
+      "first_key": [
+        0,
+        0
+      ],
+      "last_key": [
+        4,
+        499
+      ]
+    },
+    "index_seconds": 0.9619217500003288,
+    "validation_prepare_seconds": 0.15843223399861017,
+    "initialization_seconds": 0.7991321789995709,
+    "warmup_steps": 8,
+    "warmup_seconds": 5.493624683997041,
+    "measured_steps": 24,
+    "measured_wall_seconds": 15.398064932005582,
+    "exclusive_host_wall_seconds": {
+      "draw": 15.0619196239968,
+      "collate": 0.128424675000133,
+      "target_h2d": 0.006263541001317208,
+      "feature_h2d": 0.019410706001508515,
+      "forward": 0.03877889800060075,
+      "loss": 0.007252304001667653,
+      "backward": 0.0462618330038822,
+      "gradient_clip": 0.012270092998733162,
+      "optimizer": 0.019516053996994742,
+      "completion_wait": 0.0007374380020337412,
+      "metrics_write": 0.0036587280010280665,
+      "train_step_remainder": 0.041128457993181655,
+      "measurement_and_loop_remainder": 0.012442580007700599
+    },
+    "cuda_stream_seconds": {
+      "target_h2d": 0.007238496035337447,
+      "feature_h2d": 0.02070063996315002,
+      "forward": 0.04359548771381378,
+      "loss": 0.0062046080492436885,
+      "backward": 0.048296224236488335,
+      "gradient_clip": 0.012674720019102095,
+      "optimizer": 0.02060262405872345
+    },
+    "cache_total": {
+      "misses": 6110,
+      "decoded_bytes": 3996683104,
+      "hits": 2082
+    },
+    "reference_sequence_sha256": "7e65fcaef6064cd822c7ee48eb08d5a6fedad74c124bfb83af6c363b10742707",
+    "checkpoint_validation": {
+      "host_wall_seconds": {
+        "checkpoint": 0.007299454999156296,
+        "validation": 0.08630798400008644
+      },
+      "calls": {
+        "checkpoint": 1,
+        "validation": 1
+      },
+      "cuda_stream_seconds": {}
+    },
+    "validation": {
+      "available": true,
+      "positions": 4326,
+      "policy_loss": 1.9530846445790022,
+      "value_loss": 0.7371391317550088,
+      "policy_entropy": 1.9226190651646922
+    },
+    "top_train_step_functions": [
+      {
+        "function": "~:0:<method 'run_backward' of 'torch._C._EngineBase' objects>",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.044373662,
+        "inclusive_wall_seconds": 0.044373662
+      },
+      {
+        "function": "~:0:<built-in method torch.as_tensor>",
+        "calls": 528,
+        "primitive_calls": 528,
+        "self_wall_seconds": 0.024491846,
+        "inclusive_wall_seconds": 0.024491846
+      },
+      {
+        "function": "~:0:<built-in method torch._C._nn.linear>",
+        "calls": 336,
+        "primitive_calls": 336,
+        "self_wall_seconds": 0.009211657,
+        "inclusive_wall_seconds": 0.009211657
+      },
+      {
+        "function": "~:0:<built-in method torch.where>",
+        "calls": 504,
+        "primitive_calls": 504,
+        "self_wall_seconds": 0.0068731420000000005,
+        "inclusive_wall_seconds": 0.0068731420000000005
+      },
+      {
+        "function": "~:0:<method 'item' of 'torch._C.TensorBase' objects>",
+        "calls": 960,
+        "primitive_calls": 960,
+        "self_wall_seconds": 0.006020927000000001,
+        "inclusive_wall_seconds": 0.006020927000000001
+      },
+      {
+        "function": "/home/lc/下载/splendor/src/splendor/alphazero_train.py:372:train_step",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.004990476000000001,
+        "inclusive_wall_seconds": 0.18946585300000002
+      },
+      {
+        "function": "~:0:<method 'sum' of 'torch._C.TensorBase' objects>",
+        "calls": 456,
+        "primitive_calls": 456,
+        "self_wall_seconds": 0.004748789000000001,
+        "inclusive_wall_seconds": 0.004748789000000001
+      },
+      {
+        "function": "~:0:<built-in method torch.isfinite>",
+        "calls": 120,
+        "primitive_calls": 120,
+        "self_wall_seconds": 0.0033967750000000003,
+        "inclusive_wall_seconds": 0.0033967750000000003
+      },
+      {
+        "function": "~:0:<built-in method torch.relu>",
+        "calls": 288,
+        "primitive_calls": 288,
+        "self_wall_seconds": 0.002860052,
+        "inclusive_wall_seconds": 0.002860052
+      },
+      {
+        "function": "/home/lc/下载/splendor/src/splendor/actor_critic.py:340:<genexpr>",
+        "calls": 144,
+        "primitive_calls": 144,
+        "self_wall_seconds": 0.002758415,
+        "inclusive_wall_seconds": 0.008816230000000001
+      },
+      {
+        "function": "/home/lc/下载/splendor/src/splendor/alphazero_train.py:128:alphazero_loss_sums",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.002660047,
+        "inclusive_wall_seconds": 0.007032311
+      },
+      {
+        "function": "~:0:<built-in method torch.cat>",
+        "calls": 240,
+        "primitive_calls": 240,
+        "self_wall_seconds": 0.002500089,
+        "inclusive_wall_seconds": 0.002500089
+      },
+      {
+        "function": "~:0:<function Event.record at 0x79441d98c7c0>",
+        "calls": 336,
+        "primitive_calls": 336,
+        "self_wall_seconds": 0.0023147650000000003,
+        "inclusive_wall_seconds": 0.0023147650000000003
+      },
+      {
+        "function": "~:0:<built-in method torch._foreach_norm>",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.002086131,
+        "inclusive_wall_seconds": 0.002086131
+      },
+      {
+        "function": "/home/lc/下载/splendor/scripts/profile_speed_pipeline.py:85:stage",
+        "calls": 384,
+        "primitive_calls": 384,
+        "self_wall_seconds": 0.0016442240000000001,
+        "inclusive_wall_seconds": 0.014802092000000001
+      },
+      {
+        "function": "~:0:<built-in method torch.zeros_like>",
+        "calls": 216,
+        "primitive_calls": 216,
+        "self_wall_seconds": 0.001573172,
+        "inclusive_wall_seconds": 0.001573172
+      },
+      {
+        "function": "/home/lc/下载/splendor/src/splendor/actor_critic.py:359:encode_actions",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.0014099820000000002,
+        "inclusive_wall_seconds": 0.006966305000000001
+      },
+      {
+        "function": "~:0:<built-in method torch._foreach_sqrt>",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.001279718,
+        "inclusive_wall_seconds": 0.001279718
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:1787:_call_impl",
+        "calls": 912,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.0012294340000000002,
+        "inclusive_wall_seconds": 0.066311769
+      },
+      {
+        "function": "~:0:<method 'any' of 'torch._C.TensorBase' objects>",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.001227966,
+        "inclusive_wall_seconds": 0.001227966
+      },
+      {
+        "function": "~:0:<built-in method builtins.isinstance>",
+        "calls": 8688,
+        "primitive_calls": 7440,
+        "self_wall_seconds": 0.001199304,
+        "inclusive_wall_seconds": 0.0019866750000000002
+      },
+      {
+        "function": "~:0:<method 'clamp_min' of 'torch._C.TensorBase' objects>",
+        "calls": 168,
+        "primitive_calls": 168,
+        "self_wall_seconds": 0.001188271,
+        "inclusive_wall_seconds": 0.001188271
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:2845:named_modules",
+        "calls": 2856,
+        "primitive_calls": 840,
+        "self_wall_seconds": 0.001153546,
+        "inclusive_wall_seconds": 0.0017663630000000002
+      },
+      {
+        "function": "~:0:<built-in method torch._ops.profiler._record_function_enter_new>",
+        "calls": 48,
+        "primitive_calls": 48,
+        "self_wall_seconds": 0.001129175,
+        "inclusive_wall_seconds": 0.001129175
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/cuda/__init__.py:1297:current_stream",
+        "calls": 336,
+        "primitive_calls": 336,
+        "self_wall_seconds": 0.00112648,
+        "inclusive_wall_seconds": 0.009396535000000001
+      },
+      {
+        "function": "~:0:<method 'unsqueeze' of 'torch._C.TensorBase' objects>",
+        "calls": 528,
+        "primitive_calls": 528,
+        "self_wall_seconds": 0.001087318,
+        "inclusive_wall_seconds": 0.001087318
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/optim/optimizer.py:1047:zero_grad",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.001073381,
+        "inclusive_wall_seconds": 0.002629155
+      },
+      {
+        "function": "~:0:<built-in method torch._foreach_mul_>",
+        "calls": 72,
+        "primitive_calls": 72,
+        "self_wall_seconds": 0.00106011,
+        "inclusive_wall_seconds": 0.00106011
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/optim/adam.py:553:_multi_tensor_adam",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.001056441,
+        "inclusive_wall_seconds": 0.013794966
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:1976:__setattr__",
+        "calls": 624,
+        "primitive_calls": 624,
+        "self_wall_seconds": 0.001046375,
+        "inclusive_wall_seconds": 0.0028577940000000003
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/optim/adam.py:139:_init_group",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.001043183,
+        "inclusive_wall_seconds": 0.0016018780000000002
+      },
+      {
+        "function": "/home/lc/下载/splendor/src/splendor/actor_critic.py:289:_prepare",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.0009830330000000001,
+        "inclusive_wall_seconds": 0.024880028000000002
+      },
+      {
+        "function": "~:0:<built-in method __new__ of type object at 0x6428fa7de7a0>",
+        "calls": 816,
+        "primitive_calls": 816,
+        "self_wall_seconds": 0.000951119,
+        "inclusive_wall_seconds": 0.000951119
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:2894:train",
+        "calls": 624,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.0009277170000000001,
+        "inclusive_wall_seconds": 0.005067048
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/cuda/streams.py:37:__new__",
+        "calls": 336,
+        "primitive_calls": 336,
+        "self_wall_seconds": 0.000884483,
+        "inclusive_wall_seconds": 0.0014268190000000002
+      },
+      {
+        "function": "~:0:<method 'masked_fill' of 'torch._C.TensorBase' objects>",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.0008635240000000001,
+        "inclusive_wall_seconds": 0.0008635240000000001
+      },
+      {
+        "function": "/home/lc/下载/splendor/scripts/profile_speed_pipeline.py:117:call",
+        "calls": 168,
+        "primitive_calls": 168,
+        "self_wall_seconds": 0.000861161,
+        "inclusive_wall_seconds": 0.165207067
+      },
+      {
+        "function": "/home/lc/下载/splendor/src/splendor/actor_critic.py:328:encode_state",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.00086036,
+        "inclusive_wall_seconds": 0.026271818000000002
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:2650:_named_members",
+        "calls": 552,
+        "primitive_calls": 552,
+        "self_wall_seconds": 0.0008391640000000001,
+        "inclusive_wall_seconds": 0.003371081
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/optim/optimizer.py:97:_get_value",
+        "calls": 960,
+        "primitive_calls": 960,
+        "self_wall_seconds": 0.0008277130000000001,
+        "inclusive_wall_seconds": 0.0072341670000000005
+      }
+    ],
+    "steps": [
+      {
+        "host_wall_seconds": {
+          "draw": 0.5787087280004926,
+          "collate": 0.00573817000076815,
+          "target_h2d": 0.000245138999162009,
+          "feature_h2d": 0.0007225130011647707,
+          "forward": 0.001958425000339048,
+          "loss": 0.0003230599995731609,
+          "backward": 0.0021034719993622275,
+          "gradient_clip": 0.0006020239998179022,
+          "optimizer": 0.0009062819990504067,
+          "train_step": 0.00895535899871902,
+          "completion_wait": 3.224600004614331e-05,
+          "metrics_write": 0.0001509729991084896
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00029097598791122435,
+          "feature_h2d": 0.000766975998878479,
+          "forward": 0.0022954559326171875,
+          "loss": 0.00019046400487422944,
+          "backward": 0.002167167901992798,
+          "gradient_clip": 0.000638975977897644,
+          "optimizer": 0.0009412479996681214
+        },
+        "train_step_remainder_seconds": 0.0020944440002494957,
+        "step": 8,
+        "wall_seconds": 0.5940982939991954,
+        "decode_seconds": 0.5684094369880768,
+        "cache_delta": {
+          "misses": 187,
+          "decoded_bytes": 122531223,
+          "hits": 69
+        },
+        "cache_bytes": 268045612,
+        "cache_entries": 409,
+        "candidate_width": 32,
+        "candidate_positions": 3503,
+        "physical_candidate_positions": 8192,
+        "policy_samples": 193,
+        "total_loss": 2.6888365745544434
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.6298008159992605,
+          "collate": 0.005320725000274251,
+          "target_h2d": 0.00022965099924476817,
+          "feature_h2d": 0.0007096289991750382,
+          "forward": 0.0016835810001794016,
+          "loss": 0.00029171700043661986,
+          "backward": 0.0017994909994740738,
+          "gradient_clip": 0.00048670700016373303,
+          "optimizer": 0.00076311599877954,
+          "train_step": 0.00762118999955419,
+          "completion_wait": 3.010500040545594e-05,
+          "metrics_write": 0.00014214600014383905
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00026624000072479246,
+          "feature_h2d": 0.0007578880190849304,
+          "forward": 0.0018244800567626953,
+          "loss": 0.00029702401161193847,
+          "backward": 0.001847391963005066,
+          "gradient_clip": 0.0005180799961090088,
+          "optimizer": 0.0007933120131492614
+        },
+        "train_step_remainder_seconds": 0.0016572980021010153,
+        "step": 9,
+        "wall_seconds": 0.6434721480000007,
+        "decode_seconds": 0.618470408995563,
+        "cache_delta": {
+          "misses": 201,
+          "decoded_bytes": 133784473,
+          "hits": 55
+        },
+        "cache_bytes": 268272619,
+        "cache_entries": 406,
+        "candidate_width": 34,
+        "candidate_positions": 3533,
+        "physical_candidate_positions": 8704,
+        "policy_samples": 199,
+        "total_loss": 2.7586779594421387
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.7190240660002019,
+          "collate": 0.005045363999670371,
+          "target_h2d": 0.00023392399998556357,
+          "feature_h2d": 0.0006743020003341371,
+          "forward": 0.0015288489994418342,
+          "loss": 0.0002805399999488145,
+          "backward": 0.0018813959995895857,
+          "gradient_clip": 0.0004911920004815329,
+          "optimizer": 0.0007588460011902498,
+          "train_step": 0.007489309999073157,
+          "completion_wait": 2.7300000510876998e-05,
+          "metrics_write": 0.00014382799963641446
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0002661440074443817,
+          "feature_h2d": 0.0007159360051155091,
+          "forward": 0.0016720319986343385,
+          "loss": 0.0002826240062713623,
+          "backward": 0.0019542399644851684,
+          "gradient_clip": 0.0005222399830818176,
+          "optimizer": 0.0007904319763183594
+        },
+        "train_step_remainder_seconds": 0.0016402609981014393,
+        "step": 10,
+        "wall_seconds": 0.732277160999729,
+        "decode_seconds": 0.7077304580034252,
+        "cache_delta": {
+          "misses": 198,
+          "decoded_bytes": 129770388,
+          "hits": 58
+        },
+        "cache_bytes": 268044323,
+        "cache_entries": 405,
+        "candidate_width": 32,
+        "candidate_positions": 3329,
+        "physical_candidate_positions": 8192,
+        "policy_samples": 197,
+        "total_loss": 2.5349512100219727
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5816431759994884,
+          "collate": 0.004971438000211492,
+          "target_h2d": 0.0002210990005551139,
+          "feature_h2d": 0.0015168579993769526,
+          "forward": 0.0016033169995353092,
+          "loss": 0.0003403329992579529,
+          "backward": 0.001827297001000261,
+          "gradient_clip": 0.0005633729997498449,
+          "optimizer": 0.0008128580011543818,
+          "train_step": 0.008560612999644945,
+          "completion_wait": 3.176400059601292e-05,
+          "metrics_write": 0.00017606900109967683
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00025833600759506224,
+          "feature_h2d": 0.0015656960010528565,
+          "forward": 0.0017605439424514771,
+          "loss": 0.0003184640109539032,
+          "backward": 0.0018836480379104614,
+          "gradient_clip": 0.0005939199924468994,
+          "optimizer": 0.0008460479974746704
+        },
+        "train_step_remainder_seconds": 0.0016754779990151292,
+        "step": 11,
+        "wall_seconds": 0.5958629260003363,
+        "decode_seconds": 0.5710627550070058,
+        "cache_delta": {
+          "misses": 187,
+          "decoded_bytes": 122487370,
+          "hits": 69
+        },
+        "cache_bytes": 267897148,
+        "cache_entries": 408,
+        "candidate_width": 33,
+        "candidate_positions": 3330,
+        "physical_candidate_positions": 8448,
+        "policy_samples": 195,
+        "total_loss": 2.5600948333740234
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.580607379999492,
+          "collate": 0.005458700999952271,
+          "target_h2d": 0.00023086000146577135,
+          "feature_h2d": 0.0007193390010797884,
+          "forward": 0.0016254100009973627,
+          "loss": 0.0002853980004147161,
+          "backward": 0.0017758419999154285,
+          "gradient_clip": 0.0005147230003785808,
+          "optimizer": 0.0007896019997133408,
+          "train_step": 0.007846557000448229,
+          "completion_wait": 2.821199996105861e-05,
+          "metrics_write": 0.0001490969989390578
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00026579201221466064,
+          "feature_h2d": 0.0008897600173950195,
+          "forward": 0.001970016002655029,
+          "loss": 0.00026624000072479246,
+          "backward": 0.0018909120559692384,
+          "gradient_clip": 0.0005160959959030152,
+          "optimizer": 0.0008209279775619507
+        },
+        "train_step_remainder_seconds": 0.0019053829964832403,
+        "step": 12,
+        "wall_seconds": 0.5946071620001021,
+        "decode_seconds": 0.5695789120036352,
+        "cache_delta": {
+          "misses": 185,
+          "decoded_bytes": 122210152,
+          "hits": 71
+        },
+        "cache_bytes": 268120228,
+        "cache_entries": 409,
+        "candidate_width": 35,
+        "candidate_positions": 3678,
+        "physical_candidate_positions": 8960,
+        "policy_samples": 210,
+        "total_loss": 2.769035577774048
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.6833284849999472,
+          "collate": 0.005301428000166197,
+          "target_h2d": 0.0002184349996241508,
+          "feature_h2d": 0.0007236669989652,
+          "forward": 0.0015308170004573185,
+          "loss": 0.00028897999982291367,
+          "backward": 0.0017416089995094808,
+          "gradient_clip": 0.00047582099978171755,
+          "optimizer": 0.0007889600001362851,
+          "train_step": 0.007436599000357091,
+          "completion_wait": 2.8415999622666277e-05,
+          "metrics_write": 0.00014911200014466885
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00026096001267433166,
+          "feature_h2d": 0.0007639679908752441,
+          "forward": 0.0017241599559783935,
+          "loss": 0.0002170879989862442,
+          "backward": 0.0019054720401763916,
+          "gradient_clip": 0.0005304960012435913,
+          "optimizer": 0.0008203200101852417
+        },
+        "train_step_remainder_seconds": 0.001668310002060025,
+        "step": 13,
+        "wall_seconds": 0.6967460819996631,
+        "decode_seconds": 0.6721100690010644,
+        "cache_delta": {
+          "misses": 184,
+          "decoded_bytes": 120621501,
+          "hits": 72
+        },
+        "cache_bytes": 268369807,
+        "cache_entries": 409,
+        "candidate_width": 34,
+        "candidate_positions": 3266,
+        "physical_candidate_positions": 8704,
+        "policy_samples": 191,
+        "total_loss": 2.7296175956726074
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.6437119969996274,
+          "collate": 0.005376797000280931,
+          "target_h2d": 0.00039140199987741653,
+          "feature_h2d": 0.001045078000970534,
+          "forward": 0.0016033430001698434,
+          "loss": 0.00030595899988838937,
+          "backward": 0.0018024390010396019,
+          "gradient_clip": 0.0005026239996368531,
+          "optimizer": 0.0008365140001842519,
+          "train_step": 0.008158321001246804,
+          "completion_wait": 3.4472001061658375e-05,
+          "metrics_write": 0.00015644300037820358
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0004290559887886047,
+          "feature_h2d": 0.00108953595161438,
+          "forward": 0.001795807957649231,
+          "loss": 0.00024063999950885772,
+          "backward": 0.0018551679849624634,
+          "gradient_clip": 0.0005345600247383118,
+          "optimizer": 0.0008982080221176148
+        },
+        "train_step_remainder_seconds": 0.001670961999479914,
+        "step": 14,
+        "wall_seconds": 0.6580082420005056,
+        "decode_seconds": 0.6314247359841829,
+        "cache_delta": {
+          "misses": 206,
+          "decoded_bytes": 134725212,
+          "hits": 50
+        },
+        "cache_bytes": 268047067,
+        "cache_entries": 409,
+        "candidate_width": 35,
+        "candidate_positions": 3468,
+        "physical_candidate_positions": 8960,
+        "policy_samples": 197,
+        "total_loss": 2.723090171813965
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5553825140013942,
+          "collate": 0.00523539000096207,
+          "target_h2d": 0.0002330229999643052,
+          "feature_h2d": 0.0006900309999764431,
+          "forward": 0.0015686599999753525,
+          "loss": 0.0002864639991457807,
+          "backward": 0.0018147780010622228,
+          "gradient_clip": 0.0005036149996158201,
+          "optimizer": 0.0007583520000480348,
+          "train_step": 0.007500343999709003,
+          "completion_wait": 2.813399987644516e-05,
+          "metrics_write": 0.00014079500033403747
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00027184000611305237,
+          "feature_h2d": 0.000737280011177063,
+          "forward": 0.0017375040054321289,
+          "loss": 0.0002631680071353912,
+          "backward": 0.00187772798538208,
+          "gradient_clip": 0.0005344640016555786,
+          "optimizer": 0.0007906559705734253
+        },
+        "train_step_remainder_seconds": 0.0016454209999210434,
+        "step": 15,
+        "wall_seconds": 0.5687591720015917,
+        "decode_seconds": 0.5444141469852184,
+        "cache_delta": {
+          "misses": 176,
+          "decoded_bytes": 113773650,
+          "hits": 80
+        },
+        "cache_bytes": 267897753,
+        "cache_entries": 411,
+        "candidate_width": 35,
+        "candidate_positions": 3297,
+        "physical_candidate_positions": 8960,
+        "policy_samples": 196,
+        "total_loss": 2.619917631149292
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.7044867149998026,
+          "collate": 0.0052212539994798135,
+          "target_h2d": 0.0002300079995620763,
+          "feature_h2d": 0.0006898909996380098,
+          "forward": 0.0016143499997269828,
+          "loss": 0.0003247800013923552,
+          "backward": 0.0018992730001627933,
+          "gradient_clip": 0.0004966769993188791,
+          "optimizer": 0.000774776000980637,
+          "train_step": 0.007663591999516939,
+          "completion_wait": 2.7383000997360796e-05,
+          "metrics_write": 0.0001425219998054672
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00027139198780059816,
+          "feature_h2d": 0.0007352319955825806,
+          "forward": 0.001762336015701294,
+          "loss": 0.00030720001459121706,
+          "backward": 0.001949504017829895,
+          "gradient_clip": 0.0005283839702606201,
+          "optimizer": 0.000808575987815857
+        },
+        "train_step_remainder_seconds": 0.0016338369987352053,
+        "step": 16,
+        "wall_seconds": 0.718093305000366,
+        "decode_seconds": 0.6929301290001604,
+        "cache_delta": {
+          "misses": 191,
+          "decoded_bytes": 125147805,
+          "hits": 65
+        },
+        "cache_bytes": 268405059,
+        "cache_entries": 411,
+        "candidate_width": 33,
+        "candidate_positions": 3084,
+        "physical_candidate_positions": 8448,
+        "policy_samples": 192,
+        "total_loss": 2.609170913696289
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5804318139998941,
+          "collate": 0.0052703239998663776,
+          "target_h2d": 0.00022475299920188263,
+          "feature_h2d": 0.0007142719987314194,
+          "forward": 0.001550171000417322,
+          "loss": 0.0003150649990857346,
+          "backward": 0.0018635890010045841,
+          "gradient_clip": 0.0004989159988326719,
+          "optimizer": 0.0008166359984898008,
+          "train_step": 0.007588080001369235,
+          "completion_wait": 2.870399839594029e-05,
+          "metrics_write": 0.0001697389998298604
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00026076799631118776,
+          "feature_h2d": 0.0007577279806137085,
+          "forward": 0.0017049280405044556,
+          "loss": 0.0002836480140686035,
+          "backward": 0.0019178240299224853,
+          "gradient_clip": 0.0005302720069885254,
+          "optimizer": 0.0008488960266113281
+        },
+        "train_step_remainder_seconds": 0.0016046780056058196,
+        "step": 17,
+        "wall_seconds": 0.5939260230006767,
+        "decode_seconds": 0.5686540509923361,
+        "cache_delta": {
+          "misses": 183,
+          "decoded_bytes": 119625783,
+          "hits": 73
+        },
+        "cache_bytes": 268090662,
+        "cache_entries": 410,
+        "candidate_width": 33,
+        "candidate_positions": 3334,
+        "physical_candidate_positions": 8448,
+        "policy_samples": 206,
+        "total_loss": 2.6743016242980957
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5810912139986613,
+          "collate": 0.0052794950006500585,
+          "target_h2d": 0.00023580400011269376,
+          "feature_h2d": 0.0007229389993881341,
+          "forward": 0.0015533599998889258,
+          "loss": 0.0002812149996316293,
+          "backward": 0.001827339998271782,
+          "gradient_clip": 0.00047828899914748035,
+          "optimizer": 0.000796854999862262,
+          "train_step": 0.007733845000984729,
+          "completion_wait": 3.430600008869078e-05,
+          "metrics_write": 0.00015639599951100536
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00026921600103378294,
+          "feature_h2d": 0.0007620480060577393,
+          "forward": 0.0020575358867645265,
+          "loss": 5.119999870657921e-05,
+          "backward": 0.0018810880184173583,
+          "gradient_clip": 0.0005150719881057739,
+          "optimizer": 0.0008670079708099365
+        },
+        "train_step_remainder_seconds": 0.001838043004681822,
+        "step": 18,
+        "wall_seconds": 0.5947386349998851,
+        "decode_seconds": 0.5696912279945536,
+        "cache_delta": {
+          "misses": 184,
+          "decoded_bytes": 119199723,
+          "hits": 72
+        },
+        "cache_bytes": 267936073,
+        "cache_entries": 412,
+        "candidate_width": 34,
+        "candidate_positions": 3310,
+        "physical_candidate_positions": 8704,
+        "policy_samples": 192,
+        "total_loss": 2.6316354274749756
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.627762337000604,
+          "collate": 0.005356182999094017,
+          "target_h2d": 0.00022338999951898586,
+          "feature_h2d": 0.0008313449998240685,
+          "forward": 0.0016488880010001594,
+          "loss": 0.0003006330007337965,
+          "backward": 0.0017576509999344125,
+          "gradient_clip": 0.0005010650002077455,
+          "optimizer": 0.0008417579992965329,
+          "train_step": 0.007826143999409396,
+          "completion_wait": 3.505300082906615e-05,
+          "metrics_write": 0.00014009300139150582
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0002576000094413757,
+          "feature_h2d": 0.000881663978099823,
+          "forward": 0.0018319679498672485,
+          "loss": 0.0002447360008955002,
+          "backward": 0.0018180480003356933,
+          "gradient_clip": 0.0005416640043258667,
+          "optimizer": 0.0008807680010795593
+        },
+        "train_step_remainder_seconds": 0.001721413998893695,
+        "step": 19,
+        "wall_seconds": 0.6416790220009716,
+        "decode_seconds": 0.6153985869987082,
+        "cache_delta": {
+          "misses": 198,
+          "decoded_bytes": 130745557,
+          "hits": 58
+        },
+        "cache_bytes": 267890228,
+        "cache_entries": 409,
+        "candidate_width": 35,
+        "candidate_positions": 3119,
+        "physical_candidate_positions": 8960,
+        "policy_samples": 186,
+        "total_loss": 2.6837711334228516
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.692099635998602,
+          "collate": 0.005826299000545987,
+          "target_h2d": 0.00026810000053956173,
+          "feature_h2d": 0.0007815900007699383,
+          "forward": 0.0016784319996077102,
+          "loss": 0.0003480890009086579,
+          "backward": 0.0020328560003690654,
+          "gradient_clip": 0.000530249000803451,
+          "optimizer": 0.0008158999989973381,
+          "train_step": 0.008222553999075899,
+          "completion_wait": 3.6901999919791706e-05,
+          "metrics_write": 0.00015645300118194427
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00030694401264190675,
+          "feature_h2d": 0.0008232960104942322,
+          "forward": 0.0018420159816741944,
+          "loss": 0.00031641599535942077,
+          "backward": 0.002097408056259155,
+          "gradient_clip": 0.0005620800256729126,
+          "optimizer": 0.0008499519824981689
+        },
+        "train_step_remainder_seconds": 0.0017673379970801761,
+        "step": 20,
+        "wall_seconds": 0.706918701000177,
+        "decode_seconds": 0.6800829480052926,
+        "cache_delta": {
+          "misses": 185,
+          "decoded_bytes": 120178520,
+          "hits": 71
+        },
+        "cache_bytes": 268302537,
+        "cache_entries": 410,
+        "candidate_width": 35,
+        "candidate_positions": 3576,
+        "physical_candidate_positions": 8960,
+        "policy_samples": 200,
+        "total_loss": 2.6386821269989014
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5676122149998264,
+          "collate": 0.0053681869994761655,
+          "target_h2d": 0.0002418670010229107,
+          "feature_h2d": 0.0008233859989559278,
+          "forward": 0.0016238839998550247,
+          "loss": 0.0002712400000746129,
+          "backward": 0.002218830000856542,
+          "gradient_clip": 0.0004878510007984005,
+          "optimizer": 0.0009130100006586872,
+          "train_step": 0.008324005000758916,
+          "completion_wait": 2.894300087064039e-05,
+          "metrics_write": 0.00015236199942592066
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0002776960134506226,
+          "feature_h2d": 0.0008652799725532531,
+          "forward": 0.0018397120237350463,
+          "loss": 0.00017203199863433837,
+          "backward": 0.002276671886444092,
+          "gradient_clip": 0.0005181440114974975,
+          "optimizer": 0.0011320320367813111
+        },
+        "train_step_remainder_seconds": 0.0017439369985368103,
+        "step": 21,
+        "wall_seconds": 0.5819478449993767,
+        "decode_seconds": 0.5558057150046807,
+        "cache_delta": {
+          "misses": 179,
+          "decoded_bytes": 116243337,
+          "hits": 77
+        },
+        "cache_bytes": 268312312,
+        "cache_entries": 412,
+        "candidate_width": 42,
+        "candidate_positions": 3252,
+        "physical_candidate_positions": 10752,
+        "policy_samples": 191,
+        "total_loss": 2.575162887573242
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5907602929983113,
+          "collate": 0.005102273000375135,
+          "target_h2d": 0.0002255569997942075,
+          "feature_h2d": 0.000991492001048755,
+          "forward": 0.001547673999084509,
+          "loss": 0.000282599999991362,
+          "backward": 0.0016819789998407941,
+          "gradient_clip": 0.0005240329992375337,
+          "optimizer": 0.000809172999652219,
+          "train_step": 0.007655594999960158,
+          "completion_wait": 2.901699917856604e-05,
+          "metrics_write": 0.00017644500076130498
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0002603200078010559,
+          "feature_h2d": 0.0011202559471130372,
+          "forward": 0.0017027200460433959,
+          "loss": 0.0002508800029754639,
+          "backward": 0.0018662400245666505,
+          "gradient_clip": 0.00045875200629234315,
+          "optimizer": 0.0008429440259933472
+        },
+        "train_step_remainder_seconds": 0.0015930870013107779,
+        "step": 22,
+        "wall_seconds": 0.6042247320001479,
+        "decode_seconds": 0.5788240479869273,
+        "cache_delta": {
+          "misses": 187,
+          "decoded_bytes": 122419479,
+          "hits": 69
+        },
+        "cache_bytes": 268364213,
+        "cache_entries": 412,
+        "candidate_width": 34,
+        "candidate_positions": 3403,
+        "physical_candidate_positions": 8704,
+        "policy_samples": 194,
+        "total_loss": 2.6610538959503174
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.7195920169997407,
+          "collate": 0.00525017099971592,
+          "target_h2d": 0.00046323700007633306,
+          "feature_h2d": 0.0009443330000067363,
+          "forward": 0.0015822610002942383,
+          "loss": 0.000292073000309756,
+          "backward": 0.002021972000875394,
+          "gradient_clip": 0.0004988069995306432,
+          "optimizer": 0.0008130730002449127,
+          "train_step": 0.008256074999735574,
+          "completion_wait": 2.901799962273799e-05,
+          "metrics_write": 0.0001499879999755649
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0004999360144138336,
+          "feature_h2d": 0.000992255985736847,
+          "forward": 0.0017700799703598022,
+          "loss": 0.0002252800017595291,
+          "backward": 0.002077888011932373,
+          "gradient_clip": 0.0005304319858551026,
+          "optimizer": 0.0008468800187110901
+        },
+        "train_step_remainder_seconds": 0.0016403189983975608,
+        "step": 23,
+        "wall_seconds": 0.7338326089993643,
+        "decode_seconds": 0.7069852469849138,
+        "cache_delta": {
+          "misses": 193,
+          "decoded_bytes": 126648024,
+          "hits": 63
+        },
+        "cache_bytes": 268151334,
+        "cache_entries": 408,
+        "candidate_width": 35,
+        "candidate_positions": 3351,
+        "physical_candidate_positions": 8960,
+        "policy_samples": 201,
+        "total_loss": 2.7220489978790283
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5946902089999639,
+          "collate": 0.005495322000570013,
+          "target_h2d": 0.00023114800023904536,
+          "feature_h2d": 0.0007215410005301237,
+          "forward": 0.0015506159998039948,
+          "loss": 0.00028889000168419443,
+          "backward": 0.002048340000328608,
+          "gradient_clip": 0.0005147989995748503,
+          "optimizer": 0.0008149820005201036,
+          "train_step": 0.007828628000424942,
+          "completion_wait": 2.9398999686236493e-05,
+          "metrics_write": 0.00013621899961435702
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0002672959864139557,
+          "feature_h2d": 0.0007649279832839965,
+          "forward": 0.0017449280023574829,
+          "loss": 0.00022118400037288665,
+          "backward": 0.0021045761108398437,
+          "gradient_clip": 0.000546720027923584,
+          "optimizer": 0.0008485119938850403
+        },
+        "train_step_remainder_seconds": 0.001658311997744022,
+        "step": 24,
+        "wall_seconds": 0.6087193870007468,
+        "decode_seconds": 0.5827489009989222,
+        "cache_delta": {
+          "misses": 188,
+          "decoded_bytes": 123159101,
+          "hits": 68
+        },
+        "cache_bytes": 267984455,
+        "cache_entries": 408,
+        "candidate_width": 34,
+        "candidate_positions": 3459,
+        "physical_candidate_positions": 8704,
+        "policy_samples": 204,
+        "total_loss": 2.5954716205596924
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.6063490519991319,
+          "collate": 0.00538516999949934,
+          "target_h2d": 0.00025140500110865105,
+          "feature_h2d": 0.0007496750004065689,
+          "forward": 0.0015860740004427498,
+          "loss": 0.0002864930011128308,
+          "backward": 0.0019560290002118563,
+          "gradient_clip": 0.0004963079991284758,
+          "optimizer": 0.0008069789982982911,
+          "train_step": 0.007758843999909004,
+          "completion_wait": 2.8667000151472166e-05,
+          "metrics_write": 0.00013846399997419212
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00028611201047897336,
+          "feature_h2d": 0.0007987200021743775,
+          "forward": 0.0017524160146713257,
+          "loss": 0.00024271999299526215,
+          "backward": 0.0021723840236663816,
+          "gradient_clip": 0.00040345600247383115,
+          "optimizer": 0.0008446720242500306
+        },
+        "train_step_remainder_seconds": 0.0016258809991995804,
+        "step": 25,
+        "wall_seconds": 0.620157791998281,
+        "decode_seconds": 0.5939235620098771,
+        "cache_delta": {
+          "misses": 193,
+          "decoded_bytes": 125093038,
+          "hits": 63
+        },
+        "cache_bytes": 267946262,
+        "cache_entries": 411,
+        "candidate_width": 34,
+        "candidate_positions": 3229,
+        "physical_candidate_positions": 8704,
+        "policy_samples": 190,
+        "total_loss": 2.5848565101623535
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.724154441999417,
+          "collate": 0.005193028000576305,
+          "target_h2d": 0.0004896560003544437,
+          "feature_h2d": 0.0009191950011882,
+          "forward": 0.0015449479997187154,
+          "loss": 0.0002909069989982527,
+          "backward": 0.0018925320000562351,
+          "gradient_clip": 0.0005516829987755045,
+          "optimizer": 0.0007949270002427511,
+          "train_step": 0.00811340200016275,
+          "completion_wait": 3.316400034236722e-05,
+          "metrics_write": 0.00015189199984888546
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0006176319718360901,
+          "feature_h2d": 0.0009646080136299133,
+          "forward": 0.001744096040725708,
+          "loss": 0.00044441598653793336,
+          "backward": 0.001954815983772278,
+          "gradient_clip": 0.0005816320180892944,
+          "optimizer": 0.0008264319896697998
+        },
+        "train_step_remainder_seconds": 0.001629554000828648,
+        "step": 26,
+        "wall_seconds": 0.738218656000754,
+        "decode_seconds": 0.7116646099912032,
+        "cache_delta": {
+          "misses": 197,
+          "decoded_bytes": 128223195,
+          "hits": 59
+        },
+        "cache_bytes": 268217485,
+        "cache_entries": 412,
+        "candidate_width": 36,
+        "candidate_positions": 3323,
+        "physical_candidate_positions": 9216,
+        "policy_samples": 195,
+        "total_loss": 2.6453261375427246
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.6493395890011016,
+          "collate": 0.005384726000556839,
+          "target_h2d": 0.0002550019999034703,
+          "feature_h2d": 0.0007116029992175754,
+          "forward": 0.0017307769994658884,
+          "loss": 0.00031331299942394253,
+          "backward": 0.002204649999839603,
+          "gradient_clip": 0.0005647060006594984,
+          "optimizer": 0.0008367930004169466,
+          "train_step": 0.008627328999864403,
+          "completion_wait": 3.146400013065431e-05,
+          "metrics_write": 0.00016535600116185378
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00029104000329971316,
+          "feature_h2d": 0.0007588480114936829,
+          "forward": 0.0018500479459762572,
+          "loss": 0.0003266560137271881,
+          "backward": 0.0024081599712371827,
+          "gradient_clip": 0.00047513601183891296,
+          "optimizer": 0.0008747519850730896
+        },
+        "train_step_remainder_seconds": 0.0020104850009374786,
+        "step": 27,
+        "wall_seconds": 0.6641624540006887,
+        "decode_seconds": 0.6359109979912319,
+        "cache_delta": {
+          "misses": 205,
+          "decoded_bytes": 133181402,
+          "hits": 51
+        },
+        "cache_bytes": 268381013,
+        "cache_entries": 413,
+        "candidate_width": 31,
+        "candidate_positions": 3203,
+        "physical_candidate_positions": 7936,
+        "policy_samples": 185,
+        "total_loss": 2.5883548259735107
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5828416450003715,
+          "collate": 0.005421268999270978,
+          "target_h2d": 0.00022694899962516502,
+          "feature_h2d": 0.0006988370005274191,
+          "forward": 0.0015470680009457283,
+          "loss": 0.00031301399940275587,
+          "backward": 0.002081546001136303,
+          "gradient_clip": 0.0005009220003557857,
+          "optimizer": 0.0008167559990397422,
+          "train_step": 0.007831900999008212,
+          "completion_wait": 3.0006000088178553e-05,
+          "metrics_write": 0.0001496459990448784
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00026003199815750124,
+          "feature_h2d": 0.0007393280267715454,
+          "forward": 0.0016885119676589965,
+          "loss": 0.000292959988117218,
+          "backward": 0.002130944013595581,
+          "gradient_clip": 0.0005324800014495849,
+          "optimizer": 0.0008510720133781433
+        },
+        "train_step_remainder_seconds": 0.001646808997975313,
+        "step": 28,
+        "wall_seconds": 0.5967569719996391,
+        "decode_seconds": 0.5708163650069764,
+        "cache_delta": {
+          "misses": 183,
+          "decoded_bytes": 120118198,
+          "hits": 73
+        },
+        "cache_bytes": 268432215,
+        "cache_entries": 412,
+        "candidate_width": 34,
+        "candidate_positions": 3363,
+        "physical_candidate_positions": 8704,
+        "policy_samples": 192,
+        "total_loss": 2.6319663524627686
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.6955037260013341,
+          "collate": 0.0055548119999002665,
+          "target_h2d": 0.00023051000061968807,
+          "feature_h2d": 0.0007111840004654368,
+          "forward": 0.0016543719993933337,
+          "loss": 0.0003160380001645535,
+          "backward": 0.0019096710002486361,
+          "gradient_clip": 0.0004916890011372743,
+          "optimizer": 0.0008209900006477255,
+          "train_step": 0.00781425599961949,
+          "completion_wait": 2.9745000574621372e-05,
+          "metrics_write": 0.00014722400010214187
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0002650560140609741,
+          "feature_h2d": 0.000754688024520874,
+          "forward": 0.0018018879890441895,
+          "loss": 0.0003256320059299469,
+          "backward": 0.0020309760570526125,
+          "gradient_clip": 0.0004997760057449341,
+          "optimizer": 0.0008535360097885132
+        },
+        "train_step_remainder_seconds": 0.0016798019969428424,
+        "step": 29,
+        "wall_seconds": 0.709534434001398,
+        "decode_seconds": 0.6833368060033536,
+        "cache_delta": {
+          "misses": 186,
+          "decoded_bytes": 122020922,
+          "hits": 70
+        },
+        "cache_bytes": 268297605,
+        "cache_entries": 409,
+        "candidate_width": 33,
+        "candidate_positions": 3387,
+        "physical_candidate_positions": 8448,
+        "policy_samples": 191,
+        "total_loss": 2.76542329788208
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5896922860010818,
+          "collate": 0.0056007799994404195,
+          "target_h2d": 0.00022708199867338408,
+          "feature_h2d": 0.000872448999871267,
+          "forward": 0.0016529950007679872,
+          "loss": 0.00030957499984651804,
+          "backward": 0.002235953999843332,
+          "gradient_clip": 0.0004752100012410665,
+          "optimizer": 0.0007666940000490285,
+          "train_step": 0.008186965998902451,
+          "completion_wait": 3.0604998755734414e-05,
+          "metrics_write": 0.00016021499868656974
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0002668159902095795,
+          "feature_h2d": 0.0009195520281791687,
+          "forward": 0.0019637440443038942,
+          "loss": 0.00012697599828243256,
+          "backward": 0.0022915520668029786,
+          "gradient_clip": 0.0005089280009269715,
+          "optimizer": 0.0007997120022773743
+        },
+        "train_step_remainder_seconds": 0.0016470069986098679,
+        "step": 30,
+        "wall_seconds": 0.6041747640010726,
+        "decode_seconds": 0.5774983339979372,
+        "cache_delta": {
+          "misses": 186,
+          "decoded_bytes": 121688579,
+          "hits": 70
+        },
+        "cache_bytes": 268104623,
+        "cache_entries": 409,
+        "candidate_width": 46,
+        "candidate_positions": 3529,
+        "physical_candidate_positions": 11776,
+        "policy_samples": 202,
+        "total_loss": 2.654006004333496
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.5833052719990519,
+          "collate": 0.005267368998829625,
+          "target_h2d": 0.00023554000108561013,
+          "feature_h2d": 0.0007255569998960709,
+          "forward": 0.001610625999092008,
+          "loss": 0.0003159280004183529,
+          "backward": 0.0018832969999493798,
+          "gradient_clip": 0.0005188100003579166,
+          "optimizer": 0.0008622219993412727,
+          "train_step": 0.007882378000431345,
+          "completion_wait": 3.441300032136496e-05,
+          "metrics_write": 0.00015725100092822686
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0002712959945201874,
+          "feature_h2d": 0.0007751680016517639,
+          "forward": 0.0017585599422454835,
+          "loss": 0.0002969599962234497,
+          "backward": 0.0019364160299301146,
+          "gradient_clip": 0.0005529599785804749,
+          "optimizer": 0.0009257280230522155
+        },
+        "train_step_remainder_seconds": 0.0017303980002907338,
+        "step": 31,
+        "wall_seconds": 0.5971484140009125,
+        "decode_seconds": 0.5712488739900436,
+        "cache_delta": {
+          "misses": 184,
+          "decoded_bytes": 119740323,
+          "hits": 72
+        },
+        "cache_bytes": 268353334,
+        "cache_entries": 411,
+        "candidate_width": 33,
+        "candidate_positions": 3433,
+        "physical_candidate_positions": 8448,
+        "policy_samples": 204,
+        "total_loss": 2.593472480773926
+      }
+    ],
+    "peak_rss_kib": 1868112,
+    "gpu_peak_bytes": 94187008,
+    "scope": "isolated updates, actual frozen replay and parent optimizer; no production run modified"
+  }
+}

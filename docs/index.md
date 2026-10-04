@@ -26,6 +26,8 @@ docs 只保留需要阅读和维护的规范、操作指南、可复核报告。
 - [AZ 五轮与逐代扩展评测](reports/alphazero_seed1_zh-CN.md)。
 - [推理吞吐有效基线与失效结论](reports/inference_throughput_zh-CN.md)。
 - [多 worker GPU 的窗口与整轮对照](reports/multiworker_gpu_zh-CN.md)。
+- [采集、learner 与固定评测的分项统计](reports/pipeline_profile_zh-CN.md)。
+- [端到端性能优化与完整1000局/50 pairs验收](reports/end_to_end_speed_optimization_zh-CN.md)。
 - [MCTS sweep 实际完成状态](reports/mcts_sweep_zh-CN.md)。
 
 ## 历史归档和维护边界

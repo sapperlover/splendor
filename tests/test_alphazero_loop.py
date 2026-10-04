@@ -216,6 +216,22 @@ def test_loop_rejects_mismatched_configuration(tmp_path, restore_torch_threads):
     with pytest.raises(ValueError, match="pass --resume"):
         run_loop(config, output, resume=False)
 
+
+def test_loop_native_batched_evaluation_is_connected_and_resumable(tmp_path, restore_torch_threads):
+    from dataclasses import replace
+    checkpoint = _weights_checkpoint(tmp_path / 'base.pt')
+    config = _loop_config(checkpoint)
+    config = replace(config, num_rounds=1, evaluation=replace(config.evaluation,
+        mcts_backend='native', mcts_execution={'backend': 'native_batched',
+            'active_games': 2, 'max_batch_size': 2, 'inference_mode': 'eager'}))
+    output = tmp_path / 'native-loop'
+    assert run_loop(config, output)['loop_complete']
+    panel = output / 'rounds/round-000/evaluation/mcts_vs_parent.json'
+    result = json.loads(panel.read_text())
+    assert result['passed'] and len(result['execution_stats']['models']) == 2
+    assert result['config']['execution'] == config.evaluation.mcts_execution
+    assert run_loop(config, output, resume=True)['loop_complete']
+
 def test_loop_stops_when_evaluation_panel_fails_engineering_checks(
     tmp_path, monkeypatch, restore_torch_threads
 ):

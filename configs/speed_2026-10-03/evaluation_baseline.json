@@ -1,0 +1,46 @@
+{
+  "policy_a": {
+    "name": "theta5_native_mcts",
+    "kind": "mcts_checkpoint",
+    "checkpoint": "runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+    "search_backend": "native",
+    "search_config": {
+      "simulations": 1024,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "seed": 9300000,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "dirichlet_alpha": 0.3
+    }
+  },
+  "policy_b": {
+    "name": "theta4_native_mcts",
+    "kind": "mcts_checkpoint",
+    "checkpoint": "runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+    "search_backend": "native",
+    "search_config": {
+      "simulations": 1024,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "seed": 9300000,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "dirichlet_alpha": 0.3
+    }
+  },
+  "pairs": 50,
+  "seed_start": 9300000,
+  "policy_seed_base": 9400000,
+  "workers": 8,
+  "device": "cpu",
+  "max_completed_turns": 400,
+  "adjudicate_deterministic_policy_cycles": true,
+  "metadata": {
+    "purpose": "end-to-end speed baseline, fixed theta5 vs theta4"
+  },
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 9300050
+}

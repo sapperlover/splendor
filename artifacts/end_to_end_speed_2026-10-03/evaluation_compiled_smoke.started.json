@@ -1,0 +1,112 @@
+{
+  "command": [
+    "scripts/run_speed_validation.py",
+    "evaluation",
+    "--config",
+    "configs/speed_2026-10-03/evaluation_compiled_smoke.json",
+    "--run",
+    "runtime/end_to_end_speed_2026-10-03/evaluation_compiled_smoke.json",
+    "--record",
+    "artifacts/end_to_end_speed_2026-10-03/evaluation_compiled_smoke.json"
+  ],
+  "start_unix": 1791030405.4335995,
+  "session_number": 1,
+  "python": "3.12.14",
+  "torch": "2.14.0+cu130",
+  "cuda_build": "13.0",
+  "source": "/home/lc/下载/splendor/src/splendor/multiworker_gpu.py",
+  "extension": "/home/lc/下载/splendor/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so",
+  "extension_sha256": "94986fb4ffaa7c1d8f01437d885f2b11e5599ad85ad878a73a10eaa8bdd9b4b7",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "cpu_count": 16,
+  "threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "meminfo": {
+    "MemTotal": "32597820 kB",
+    "MemAvailable": "25674640 kB"
+  },
+  "gpu_device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "row_statistics": null,
+  "config": {
+    "policy_a": {
+      "name": "theta5_native_mcts",
+      "kind": "mcts_checkpoint",
+      "checkpoint": "runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+      "search_backend": "native",
+      "search_config": {
+        "simulations": 8,
+        "determinizations": 1,
+        "c_puct": 1.5,
+        "seed": 9300000,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "dirichlet_alpha": 0.3
+      }
+    },
+    "policy_b": {
+      "name": "theta4_native_mcts",
+      "kind": "mcts_checkpoint",
+      "checkpoint": "runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+      "search_backend": "native",
+      "search_config": {
+        "simulations": 8,
+        "determinizations": 1,
+        "c_puct": 1.5,
+        "seed": 9300000,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "dirichlet_alpha": 0.3
+      }
+    },
+    "pairs": 1,
+    "seed_start": 9300000,
+    "policy_seed_base": 9400000,
+    "workers": 1,
+    "device": "cuda",
+    "max_completed_turns": 400,
+    "adjudicate_deterministic_policy_cycles": true,
+    "metadata": {
+      "purpose": "end-to-end optimized, fixed theta5 vs theta4"
+    },
+    "bootstrap_resamples": 0,
+    "bootstrap_seed": 9300050,
+    "execution": {
+      "backend": "native_batched",
+      "active_games": 2,
+      "max_batch_size": 4,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "inference_mode": "compiled",
+      "actor_projection": true,
+      "max_batch_wait_ms": 0.0
+    }
+  },
+  "instrument": false,
+  "script_sha256": "6855409ad32e8d8eb22943f148d77b0b35b237ce4f87bdafc2aecc0f6c33a28e"
+}

@@ -267,6 +267,7 @@ class FixedEvaluationConfig:
     bootstrap_resamples: int = 0
     bootstrap_seed: int = 0
     metadata: dict[str, Any] | None = None
+    execution: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if not self.game_seeds:
@@ -285,9 +286,17 @@ class FixedEvaluationConfig:
             raise ValueError("max_completed_turns must be positive")
         if self.bootstrap_resamples < 0:
             raise ValueError("bootstrap_resamples cannot be negative")
+        if self.execution is not None:
+            from .evaluation_batch import BatchEvaluationConfig
+            BatchEvaluationConfig(**self.execution)
+            if self.workers != 1:
+                raise ValueError("batched evaluation has one inference owner; workers must be 1")
+            for spec in (self.policy_a, self.policy_b):
+                if spec.kind != "mcts_checkpoint" or spec.search_backend != "native":
+                    raise ValueError("batched evaluation requires two native mcts_checkpoint policies")
 
     def to_dict(self) -> dict[str, object]:
-        return {
+        value = {
             "policy_a": self.policy_a.to_dict(),
             "policy_b": self.policy_b.to_dict(),
             "game_seeds": list(self.game_seeds),
@@ -302,6 +311,9 @@ class FixedEvaluationConfig:
             "bootstrap_seed": self.bootstrap_seed,
             "metadata": dict(self.metadata or {}),
         }
+        if self.execution is not None:
+            value["execution"] = dict(self.execution)
+        return value
 
     @classmethod
     def from_dict(cls, value: Mapping[str, Any]) -> FixedEvaluationConfig:
@@ -339,6 +351,7 @@ class FixedEvaluationConfig:
             bootstrap_resamples=int(value.get("bootstrap_resamples", 0)),
             bootstrap_seed=int(value.get("bootstrap_seed", 0)),
             metadata=dict(metadata),
+            execution=None if value.get("execution") is None else dict(value["execution"]),
         )
 
 
@@ -1385,8 +1398,10 @@ def run_fixed_evaluation(
         complete = store.complete_pairs(require_scored=require_scored_pairs)
         missing_ids = tuple(pair_id for pair_id in selected_ids if pair_id not in complete)
         existing_count = len(complete)
+        previous_summary = (json.loads(output_path.read_text()) if resume and output_path.exists() else {})
         started = time.perf_counter()
         pair_callbacks = 0
+        execution_stats = {}
 
         def save_summary() -> dict[str, Any]:
             store.invalidate()
@@ -1399,6 +1414,8 @@ def run_fixed_evaluation(
                 elapsed_seconds=time.perf_counter() - started,
             )
             summary["checkpoint_identity"] = identities
+            if execution_stats:
+                summary["execution_stats"] = execution_stats
             atomic_write_json(output_path, summary)
             return summary
 
@@ -1426,23 +1443,30 @@ def run_fixed_evaluation(
                     summary = save_summary()
 
             try:
-                evaluate_policies_parallel(
-                    config.policy_a,
-                    config.policy_b,
-                    missing_seeds,
-                    workers=config.workers,
-                    device=config.device,
-                    policy_seed_base=config.policy_seed_base,
-                    max_completed_turns=config.max_completed_turns,
-                    failure_dir=failure_dir or output_path.parent / "failures" / output_path.stem,
-                    progress_callback=None,
-                    adjudicate_deterministic_policy_cycles=(
-                        config.adjudicate_deterministic_policy_cycles
-                    ),
-                    pair_ids=missing_ids,
-                    pair_callback=on_pair,
-                    game_log_dir=root,
-                )
+                if config.execution is not None:
+                    from .evaluation_batch import evaluate_batched
+                    execution_stats.update(evaluate_batched(
+                        config, missing_ids, root,
+                        failure_dir or output_path.parent / "failures" / output_path.stem,
+                        on_pair))
+                else:
+                    evaluate_policies_parallel(
+                        config.policy_a,
+                        config.policy_b,
+                        missing_seeds,
+                        workers=config.workers,
+                        device=config.device,
+                        policy_seed_base=config.policy_seed_base,
+                        max_completed_turns=config.max_completed_turns,
+                        failure_dir=failure_dir or output_path.parent / "failures" / output_path.stem,
+                        progress_callback=None,
+                        adjudicate_deterministic_policy_cycles=(
+                            config.adjudicate_deterministic_policy_cycles
+                        ),
+                        pair_ids=missing_ids,
+                        pair_callback=on_pair,
+                        game_log_dir=root,
+                    )
             except KeyboardInterrupt:
                 # Per-game JSONL is authoritative; refresh the summary from
                 # every complete line before returning control to the CLI.
@@ -1459,6 +1483,10 @@ def run_fixed_evaluation(
             elapsed_seconds=time.perf_counter() - started,
         )
         summary["checkpoint_identity"] = identities
+        if execution_stats:
+            summary["execution_stats"] = execution_stats
+        elif not missing_ids and "execution_stats" in previous_summary:
+            summary["execution_stats"] = previous_summary["execution_stats"]
         atomic_write_json(output_path, summary)
         return FixedEvaluationRun(summary, records, output_path, root)
     finally:

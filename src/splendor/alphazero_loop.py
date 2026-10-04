@@ -225,6 +225,7 @@ class EvaluationSection:
     mcts_vs_parent: EvaluationPanel
     greedy_vs_initial: EvaluationPanel
     mcts_backend: str = "python"
+    mcts_execution: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if type(self.workers) is not int or self.workers <= 0:
@@ -241,11 +242,18 @@ class EvaluationSection:
             raise ValueError("the greedy-vs-initial panel cannot carry search configuration")
         if type(self.adjudicate_deterministic_policy_cycles) is not bool:
             raise ValueError("adjudicate_deterministic_policy_cycles must be bool")
+        if self.mcts_execution is not None:
+            from .evaluation_batch import BatchEvaluationConfig
+            BatchEvaluationConfig(**self.mcts_execution)
+            if self.mcts_backend != "native" or self.workers != 1:
+                raise ValueError("batched MCTS evaluation requires native backend and one owner")
 
     def to_dict(self) -> dict[str, Any]:
         value = asdict(self)
         if self.mcts_backend == "python":
             value.pop("mcts_backend")
+        if self.mcts_execution is None:
+            value.pop("mcts_execution")
         return value
 
 
@@ -309,6 +317,7 @@ class LoopConfig:
                 mcts_vs_parent=EvaluationPanel(**evaluation["mcts_vs_parent"]),
                 greedy_vs_initial=EvaluationPanel(**evaluation["greedy_vs_initial"]),
                 mcts_backend=evaluation.get("mcts_backend", "python"),
+                mcts_execution=evaluation.get("mcts_execution"),
             ),
         )
 
@@ -961,6 +970,7 @@ class LoopRunner:
                     search_backend=self.config.evaluation.mcts_backend
                 ),
                 game_seeds=parent_panel.game_seeds,
+                execution=self.config.evaluation.mcts_execution,
                 policy_seed_base=parent_panel.policy_seed_base,
                 metadata={
                     "loop_protocol": LOOP_PROTOCOL,

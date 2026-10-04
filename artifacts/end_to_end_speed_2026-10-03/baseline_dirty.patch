@@ -1,0 +1,130 @@
+diff --git a/README.md b/README.md
+index 431081e..29102e6 100644
+--- a/README.md
++++ b/README.md
+@@ -5,6 +5,7 @@
+ - [当前状态](docs/current_project_state_zh-CN.md) 与 [文档导航](docs/index.md)。
+ - [标准规则](docs/splendor_standard_rules_zh-CN.md)；卡牌、贵族与常量位于 `data/`。
+ - [实验索引](artifacts/experiment_index.json)、[产物约定](artifacts/README.md)、[配置导航](configs/README.md)。
++- [采集、learner 与固定评测时间统计](docs/reports/pipeline_profile_zh-CN.md)：有限诊断、瓶颈归因与复现命令。
+ 
+ PPO seed1 已完成 5M learning decisions；其 DEV best 为 `local_004150000_lifetime_004662112.pt`，latest 为 `local_005000000_lifetime_005512112.pt`。AZ seed1 已完成 5 轮 × 500 局及 θ1–θ5 扩展对照。native CUDA pool 已实现并保存性能对照；窗口与整轮收益分别解读。具体结论和未验证范围见文档导航中的报告。
+ 
+diff --git a/artifacts/experiment_index.json b/artifacts/experiment_index.json
+index b33d74d..1e7bffb 100644
+--- a/artifacts/experiment_index.json
++++ b/artifacts/experiment_index.json
+@@ -123,6 +123,21 @@
+       "evidence": [],
+       "scope": "native smoke and standalone collection do not establish multi-round training performance",
+       "evidence_hashes": {}
++    },
++    {
++      "id": "pipeline-profile-2026-10-02",
++      "recorded_on": "2026-10-03",
++      "status": "valid",
++      "report": "docs/reports/pipeline_profile_zh-CN.md",
++      "evidence": [
++        "artifacts/speed_profile_2026-10-02/summary.json",
++        "artifacts/speed_profile_2026-10-02/manifest.json"
++      ],
++      "scope": "bounded statistics only: old full-run phases, 24 learner steps per case, one native CPU pair, 35s opening and 16 full games; no production optimization or speed acceptance",
++      "evidence_hashes": {
++        "artifacts/speed_profile_2026-10-02/summary.json": "e1801bb470d9353b29408668258aed2bd0d639ded73291ed50b946b626726524",
++        "artifacts/speed_profile_2026-10-02/manifest.json": "3c5bb6c669ac7213dd04dae2494621cb3e60a72ad99a8f1e4e20ef40ac34e69a"
++      }
+     }
+   ],
+   "other_retained_results": "Existing baseline and search aggregates remain under their original paths; absence from this focused index is not an invalidity judgment."
+diff --git a/docs/current_project_state_zh-CN.md b/docs/current_project_state_zh-CN.md
+index c167216..d8581a8 100644
+--- a/docs/current_project_state_zh-CN.md
++++ b/docs/current_project_state_zh-CN.md
+@@ -1,6 +1,6 @@
+ # 当前项目状态
+ 
+-证据核对：2026-10-01。本文仅作导航；规则看标准规则与 data，契约看对应 specs，实现与实验状态优先核对当前代码/config 和可复核原始产物，再读对应版本报告。总览不凌驾于专题协议或报告。
++既有条目证据核对：2026-10-01；2026-10-03 新增流程统计导航。本文仅作导航；规则看标准规则与 data，契约看对应 specs，实现与实验状态优先核对当前代码/config 和可复核原始产物，再读对应版本报告。总览不凌驾于专题协议或报告。
+ 
+ | 能力或实验 | 已确认状态 | 阅读入口 |
+ | --- | --- | --- |
+@@ -10,6 +10,7 @@
+ | AZ seed1 | Python batched_cpu 5 轮 × 500 局、2,982 优化步完成；θ1–θ5 扩展面板已保存 | [报告](reports/alphazero_seed1_zh-CN.md) |
+ | native 单 owner 推理 | 08 正确输入窗口、09 传输画像、500 局比较已保存；按负载区分推荐 | [报告](reports/inference_throughput_zh-CN.md) |
+ | 多 worker GPU pool | 已实现，有窗口和每档一次完整 500 局；整轮收益尚无重复稳定性证据 | [报告](reports/multiworker_gpu_zh-CN.md) |
++| 流程时间统计 | 有有限 learner cache 对照、native 评测分项、pool 开局窗口与 16 局完整诊断；未实施优化 | [分项报告](reports/pipeline_profile_zh-CN.md) |
+ | MCTS sweep | 01/02/05 完整，03 不完整，04 无汇总；非全部完成 | [报告](reports/mcts_sweep_zh-CN.md) |
+ 
+ 不能从 smoke 推断棋力，从稳态窗口推断整轮收益，或从单 seed/多个被查看面板推断总体稳定提升。当前没有 native 多轮生产训练、多训练 seed 或扩容 ablation 的报告依据。
+diff --git a/docs/guides/alphazero_zh-CN.md b/docs/guides/alphazero_zh-CN.md
+index 0fe8f45..00b0fdb 100644
+--- a/docs/guides/alphazero_zh-CN.md
++++ b/docs/guides/alphazero_zh-CN.md
+@@ -258,6 +258,8 @@ runs/az_loop_seed1/
+ 
+ ## 10. 指标记录
+ 
++有限性能归因可使用 [`profile_speed_pipeline.py`](../../scripts/profile_speed_pipeline.py) 的 `learner`/`replay` 模式，复用冻结 replay 与本轮抽样种子，更新和诊断 checkpoint 仅写新 runtime。2026-10-02 的 [分项报告](../reports/pipeline_profile_zh-CN.md) 区分训练步、数据准备、checkpoint/validation 和 cache 冷启动；缓存对照不代表生产配置已经改动，旧 loop 的完整配置指纹仍必须保持一致。
++
+ - 每步 JSONL：`policy_loss`、`value_loss`、`total_loss`、合法动作策略熵、`grad_norm`、`learning_rate`、`total_train_step`、current/history 抽样数。
+ - 每轮：验证 split 的局数、样本数与 policy CE / value MSE；无验证局时记为 `available=false`，不从训练池冒充。
+ - 终端周期进度（默认每 30 秒一条，`DEFAULT_PROGRESS_INTERVAL_SECONDS`，首个事件立即输出）：`collect_start`/`collect_progress`（已完成局数、本会话新增、局/分钟）、`train_start`/`train_progress`（轮内与全局步数、loss、步/秒、ETA）、`evaluate_progress`（面板、已完成 pairs、pairs/分钟）；阶段结束仍输出 `collect_complete`/`train_complete`/`evaluate_complete`。
+diff --git a/docs/guides/evaluation_zh-CN.md b/docs/guides/evaluation_zh-CN.md
+index 7e55351..d7a9292 100644
+--- a/docs/guides/evaluation_zh-CN.md
++++ b/docs/guides/evaluation_zh-CN.md
+@@ -29,3 +29,5 @@ conda run -n splendor env PYTHONPATH=src python scripts/run_mcts_50pair_sweep.py
+ 实际 sweep 状态见 [结果报告](../reports/mcts_sweep_zh-CN.md)。AZ 扩展面板入口为 `scripts/run_az_generation_evals.py`；默认 θ1–θ4，θ1–θ5 要显式传 `--rounds 1 2 3 4 5`。summary 默认纳管，生成配置和 sidecar 忽略，见 [AZ 指南](alphazero_zh-CN.md)。
+ 
+ 新实验使用新输出目录；恢复既有实验必须保持冻结配置和 checkpoint 身份。5C Quick/Formal/Promotion/FINAL 的种子域与晋升阈值见 [PPO 实验协议](../specs/ppo_training_protocol_zh-CN.md)。
++
++单 worker 的有限 native 时间归因入口为 [`profile_speed_pipeline.py evaluation`](../../scripts/profile_speed_pipeline.py)，示例、计时边界及既有结果见 [分项报告](../reports/pipeline_profile_zh-CN.md)。它调用同一个固定配对 runner，保留 sidecar 和状态语义；不是新增跨局批量评测，也不能用 1 pair 宣称棋力或完整面板吞吐。
+diff --git a/docs/guides/multiworker_gpu_zh-CN.md b/docs/guides/multiworker_gpu_zh-CN.md
+index d1f6850..b648e22 100644
+--- a/docs/guides/multiworker_gpu_zh-CN.md
++++ b/docs/guides/multiworker_gpu_zh-CN.md
+@@ -50,6 +50,8 @@ status.json 的 gpu_owner 保存请求和实际 W/A、B、微批/槽容量、共
+ 
+ ## 可执行命令
+ 
++有限分项统计另见 [2026-10-02 报告](../reports/pipeline_profile_zh-CN.md) 和 [`profile_speed_pipeline.py collection`](../../scripts/profile_speed_pipeline.py)。诊断包装保存真实叶宽、worker 微批宽、owner 物理档位及完成时间；开局窗口与小轮次分开报告，worker 累计等待不并入 owner 墙钟。
++
+ 小规模正式采集及 checked replay：
+ 
+ ~~~bash
+diff --git a/docs/index.md b/docs/index.md
+index bb77c5e..914984d 100644
+--- a/docs/index.md
++++ b/docs/index.md
+@@ -26,6 +26,7 @@ docs 只保留需要阅读和维护的规范、操作指南、可复核报告。
+ - [AZ 五轮与逐代扩展评测](reports/alphazero_seed1_zh-CN.md)。
+ - [推理吞吐有效基线与失效结论](reports/inference_throughput_zh-CN.md)。
+ - [多 worker GPU 的窗口与整轮对照](reports/multiworker_gpu_zh-CN.md)。
++- [采集、learner 与固定评测的分项统计](reports/pipeline_profile_zh-CN.md)。
+ - [MCTS sweep 实际完成状态](reports/mcts_sweep_zh-CN.md)。
+ 
+ ## 历史归档和维护边界
+diff --git a/docs/reports/inference_throughput_zh-CN.md b/docs/reports/inference_throughput_zh-CN.md
+index 531b470..fb31802 100644
+--- a/docs/reports/inference_throughput_zh-CN.md
++++ b/docs/reports/inference_throughput_zh-CN.md
+@@ -163,6 +163,8 @@ H2D/D2H 主机侧 0.4 s（2%）、`start_job`+`encode_decision` 0.6 s（4%），
+ 
+ ## 长期证据与口径
+ 
++2026-10-02 的 [流程分项报告](pipeline_profile_zh-CN.md) 另记录 pool 开局/有限完整轮次、learner cache 对照和固定 native 评测；它不替代本报告的历史微基准，也不将新的计数诊断包装吞吐作为无仪器速度排名。
++
+ [08 摘要](../../artifacts/inference_throughput/08/summary_08_2026-09-29.json)、[500 局比较](../../artifacts/inference_throughput/08/round500_compare.json) 及其 manifest/summary 副本保留；[09 传输画像](../../artifacts/inference_throughput/09/) 保留原 JSON。09 原件没有测量 revision/模型内容哈希时，保留未知，不从 08 自动继承。
+ 
+ 完整 500 局单 owner 的三档排名来自各一次测量；旧统计未记录 compile 状态，不能断言所有调用保持 compiled。pool 后来的 500 局对照已记录 compile 统计，但不能倒填旧 run。微基准、稳态窗口、整轮 games/min、learner 全循环成本分别报告；当前数据不构成长时间热稳定、多 checkpoint、多机器或 native 多轮训练的结论。
+diff --git a/docs/reports/multiworker_gpu_zh-CN.md b/docs/reports/multiworker_gpu_zh-CN.md
+index 7347c3a..4918c0b 100644
+--- a/docs/reports/multiworker_gpu_zh-CN.md
++++ b/docs/reports/multiworker_gpu_zh-CN.md
+@@ -33,4 +33,6 @@ microbatch=16、slots=2 的最初 pool 窗口低于 baseline；microbatch=64、s
+ 
+ ## 可复核产物
+ 
++2026-10-02 新增的有限 [分项时间统计](pipeline_profile_zh-CN.md) 核对 gather、等待、实际候选宽度与尾段；历史完整 500 局原件和本报告的原排名保持不变。
++
+ [比较摘要](../../artifacts/inference_throughput/multiworker_gpu/comparison_summary.json)、[完整 manifest/summary 副本](../../artifacts/inference_throughput/multiworker_gpu/) 与全部七份原窗口保留；来源哈希见 [保全清单](../../artifacts/retention_manifest_2026-10-01.json)。原 `runtime/module_b/` 的 NPZ、日志、运行状态没有移动。[配置与恢复指南](../guides/multiworker_gpu_zh-CN.md) 描述执行语义。

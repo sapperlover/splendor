@@ -1,0 +1,483 @@
+{
+  "protocol": "speed-pipeline-profile-v1",
+  "provenance": {
+    "command": [
+      "scripts/profile_speed_pipeline.py",
+      "--output",
+      "artifacts/speed_profile_2026-10-02/replay_r4_cprofile.json",
+      "--scratch",
+      "runtime/speed_profile_2026-10-02/replay_r4_cprofile",
+      "replay",
+      "--round",
+      "4",
+      "--cache-mib",
+      "256",
+      "--warmup-steps",
+      "8",
+      "--steps",
+      "2"
+    ],
+    "git_revision": "f213e6378559322d38ac5a3845118de1816950e2",
+    "git_status": " M docs/guides/alphazero_zh-CN.md\n M docs/guides/evaluation_zh-CN.md\n M docs/guides/multiworker_gpu_zh-CN.md\n M docs/index.md\n M docs/reports/inference_throughput_zh-CN.md\n M docs/reports/multiworker_gpu_zh-CN.md\n?? artifacts/speed_profile_2026-10-02/\n?? docs/reports/pipeline_profile_zh-CN.md\n?? scripts/profile_speed_pipeline.py\n",
+    "script_sha256": "9c1a4cc421356ce2507492dccf7b9b7143f02f1d20e783d945d0a53b235c9042",
+    "python": "3.12.14",
+    "torch": "2.14.0+cu130",
+    "cuda_build": "13.0",
+    "cuda_available": false,
+    "device": "cpu",
+    "cpu_count": 16,
+    "torch_threads": 1,
+    "meminfo": {
+      "MemTotal": "32597816 kB",
+      "MemAvailable": "24523728 kB"
+    }
+  },
+  "total_command_body_seconds": 8.200853635000385,
+  "result": {
+    "round": 4,
+    "cache_mib": 256,
+    "steps": 2,
+    "warmup_steps": 8,
+    "wall_seconds": 2.172568403999321,
+    "replay_identity": {
+      "protocol": "alphazero-replay-index-v1",
+      "total_games": 2500,
+      "train_games": 2238,
+      "validation_games": 262,
+      "train_positions": 190660,
+      "evicted_games": 0,
+      "digest": "b13060726f79b8f5bfdbca7d20457cd467c5947bd9c4e2fd7e0d1ca35f565f46",
+      "first_key": [
+        0,
+        0
+      ],
+      "last_key": [
+        4,
+        499
+      ]
+    },
+    "top_functions": [
+      {
+        "function": "~:0:<method 'decompress' of 'zlib.Decompress' objects>",
+        "calls": 21612,
+        "primitive_calls": 21612,
+        "self_wall_seconds": 0.26139306500000004,
+        "inclusive_wall_seconds": 0.26139306500000004
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/ast.py:86:_convert",
+        "calls": 133084,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.17687118100000002,
+        "inclusive_wall_seconds": 0.19772756800000002
+      },
+      {
+        "function": "~:0:<built-in method builtins.compile>",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.155652166,
+        "inclusive_wall_seconds": 0.155652166
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/numpy/lib/_format_impl.py:780:read_array",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.12219719000000001,
+        "inclusive_wall_seconds": 1.1519652820000001
+      },
+      {
+        "function": "~:0:<built-in method zlib.crc32>",
+        "calls": 52652,
+        "primitive_calls": 52652,
+        "self_wall_seconds": 0.10900330100000001,
+        "inclusive_wall_seconds": 0.10900330100000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/numpy/lib/_format_impl.py:621:_read_array_header",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.08328347500000001,
+        "inclusive_wall_seconds": 0.57706119
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:983:read",
+        "calls": 77976,
+        "primitive_calls": 77976,
+        "self_wall_seconds": 0.082095207,
+        "inclusive_wall_seconds": 0.6441254190000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1588:open",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.079779473,
+        "inclusive_wall_seconds": 0.31119455500000004
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1065:_read1",
+        "calls": 21612,
+        "primitive_calls": 21612,
+        "self_wall_seconds": 0.071445433,
+        "inclusive_wall_seconds": 0.5482471790000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:820:read",
+        "calls": 47392,
+        "primitive_calls": 47392,
+        "self_wall_seconds": 0.05771753,
+        "inclusive_wall_seconds": 0.11509516600000001
+      },
+      {
+        "function": "~:0:<built-in method builtins.len>",
+        "calls": 640769,
+        "primitive_calls": 640769,
+        "self_wall_seconds": 0.054736375000000004,
+        "inclusive_wall_seconds": 0.054737388000000005
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/json/decoder.py:344:raw_decode",
+        "calls": 388,
+        "primitive_calls": 388,
+        "self_wall_seconds": 0.052637645000000004,
+        "inclusive_wall_seconds": 0.052637645000000004
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/numpy/lib/_format_impl.py:1000:_read_bytes",
+        "calls": 62456,
+        "primitive_calls": 62456,
+        "self_wall_seconds": 0.050123419,
+        "inclusive_wall_seconds": 0.40795331100000004
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:872:__init__",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.046711892000000005,
+        "inclusive_wall_seconds": 0.079333702
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1430:_RealGetContents",
+        "calls": 388,
+        "primitive_calls": 388,
+        "self_wall_seconds": 0.04600743,
+        "inclusive_wall_seconds": 0.111851767
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/numpy/lib/_npyio_impl.py:239:__getitem__",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.046004397,
+        "inclusive_wall_seconds": 1.890318879
+      },
+      {
+        "function": "~:0:<built-in method builtins.isinstance>",
+        "calls": 376360,
+        "primitive_calls": 376360,
+        "self_wall_seconds": 0.033503365,
+        "inclusive_wall_seconds": 0.033954829
+      },
+      {
+        "function": "~:0:<method 'reduce' of 'numpy.ufunc' objects>",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.030326710000000003,
+        "inclusive_wall_seconds": 0.030326710000000003
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/ast.py:56:literal_eval",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.027924669000000003,
+        "inclusive_wall_seconds": 0.39473111600000005
+      },
+      {
+        "function": "~:0:<method 'decode' of 'bytes' objects>",
+        "calls": 46948,
+        "primitive_calls": 46948,
+        "self_wall_seconds": 0.027821243000000002,
+        "inclusive_wall_seconds": 0.045203968000000004
+      },
+      {
+        "function": "~:0:<method 'copy' of 'numpy.ndarray' objects>",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.027193408000000002,
+        "inclusive_wall_seconds": 0.027193408000000002
+      },
+      {
+        "function": "~:0:<method 'tell' of '_io.BufferedReader' objects>",
+        "calls": 63300,
+        "primitive_calls": 63300,
+        "self_wall_seconds": 0.027049195,
+        "inclusive_wall_seconds": 0.027049195
+      },
+      {
+        "function": "/home/lc/下载/splendor/src/splendor/selfplay_data.py:106:load_game",
+        "calls": 388,
+        "primitive_calls": 388,
+        "self_wall_seconds": 0.025178367,
+        "inclusive_wall_seconds": 2.145559966
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1101:_read2",
+        "calls": 21609,
+        "primitive_calls": 21609,
+        "self_wall_seconds": 0.021898115000000003,
+        "inclusive_wall_seconds": 0.076219482
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1129:seek",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.020891357000000003,
+        "inclusive_wall_seconds": 0.037722792000000005
+      },
+      {
+        "function": "~:0:<method 'read' of '_io.BufferedReader' objects>",
+        "calls": 48944,
+        "primitive_calls": 48944,
+        "self_wall_seconds": 0.019763321,
+        "inclusive_wall_seconds": 0.019763321
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:807:seek",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.018666605000000003,
+        "inclusive_wall_seconds": 0.031163219000000002
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1117:close",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.016269591,
+        "inclusive_wall_seconds": 0.031818853
+      },
+      {
+        "function": "~:0:<built-in method numpy.frombuffer>",
+        "calls": 15896,
+        "primitive_calls": 15896,
+        "self_wall_seconds": 0.016023448000000003,
+        "inclusive_wall_seconds": 0.016023448000000003
+      },
+      {
+        "function": "~:0:<built-in method _struct.unpack>",
+        "calls": 47336,
+        "primitive_calls": 47336,
+        "self_wall_seconds": 0.015277541,
+        "inclusive_wall_seconds": 0.015277541
+      },
+      {
+        "function": "~:0:<built-in method builtins.min>",
+        "calls": 48156,
+        "primitive_calls": 48156,
+        "self_wall_seconds": 0.013507757,
+        "inclusive_wall_seconds": 0.013507757
+      },
+      {
+        "function": "/home/lc/下载/splendor/src/splendor/alphazero_replay.py:164:sample",
+        "calls": 512,
+        "primitive_calls": 512,
+        "self_wall_seconds": 0.012989641000000001,
+        "inclusive_wall_seconds": 2.169449852
+      },
+      {
+        "function": "~:0:<method 'flush' of 'zlib.Decompress' objects>",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.012851984,
+        "inclusive_wall_seconds": 0.012851984
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1194:tell",
+        "calls": 31040,
+        "primitive_calls": 31040,
+        "self_wall_seconds": 0.012641910000000001,
+        "inclusive_wall_seconds": 0.015303626
+      },
+      {
+        "function": "~:0:<method 'seek' of '_io.BufferedReader' objects>",
+        "calls": 64852,
+        "primitive_calls": 64852,
+        "self_wall_seconds": 0.012557744000000001,
+        "inclusive_wall_seconds": 0.012557744000000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1018:_update_crc",
+        "calls": 21612,
+        "primitive_calls": 21612,
+        "self_wall_seconds": 0.012537283000000001,
+        "inclusive_wall_seconds": 0.115504064
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/numpy/lib/_format_impl.py:310:descr_to_dtype",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.011062917,
+        "inclusive_wall_seconds": 0.011932426000000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/numpy/lib/_format_impl.py:229:read_magic",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.010839205000000001,
+        "inclusive_wall_seconds": 0.036036779000000005
+      },
+      {
+        "function": "~:0:<method 'reshape' of 'numpy.ndarray' objects>",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.010489225000000001,
+        "inclusive_wall_seconds": 0.010489225000000001
+      },
+      {
+        "function": "~:0:<built-in method builtins.all>",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.010012724,
+        "inclusive_wall_seconds": 0.019148944
+      },
+      {
+        "function": "~:0:<built-in method zlib.decompressobj>",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.009341778,
+        "inclusive_wall_seconds": 0.009341778
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:777:_get_decompressor",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.009303595000000001,
+        "inclusive_wall_seconds": 0.021849841000000002
+      },
+      {
+        "function": "~:0:<built-in method builtins.max>",
+        "calls": 37964,
+        "primitive_calls": 37964,
+        "self_wall_seconds": 0.009010162,
+        "inclusive_wall_seconds": 0.009010162
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/encodings/cp437.py:14:decode",
+        "calls": 31040,
+        "primitive_calls": 31040,
+        "self_wall_seconds": 0.008935541,
+        "inclusive_wall_seconds": 0.017382725
+      },
+      {
+        "function": "~:0:<method '__exit__' of '_thread.RLock' objects>",
+        "calls": 62912,
+        "primitive_calls": 62912,
+        "self_wall_seconds": 0.008909933,
+        "inclusive_wall_seconds": 0.008909933
+      },
+      {
+        "function": "~:0:<built-in method _codecs.charmap_decode>",
+        "calls": 31040,
+        "primitive_calls": 31040,
+        "self_wall_seconds": 0.008447184,
+        "inclusive_wall_seconds": 0.008447184
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/numpy/lib/_format_impl.py:687:<genexpr>",
+        "calls": 39964,
+        "primitive_calls": 39964,
+        "self_wall_seconds": 0.007725458,
+        "inclusive_wall_seconds": 0.00913622
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/ast.py:34:parse",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.007672173000000001,
+        "inclusive_wall_seconds": 0.163324339
+      },
+      {
+        "function": "~:0:<method '__exit__' of '_io._IOBase' objects>",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.007327694,
+        "inclusive_wall_seconds": 0.039146547000000004
+      },
+      {
+        "function": "~:0:<method 'get' of 'dict' objects>",
+        "calls": 31552,
+        "primitive_calls": 31552,
+        "self_wall_seconds": 0.007301498000000001,
+        "inclusive_wall_seconds": 0.007301498000000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:357:_sanitize_filename",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.006851056,
+        "inclusive_wall_seconds": 0.011288178000000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:831:close",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.006804661,
+        "inclusive_wall_seconds": 0.011197938000000001
+      },
+      {
+        "function": "~:0:<method 'read' of '_io.BytesIO' objects>",
+        "calls": 62080,
+        "primitive_calls": 62080,
+        "self_wall_seconds": 0.006801456,
+        "inclusive_wall_seconds": 0.006801456
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:403:__init__",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.0065532360000000005,
+        "inclusive_wall_seconds": 0.017841414
+      },
+      {
+        "function": "~:0:<built-in method _io.open>",
+        "calls": 388,
+        "primitive_calls": 388,
+        "self_wall_seconds": 0.006372263,
+        "inclusive_wall_seconds": 0.006372263
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1546:getinfo",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.005770661000000001,
+        "inclusive_wall_seconds": 0.009272795
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:1635:<lambda>",
+        "calls": 62912,
+        "primitive_calls": 62912,
+        "self_wall_seconds": 0.005644381,
+        "inclusive_wall_seconds": 0.005644381
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/numpy/lib/_format_impl.py:1028:isfileobj",
+        "calls": 15520,
+        "primitive_calls": 15520,
+        "self_wall_seconds": 0.0054951240000000005,
+        "inclusive_wall_seconds": 0.008626626
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/zipfile/__init__.py:2095:_fpclose",
+        "calls": 15908,
+        "primitive_calls": 15908,
+        "self_wall_seconds": 0.004479502000000001,
+        "inclusive_wall_seconds": 0.004479502000000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/numpy/lib/_npyio_impl.py:192:__init__",
+        "calls": 388,
+        "primitive_calls": 388,
+        "self_wall_seconds": 0.004459964,
+        "inclusive_wall_seconds": 0.12388647400000001
+      }
+    ],
+    "scope": "separate read-only replay cProfile; no learner updates"
+  }
+}

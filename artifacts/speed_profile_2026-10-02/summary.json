@@ -1,0 +1,102 @@
+{
+  "protocol": "speed-profile-summary-v1",
+  "organized_on": "2026-10-03",
+  "learner": [
+    {
+      "source": "learner_r0_256mib_v2.json",
+      "measured_wall_seconds": 3.0266705579961126,
+      "draw_fraction": 0.8937768518790916,
+      "load_game_seconds": 2.637789173002602,
+      "cache_hit_fraction": 0.8714192708333334,
+      "cache_counts": {
+        "hits": 5354,
+        "misses": 790,
+        "decoded_bytes": 540352039
+      }
+    },
+    {
+      "source": "learner_r4_256mib_v2.json",
+      "measured_wall_seconds": 15.398064932005582,
+      "draw_fraction": 0.9781696395298289,
+      "load_game_seconds": 14.77872132592529,
+      "cache_hit_fraction": 0.2600911458333333,
+      "cache_counts": {
+        "hits": 1598,
+        "misses": 4546,
+        "decoded_bytes": 2973336955
+      }
+    },
+    {
+      "source": "learner_r4_2048mib_v2.json",
+      "measured_wall_seconds": 3.2462378239924874,
+      "draw_fraction": 0.8909899076471014,
+      "load_game_seconds": 2.8495357539995894,
+      "cache_hit_fraction": 0.8610026041666666,
+      "cache_counts": {
+        "hits": 5290,
+        "misses": 854,
+        "decoded_bytes": 561829622
+      }
+    }
+  ],
+  "cache_comparison": {
+    "same_reference_sequence": true,
+    "max_total_loss_difference": 0.0,
+    "measured_step_speedup": 4.74335700798033,
+    "wall_reduction_fraction": 0.7891788456324123,
+    "scope": "24 measured steps after 8 warmup, still warming large cache"
+  },
+  "evaluation": {
+    "wall_seconds": 65.56851011400067,
+    "exclusive_wall_seconds": {
+      "summary": 0.0004653609994420549,
+      "policy_create": 0.03386419900016335,
+      "engine_create": 0.0006352899999910733,
+      "real_decision": 0.010210678001385531,
+      "inference_collate": 3.9023361048184597,
+      "inference_tensorize": 3.26559496097434,
+      "inference_forward": 49.39284116679664,
+      "real_apply": 0.07827636800175242,
+      "sidecar": 0.007133522001822712,
+      "inference_output_and_other": 4.147817760614998,
+      "search_except_inference": 4.70398119478341,
+      "runner_store_and_other": 0.025353508008265635
+    },
+    "policy_value_calls": 125872,
+    "passed": true,
+    "completed_pairs": 1
+  },
+  "collection_full16": {
+    "wall_seconds": 306.08237871300116,
+    "completed_games": 16,
+    "checked_replay": true,
+    "exceptions": 0,
+    "engineering_truncations": 0,
+    "width_row_count_equals_model_positions": true,
+    "tail_last_two_seconds": 35.016015562001485,
+    "batches_by_remaining": {
+      "first_half": {
+        "batches": 60847,
+        "rows": 924336,
+        "inference_wall_seconds": 94.45060588369779
+      },
+      "last_half": {
+        "batches": 5252,
+        "rows": 26723,
+        "inference_wall_seconds": 12.071432381995692
+      },
+      "last_10_percent": {
+        "batches": 3955,
+        "rows": 6223,
+        "inference_wall_seconds": 9.831708618130506
+      }
+    }
+  },
+  "verification": {
+    "command": "conda run -n splendor env PYTHONPATH=src python -m pytest -q tests/test_profile_speed_pipeline.py tests/test_alphazero_replay.py tests/test_paired_statistics.py",
+    "exit_code": 0,
+    "passed_tests": 13,
+    "accounting_assertions": "exclusive learner/evaluation stages sum to corresponding measured wall; cache loss/reference identity; collection row identity totals; complete outcomes checked"
+  },
+  "scope": "statistics only; no production optimization or complete 500/1000 game rerun"
+}

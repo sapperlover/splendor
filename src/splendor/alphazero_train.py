@@ -569,6 +569,7 @@ def run_training_round(
         record = learner.train_step(batch, references=drawn.references)
         record["current_positions"] = drawn.current_positions
         record["history_positions"] = drawn.history_positions
+        record["replay_cache"] = current_pool.cache_stats()
         _append_jsonl(metrics_path, record)
         if learner.round_train_step % learner.config.checkpoint_every_steps == 0 or learner.round_train_step == steps_target:
             learner.save(checkpoint_dir / f"step-{learner.round_train_step:09d}.pt")
@@ -595,5 +596,6 @@ def run_training_round(
         "first_total_loss": losses[0] if losses else None,
         "last_total_loss": losses[-1] if losses else None,
         "validation": validation,
+        "replay_cache": current_pool.cache_stats(),
         "training_seconds": time.perf_counter() - started,
     }

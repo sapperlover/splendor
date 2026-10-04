@@ -1,0 +1,366 @@
+{
+  "command": [
+    "scripts/run_speed_validation.py",
+    "learner_smoke",
+    "--config",
+    "configs/speed_2026-10-03/collection_optimized.json",
+    "--collected-run",
+    "runtime/end_to_end_speed_2026-10-03/collection_optimized",
+    "--run",
+    "runtime/end_to_end_speed_2026-10-03/new_data_learner_smoke_v2",
+    "--record",
+    "artifacts/end_to_end_speed_2026-10-03/new_data_learner_smoke_v2.json"
+  ],
+  "start_unix": 1791032276.1050196,
+  "session_number": 1,
+  "python": "3.12.14",
+  "torch": "2.14.0+cu130",
+  "cuda_build": "13.0",
+  "source": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/multiworker_gpu.py",
+  "extension": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so",
+  "extension_sha256": "94986fb4ffaa7c1d8f01437d885f2b11e5599ad85ad878a73a10eaa8bdd9b4b7",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "cpu_count": 16,
+  "threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "meminfo": {
+    "MemTotal": "32597820 kB",
+    "MemAvailable": "25584532 kB"
+  },
+  "gpu_device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "row_statistics": null,
+  "config": {
+    "protocol": "mcts-selfplay-v2",
+    "run_id": "speed_optimized_1000",
+    "round_index": 0,
+    "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+    "num_games": 1000,
+    "seed": 12347000,
+    "search_config": {
+      "simulations": 1024,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "seed": 9500000,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "dirichlet_alpha": 0.3
+    },
+    "execution": {
+      "backend": "native_cuda_pool",
+      "engine_mode": "fast",
+      "workers": 1,
+      "active_games_per_worker": 1,
+      "max_batch_size": 500,
+      "max_batch_wait_ms": 5,
+      "torch_threads": 1,
+      "precision": "float32",
+      "batch_interface": "native",
+      "inference_mode": "compiled",
+      "actor_projection": true,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "search_workers": 8,
+      "total_active_games": 500,
+      "local_microbatch": 64,
+      "shared_slots": 1,
+      "shared_candidate_width": 256,
+      "native_transport": "reused",
+      "compile_failure_policy": "fail_fast"
+    },
+    "add_root_noise": true,
+    "temperature_schedule": {
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0,
+      "late_temperature": 0.0
+    },
+    "validation_fraction": 0.1,
+    "split_seed": 12348000,
+    "max_completed_turns": 400
+  },
+  "instrument": false,
+  "script_sha256": "943e1e80fdcfa3a7a8effdcf010e9636afa3f88d43c9140cc7ba75f95ba04010",
+  "end_unix": 1791032278.139337,
+  "result": {
+    "round_index": 0,
+    "steps_target": 2,
+    "steps_completed": 2,
+    "steps_this_session": 2,
+    "history_pool_positions": 0,
+    "checkpoint_every_steps": 100,
+    "metrics_path": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/new_data_learner_smoke_v2/metrics.jsonl",
+    "mean_total_loss": 4.032483339309692,
+    "first_total_loss": 4.082874298095703,
+    "last_total_loss": 3.9820923805236816,
+    "validation": {
+      "available": true,
+      "positions": 4,
+      "policy_loss": 2.7930283546447754,
+      "value_loss": 0.8387072682380676,
+      "policy_entropy": 2.2932236194610596,
+      "games": 1,
+      "event": "validation",
+      "round_index": 0
+    },
+    "replay_cache": {
+      "capacity_bytes": 2147483648,
+      "cache_bytes": 11232844,
+      "entries": 17,
+      "hits": 19,
+      "misses": 17,
+      "decode_count": 17,
+      "decoded_bytes": 11232844,
+      "load_seconds": 0.05766899599984754
+    },
+    "training_seconds": 0.4008191930006433,
+    "learner_config": {
+      "device": "cuda",
+      "batch_size": 16,
+      "history_batch_size": 16,
+      "learning_rate": 0.0001,
+      "weight_decay": 0.0001,
+      "policy_loss_weight": 1.0,
+      "value_loss_weight": 1.0,
+      "max_grad_norm": 1.0,
+      "steps_per_new_position": 4.0,
+      "checkpoint_every_steps": 100,
+      "validation_batch_size": 256,
+      "max_steps_per_round": 2
+    },
+    "replay_identity": {
+      "protocol": "alphazero-replay-index-v1",
+      "total_games": 32,
+      "train_games": 31,
+      "validation_games": 1,
+      "train_positions": 2599,
+      "evicted_games": 968,
+      "digest": "791fcff15eaaefe8f1906948a199d170efe75836bb085c51a0f09fbcb1a46d2c",
+      "first_key": [
+        0,
+        968
+      ],
+      "last_key": [
+        0,
+        999
+      ]
+    },
+    "source_run": "runtime/end_to_end_speed_2026-10-03/collection_optimized",
+    "scope": "two updates on retained real games; no strength evaluation",
+    "main_seconds": 1.9034651999991183,
+    "torch_gpu_allocator": {
+      "max_allocated_bytes": 24491008,
+      "max_reserved_bytes": 29360128,
+      "allocated_at_end_bytes": 17039360,
+      "reserved_at_end_bytes": 29360128
+    }
+  },
+  "resources": "artifacts/end_to_end_speed_2026-10-03/new_data_learner_smoke_v2.session-1.resources.json",
+  "sessions": [
+    {
+      "command": [
+        "scripts/run_speed_validation.py",
+        "learner_smoke",
+        "--config",
+        "configs/speed_2026-10-03/collection_optimized.json",
+        "--collected-run",
+        "runtime/end_to_end_speed_2026-10-03/collection_optimized",
+        "--run",
+        "runtime/end_to_end_speed_2026-10-03/new_data_learner_smoke_v2",
+        "--record",
+        "artifacts/end_to_end_speed_2026-10-03/new_data_learner_smoke_v2.json"
+      ],
+      "start_unix": 1791032276.1050196,
+      "session_number": 1,
+      "python": "3.12.14",
+      "torch": "2.14.0+cu130",
+      "cuda_build": "13.0",
+      "source": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/multiworker_gpu.py",
+      "extension": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so",
+      "extension_sha256": "94986fb4ffaa7c1d8f01437d885f2b11e5599ad85ad878a73a10eaa8bdd9b4b7",
+      "affinity": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "cpu_count": 16,
+      "threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1"
+      },
+      "meminfo": {
+        "MemTotal": "32597820 kB",
+        "MemAvailable": "25584532 kB"
+      },
+      "gpu_device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "row_statistics": null,
+      "config": {
+        "protocol": "mcts-selfplay-v2",
+        "run_id": "speed_optimized_1000",
+        "round_index": 0,
+        "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "num_games": 1000,
+        "seed": 12347000,
+        "search_config": {
+          "simulations": 1024,
+          "determinizations": 1,
+          "c_puct": 1.5,
+          "seed": 9500000,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "dirichlet_alpha": 0.3
+        },
+        "execution": {
+          "backend": "native_cuda_pool",
+          "engine_mode": "fast",
+          "workers": 1,
+          "active_games_per_worker": 1,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "torch_threads": 1,
+          "precision": "float32",
+          "batch_interface": "native",
+          "inference_mode": "compiled",
+          "actor_projection": true,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "search_workers": 8,
+          "total_active_games": 500,
+          "local_microbatch": 64,
+          "shared_slots": 1,
+          "shared_candidate_width": 256,
+          "native_transport": "reused",
+          "compile_failure_policy": "fail_fast"
+        },
+        "add_root_noise": true,
+        "temperature_schedule": {
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0,
+          "late_temperature": 0.0
+        },
+        "validation_fraction": 0.1,
+        "split_seed": 12348000,
+        "max_completed_turns": 400
+      },
+      "instrument": false,
+      "script_sha256": "943e1e80fdcfa3a7a8effdcf010e9636afa3f88d43c9140cc7ba75f95ba04010",
+      "end_unix": 1791032278.139337,
+      "result": {
+        "round_index": 0,
+        "steps_target": 2,
+        "steps_completed": 2,
+        "steps_this_session": 2,
+        "history_pool_positions": 0,
+        "checkpoint_every_steps": 100,
+        "metrics_path": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/new_data_learner_smoke_v2/metrics.jsonl",
+        "mean_total_loss": 4.032483339309692,
+        "first_total_loss": 4.082874298095703,
+        "last_total_loss": 3.9820923805236816,
+        "validation": {
+          "available": true,
+          "positions": 4,
+          "policy_loss": 2.7930283546447754,
+          "value_loss": 0.8387072682380676,
+          "policy_entropy": 2.2932236194610596,
+          "games": 1,
+          "event": "validation",
+          "round_index": 0
+        },
+        "replay_cache": {
+          "capacity_bytes": 2147483648,
+          "cache_bytes": 11232844,
+          "entries": 17,
+          "hits": 19,
+          "misses": 17,
+          "decode_count": 17,
+          "decoded_bytes": 11232844,
+          "load_seconds": 0.05766899599984754
+        },
+        "training_seconds": 0.4008191930006433,
+        "learner_config": {
+          "device": "cuda",
+          "batch_size": 16,
+          "history_batch_size": 16,
+          "learning_rate": 0.0001,
+          "weight_decay": 0.0001,
+          "policy_loss_weight": 1.0,
+          "value_loss_weight": 1.0,
+          "max_grad_norm": 1.0,
+          "steps_per_new_position": 4.0,
+          "checkpoint_every_steps": 100,
+          "validation_batch_size": 256,
+          "max_steps_per_round": 2
+        },
+        "replay_identity": {
+          "protocol": "alphazero-replay-index-v1",
+          "total_games": 32,
+          "train_games": 31,
+          "validation_games": 1,
+          "train_positions": 2599,
+          "evicted_games": 968,
+          "digest": "791fcff15eaaefe8f1906948a199d170efe75836bb085c51a0f09fbcb1a46d2c",
+          "first_key": [
+            0,
+            968
+          ],
+          "last_key": [
+            0,
+            999
+          ]
+        },
+        "source_run": "runtime/end_to_end_speed_2026-10-03/collection_optimized",
+        "scope": "two updates on retained real games; no strength evaluation",
+        "main_seconds": 1.9034651999991183,
+        "torch_gpu_allocator": {
+          "max_allocated_bytes": 24491008,
+          "max_reserved_bytes": 29360128,
+          "allocated_at_end_bytes": 17039360,
+          "reserved_at_end_bytes": 29360128
+        }
+      },
+      "resources": "artifacts/end_to_end_speed_2026-10-03/new_data_learner_smoke_v2.session-1.resources.json"
+    }
+  ]
+}

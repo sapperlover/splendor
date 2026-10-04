@@ -1,0 +1,115 @@
+{
+  "protocol": "alphazero-loop-v1",
+  "run_id": "az_cuda_pool_cached_example",
+  "num_rounds": 1,
+  "new_games_per_round": 1000,
+  "initial_checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+  "replay_max_games": 2500,
+  "replay_cache_bytes": 2147483648,
+  "seeds": {
+    "collection": 9600000,
+    "split": 9601000,
+    "sampling": 9602000
+  },
+  "selfplay": {
+    "protocol": "mcts-selfplay-v2",
+    "search_config": {
+      "simulations": 1024,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "seed": 9500000,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "dirichlet_alpha": 0.3
+    },
+    "execution": {
+      "backend": "native_cuda_pool",
+      "engine_mode": "fast",
+      "workers": 1,
+      "active_games_per_worker": 1,
+      "max_batch_size": 500,
+      "max_batch_wait_ms": 5,
+      "torch_threads": 1,
+      "precision": "float32",
+      "batch_interface": "native",
+      "inference_mode": "compiled",
+      "actor_projection": true,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "search_workers": 8,
+      "total_active_games": 500,
+      "local_microbatch": 64,
+      "shared_slots": 1,
+      "shared_candidate_width": 256,
+      "native_transport": "reused",
+      "compile_failure_policy": "fail_fast"
+    },
+    "add_root_noise": true,
+    "temperature_schedule": {
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0,
+      "late_temperature": 0.0
+    },
+    "validation_fraction": 0.1,
+    "max_completed_turns": 400
+  },
+  "learner": {
+    "device": "cuda",
+    "batch_size": 256,
+    "history_batch_size": 128,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "policy_loss_weight": 1.0,
+    "value_loss_weight": 1.0,
+    "max_grad_norm": 1.0,
+    "steps_per_new_position": 4.0,
+    "checkpoint_every_steps": 100,
+    "validation_batch_size": 256,
+    "max_steps_per_round": null
+  },
+  "evaluation": {
+    "workers": 1,
+    "device": "cuda",
+    "adjudicate_deterministic_policy_cycles": true,
+    "mcts_vs_parent": {
+      "pairs": 50,
+      "seed_start": 9300000,
+      "policy_seed_base": 9400000,
+      "search_config": {
+        "simulations": 1024,
+        "determinizations": 1,
+        "c_puct": 1.5,
+        "seed": 9300000,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "dirichlet_alpha": 0.3
+      }
+    },
+    "greedy_vs_initial": {
+      "pairs": 1,
+      "seed_start": 9310000,
+      "policy_seed_base": 9410000
+    },
+    "mcts_backend": "native",
+    "mcts_execution": {
+      "backend": "native_batched",
+      "active_games": 100,
+      "max_batch_size": 64,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "inference_mode": "compiled",
+      "actor_projection": true,
+      "max_batch_wait_ms": 0.0
+    }
+  }
+}

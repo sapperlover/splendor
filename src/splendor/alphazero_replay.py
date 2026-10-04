@@ -20,6 +20,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
@@ -108,6 +109,14 @@ class _GameCache:
             tuple[int, int], tuple[dict[str, np.ndarray], dict[str, Any], int]
         ] = OrderedDict()
         self._bytes = 0
+        self.hits = self.misses = self.decode_count = self.decoded_bytes = 0
+        self.load_seconds = 0.0
+
+    def stats(self) -> dict[str, int | float]:
+        return {"capacity_bytes": self.max_bytes, "cache_bytes": self.bytes,
+                "entries": self.entries, "hits": self.hits, "misses": self.misses,
+                "decode_count": self.decode_count, "decoded_bytes": self.decoded_bytes,
+                "load_seconds": self.load_seconds}
 
     @property
     def bytes(self) -> int:
@@ -121,8 +130,13 @@ class _GameCache:
         key = game.key
         entry = self._entries.get(key)
         if entry is None:
+            self.misses += 1
+            started = time.perf_counter()
             arrays, metadata = load_game(game.path)
+            self.load_seconds += time.perf_counter() - started
+            self.decode_count += 1
             size = sum(value.nbytes for value in arrays.values())
+            self.decoded_bytes += size
             entry = (arrays, metadata, size)
             if size <= self.max_bytes:
                 # Only whole games that fit the budget are cached; a single
@@ -133,6 +147,7 @@ class _GameCache:
                     _, evicted = self._entries.popitem(last=False)
                     self._bytes -= evicted[2]
         else:
+            self.hits += 1
             self._entries.move_to_end(key)
         arrays, metadata, _ = entry
         return SelfPlaySample(arrays, metadata, decision_index)
@@ -160,6 +175,9 @@ class PositionPool:
     @property
     def games(self) -> tuple[ReplayGame, ...]:
         return self._games
+
+    def cache_stats(self) -> dict[str, int | float]:
+        return self._cache.stats()
 
     def sample(self, rng: DeterministicRng) -> tuple[SelfPlaySample, ReplayReference]:
         if self._size == 0:

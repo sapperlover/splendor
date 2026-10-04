@@ -1,0 +1,975 @@
+diff --git a/README.md b/README.md
+index 431081e..29102e6 100644
+--- a/README.md
++++ b/README.md
+@@ -5,6 +5,7 @@
+ - [当前状态](docs/current_project_state_zh-CN.md) 与 [文档导航](docs/index.md)。
+ - [标准规则](docs/splendor_standard_rules_zh-CN.md)；卡牌、贵族与常量位于 `data/`。
+ - [实验索引](artifacts/experiment_index.json)、[产物约定](artifacts/README.md)、[配置导航](configs/README.md)。
++- [采集、learner 与固定评测时间统计](docs/reports/pipeline_profile_zh-CN.md)：有限诊断、瓶颈归因与复现命令。
+ 
+ PPO seed1 已完成 5M learning decisions；其 DEV best 为 `local_004150000_lifetime_004662112.pt`，latest 为 `local_005000000_lifetime_005512112.pt`。AZ seed1 已完成 5 轮 × 500 局及 θ1–θ5 扩展对照。native CUDA pool 已实现并保存性能对照；窗口与整轮收益分别解读。具体结论和未验证范围见文档导航中的报告。
+ 
+diff --git a/artifacts/experiment_index.json b/artifacts/experiment_index.json
+index b33d74d..1e7bffb 100644
+--- a/artifacts/experiment_index.json
++++ b/artifacts/experiment_index.json
+@@ -123,6 +123,21 @@
+       "evidence": [],
+       "scope": "native smoke and standalone collection do not establish multi-round training performance",
+       "evidence_hashes": {}
++    },
++    {
++      "id": "pipeline-profile-2026-10-02",
++      "recorded_on": "2026-10-03",
++      "status": "valid",
++      "report": "docs/reports/pipeline_profile_zh-CN.md",
++      "evidence": [
++        "artifacts/speed_profile_2026-10-02/summary.json",
++        "artifacts/speed_profile_2026-10-02/manifest.json"
++      ],
++      "scope": "bounded statistics only: old full-run phases, 24 learner steps per case, one native CPU pair, 35s opening and 16 full games; no production optimization or speed acceptance",
++      "evidence_hashes": {
++        "artifacts/speed_profile_2026-10-02/summary.json": "e1801bb470d9353b29408668258aed2bd0d639ded73291ed50b946b626726524",
++        "artifacts/speed_profile_2026-10-02/manifest.json": "3c5bb6c669ac7213dd04dae2494621cb3e60a72ad99a8f1e4e20ef40ac34e69a"
++      }
+     }
+   ],
+   "other_retained_results": "Existing baseline and search aggregates remain under their original paths; absence from this focused index is not an invalidity judgment."
+diff --git a/docs/current_project_state_zh-CN.md b/docs/current_project_state_zh-CN.md
+index c167216..d8581a8 100644
+--- a/docs/current_project_state_zh-CN.md
++++ b/docs/current_project_state_zh-CN.md
+@@ -1,6 +1,6 @@
+ # 当前项目状态
+ 
+-证据核对：2026-10-01。本文仅作导航；规则看标准规则与 data，契约看对应 specs，实现与实验状态优先核对当前代码/config 和可复核原始产物，再读对应版本报告。总览不凌驾于专题协议或报告。
++既有条目证据核对：2026-10-01；2026-10-03 新增流程统计导航。本文仅作导航；规则看标准规则与 data，契约看对应 specs，实现与实验状态优先核对当前代码/config 和可复核原始产物，再读对应版本报告。总览不凌驾于专题协议或报告。
+ 
+ | 能力或实验 | 已确认状态 | 阅读入口 |
+ | --- | --- | --- |
+@@ -10,6 +10,7 @@
+ | AZ seed1 | Python batched_cpu 5 轮 × 500 局、2,982 优化步完成；θ1–θ5 扩展面板已保存 | [报告](reports/alphazero_seed1_zh-CN.md) |
+ | native 单 owner 推理 | 08 正确输入窗口、09 传输画像、500 局比较已保存；按负载区分推荐 | [报告](reports/inference_throughput_zh-CN.md) |
+ | 多 worker GPU pool | 已实现，有窗口和每档一次完整 500 局；整轮收益尚无重复稳定性证据 | [报告](reports/multiworker_gpu_zh-CN.md) |
++| 流程时间统计 | 有有限 learner cache 对照、native 评测分项、pool 开局窗口与 16 局完整诊断；未实施优化 | [分项报告](reports/pipeline_profile_zh-CN.md) |
+ | MCTS sweep | 01/02/05 完整，03 不完整，04 无汇总；非全部完成 | [报告](reports/mcts_sweep_zh-CN.md) |
+ 
+ 不能从 smoke 推断棋力，从稳态窗口推断整轮收益，或从单 seed/多个被查看面板推断总体稳定提升。当前没有 native 多轮生产训练、多训练 seed 或扩容 ablation 的报告依据。
+diff --git a/docs/guides/alphazero_zh-CN.md b/docs/guides/alphazero_zh-CN.md
+index 0fe8f45..72f72db 100644
+--- a/docs/guides/alphazero_zh-CN.md
++++ b/docs/guides/alphazero_zh-CN.md
+@@ -258,9 +258,17 @@ runs/az_loop_seed1/
+ 
+ ## 10. 指标记录
+ 
++有限性能归因可使用 [`profile_speed_pipeline.py`](../../scripts/profile_speed_pipeline.py) 的 `learner`/`replay` 模式，复用冻结 replay 与本轮抽样种子，更新和诊断 checkpoint 仅写新 runtime。2026-10-02 的 [分项报告](../reports/pipeline_profile_zh-CN.md) 区分训练步、数据准备、checkpoint/validation 和 cache 冷启动；缓存对照不代表生产配置已经改动，旧 loop 的完整配置指纹仍必须保持一致。
++
+ - 每步 JSONL：`policy_loss`、`value_loss`、`total_loss`、合法动作策略熵、`grad_norm`、`learning_rate`、`total_train_step`、current/history 抽样数。
+ - 每轮：验证 split 的局数、样本数与 policy CE / value MSE；无验证局时记为 `available=false`，不从训练池冒充。
+ - 终端周期进度（默认每 30 秒一条，`DEFAULT_PROGRESS_INTERVAL_SECONDS`，首个事件立即输出）：`collect_start`/`collect_progress`（已完成局数、本会话新增、局/分钟）、`train_start`/`train_progress`（轮内与全局步数、loss、步/秒、ETA）、`evaluate_progress`（面板、已完成 pairs、pairs/分钟）；阶段结束仍输出 `collect_complete`/`train_complete`/`evaluate_complete`。
+ - TensorBoard：`train/*`（x 轴为全局步）；`validation/policy_ce`、`validation/value_mse`、`validation/policy_entropy`、`validation/games`、`validation/positions`（轮末全局步）；`collect/round-XXX/games_completed`、`collect/round-XXX/games_per_minute`（轮内相对秒，按轮分标签）；`collect/completed_games`、`collect/samples`、`collect/policy_samples`、`collect/simulations`、`collect/wall_seconds`、`collect/games_per_second`、`collect/policy_samples_per_second`、`collect/simulations_per_second`（以该轮入口全局步为 x 轴）；`eval/mcts_vs_parent_score_rate`、`eval/greedy_vs_initial_score_rate`、`system/eval_*_seconds_this_session`。
+ - 采集吞吐沿用 selfplay 既有会话口径：`*_per_second` 的分子只含本次会话实际采集的对局，跨会话恢复不会伪造整轮速率。
+ - 跨轮 target 熵会变化，CE 单独下降不构成棋力证据；不要求单个 minibatch loss 单调下降。
++
++## 大 replay cache 与批量评测配置
++
++新示例 `configs/speed_2026-10-03/alphazero_cached_example.json` 使用 2 GiB 有界整局 LRU cache；历史 run/config 与恢复指纹不改写。容量限制约束 cache 保留的数组，进程 RSS 还含模型、索引、批次及被样本继续引用的已淘汰数组。训练记录增加 `replay_cache`：hits/misses、decode_count/decoded_bytes、load_seconds、实际条目与字节。load 包含 ZIP/NPY 读取、解析与构造，不能全部解释为磁盘 I/O。
++
++`evaluation.mcts_execution` 可启用单 owner 的跨局 native 批量路径；该字段参与 loop 恢复身份。此示例用于新目录，不能替换既有冻结配置后直接 resume。正式固定数据对照使用既有第五轮 replay 与 θ4 optimizer，8 步预热 + 128 步测量，当前尚在验收。
+diff --git a/docs/guides/evaluation_zh-CN.md b/docs/guides/evaluation_zh-CN.md
+index 7e55351..31594fb 100644
+--- a/docs/guides/evaluation_zh-CN.md
++++ b/docs/guides/evaluation_zh-CN.md
+@@ -29,3 +29,13 @@ conda run -n splendor env PYTHONPATH=src python scripts/run_mcts_50pair_sweep.py
+ 实际 sweep 状态见 [结果报告](../reports/mcts_sweep_zh-CN.md)。AZ 扩展面板入口为 `scripts/run_az_generation_evals.py`；默认 θ1–θ4，θ1–θ5 要显式传 `--rounds 1 2 3 4 5`。summary 默认纳管，生成配置和 sidecar 忽略，见 [AZ 指南](alphazero_zh-CN.md)。
+ 
+ 新实验使用新输出目录；恢复既有实验必须保持冻结配置和 checkpoint 身份。5C Quick/Formal/Promotion/FINAL 的种子域与晋升阈值见 [PPO 实验协议](../specs/ppo_training_protocol_zh-CN.md)。
++
++单 worker 的有限 native 时间归因入口为 [`profile_speed_pipeline.py evaluation`](../../scripts/profile_speed_pipeline.py)，示例、计时边界及既有结果见 [分项报告](../reports/pipeline_profile_zh-CN.md)。它调用同一个固定配对 runner，保留 sidecar 和状态语义；不是新增跨局批量评测，也不能用 1 pair 宣称棋力或完整面板吞吐。
++
++## 跨局 native 批量入口
++
++新配置可增加 `execution`：`backend=native_batched`、`active_games`、`max_batch_size`、`candidate_buckets`、`inference_mode` 和 `actor_projection`；`workers=1` 指唯一推理 owner，`device` 可选 CPU/CUDA。示例为 `configs/speed_2026-10-03/evaluation_optimized.json`。暂处于本次正式验收过程中，结果完成后以性能专题报告为准。
++
++此路径只接受双方均为 `native` 的 `mcts_checkpoint`。每局各自保留 policy seed，按 checkpoint 内容身份和推理配置隔离 evaluator/批次；原 checked runner 以协程推进真实规则、循环裁决、异常和截断。所有就绪局已经提供当前可用叶请求，因此 `max_batch_wait_ms` 必须为 0，尾批立即执行。恢复仍以完整 pair 为单位，半个 pair 使用原种子重跑；执行配置参与 manifest 身份，不允许与旧 CPU 路径拼接。
++
++AZ 的 `evaluation.mcts_execution` 接通同一路径；需要 `mcts_backend=native`、`workers=1`，不影响旧配置的默认 CPU 多进程入口。两个配置应使用不同运行目录。
+diff --git a/docs/guides/multiworker_gpu_zh-CN.md b/docs/guides/multiworker_gpu_zh-CN.md
+index d1f6850..0d244f1 100644
+--- a/docs/guides/multiworker_gpu_zh-CN.md
++++ b/docs/guides/multiworker_gpu_zh-CN.md
+@@ -50,6 +50,8 @@ status.json 的 gpu_owner 保存请求和实际 W/A、B、微批/槽容量、共
+ 
+ ## 可执行命令
+ 
++有限分项统计另见 [2026-10-02 报告](../reports/pipeline_profile_zh-CN.md) 和 [`profile_speed_pipeline.py collection`](../../scripts/profile_speed_pipeline.py)。诊断包装保存真实叶宽、worker 微批宽、owner 物理档位及完成时间；开局窗口与小轮次分开报告，worker 累计等待不并入 owner 墙钟。
++
+ 小规模正式采集及 checked replay：
+ 
+ ~~~bash
+@@ -85,3 +87,11 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src python scripts/benc
+ ~~~
+ 
+ 只有短窗口显示稳定收益时，再分别运行 selfplay_fast generate，以 selfplay_cuda_baseline_500.json 和胜出的 throughput_cuda_pool_8x500_b*.json 采集各 500 局到不同新目录。已有完整采集的配置快照和 summary 已保留到 artifacts；复测应使用新输出目录，不覆盖历史记录。
++
++## 2026-10-03 等待与搬运改动
++
++worker 在当前可供给槽全部提交后报告 `blocked` 及槽 generation。owner 在处理 hello/complete/done/error 后，按当前生产者和实际在途槽判断：满批、真正到 deadline、所有可供给槽到齐、生产者耗尽。结果返回会撤销对应 worker 的 blocked 状态；分段请求保留槽所有权，policy/value 分开，超出已编译上限的请求单独分组，队列保持轮转。单 worker 或不足 8 局仍完成所有对局。
++
++同布局 gather 直接块复制；不同布局只清零候选 padding 后缀。共享容量仍明确限制为 256，超限报错，不截断候选。`configs/speed_2026-10-03/collection_optimized.json` 在原 16/32/48 档之外评估 64 档，保持 W=8/A=500/B=500、micro=64、slots=1、wait=5ms。正式加速结论需等待同次任务的两组 1,000 局验收。
++
++`gpu_owner.batch_trigger_detail` 记录触发原因、行数、是否等待和等待时长，旧 `deadline` 分类不可当作真实超时。设置 `SPLENDOR_SPEED_ROW_STATS=1` 可额外聚合实际叶候选宽度、微批宽度和根对局阶段；它不写逐叶日志。
+diff --git a/docs/index.md b/docs/index.md
+index bb77c5e..914984d 100644
+--- a/docs/index.md
++++ b/docs/index.md
+@@ -26,6 +26,7 @@ docs 只保留需要阅读和维护的规范、操作指南、可复核报告。
+ - [AZ 五轮与逐代扩展评测](reports/alphazero_seed1_zh-CN.md)。
+ - [推理吞吐有效基线与失效结论](reports/inference_throughput_zh-CN.md)。
+ - [多 worker GPU 的窗口与整轮对照](reports/multiworker_gpu_zh-CN.md)。
++- [采集、learner 与固定评测的分项统计](reports/pipeline_profile_zh-CN.md)。
+ - [MCTS sweep 实际完成状态](reports/mcts_sweep_zh-CN.md)。
+ 
+ ## 历史归档和维护边界
+diff --git a/docs/reports/inference_throughput_zh-CN.md b/docs/reports/inference_throughput_zh-CN.md
+index 531b470..fb31802 100644
+--- a/docs/reports/inference_throughput_zh-CN.md
++++ b/docs/reports/inference_throughput_zh-CN.md
+@@ -163,6 +163,8 @@ H2D/D2H 主机侧 0.4 s（2%）、`start_job`+`encode_decision` 0.6 s（4%），
+ 
+ ## 长期证据与口径
+ 
++2026-10-02 的 [流程分项报告](pipeline_profile_zh-CN.md) 另记录 pool 开局/有限完整轮次、learner cache 对照和固定 native 评测；它不替代本报告的历史微基准，也不将新的计数诊断包装吞吐作为无仪器速度排名。
++
+ [08 摘要](../../artifacts/inference_throughput/08/summary_08_2026-09-29.json)、[500 局比较](../../artifacts/inference_throughput/08/round500_compare.json) 及其 manifest/summary 副本保留；[09 传输画像](../../artifacts/inference_throughput/09/) 保留原 JSON。09 原件没有测量 revision/模型内容哈希时，保留未知，不从 08 自动继承。
+ 
+ 完整 500 局单 owner 的三档排名来自各一次测量；旧统计未记录 compile 状态，不能断言所有调用保持 compiled。pool 后来的 500 局对照已记录 compile 统计，但不能倒填旧 run。微基准、稳态窗口、整轮 games/min、learner 全循环成本分别报告；当前数据不构成长时间热稳定、多 checkpoint、多机器或 native 多轮训练的结论。
+diff --git a/docs/reports/multiworker_gpu_zh-CN.md b/docs/reports/multiworker_gpu_zh-CN.md
+index 7347c3a..4918c0b 100644
+--- a/docs/reports/multiworker_gpu_zh-CN.md
++++ b/docs/reports/multiworker_gpu_zh-CN.md
+@@ -33,4 +33,6 @@ microbatch=16、slots=2 的最初 pool 窗口低于 baseline；microbatch=64、s
+ 
+ ## 可复核产物
+ 
++2026-10-02 新增的有限 [分项时间统计](pipeline_profile_zh-CN.md) 核对 gather、等待、实际候选宽度与尾段；历史完整 500 局原件和本报告的原排名保持不变。
++
+ [比较摘要](../../artifacts/inference_throughput/multiworker_gpu/comparison_summary.json)、[完整 manifest/summary 副本](../../artifacts/inference_throughput/multiworker_gpu/) 与全部七份原窗口保留；来源哈希见 [保全清单](../../artifacts/retention_manifest_2026-10-01.json)。原 `runtime/module_b/` 的 NPZ、日志、运行状态没有移动。[配置与恢复指南](../guides/multiworker_gpu_zh-CN.md) 描述执行语义。
+diff --git a/src/splendor/alphazero_loop.py b/src/splendor/alphazero_loop.py
+index f05e244..2aef19d 100644
+--- a/src/splendor/alphazero_loop.py
++++ b/src/splendor/alphazero_loop.py
+@@ -225,6 +225,7 @@ class EvaluationSection:
+     mcts_vs_parent: EvaluationPanel
+     greedy_vs_initial: EvaluationPanel
+     mcts_backend: str = "python"
++    mcts_execution: dict[str, Any] | None = None
+ 
+     def __post_init__(self) -> None:
+         if type(self.workers) is not int or self.workers <= 0:
+@@ -241,11 +242,18 @@ class EvaluationSection:
+             raise ValueError("the greedy-vs-initial panel cannot carry search configuration")
+         if type(self.adjudicate_deterministic_policy_cycles) is not bool:
+             raise ValueError("adjudicate_deterministic_policy_cycles must be bool")
++        if self.mcts_execution is not None:
++            from .evaluation_batch import BatchEvaluationConfig
++            BatchEvaluationConfig(**self.mcts_execution)
++            if self.mcts_backend != "native" or self.workers != 1:
++                raise ValueError("batched MCTS evaluation requires native backend and one owner")
+ 
+     def to_dict(self) -> dict[str, Any]:
+         value = asdict(self)
+         if self.mcts_backend == "python":
+             value.pop("mcts_backend")
++        if self.mcts_execution is None:
++            value.pop("mcts_execution")
+         return value
+ 
+ 
+@@ -309,6 +317,7 @@ class LoopConfig:
+                 mcts_vs_parent=EvaluationPanel(**evaluation["mcts_vs_parent"]),
+                 greedy_vs_initial=EvaluationPanel(**evaluation["greedy_vs_initial"]),
+                 mcts_backend=evaluation.get("mcts_backend", "python"),
++                mcts_execution=evaluation.get("mcts_execution"),
+             ),
+         )
+ 
+@@ -961,6 +970,7 @@ class LoopRunner:
+                     search_backend=self.config.evaluation.mcts_backend
+                 ),
+                 game_seeds=parent_panel.game_seeds,
++                execution=self.config.evaluation.mcts_execution,
+                 policy_seed_base=parent_panel.policy_seed_base,
+                 metadata={
+                     "loop_protocol": LOOP_PROTOCOL,
+diff --git a/src/splendor/alphazero_replay.py b/src/splendor/alphazero_replay.py
+index 61c88fa..468ea0f 100644
+--- a/src/splendor/alphazero_replay.py
++++ b/src/splendor/alphazero_replay.py
+@@ -20,6 +20,7 @@ from __future__ import annotations
+ import hashlib
+ import json
+ import os
++import time
+ from collections import OrderedDict
+ from dataclasses import dataclass
+ from pathlib import Path
+@@ -108,6 +109,14 @@ class _GameCache:
+             tuple[int, int], tuple[dict[str, np.ndarray], dict[str, Any], int]
+         ] = OrderedDict()
+         self._bytes = 0
++        self.hits = self.misses = self.decode_count = self.decoded_bytes = 0
++        self.load_seconds = 0.0
++
++    def stats(self) -> dict[str, int | float]:
++        return {"capacity_bytes": self.max_bytes, "cache_bytes": self.bytes,
++                "entries": self.entries, "hits": self.hits, "misses": self.misses,
++                "decode_count": self.decode_count, "decoded_bytes": self.decoded_bytes,
++                "load_seconds": self.load_seconds}
+ 
+     @property
+     def bytes(self) -> int:
+@@ -121,8 +130,13 @@ class _GameCache:
+         key = game.key
+         entry = self._entries.get(key)
+         if entry is None:
++            self.misses += 1
++            started = time.perf_counter()
+             arrays, metadata = load_game(game.path)
++            self.load_seconds += time.perf_counter() - started
++            self.decode_count += 1
+             size = sum(value.nbytes for value in arrays.values())
++            self.decoded_bytes += size
+             entry = (arrays, metadata, size)
+             if size <= self.max_bytes:
+                 # Only whole games that fit the budget are cached; a single
+@@ -133,6 +147,7 @@ class _GameCache:
+                     _, evicted = self._entries.popitem(last=False)
+                     self._bytes -= evicted[2]
+         else:
++            self.hits += 1
+             self._entries.move_to_end(key)
+         arrays, metadata, _ = entry
+         return SelfPlaySample(arrays, metadata, decision_index)
+@@ -161,6 +176,9 @@ class PositionPool:
+     def games(self) -> tuple[ReplayGame, ...]:
+         return self._games
+ 
++    def cache_stats(self) -> dict[str, int | float]:
++        return self._cache.stats()
++
+     def sample(self, rng: DeterministicRng) -> tuple[SelfPlaySample, ReplayReference]:
+         if self._size == 0:
+             raise ValueError(f"position pool {self.label!r} is empty")
+diff --git a/src/splendor/alphazero_train.py b/src/splendor/alphazero_train.py
+index 6866c7e..1ec2449 100644
+--- a/src/splendor/alphazero_train.py
++++ b/src/splendor/alphazero_train.py
+@@ -569,6 +569,7 @@ def run_training_round(
+         record = learner.train_step(batch, references=drawn.references)
+         record["current_positions"] = drawn.current_positions
+         record["history_positions"] = drawn.history_positions
++        record["replay_cache"] = current_pool.cache_stats()
+         _append_jsonl(metrics_path, record)
+         if learner.round_train_step % learner.config.checkpoint_every_steps == 0 or learner.round_train_step == steps_target:
+             learner.save(checkpoint_dir / f"step-{learner.round_train_step:09d}.pt")
+@@ -595,5 +596,6 @@ def run_training_round(
+         "first_total_loss": losses[0] if losses else None,
+         "last_total_loss": losses[-1] if losses else None,
+         "validation": validation,
++        "replay_cache": current_pool.cache_stats(),
+         "training_seconds": time.perf_counter() - started,
+     }
+diff --git a/src/splendor/evaluation.py b/src/splendor/evaluation.py
+index b9bc6d6..7e529c2 100644
+--- a/src/splendor/evaluation.py
++++ b/src/splendor/evaluation.py
+@@ -267,6 +267,7 @@ class FixedEvaluationConfig:
+     bootstrap_resamples: int = 0
+     bootstrap_seed: int = 0
+     metadata: dict[str, Any] | None = None
++    execution: dict[str, Any] | None = None
+ 
+     def __post_init__(self) -> None:
+         if not self.game_seeds:
+@@ -285,9 +286,17 @@ class FixedEvaluationConfig:
+             raise ValueError("max_completed_turns must be positive")
+         if self.bootstrap_resamples < 0:
+             raise ValueError("bootstrap_resamples cannot be negative")
++        if self.execution is not None:
++            from .evaluation_batch import BatchEvaluationConfig
++            BatchEvaluationConfig(**self.execution)
++            if self.workers != 1:
++                raise ValueError("batched evaluation has one inference owner; workers must be 1")
++            for spec in (self.policy_a, self.policy_b):
++                if spec.kind != "mcts_checkpoint" or spec.search_backend != "native":
++                    raise ValueError("batched evaluation requires two native mcts_checkpoint policies")
+ 
+     def to_dict(self) -> dict[str, object]:
+-        return {
++        value = {
+             "policy_a": self.policy_a.to_dict(),
+             "policy_b": self.policy_b.to_dict(),
+             "game_seeds": list(self.game_seeds),
+@@ -302,6 +311,9 @@ class FixedEvaluationConfig:
+             "bootstrap_seed": self.bootstrap_seed,
+             "metadata": dict(self.metadata or {}),
+         }
++        if self.execution is not None:
++            value["execution"] = dict(self.execution)
++        return value
+ 
+     @classmethod
+     def from_dict(cls, value: Mapping[str, Any]) -> FixedEvaluationConfig:
+@@ -339,6 +351,7 @@ class FixedEvaluationConfig:
+             bootstrap_resamples=int(value.get("bootstrap_resamples", 0)),
+             bootstrap_seed=int(value.get("bootstrap_seed", 0)),
+             metadata=dict(metadata),
++            execution=None if value.get("execution") is None else dict(value["execution"]),
+         )
+ 
+ 
+@@ -1385,8 +1398,10 @@ def run_fixed_evaluation(
+         complete = store.complete_pairs(require_scored=require_scored_pairs)
+         missing_ids = tuple(pair_id for pair_id in selected_ids if pair_id not in complete)
+         existing_count = len(complete)
++        previous_summary = (json.loads(output_path.read_text()) if resume and output_path.exists() else {})
+         started = time.perf_counter()
+         pair_callbacks = 0
++        execution_stats = {}
+ 
+         def save_summary() -> dict[str, Any]:
+             store.invalidate()
+@@ -1399,6 +1414,8 @@ def run_fixed_evaluation(
+                 elapsed_seconds=time.perf_counter() - started,
+             )
+             summary["checkpoint_identity"] = identities
++            if execution_stats:
++                summary["execution_stats"] = execution_stats
+             atomic_write_json(output_path, summary)
+             return summary
+ 
+@@ -1426,23 +1443,30 @@ def run_fixed_evaluation(
+                     summary = save_summary()
+ 
+             try:
+-                evaluate_policies_parallel(
+-                    config.policy_a,
+-                    config.policy_b,
+-                    missing_seeds,
+-                    workers=config.workers,
+-                    device=config.device,
+-                    policy_seed_base=config.policy_seed_base,
+-                    max_completed_turns=config.max_completed_turns,
+-                    failure_dir=failure_dir or output_path.parent / "failures" / output_path.stem,
+-                    progress_callback=None,
+-                    adjudicate_deterministic_policy_cycles=(
+-                        config.adjudicate_deterministic_policy_cycles
+-                    ),
+-                    pair_ids=missing_ids,
+-                    pair_callback=on_pair,
+-                    game_log_dir=root,
+-                )
++                if config.execution is not None:
++                    from .evaluation_batch import evaluate_batched
++                    execution_stats.update(evaluate_batched(
++                        config, missing_ids, root,
++                        failure_dir or output_path.parent / "failures" / output_path.stem,
++                        on_pair))
++                else:
++                    evaluate_policies_parallel(
++                        config.policy_a,
++                        config.policy_b,
++                        missing_seeds,
++                        workers=config.workers,
++                        device=config.device,
++                        policy_seed_base=config.policy_seed_base,
++                        max_completed_turns=config.max_completed_turns,
++                        failure_dir=failure_dir or output_path.parent / "failures" / output_path.stem,
++                        progress_callback=None,
++                        adjudicate_deterministic_policy_cycles=(
++                            config.adjudicate_deterministic_policy_cycles
++                        ),
++                        pair_ids=missing_ids,
++                        pair_callback=on_pair,
++                        game_log_dir=root,
++                    )
+             except KeyboardInterrupt:
+                 # Per-game JSONL is authoritative; refresh the summary from
+                 # every complete line before returning control to the CLI.
+@@ -1459,6 +1483,10 @@ def run_fixed_evaluation(
+             elapsed_seconds=time.perf_counter() - started,
+         )
+         summary["checkpoint_identity"] = identities
++        if execution_stats:
++            summary["execution_stats"] = execution_stats
++        elif not missing_ids and "execution_stats" in previous_summary:
++            summary["execution_stats"] = previous_summary["execution_stats"]
+         atomic_write_json(output_path, summary)
+         return FixedEvaluationRun(summary, records, output_path, root)
+     finally:
+diff --git a/src/splendor/multiworker_gpu.py b/src/splendor/multiworker_gpu.py
+index 6638d4d..1f3a6a3 100644
+--- a/src/splendor/multiworker_gpu.py
++++ b/src/splendor/multiworker_gpu.py
+@@ -12,7 +12,7 @@ import queue
+ import resource
+ import time
+ import traceback
+-from collections import deque
++from collections import Counter, deque
+ from dataclasses import dataclass
+ from multiprocessing.shared_memory import SharedMemory
+ from pathlib import Path
+@@ -148,6 +148,9 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
+     buffers: dict[tuple[int, bool, int], Any] = {}
+     peak_active = peak_pending = peak_inflight = exported_rows = batches = root_rows = policy_rows = value_rows = 0
+     wide_batches = 0
++    row_statistics = os.environ.get("SPLENDOR_SPEED_ROW_STATS") == "1"
++    actual_widths = {stage: Counter() for stage in ("opening", "middle", "late")}
++    descriptor_widths = Counter()
+     fill_seconds = wait_seconds = backpressure_seconds = 0.0
+     decision_latencies: list[float] = []
+     kind_turn = 0
+@@ -244,6 +247,19 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
+                 return False
+             roots = [job for job in used_jobs if job in roots]
+             ids = batch.row_ids_array()
++            if row_statistics:
++                descriptor_widths[str(0 if state_only else width)] += rows
++                indices = {stage: [] for stage in actual_widths}
++                for start, count, game_id in segments:
++                    observation = active[game_id].job.request.observation
++                    turns = observation.own_completed_turns + observation.opponent_completed_turns
++                    stage = "opening" if turns < 10 else "middle" if turns < 50 else "late"
++                    indices[stage].extend(range(start, start + count))
++                for stage, selected in indices.items():
++                    if selected:
++                        counts = np.bincount(ids[selected, 3])
++                        actual_widths[stage].update({str(int(i)): int(counts[i])
++                                                   for i in np.flatnonzero(counts)})
+             generations[slot_index] += 1
+             generation = generations[slot_index]
+             outstanding[slot_index] = (generation, batch, segments, roots, used_jobs)
+@@ -277,6 +293,12 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
+                         publish(slot_index)
+             if (not active and not outstanding and exhausted) or (stopping and not outstanding):
+                 break
++            if not outstanding:
++                # Forced roots can finish without inference. Advance them now;
++                # a result queue cannot wake a worker with no exported request.
++                continue
++            ready.put(("blocked", worker_id,
++                       tuple((slot, item[0]) for slot, item in outstanding.items())))
+             before_wait = time.perf_counter()
+             try:
+                 reply = replies.get(timeout=0.25)
+@@ -336,6 +358,8 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
+         "cpu_peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+         "gpu_peak_bytes": 0, "wait_result_seconds": wait_seconds,
+         "queue_backpressure_seconds": backpressure_seconds,
++        "actual_width_rows_by_root_stage": {stage: dict(counts) for stage, counts in actual_widths.items()},
++        "descriptor_width_rows": dict(descriptor_widths),
+         "window": {"start": window_start, "end": window_end or snapshot()}
+                   if start_event is not None else None,
+     }))
+@@ -415,16 +439,47 @@ def _gather(src: _Slot, src_width: int, dst: Any,
+     sm = src.masks[:(src_offset + rows) * src_mask_stride].reshape(src_offset + rows, src_mask_stride)[src_offset:]
+     df = dst.float_staging.reshape(-1, dst_float_stride)[dst_offset:dst_offset + rows]
+     dm = dst.mask_staging.reshape(-1, dst_mask_stride)[dst_offset:dst_offset + rows]
++    if src_float_stride == dst_float_stride and src_mask_stride == dst_mask_stride:
++        np.copyto(df, sf)
++        np.copyto(dm, sm, casting="unsafe")
++        return
+     np.copyto(df[:, :base_float], sf[:, :base_float])
+     np.copyto(dm[:, :base_mask], sm[:, :base_mask], casting="unsafe")
+     if kind == "policy":
+-        df[:, base_float:].fill(0)
+-        dm[:, base_mask:].fill(0)
+         count = src_width * action_dim
++        df[:, base_float + count:].fill(0)
++        dm[:, base_mask + src_width:].fill(0)
+         np.copyto(df[:, base_float:base_float + count], sf[:, base_float:base_float + count])
+         np.copyto(dm[:, base_mask:base_mask + src_width], sm[:, base_mask:base_mask + src_width], casting="unsafe")
+ 
+ 
++def _batch_group(desc: tuple, compiled_width: int) -> tuple[str, bool]:
++    """Keep a wide eager request from widening unrelated compiled requests."""
++    return desc[4], desc[4] == "policy" and desc[5] > compiled_width
++
++
++def _batch_trigger(pending: deque, active_workers: set[int], blocked: dict,
++                   max_batch: int, compiled_width: int,
++                   now: float, deadline: float) -> str | None:
++    if not pending:
++        return None
++    group = _batch_group(pending[0]["event"][1], compiled_width)
++    if sum(item["event"][1][3] - item["offset"] for item in pending
++           if _batch_group(item["event"][1], compiled_width) == group) >= max_batch:
++        return "full"
++    if not active_workers:
++        return "producers_exhausted"
++    supplied = {(item["event"][1][0], item["event"][1][1], item["event"][1][2])
++                for item in pending}
++    if all(wid in blocked and blocked[wid] and
++           all((wid, slot, generation) in supplied for slot, generation in blocked[wid])
++           for wid in active_workers):
++        return "all_supply_arrived"
++    if now >= deadline:
++        return "deadline"
++    return None
++
++
+ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+             fingerprint: str, checkpoint_sha: str,
+             progress_callback: Callable[[int, int], None] | None = None,
+@@ -446,7 +501,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+     width_limit = execution.shared_candidate_width
+     ctx = mp.get_context("spawn")
+     tasks = ctx.Queue()
+-    ready = ctx.Queue(maxsize=worker_count * execution.shared_slots * 2)
++    ready = ctx.Queue(maxsize=worker_count * execution.shared_slots * 4)
+     replies = [ctx.Queue(maxsize=execution.shared_slots * 2) for _ in range(worker_count)]
+     start_event = ctx.Event() if benchmark_seconds is not None else None
+     stop_event = ctx.Event() if benchmark_seconds is not None else None
+@@ -520,19 +575,58 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+         peak_inflight = padding_positions = 0
+         width_hist: dict[str, int] = {}
+         batches_waited = batches_full = 0
+-        wait_reasons = {"full": 0, "deadline": 0, "drain": 0}
++        wait_reasons = {name: 0 for name in ("full", "deadline", "all_supply_arrived", "producers_exhausted")}
++        wait_detail = {name: {"batches": 0, "rows": 0, "waited_batches": 0, "wait_seconds": 0.}
++                       for name in wait_reasons}
++        blocked: dict[int, tuple] = {}
++        returned = {}
+         completed_count = 0
+-
+-        def ready_for_full_batch() -> bool:
+-            batches = [item for item in pending if item["event"][0] == "batch"]
+-            if not batches:
+-                return False
+-            first_kind = batches[0]["event"][1][4]
+-            return sum(item["event"][1][3] - item["offset"]
+-                       for item in batches if item["event"][1][4] == first_kind) >= execution.max_batch_size
++        supply_series = []
++        last_supply_time = session_started
++        tail_intervals = {name: {"batches": 0, "rows": 0, "coalesce_seconds": 0., "gather_seconds": 0.,
++                                 "inference_seconds": 0., "dispatch_seconds": 0.}
++                          for name in ("above100", "11to100", "9to10", "2to8", "last1")}
++
++        def accept(event):
++            nonlocal completed_count, all_assigned
++            if event[0] == "batch":
++                pending.append({"event": event, "offset": 0})
++            elif event[0] == "hello":
++                if event[2] != checkpoint_sha:
++                    raise RuntimeError(f"search worker {event[1]} checkpoint identity mismatch")
++                online_workers.add(event[1])
++            elif event[0] == "blocked":
++                wid, slots = event[1:]
++                if all(generation > returned.get((wid, slot), 0) for slot, generation in slots):
++                    blocked[wid] = slots
++            elif event[0] == "complete":
++                completed_count += 1
++                if not all_assigned:
++                    tasks.put(next(unassigned))
++                    if completed_count + active_limit == len(missing):
++                        all_assigned = True
++                        for _ in range(worker_count):
++                            tasks.put(None)
++                if progress_callback is not None:
++                    progress_callback(completed_before + completed_count, config.num_games)
++            elif event[0] == "error":
++                _, worker_id, error, trace = event
++                raise type(error)(f"search worker {worker_id}: {error}\n{trace}")
++            elif event[0] == "done":
++                data = event[1]
++                active_workers.remove(data["worker_id"])
++                blocked.pop(data["worker_id"], None)
++                results.append(data)
+ 
+         while active_workers or pending:
+             now = time.perf_counter()
++            if now - last_supply_time >= 5:
++                last_supply_time = now
++                supply_series.append({"seconds": now - session_started,
++                    "remaining_games": len(missing) - completed_count,
++                    "active_workers": len(active_workers), "blocked_workers": len(blocked),
++                    "pending_slots": len(pending),
++                    "pending_rows": sum(i["event"][1][3] - i["offset"] for i in pending)})
+             if benchmark_seconds is not None and len(online_workers) == worker_count:
+                 if warmup_deadline is None:
+                     warmup_deadline = now + warmup_seconds
+@@ -568,64 +662,44 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+                             raise RuntimeError(f"search worker {worker_id} exited without completion")
+                     continue
+                 owner_wait += time.perf_counter() - before_wait
+-                pending.append({"event": event, "offset": 0})
++                accept(event)
+             deadline = time.perf_counter() + execution.max_batch_wait_ms / 1000
+-            while (time.perf_counter() < deadline and
+-                   len(pending) < worker_count * execution.shared_slots and
+-                   not ready_for_full_batch()):
+-                coalesce_started = time.perf_counter()
++            waited = 0.
++            # Drain controls before deciding how much future supply is possible.
++            while True:
+                 try:
+-                    pending.append({"event": ready.get(timeout=max(0, deadline - coalesce_started)),
+-                                    "offset": 0})
++                    accept(ready.get_nowait())
+                 except queue.Empty:
+-                    owner_coalesce_wait += time.perf_counter() - coalesce_started
+                     break
+-                owner_coalesce_wait += time.perf_counter() - coalesce_started
+-            while True:
++            if not pending:
++                continue
++            reason = _batch_trigger(pending, active_workers, blocked, execution.max_batch_size,
++                                    execution.candidate_buckets[-1], time.perf_counter(), deadline)
++            while reason is None:
++                coalesce_started = time.perf_counter()
++                event = None
+                 try:
+-                    pending.append({"event": ready.get_nowait(), "offset": 0})
++                    event = ready.get(timeout=max(0, deadline - coalesce_started))
+                 except queue.Empty:
+-                    break
+-            for entry in tuple(pending):
+-                event = entry["event"]
+-                if event[0] == "hello":
+-                    pending.remove(entry)
+-                    if event[2] != checkpoint_sha:
+-                        raise RuntimeError(f"search worker {event[1]} checkpoint identity mismatch")
+-                    online_workers.add(event[1])
+-                    continue
+-                if event[0] == "complete":
+-                    pending.remove(entry)
+-                    completed_count += 1
+-                    if not all_assigned:
+-                        tasks.put(next(unassigned))
+-                        if completed_count + active_limit == len(missing):
+-                            all_assigned = True
+-                            for _ in range(worker_count):
+-                                tasks.put(None)
+-                    if progress_callback is not None:
+-                        progress_callback(completed_before + completed_count, config.num_games)
+-                    continue
+-                if event[0] == "error":
+-                    _, worker_id, error, trace = event
+-                    raise type(error)(f"search worker {worker_id}: {error}\n{trace}")
+-                if event[0] == "done":
+-                    pending.remove(entry)
+-                    data = event[1]
+-                    active_workers.remove(data["worker_id"])
+-                    results.append(data)
++                    pass
++                elapsed = time.perf_counter() - coalesce_started
++                owner_coalesce_wait += elapsed
++                waited += elapsed
++                if event is not None:
++                    accept(event)
++                reason = _batch_trigger(pending, active_workers, blocked, execution.max_batch_size,
++                                        execution.candidate_buckets[-1], time.perf_counter(), deadline)
+             if not pending:
+                 continue
+             candidates = [entry for entry in pending if entry["event"][0] == "batch"]
+             if not candidates:
+                 continue
+-            reason = ("full" if ready_for_full_batch() else
+-                      "drain" if not active_workers else "deadline")
+             wait_reasons[reason] += 1
+-            if reason != "full":
+-                batches_waited += 1
++            batches_waited += int(waited > 0)
+             kind = candidates[0]["event"][1][4]
+-            chosen = [entry for entry in candidates if entry["event"][1][4] == kind]
++            group = _batch_group(candidates[0]["event"][1], execution.candidate_buckets[-1])
++            chosen = [entry for entry in candidates
++                      if _batch_group(entry["event"][1], execution.candidate_buckets[-1]) == group]
+             parts = []
+             used = 0
+             for entry in chosen:
+@@ -642,6 +716,11 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+                     break
+             if used == execution.max_batch_size:
+                 batches_full += 1
++            detail = wait_detail[reason]
++            detail["batches"] += 1
++            detail["rows"] += used
++            detail["waited_batches"] += int(waited > 0)
++            detail["wait_seconds"] += waited
+             width = 0 if kind == "value" else max(part[7] for part in parts)
+             bucket = (next((item for item in execution.candidate_buckets if width <= item),
+                            width_limit) if kind == "policy" else 0)
+@@ -678,11 +757,14 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+                         base_float, base_mask, action_dim)
+                 padding_positions += take * max(0, bucket - src_width)
+             owner_gather += time.perf_counter() - started_gather
++            gather_elapsed = time.perf_counter() - started_gather
+             sink = _OutputSink(used, layout)
+             try:
++                infer_started = time.perf_counter()
+                 handle = (transfer.begin_value_only(sink) if kind == "value"
+                           else transfer.begin_policy_value(sink))
+                 handle.finish()
++                infer_elapsed = time.perf_counter() - infer_started
+                 output = sink.output
+                 assert output is not None
+                 finite = np.isfinite(output)
+@@ -708,11 +790,24 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+                     entry["offset"] += take
+                     if entry["offset"] == entry["event"][1][3]:
+                         pending.remove(entry)
++                        returned[wid, slot_index] = generation
++                        blocked.pop(wid, None)
+                         replies[wid].put(("result", slot_index, generation), timeout=30)
+                     else:
+                         pending.remove(entry)
+                         pending.append(entry)
+                 owner_dispatch += time.perf_counter() - started_dispatch
++                dispatch_elapsed = time.perf_counter() - started_dispatch
++                remaining = len(missing) - completed_count
++                interval = ("above100" if remaining > 100 else "11to100" if remaining > 10 else
++                            "9to10" if remaining > 8 else "2to8" if remaining > 1 else "last1")
++                data = tail_intervals[interval]
++                data["batches"] += 1
++                data["rows"] += used
++                data["coalesce_seconds"] += waited
++                data["gather_seconds"] += gather_elapsed
++                data["inference_seconds"] += infer_elapsed
++                data["dispatch_seconds"] += dispatch_elapsed
+                 width_hist[str(bucket)] = width_hist.get(str(bucket), 0) + used
+             except BaseException as error:
+                 try:
+@@ -741,6 +836,8 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+             "peak_ready_rows": peak_inflight, "padding_positions": padding_positions,
+             "width_histogram": width_hist, "batches_waited": batches_waited,
+             "batches_full": batches_full, "batch_wait_reasons": wait_reasons,
++            "batch_trigger_detail": wait_detail,
++            "supply_series": supply_series, "tail_intervals_exclusive": tail_intervals,
+             "owner_initialization_seconds": init_done - session_started,
+             "inference": evaluator.stats.to_dict(),
+             "benchmark": ({
+@@ -770,6 +867,9 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
+                  "queue_backpressure_seconds": item["queue_backpressure_seconds"]}
+                 for item in sorted(results, key=lambda result: result["worker_id"])
+             ],
++            "worker_row_statistics": [{"worker_id": item["worker_id"],
++                "actual_width_rows_by_root_stage": item["actual_width_rows_by_root_stage"],
++                "descriptor_width_rows": item["descriptor_width_rows"]} for item in results],
+             "gpu_peak_bytes": (torch.cuda.max_memory_allocated() if evaluator.device.type == "cuda" else 0),
+             "owner_cpu_peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+         }
+diff --git a/src/splendor/runner.py b/src/splendor/runner.py
+index cf7ae5d..fef20be 100644
+--- a/src/splendor/runner.py
++++ b/src/splendor/runner.py
+@@ -6,7 +6,7 @@ from collections import Counter
+ from dataclasses import dataclass, fields
+ from enum import Enum
+ from pathlib import Path
+-from typing import Sequence
++from typing import Generator, Sequence
+ 
+ from .actions import (
+     Action,
+@@ -304,7 +304,7 @@ def _write_failure_scene(
+     return path
+ 
+ 
+-def run_random_game(
++def _game_coroutine(
+     seed: int,
+     *,
+     first_player: int | None = None,
+@@ -316,7 +316,7 @@ def run_random_game(
+     adjudicate_deterministic_policy_cycles: bool = False,
+     raise_on_error: bool = True,
+     lean: bool = False,
+-) -> GameRun:
++) -> Generator[tuple[int, DecisionRequest], Action, GameRun]:
+     """Run one complete game or return an explicitly classified truncation.
+ 
+     ``max_completed_turns`` is an engineering watchdog only.  Reaching it does
+@@ -492,7 +492,7 @@ def run_random_game(
+                 if phase is DecisionPhase.PAYMENT and len(request.legal_actions) > 1:
+                     coverage.add("multiple_payment_options")
+ 
+-            action = policy_objects[engine.current_player].choose(request)
++            action = yield engine.current_player, request
+             decision_count += 1
+             before_trigger = (
+                 None if lean else engine._debug_state().final_round_triggered_by
+@@ -525,6 +525,41 @@ def run_random_game(
+         return result_for(RunStatus.ERROR, None, scene=scene, error=error)
+ 
+ 
++def run_random_game(
++    seed: int, *, first_player: int | None = None, max_completed_turns: int = 400,
++    catalog: Catalog | None = None, failure_dir: Path | None = None,
++    policies: Sequence[Policy] | None = None, policy_seeds: tuple[int, int] | None = None,
++    adjudicate_deterministic_policy_cycles: bool = False, raise_on_error: bool = True,
++    lean: bool = False,
++) -> GameRun:
++    """Drive the same checked game coroutine with synchronous policy calls."""
++    kwargs = dict(first_player=first_player, max_completed_turns=max_completed_turns,
++                  catalog=catalog, failure_dir=failure_dir, policies=policies, policy_seeds=policy_seeds,
++                  adjudicate_deterministic_policy_cycles=adjudicate_deterministic_policy_cycles,
++                  raise_on_error=raise_on_error, lean=lean)
++    if policies is None:
++        if policy_seeds is not None and (len(policy_seeds) != 2 or
++                not all(type(value) is int for value in policy_seeds)):
++            raise ValueError("policy_seeds must contain exactly two integers")
++        seeds = kwargs.get("policy_seeds") or (_policy_seed(seed, 0), _policy_seed(seed, 1))
++        policies = (RandomPolicy(seeds[0]), RandomPolicy(seeds[1]))
++        kwargs["policies"] = policies
++    game = _game_coroutine(seed, **kwargs)
++    try:
++        actor, request = next(game)
++        while True:
++            try:
++                action = policies[actor].choose(request)
++            except Exception as error:
++                # Deliver policy failures inside the authoritative runner so
++                # its error status and failure scene retain identical semantics.
++                actor, request = game.throw(error)
++            else:
++                actor, request = game.send(action)
++    except StopIteration as completed:
++        return completed.value
++
++
+ def terminal_branch(result: TerminalResult) -> str:
+     if result.reason is TerminalReason.CONSECUTIVE_FORCED_SKIPS:
+         return "forced_skip_draw"
+@@ -570,6 +605,13 @@ def run_match(
+         raise_on_error=raise_on_error,
+         lean=lean,
+     )
++    return _match_from_run(run, game_seed=game_seed, policy_seeds=policy_seeds,
++                           policy_names=policy_names, pair_id=pair_id, game_in_pair=game_in_pair)
++
++
++def _match_from_run(run: GameRun, *, game_seed: int, policy_seeds: tuple[int, int],
++                    policy_names: tuple[str, str], pair_id: int | None,
++                    game_in_pair: int | None) -> MatchResult:
+     terminal = run.result
+     outcome = None
+     winner_id = None
+diff --git a/src/splendor/search_inference.py b/src/splendor/search_inference.py
+index 351dd06..7c4a60d 100644
+--- a/src/splendor/search_inference.py
++++ b/src/splendor/search_inference.py
+@@ -7,6 +7,7 @@ import importlib
+ import math
+ import time
+ from collections import Counter
++from contextlib import nullcontext
+ from dataclasses import dataclass, field
+ from typing import Callable, Mapping, Sequence
+ 
+@@ -138,6 +139,7 @@ def _compile_failure_types() -> tuple[type[BaseException], ...]:
+ 
+     types: list[type[BaseException]] = []
+     for module_name, class_name in (("torch._dynamo.exc", "TorchDynamoException"),
++                                    ("torch._dynamo.exc", "FailOnRecompileLimitHit"),
+                                     ("torch._inductor.exc", "InductorError")):
+         try:
+             module = importlib.import_module(module_name)
+@@ -307,7 +309,12 @@ class CompiledForward:
+         def timed(*tensors):
+             started = time.perf_counter()
+             try:
+-                result = graph(*tensors)
++                # Torch otherwise silently executes eager code when its guard
++                # cache limit is reached. Honor the explicit fail-fast contract.
++                strict = (torch._dynamo.config.patch(fail_on_recompile_limit_hit=True)
++                          if self.failure_policy == "fail_fast" else nullcontext())
++                with strict:
++                    result = graph(*tensors)
+             except self.failure_types as error:
+                 self._graphs.pop(name, None)
+                 self._record_failure(name, "execute", error)
+diff --git a/tests/test_alphazero_loop.py b/tests/test_alphazero_loop.py
+index 4f39760..6d1b807 100644
+--- a/tests/test_alphazero_loop.py
++++ b/tests/test_alphazero_loop.py
+@@ -216,6 +216,22 @@ def test_loop_rejects_mismatched_configuration(tmp_path, restore_torch_threads):
+     with pytest.raises(ValueError, match="pass --resume"):
+         run_loop(config, output, resume=False)
+ 
++
++def test_loop_native_batched_evaluation_is_connected_and_resumable(tmp_path, restore_torch_threads):
++    from dataclasses import replace
++    checkpoint = _weights_checkpoint(tmp_path / 'base.pt')
++    config = _loop_config(checkpoint)
++    config = replace(config, num_rounds=1, evaluation=replace(config.evaluation,
++        mcts_backend='native', mcts_execution={'backend': 'native_batched',
++            'active_games': 2, 'max_batch_size': 2, 'inference_mode': 'eager'}))
++    output = tmp_path / 'native-loop'
++    assert run_loop(config, output)['loop_complete']
++    panel = output / 'rounds/round-000/evaluation/mcts_vs_parent.json'
++    result = json.loads(panel.read_text())
++    assert result['passed'] and len(result['execution_stats']['models']) == 2
++    assert result['config']['execution'] == config.evaluation.mcts_execution
++    assert run_loop(config, output, resume=True)['loop_complete']
++
+ def test_loop_stops_when_evaluation_panel_fails_engineering_checks(
+     tmp_path, monkeypatch, restore_torch_threads
+ ):
+diff --git a/tests/test_alphazero_replay.py b/tests/test_alphazero_replay.py
+index 349560b..7f2200d 100644
+--- a/tests/test_alphazero_replay.py
++++ b/tests/test_alphazero_replay.py
+@@ -199,6 +199,11 @@ def test_whole_game_cache_serves_repeats_without_reloading(replay_runs, monkeypa
+         assert sample.arrays is arrays and sample.index == position
+     assert loads == [game.path]
+     assert index.cache.entries == 1 and index.cache.bytes > 0
++    stats = index.cache.stats()
++    assert stats['hits'] == min(game.decision_count, 3)
++    assert stats['misses'] == stats['decode_count'] == 1
++    assert stats['decoded_bytes'] == stats['cache_bytes']
++    assert stats['load_seconds'] > 0
+ 
+ 
+ def test_whole_game_cache_evicts_oldest_and_skips_oversized_games(replay_runs):
+@@ -221,6 +226,8 @@ def test_whole_game_cache_evicts_oldest_and_skips_oversized_games(replay_runs):
+     oversized = alphazero_replay._GameCache(max_bytes=1)
+     assert oversized.sample(games[0], 0).index == 0
+     assert oversized.entries == 0 and oversized.bytes == 0
++    assert oversized.stats()['decode_count'] == 1
++    assert oversized.stats()['decoded_bytes'] == sizes[0]
+ 
+ 
+ def test_collection_reports_committed_game_progress(tmp_path):
+diff --git a/tests/test_inference_modes.py b/tests/test_inference_modes.py
+index ad55d1b..56e315c 100644
+--- a/tests/test_inference_modes.py
++++ b/tests/test_inference_modes.py
+@@ -152,6 +152,23 @@ def test_compile_fail_fast_reraises_the_backend_failure(monkeypatch):
+     assert compiled.stats.to_dict()["compile"]["compile_failures"][0]["stage"] == "construct"
+ 
+ 
++def test_compile_fail_fast_does_not_silently_hit_guard_cache_limit(monkeypatch):
++    import pytest
++    original = torch.compile
++    # Use Dynamo's real guards but a cheap backend; the failure under test is
++    # the framework's cache-limit fallback, not code generation performance.
++    monkeypatch.setattr(torch, 'compile', lambda function, **kw: original(function, backend='eager'))
++    torch._dynamo.reset()
++    evaluator = _evaluator(_model(), mode='compiled', actor_projection=True,
++                           candidate_buckets=(16, 32), compile_failure_policy='fail_fast')
++    with torch._dynamo.config.patch(recompile_limit=1):
++        with pytest.raises(torch._dynamo.exc.FailOnRecompileLimitHit):
++            evaluator.warmup_native((16, 32), rows=2)
++    failures = evaluator.stats.to_dict()['compile']['compile_failures']
++    assert failures and failures[-1]['error_type'] == 'FailOnRecompileLimitHit'
++    torch._dynamo.reset()
++
++
+ def test_compile_does_not_swallow_unrelated_runtime_errors(monkeypatch):
+     import pytest
+ 

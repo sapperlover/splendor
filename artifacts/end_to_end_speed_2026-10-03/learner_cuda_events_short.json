@@ -1,0 +1,649 @@
+{
+  "protocol": "speed-pipeline-profile-v1",
+  "provenance": {
+    "command": [
+      "runtime/end_to_end_speed_2026-10-03/optimized_source/scripts/profile_speed_pipeline.py",
+      "--output",
+      "artifacts/end_to_end_speed_2026-10-03/learner_cuda_events_short.json",
+      "--scratch",
+      "runtime/end_to_end_speed_2026-10-03/learner_cuda_events_short",
+      "--cprofile",
+      "learner",
+      "--cache-mib",
+      "2048",
+      "--warmup-steps",
+      "4",
+      "--steps",
+      "4"
+    ],
+    "git_revision": "f213e6378559322d38ac5a3845118de1816950e2",
+    "git_status": " M README.md\n M artifacts/experiment_index.json\n M configs/README.md\n M docs/current_project_state_zh-CN.md\n M docs/guides/alphazero_zh-CN.md\n M docs/guides/evaluation_zh-CN.md\n M docs/guides/multiworker_gpu_zh-CN.md\n M docs/index.md\n M docs/reports/inference_throughput_zh-CN.md\n M docs/reports/multiworker_gpu_zh-CN.md\n M src/splendor/alphazero_loop.py\n M src/splendor/alphazero_replay.py\n M src/splendor/alphazero_train.py\n M src/splendor/evaluation.py\n M src/splendor/multiworker_gpu.py\n M src/splendor/runner.py\n M src/splendor/search_inference.py\n M tests/test_alphazero_loop.py\n M tests/test_alphazero_replay.py\n M tests/test_inference_modes.py\n?? artifacts/end_to_end_speed_2026-10-03/\n?? artifacts/speed_profile_2026-10-02/\n?? configs/speed_2026-10-03/\n?? docs/reports/end_to_end_speed_optimization_zh-CN.md\n?? docs/reports/pipeline_profile_zh-CN.md\n?? scripts/compare_speed_inference.py\n?? scripts/profile_speed_pipeline.py\n?? scripts/run_speed_validation.py\n?? scripts/summarize_speed_validation.py\n?? src/splendor/evaluation_batch.py\n?? tests/test_profile_speed_pipeline.py\n?? tests/test_speed_optimization.py\n",
+    "script_sha256": "8dfc1739848a2998d73e9cfee36af718c23251807c5c29d06a5ca65ecd692052",
+    "python": "3.12.14",
+    "torch": "2.14.0+cu130",
+    "cuda_build": "13.0",
+    "cuda_available": true,
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "cpu_count": 16,
+    "torch_threads": 1,
+    "meminfo": {
+      "MemTotal": "32597820 kB",
+      "MemAvailable": "25667772 kB"
+    }
+  },
+  "total_command_body_seconds": 6.419302821999736,
+  "result": {
+    "round": 4,
+    "cache_mib": 2048,
+    "device": "cuda",
+    "learner_config": {
+      "device": "cuda",
+      "batch_size": 256,
+      "history_batch_size": 128,
+      "learning_rate": 0.0001,
+      "weight_decay": 0.0001,
+      "policy_loss_weight": 1.0,
+      "value_loss_weight": 1.0,
+      "max_grad_norm": 1.0,
+      "steps_per_new_position": 4.0,
+      "checkpoint_every_steps": 100,
+      "validation_batch_size": 256,
+      "max_steps_per_round": null
+    },
+    "sampling_seed": 7472986141618057342,
+    "parent_checkpoint": {
+      "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+      "sha256": "c4e85e27c1242c640c1504fe10d158a7817efd6c0ceed7e165dbb8b68aa26e7c"
+    },
+    "replay_identity": {
+      "protocol": "alphazero-replay-index-v1",
+      "total_games": 2500,
+      "train_games": 2238,
+      "validation_games": 262,
+      "train_positions": 190660,
+      "evicted_games": 0,
+      "digest": "b13060726f79b8f5bfdbca7d20457cd467c5947bd9c4e2fd7e0d1ca35f565f46",
+      "first_key": [
+        0,
+        0
+      ],
+      "last_key": [
+        4,
+        499
+      ]
+    },
+    "index_seconds": 0.9851259590013797,
+    "validation_prepare_seconds": 0.1640973940011463,
+    "initialization_seconds": 0.7918849659999978,
+    "warmup_steps": 4,
+    "warmup_seconds": 2.844639582999662,
+    "measured_steps": 4,
+    "measured_wall_seconds": 1.5299629020009888,
+    "exclusive_host_wall_seconds": {
+      "draw": 1.4779398489990854,
+      "collate": 0.01929119700253068,
+      "target_h2d": 0.0009039169999596197,
+      "feature_h2d": 0.002834259001247119,
+      "forward": 0.006035989001247799,
+      "loss": 0.0011611580011958722,
+      "backward": 0.007869355997172534,
+      "gradient_clip": 0.001997517001655069,
+      "optimizer": 0.003199185999619658,
+      "completion_wait": 0.00011640900083875749,
+      "metrics_write": 0.0005266160005703568,
+      "train_step_remainder": 0.0065378829967812635,
+      "measurement_and_loop_remainder": 0.0015495659990847344
+    },
+    "cuda_stream_seconds": {
+      "target_h2d": 0.0010553279519081116,
+      "feature_h2d": 0.0030013440251350403,
+      "forward": 0.006741952061653137,
+      "loss": 0.0010086399763822556,
+      "backward": 0.008111711859703065,
+      "gradient_clip": 0.002130975991487503,
+      "optimizer": 0.003332192003726959
+    },
+    "cache_total": {
+      "misses": 1195,
+      "decoded_bytes": 784250241,
+      "hits": 853
+    },
+    "reference_sequence_sha256": "17e21e42ae36dd46082da821897093cd88b4b10e0e868e6d2f0cd82ec8ab506a",
+    "production_cache_stats": {
+      "capacity_bytes": 2147483648,
+      "cache_bytes": 816495035,
+      "entries": 1246,
+      "hits": 5128,
+      "misses": 1246,
+      "decode_count": 1246,
+      "decoded_bytes": 816495035,
+      "load_seconds": 4.094129552953746
+    },
+    "profiler_enabled": true,
+    "checkpoint_validation": {
+      "host_wall_seconds": {
+        "checkpoint": 0.006632467000599718,
+        "validation": 0.0836768100016343
+      },
+      "calls": {
+        "checkpoint": 1,
+        "validation": 1
+      },
+      "cuda_stream_seconds": {}
+    },
+    "validation": {
+      "available": true,
+      "positions": 4326,
+      "policy_loss": 1.9544134258036523,
+      "value_loss": 0.7671445739858965,
+      "policy_entropy": 1.910817743607097
+    },
+    "top_train_step_functions": [
+      {
+        "function": "~:0:<method 'run_backward' of 'torch._C._EngineBase' objects>",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.007521160000000001,
+        "inclusive_wall_seconds": 0.007521160000000001
+      },
+      {
+        "function": "~:0:<built-in method torch.as_tensor>",
+        "calls": 88,
+        "primitive_calls": 88,
+        "self_wall_seconds": 0.003545723,
+        "inclusive_wall_seconds": 0.003545723
+      },
+      {
+        "function": "~:0:<built-in method torch._C._nn.linear>",
+        "calls": 56,
+        "primitive_calls": 56,
+        "self_wall_seconds": 0.0014222310000000001,
+        "inclusive_wall_seconds": 0.0014222310000000001
+      },
+      {
+        "function": "~:0:<built-in method torch.where>",
+        "calls": 84,
+        "primitive_calls": 84,
+        "self_wall_seconds": 0.00104721,
+        "inclusive_wall_seconds": 0.00104721
+      },
+      {
+        "function": "~:0:<method 'item' of 'torch._C.TensorBase' objects>",
+        "calls": 160,
+        "primitive_calls": 160,
+        "self_wall_seconds": 0.0010091330000000002,
+        "inclusive_wall_seconds": 0.0010091330000000002
+      },
+      {
+        "function": "~:0:<method 'sum' of 'torch._C.TensorBase' objects>",
+        "calls": 76,
+        "primitive_calls": 76,
+        "self_wall_seconds": 0.0007495980000000001,
+        "inclusive_wall_seconds": 0.0007495980000000001
+      },
+      {
+        "function": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/alphazero_train.py:372:train_step",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.000620306,
+        "inclusive_wall_seconds": 0.030348345000000002
+      },
+      {
+        "function": "~:0:<built-in method torch.isfinite>",
+        "calls": 20,
+        "primitive_calls": 20,
+        "self_wall_seconds": 0.000539989,
+        "inclusive_wall_seconds": 0.000539989
+      },
+      {
+        "function": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/alphazero_train.py:128:alphazero_loss_sums",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00042637400000000003,
+        "inclusive_wall_seconds": 0.00111815
+      },
+      {
+        "function": "~:0:<built-in method torch.relu>",
+        "calls": 48,
+        "primitive_calls": 48,
+        "self_wall_seconds": 0.00041853,
+        "inclusive_wall_seconds": 0.00041853
+      },
+      {
+        "function": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/actor_critic.py:340:<genexpr>",
+        "calls": 24,
+        "primitive_calls": 24,
+        "self_wall_seconds": 0.000415232,
+        "inclusive_wall_seconds": 0.00135665
+      },
+      {
+        "function": "~:0:<function Event.record at 0x7029641709a0>",
+        "calls": 56,
+        "primitive_calls": 56,
+        "self_wall_seconds": 0.000398316,
+        "inclusive_wall_seconds": 0.000398316
+      },
+      {
+        "function": "~:0:<built-in method torch.cat>",
+        "calls": 40,
+        "primitive_calls": 40,
+        "self_wall_seconds": 0.000384058,
+        "inclusive_wall_seconds": 0.000384058
+      },
+      {
+        "function": "~:0:<built-in method torch._foreach_norm>",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00036053800000000004,
+        "inclusive_wall_seconds": 0.00036053800000000004
+      },
+      {
+        "function": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/scripts/profile_speed_pipeline.py:87:stage",
+        "calls": 64,
+        "primitive_calls": 64,
+        "self_wall_seconds": 0.000276171,
+        "inclusive_wall_seconds": 0.002522489
+      },
+      {
+        "function": "~:0:<built-in method torch.zeros_like>",
+        "calls": 36,
+        "primitive_calls": 36,
+        "self_wall_seconds": 0.000256304,
+        "inclusive_wall_seconds": 0.000256304
+      },
+      {
+        "function": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/actor_critic.py:359:encode_actions",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00022270900000000003,
+        "inclusive_wall_seconds": 0.001064026
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:1787:_call_impl",
+        "calls": 152,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00021072200000000002,
+        "inclusive_wall_seconds": 0.010209155000000001
+      },
+      {
+        "function": "~:0:<built-in method builtins.isinstance>",
+        "calls": 1448,
+        "primitive_calls": 1240,
+        "self_wall_seconds": 0.00020037,
+        "inclusive_wall_seconds": 0.000329509
+      },
+      {
+        "function": "~:0:<method 'clamp_min' of 'torch._C.TensorBase' objects>",
+        "calls": 28,
+        "primitive_calls": 28,
+        "self_wall_seconds": 0.000200008,
+        "inclusive_wall_seconds": 0.000200008
+      },
+      {
+        "function": "~:0:<built-in method torch._foreach_sqrt>",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00019709000000000003,
+        "inclusive_wall_seconds": 0.00019709000000000003
+      },
+      {
+        "function": "~:0:<method 'any' of 'torch._C.TensorBase' objects>",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00019519600000000002,
+        "inclusive_wall_seconds": 0.00019519600000000002
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/cuda/__init__.py:1297:current_stream",
+        "calls": 56,
+        "primitive_calls": 56,
+        "self_wall_seconds": 0.000188604,
+        "inclusive_wall_seconds": 0.0016015390000000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:2845:named_modules",
+        "calls": 476,
+        "primitive_calls": 140,
+        "self_wall_seconds": 0.000187123,
+        "inclusive_wall_seconds": 0.000244329
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:1976:__setattr__",
+        "calls": 104,
+        "primitive_calls": 104,
+        "self_wall_seconds": 0.000172528,
+        "inclusive_wall_seconds": 0.00046127200000000004
+      },
+      {
+        "function": "~:0:<method 'unsqueeze' of 'torch._C.TensorBase' objects>",
+        "calls": 88,
+        "primitive_calls": 88,
+        "self_wall_seconds": 0.00017173400000000002,
+        "inclusive_wall_seconds": 0.00017173400000000002
+      },
+      {
+        "function": "~:0:<built-in method torch._foreach_mul_>",
+        "calls": 12,
+        "primitive_calls": 12,
+        "self_wall_seconds": 0.00016930500000000002,
+        "inclusive_wall_seconds": 0.00016930500000000002
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/optim/adam.py:139:_init_group",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00016887,
+        "inclusive_wall_seconds": 0.000258822
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/optim/adam.py:553:_multi_tensor_adam",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00016788300000000002,
+        "inclusive_wall_seconds": 0.002251852
+      },
+      {
+        "function": "~:0:<built-in method torch._ops.profiler._record_function_enter_new>",
+        "calls": 8,
+        "primitive_calls": 8,
+        "self_wall_seconds": 0.000164388,
+        "inclusive_wall_seconds": 0.000164388
+      },
+      {
+        "function": "~:0:<built-in method __new__ of type object at 0x630df3ce77a0>",
+        "calls": 136,
+        "primitive_calls": 136,
+        "self_wall_seconds": 0.000164191,
+        "inclusive_wall_seconds": 0.000164191
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:2894:train",
+        "calls": 104,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.000161793,
+        "inclusive_wall_seconds": 0.0008353560000000001
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/cuda/streams.py:37:__new__",
+        "calls": 56,
+        "primitive_calls": 56,
+        "self_wall_seconds": 0.000156451,
+        "inclusive_wall_seconds": 0.00025307300000000003
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/optim/optimizer.py:1047:zero_grad",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00015570500000000001,
+        "inclusive_wall_seconds": 0.000408479
+      },
+      {
+        "function": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/actor_critic.py:289:_prepare",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.000155018,
+        "inclusive_wall_seconds": 0.00370629
+      },
+      {
+        "function": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/scripts/profile_speed_pipeline.py:122:call",
+        "calls": 28,
+        "primitive_calls": 28,
+        "self_wall_seconds": 0.00014827900000000002,
+        "inclusive_wall_seconds": 0.026619944000000003
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/optim/optimizer.py:97:_get_value",
+        "calls": 160,
+        "primitive_calls": 160,
+        "self_wall_seconds": 0.000146656,
+        "inclusive_wall_seconds": 0.0012201620000000001
+      },
+      {
+        "function": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/optimized_source/src/splendor/actor_critic.py:328:encode_state",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.00014598400000000002,
+        "inclusive_wall_seconds": 0.004115570000000001
+      },
+      {
+        "function": "~:0:<method 'masked_fill' of 'torch._C.TensorBase' objects>",
+        "calls": 4,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.000142989,
+        "inclusive_wall_seconds": 0.000142989
+      },
+      {
+        "function": "/home/lc/anaconda3/envs/splendor/lib/python3.12/site-packages/torch/nn/modules/module.py:1779:_wrapped_call_impl",
+        "calls": 152,
+        "primitive_calls": 4,
+        "self_wall_seconds": 0.000136192,
+        "inclusive_wall_seconds": 0.010220278000000001
+      }
+    ],
+    "steps": [
+      {
+        "host_wall_seconds": {
+          "draw": 0.5113200949999737,
+          "collate": 0.004675305001001107,
+          "target_h2d": 0.00022151200028019957,
+          "feature_h2d": 0.0006899890013301047,
+          "forward": 0.0014915419997123536,
+          "loss": 0.0003005720009241486,
+          "backward": 0.0021320690011634724,
+          "gradient_clip": 0.000569775998883415,
+          "optimizer": 0.0008925849997467594,
+          "train_step": 0.008029725999222137,
+          "completion_wait": 3.080200076510664e-05,
+          "metrics_write": 0.00013558799946622457
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.0002596159875392914,
+          "feature_h2d": 0.0007311360239982605,
+          "forward": 0.0016723840236663819,
+          "loss": 0.00026214399933815005,
+          "backward": 0.0021958398818969728,
+          "gradient_clip": 0.0006041920185089111,
+          "optimizer": 0.0009286720156669617
+        },
+        "train_step_remainder_seconds": 0.0017316809971816838,
+        "step": 4,
+        "wall_seconds": 0.5245910920002643,
+        "decode_seconds": 0.508287985014249,
+        "cache_delta": {
+          "misses": 130,
+          "decoded_bytes": 86286805,
+          "hits": 126
+        },
+        "cache_bytes": 615732278,
+        "cache_entries": 940,
+        "candidate_width": 33,
+        "candidate_positions": 3236,
+        "physical_candidate_positions": 8448,
+        "policy_samples": 195,
+        "total_loss": 2.469351291656494
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.33521382700018876,
+          "collate": 0.004770913001266308,
+          "target_h2d": 0.00022958000045036897,
+          "feature_h2d": 0.000716213000487187,
+          "forward": 0.001556402001369861,
+          "loss": 0.0002708370011532679,
+          "backward": 0.0021031269989180146,
+          "gradient_clip": 0.00047309200090239756,
+          "optimizer": 0.0007707579989073565,
+          "train_step": 0.007751197999823489,
+          "completion_wait": 2.748299993982073e-05,
+          "metrics_write": 0.00012968900045962073
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.000270143985748291,
+          "feature_h2d": 0.0007587839961051941,
+          "forward": 0.0017494080066680908,
+          "loss": 0.00022220799326896668,
+          "backward": 0.0021674239635467527,
+          "gradient_clip": 0.0005109760165214538,
+          "optimizer": 0.0008034560084342956
+        },
+        "train_step_remainder_seconds": 0.0016311889976350358,
+        "step": 5,
+        "wall_seconds": 0.34827446500094084,
+        "decode_seconds": 0.3325813700157596,
+        "cache_delta": {
+          "misses": 106,
+          "decoded_bytes": 69884951,
+          "hits": 150
+        },
+        "cache_bytes": 685617229,
+        "cache_entries": 1046,
+        "candidate_width": 36,
+        "candidate_positions": 3376,
+        "physical_candidate_positions": 9216,
+        "policy_samples": 190,
+        "total_loss": 2.691490650177002
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.3249833429999853,
+          "collate": 0.004912786000204505,
+          "target_h2d": 0.00023206399964692537,
+          "feature_h2d": 0.0007055309997667791,
+          "forward": 0.0014793739992455812,
+          "loss": 0.00028175199986435473,
+          "backward": 0.0018033219985227333,
+          "gradient_clip": 0.0004558000000542961,
+          "optimizer": 0.0007788420007273089,
+          "train_step": 0.007350834999670042,
+          "completion_wait": 3.122899943264201e-05,
+          "metrics_write": 0.00012621200039575342
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00026854398846626283,
+          "feature_h2d": 0.0007485439777374268,
+          "forward": 0.0016584320068359375,
+          "loss": 0.00024780799448490145,
+          "backward": 0.0018578560352325438,
+          "gradient_clip": 0.00048742398619651796,
+          "optimizer": 0.0008100159764289856
+        },
+        "train_step_remainder_seconds": 0.001614150001842063,
+        "step": 6,
+        "wall_seconds": 0.33778914400136273,
+        "decode_seconds": 0.32241675299519557,
+        "cache_delta": {
+          "misses": 103,
+          "decoded_bytes": 67218017,
+          "hits": 153
+        },
+        "cache_bytes": 752835246,
+        "cache_entries": 1149,
+        "candidate_width": 33,
+        "candidate_positions": 3144,
+        "physical_candidate_positions": 8448,
+        "policy_samples": 195,
+        "total_loss": 2.5180211067199707
+      },
+      {
+        "host_wall_seconds": {
+          "draw": 0.3064225839989376,
+          "collate": 0.00493219300005876,
+          "target_h2d": 0.0002207609995821258,
+          "feature_h2d": 0.0007225259996630484,
+          "forward": 0.0015086710009200033,
+          "loss": 0.00030799699925410096,
+          "backward": 0.0018308379985683132,
+          "gradient_clip": 0.0004988490018149605,
+          "optimizer": 0.0007570010002382332,
+          "train_step": 0.0074075060001632664,
+          "completion_wait": 2.689500070118811e-05,
+          "metrics_write": 0.00013512700024875812
+        },
+        "calls": {
+          "draw": 1,
+          "collate": 1,
+          "target_h2d": 1,
+          "feature_h2d": 1,
+          "forward": 1,
+          "loss": 1,
+          "backward": 1,
+          "gradient_clip": 1,
+          "optimizer": 1,
+          "train_step": 1,
+          "completion_wait": 1,
+          "metrics_write": 1
+        },
+        "cuda_stream_seconds": {
+          "target_h2d": 0.00025702399015426635,
+          "feature_h2d": 0.000762880027294159,
+          "forward": 0.001661728024482727,
+          "loss": 0.00027647998929023745,
+          "backward": 0.0018905919790267944,
+          "gradient_clip": 0.0005283839702606201,
+          "optimizer": 0.0007900480031967163
+        },
+        "train_step_remainder_seconds": 0.001560863000122481,
+        "step": 7,
+        "wall_seconds": 0.31930820099842094,
+        "decode_seconds": 0.3039496559977124,
+        "cache_delta": {
+          "misses": 97,
+          "decoded_bytes": 63659789,
+          "hits": 159
+        },
+        "cache_bytes": 816495035,
+        "cache_entries": 1246,
+        "candidate_width": 36,
+        "candidate_positions": 3406,
+        "physical_candidate_positions": 9216,
+        "policy_samples": 191,
+        "total_loss": 2.6754565238952637
+      }
+    ],
+    "peak_rss_kib": 2385308,
+    "gpu_peak_bytes": 83500032,
+    "scope": "isolated updates, actual frozen replay and parent optimizer; no production run modified"
+  }
+}

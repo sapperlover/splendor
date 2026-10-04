@@ -50,6 +50,8 @@ status.json 的 gpu_owner 保存请求和实际 W/A、B、微批/槽容量、共
 
 ## 可执行命令
 
+有限分项统计另见 [2026-10-02 报告](../reports/pipeline_profile_zh-CN.md) 和 [`profile_speed_pipeline.py collection`](../../scripts/profile_speed_pipeline.py)。诊断包装保存真实叶宽、worker 微批宽、owner 物理档位及完成时间；开局窗口与小轮次分开报告，worker 累计等待不并入 owner 墙钟。
+
 小规模正式采集及 checked replay：
 
 ~~~bash
@@ -85,3 +87,15 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src python scripts/benc
 ~~~
 
 只有短窗口显示稳定收益时，再分别运行 selfplay_fast generate，以 selfplay_cuda_baseline_500.json 和胜出的 throughput_cuda_pool_8x500_b*.json 采集各 500 局到不同新目录。已有完整采集的配置快照和 summary 已保留到 artifacts；复测应使用新输出目录，不覆盖历史记录。
+
+## 2026-10-03 等待与搬运改动
+
+worker 在当前可供给槽全部提交后报告 `blocked` 及槽 generation。owner 在处理 hello/complete/done/error 后，按当前生产者和实际在途槽判断：满批、真正到 deadline、所有可供给槽到齐、生产者耗尽。结果返回会撤销对应 worker 的 blocked 状态；分段请求保留槽所有权，policy/value 分开，超出已编译上限的请求单独分组，队列保持轮转。单 worker 或不足 8 局仍完成所有对局。
+
+同布局 gather 直接块复制；不同布局只清零候选 padding 后缀。共享容量仍明确限制为 256，超限报错，不截断候选。`configs/speed_2026-10-03/collection_optimized.json` 在原 16/32/48 档之外采用 64 档，保持 W=8/A=500/B=500、micro=64、slots=1、wait=5ms。两组各1,000局生产采集与全量checked replay已通过，主墙钟1714.56→1384.04秒；这是本机每组一次的联合改动结果，详见[完整性能专题](../reports/end_to_end_speed_optimization_zh-CN.md)。
+
+`gpu_owner.batch_trigger_detail` 记录触发原因、行数、是否等待和等待时长，旧 `deadline` 分类不可当作真实超时。设置 `SPLENDOR_SPEED_ROW_STATS=1` 可额外聚合实际叶候选宽度、微批宽度和根对局阶段；它不写逐叶日志。
+
+`supply_series` 以5秒间隔记录全轮剩余局数、active/blocked worker、pending rows/slots；`tail_intervals_exclusive` 的above100、11to100、9to10、2to8、last1互斥。额外汇总的last100/10/8/1区间则嵌套，不能相加。根opening/middle/late按双方合计回合<10、10–49、≥50统计，与全轮剩余局数分开。
+
+`compile_failure_policy=fail_fast` 除后端编译错误也覆盖Dynamo缓存限额的隐式eager退化；不通过增加无限图数量掩盖。共享容量以内而编译档位外的合法宽请求仍有明确eager执行语义，统计单列，和编译失败回退区分。

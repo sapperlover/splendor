@@ -163,6 +163,8 @@ H2D/D2H 主机侧 0.4 s（2%）、`start_job`+`encode_decision` 0.6 s（4%），
 
 ## 长期证据与口径
 
+2026-10-02 的 [流程分项报告](pipeline_profile_zh-CN.md) 另记录 pool 开局/有限完整轮次、learner cache 对照和固定 native 评测；它不替代本报告的历史微基准，也不将新的计数诊断包装吞吐作为无仪器速度排名。
+
 [08 摘要](../../artifacts/inference_throughput/08/summary_08_2026-09-29.json)、[500 局比较](../../artifacts/inference_throughput/08/round500_compare.json) 及其 manifest/summary 副本保留；[09 传输画像](../../artifacts/inference_throughput/09/) 保留原 JSON。09 原件没有测量 revision/模型内容哈希时，保留未知，不从 08 自动继承。
 
 完整 500 局单 owner 的三档排名来自各一次测量；旧统计未记录 compile 状态，不能断言所有调用保持 compiled。pool 后来的 500 局对照已记录 compile 统计，但不能倒填旧 run。微基准、稳态窗口、整轮 games/min、learner 全循环成本分别报告；当前数据不构成长时间热稳定、多 checkpoint、多机器或 native 多轮训练的结论。

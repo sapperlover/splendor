@@ -33,4 +33,6 @@ microbatch=16、slots=2 的最初 pool 窗口低于 baseline；microbatch=64、s
 
 ## 可复核产物
 
+2026-10-02 新增的有限 [分项时间统计](pipeline_profile_zh-CN.md) 核对 gather、等待、实际候选宽度与尾段；历史完整 500 局原件和本报告的原排名保持不变。
+
 [比较摘要](../../artifacts/inference_throughput/multiworker_gpu/comparison_summary.json)、[完整 manifest/summary 副本](../../artifacts/inference_throughput/multiworker_gpu/) 与全部七份原窗口保留；来源哈希见 [保全清单](../../artifacts/retention_manifest_2026-10-01.json)。原 `runtime/module_b/` 的 NPZ、日志、运行状态没有移动。[配置与恢复指南](../guides/multiworker_gpu_zh-CN.md) 描述执行语义。

@@ -6,7 +6,7 @@ from collections import Counter
 from dataclasses import dataclass, fields
 from enum import Enum
 from pathlib import Path
-from typing import Sequence
+from typing import Generator, Sequence
 
 from .actions import (
     Action,
@@ -304,7 +304,7 @@ def _write_failure_scene(
     return path
 
 
-def run_random_game(
+def _game_coroutine(
     seed: int,
     *,
     first_player: int | None = None,
@@ -316,7 +316,7 @@ def run_random_game(
     adjudicate_deterministic_policy_cycles: bool = False,
     raise_on_error: bool = True,
     lean: bool = False,
-) -> GameRun:
+) -> Generator[tuple[int, DecisionRequest], Action, GameRun]:
     """Run one complete game or return an explicitly classified truncation.
 
     ``max_completed_turns`` is an engineering watchdog only.  Reaching it does
@@ -492,7 +492,7 @@ def run_random_game(
                 if phase is DecisionPhase.PAYMENT and len(request.legal_actions) > 1:
                     coverage.add("multiple_payment_options")
 
-            action = policy_objects[engine.current_player].choose(request)
+            action = yield engine.current_player, request
             decision_count += 1
             before_trigger = (
                 None if lean else engine._debug_state().final_round_triggered_by
@@ -523,6 +523,41 @@ def run_random_game(
             error.add_note(f"runner failure snapshot: {scene}")
             raise
         return result_for(RunStatus.ERROR, None, scene=scene, error=error)
+
+
+def run_random_game(
+    seed: int, *, first_player: int | None = None, max_completed_turns: int = 400,
+    catalog: Catalog | None = None, failure_dir: Path | None = None,
+    policies: Sequence[Policy] | None = None, policy_seeds: tuple[int, int] | None = None,
+    adjudicate_deterministic_policy_cycles: bool = False, raise_on_error: bool = True,
+    lean: bool = False,
+) -> GameRun:
+    """Drive the same checked game coroutine with synchronous policy calls."""
+    kwargs = dict(first_player=first_player, max_completed_turns=max_completed_turns,
+                  catalog=catalog, failure_dir=failure_dir, policies=policies, policy_seeds=policy_seeds,
+                  adjudicate_deterministic_policy_cycles=adjudicate_deterministic_policy_cycles,
+                  raise_on_error=raise_on_error, lean=lean)
+    if policies is None:
+        if policy_seeds is not None and (len(policy_seeds) != 2 or
+                not all(type(value) is int for value in policy_seeds)):
+            raise ValueError("policy_seeds must contain exactly two integers")
+        seeds = kwargs.get("policy_seeds") or (_policy_seed(seed, 0), _policy_seed(seed, 1))
+        policies = (RandomPolicy(seeds[0]), RandomPolicy(seeds[1]))
+        kwargs["policies"] = policies
+    game = _game_coroutine(seed, **kwargs)
+    try:
+        actor, request = next(game)
+        while True:
+            try:
+                action = policies[actor].choose(request)
+            except Exception as error:
+                # Deliver policy failures inside the authoritative runner so
+                # its error status and failure scene retain identical semantics.
+                actor, request = game.throw(error)
+            else:
+                actor, request = game.send(action)
+    except StopIteration as completed:
+        return completed.value
 
 
 def terminal_branch(result: TerminalResult) -> str:
@@ -570,6 +605,13 @@ def run_match(
         raise_on_error=raise_on_error,
         lean=lean,
     )
+    return _match_from_run(run, game_seed=game_seed, policy_seeds=policy_seeds,
+                           policy_names=policy_names, pair_id=pair_id, game_in_pair=game_in_pair)
+
+
+def _match_from_run(run: GameRun, *, game_seed: int, policy_seeds: tuple[int, int],
+                    policy_names: tuple[str, str], pair_id: int | None,
+                    game_in_pair: int | None) -> MatchResult:
     terminal = run.result
     outcome = None
     winner_id = None

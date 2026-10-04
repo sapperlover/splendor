@@ -152,6 +152,23 @@ def test_compile_fail_fast_reraises_the_backend_failure(monkeypatch):
     assert compiled.stats.to_dict()["compile"]["compile_failures"][0]["stage"] == "construct"
 
 
+def test_compile_fail_fast_does_not_silently_hit_guard_cache_limit(monkeypatch):
+    import pytest
+    original = torch.compile
+    # Use Dynamo's real guards but a cheap backend; the failure under test is
+    # the framework's cache-limit fallback, not code generation performance.
+    monkeypatch.setattr(torch, 'compile', lambda function, **kw: original(function, backend='eager'))
+    torch._dynamo.reset()
+    evaluator = _evaluator(_model(), mode='compiled', actor_projection=True,
+                           candidate_buckets=(16, 32), compile_failure_policy='fail_fast')
+    with torch._dynamo.config.patch(recompile_limit=1):
+        with pytest.raises(torch._dynamo.exc.FailOnRecompileLimitHit):
+            evaluator.warmup_native((16, 32), rows=2)
+    failures = evaluator.stats.to_dict()['compile']['compile_failures']
+    assert failures and failures[-1]['error_type'] == 'FailOnRecompileLimitHit'
+    torch._dynamo.reset()
+
+
 def test_compile_does_not_swallow_unrelated_runtime_errors(monkeypatch):
     import pytest
 

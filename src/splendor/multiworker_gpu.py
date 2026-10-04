@@ -12,7 +12,7 @@ import queue
 import resource
 import time
 import traceback
-from collections import deque
+from collections import Counter, deque
 from dataclasses import dataclass
 from multiprocessing.shared_memory import SharedMemory
 from pathlib import Path
@@ -148,6 +148,9 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
     buffers: dict[tuple[int, bool, int], Any] = {}
     peak_active = peak_pending = peak_inflight = exported_rows = batches = root_rows = policy_rows = value_rows = 0
     wide_batches = 0
+    row_statistics = os.environ.get("SPLENDOR_SPEED_ROW_STATS") == "1"
+    actual_widths = {stage: Counter() for stage in ("opening", "middle", "late")}
+    descriptor_widths = Counter()
     fill_seconds = wait_seconds = backpressure_seconds = 0.0
     decision_latencies: list[float] = []
     kind_turn = 0
@@ -244,6 +247,19 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
                 return False
             roots = [job for job in used_jobs if job in roots]
             ids = batch.row_ids_array()
+            if row_statistics:
+                descriptor_widths[str(0 if state_only else width)] += rows
+                indices = {stage: [] for stage in actual_widths}
+                for start, count, game_id in segments:
+                    observation = active[game_id].job.request.observation
+                    turns = observation.own_completed_turns + observation.opponent_completed_turns
+                    stage = "opening" if turns < 10 else "middle" if turns < 50 else "late"
+                    indices[stage].extend(range(start, start + count))
+                for stage, selected in indices.items():
+                    if selected:
+                        counts = np.bincount(ids[selected, 3])
+                        actual_widths[stage].update({str(int(i)): int(counts[i])
+                                                   for i in np.flatnonzero(counts)})
             generations[slot_index] += 1
             generation = generations[slot_index]
             outstanding[slot_index] = (generation, batch, segments, roots, used_jobs)
@@ -277,6 +293,12 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
                         publish(slot_index)
             if (not active and not outstanding and exhausted) or (stopping and not outstanding):
                 break
+            if not outstanding:
+                # Forced roots can finish without inference. Advance them now;
+                # a result queue cannot wake a worker with no exported request.
+                continue
+            ready.put(("blocked", worker_id,
+                       tuple((slot, item[0]) for slot, item in outstanding.items())))
             before_wait = time.perf_counter()
             try:
                 reply = replies.get(timeout=0.25)
@@ -336,6 +358,8 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
         "cpu_peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
         "gpu_peak_bytes": 0, "wait_result_seconds": wait_seconds,
         "queue_backpressure_seconds": backpressure_seconds,
+        "actual_width_rows_by_root_stage": {stage: dict(counts) for stage, counts in actual_widths.items()},
+        "descriptor_width_rows": dict(descriptor_widths),
         "window": {"start": window_start, "end": window_end or snapshot()}
                   if start_event is not None else None,
     }))
@@ -415,14 +439,45 @@ def _gather(src: _Slot, src_width: int, dst: Any,
     sm = src.masks[:(src_offset + rows) * src_mask_stride].reshape(src_offset + rows, src_mask_stride)[src_offset:]
     df = dst.float_staging.reshape(-1, dst_float_stride)[dst_offset:dst_offset + rows]
     dm = dst.mask_staging.reshape(-1, dst_mask_stride)[dst_offset:dst_offset + rows]
+    if src_float_stride == dst_float_stride and src_mask_stride == dst_mask_stride:
+        np.copyto(df, sf)
+        np.copyto(dm, sm, casting="unsafe")
+        return
     np.copyto(df[:, :base_float], sf[:, :base_float])
     np.copyto(dm[:, :base_mask], sm[:, :base_mask], casting="unsafe")
     if kind == "policy":
-        df[:, base_float:].fill(0)
-        dm[:, base_mask:].fill(0)
         count = src_width * action_dim
+        df[:, base_float + count:].fill(0)
+        dm[:, base_mask + src_width:].fill(0)
         np.copyto(df[:, base_float:base_float + count], sf[:, base_float:base_float + count])
         np.copyto(dm[:, base_mask:base_mask + src_width], sm[:, base_mask:base_mask + src_width], casting="unsafe")
+
+
+def _batch_group(desc: tuple, compiled_width: int) -> tuple[str, bool]:
+    """Keep a wide eager request from widening unrelated compiled requests."""
+    return desc[4], desc[4] == "policy" and desc[5] > compiled_width
+
+
+def _batch_trigger(pending: deque, active_workers: set[int], blocked: dict,
+                   max_batch: int, compiled_width: int,
+                   now: float, deadline: float) -> str | None:
+    if not pending:
+        return None
+    group = _batch_group(pending[0]["event"][1], compiled_width)
+    if sum(item["event"][1][3] - item["offset"] for item in pending
+           if _batch_group(item["event"][1], compiled_width) == group) >= max_batch:
+        return "full"
+    if not active_workers:
+        return "producers_exhausted"
+    supplied = {(item["event"][1][0], item["event"][1][1], item["event"][1][2])
+                for item in pending}
+    if all(wid in blocked and blocked[wid] and
+           all((wid, slot, generation) in supplied for slot, generation in blocked[wid])
+           for wid in active_workers):
+        return "all_supply_arrived"
+    if now >= deadline:
+        return "deadline"
+    return None
 
 
 def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
@@ -446,7 +501,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
     width_limit = execution.shared_candidate_width
     ctx = mp.get_context("spawn")
     tasks = ctx.Queue()
-    ready = ctx.Queue(maxsize=worker_count * execution.shared_slots * 2)
+    ready = ctx.Queue(maxsize=worker_count * execution.shared_slots * 4)
     replies = [ctx.Queue(maxsize=execution.shared_slots * 2) for _ in range(worker_count)]
     start_event = ctx.Event() if benchmark_seconds is not None else None
     stop_event = ctx.Event() if benchmark_seconds is not None else None
@@ -520,19 +575,58 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
         peak_inflight = padding_positions = 0
         width_hist: dict[str, int] = {}
         batches_waited = batches_full = 0
-        wait_reasons = {"full": 0, "deadline": 0, "drain": 0}
+        wait_reasons = {name: 0 for name in ("full", "deadline", "all_supply_arrived", "producers_exhausted")}
+        wait_detail = {name: {"batches": 0, "rows": 0, "waited_batches": 0, "wait_seconds": 0.}
+                       for name in wait_reasons}
+        blocked: dict[int, tuple] = {}
+        returned = {}
         completed_count = 0
+        supply_series = []
+        last_supply_time = session_started
+        tail_intervals = {name: {"batches": 0, "rows": 0, "coalesce_seconds": 0., "gather_seconds": 0.,
+                                 "inference_seconds": 0., "dispatch_seconds": 0.}
+                          for name in ("above100", "11to100", "9to10", "2to8", "last1")}
 
-        def ready_for_full_batch() -> bool:
-            batches = [item for item in pending if item["event"][0] == "batch"]
-            if not batches:
-                return False
-            first_kind = batches[0]["event"][1][4]
-            return sum(item["event"][1][3] - item["offset"]
-                       for item in batches if item["event"][1][4] == first_kind) >= execution.max_batch_size
+        def accept(event):
+            nonlocal completed_count, all_assigned
+            if event[0] == "batch":
+                pending.append({"event": event, "offset": 0})
+            elif event[0] == "hello":
+                if event[2] != checkpoint_sha:
+                    raise RuntimeError(f"search worker {event[1]} checkpoint identity mismatch")
+                online_workers.add(event[1])
+            elif event[0] == "blocked":
+                wid, slots = event[1:]
+                if all(generation > returned.get((wid, slot), 0) for slot, generation in slots):
+                    blocked[wid] = slots
+            elif event[0] == "complete":
+                completed_count += 1
+                if not all_assigned:
+                    tasks.put(next(unassigned))
+                    if completed_count + active_limit == len(missing):
+                        all_assigned = True
+                        for _ in range(worker_count):
+                            tasks.put(None)
+                if progress_callback is not None:
+                    progress_callback(completed_before + completed_count, config.num_games)
+            elif event[0] == "error":
+                _, worker_id, error, trace = event
+                raise type(error)(f"search worker {worker_id}: {error}\n{trace}")
+            elif event[0] == "done":
+                data = event[1]
+                active_workers.remove(data["worker_id"])
+                blocked.pop(data["worker_id"], None)
+                results.append(data)
 
         while active_workers or pending:
             now = time.perf_counter()
+            if now - last_supply_time >= 5:
+                last_supply_time = now
+                supply_series.append({"seconds": now - session_started,
+                    "remaining_games": len(missing) - completed_count,
+                    "active_workers": len(active_workers), "blocked_workers": len(blocked),
+                    "pending_slots": len(pending),
+                    "pending_rows": sum(i["event"][1][3] - i["offset"] for i in pending)})
             if benchmark_seconds is not None and len(online_workers) == worker_count:
                 if warmup_deadline is None:
                     warmup_deadline = now + warmup_seconds
@@ -568,64 +662,44 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                             raise RuntimeError(f"search worker {worker_id} exited without completion")
                     continue
                 owner_wait += time.perf_counter() - before_wait
-                pending.append({"event": event, "offset": 0})
+                accept(event)
             deadline = time.perf_counter() + execution.max_batch_wait_ms / 1000
-            while (time.perf_counter() < deadline and
-                   len(pending) < worker_count * execution.shared_slots and
-                   not ready_for_full_batch()):
-                coalesce_started = time.perf_counter()
-                try:
-                    pending.append({"event": ready.get(timeout=max(0, deadline - coalesce_started)),
-                                    "offset": 0})
-                except queue.Empty:
-                    owner_coalesce_wait += time.perf_counter() - coalesce_started
-                    break
-                owner_coalesce_wait += time.perf_counter() - coalesce_started
+            waited = 0.
+            # Drain controls before deciding how much future supply is possible.
             while True:
                 try:
-                    pending.append({"event": ready.get_nowait(), "offset": 0})
+                    accept(ready.get_nowait())
                 except queue.Empty:
                     break
-            for entry in tuple(pending):
-                event = entry["event"]
-                if event[0] == "hello":
-                    pending.remove(entry)
-                    if event[2] != checkpoint_sha:
-                        raise RuntimeError(f"search worker {event[1]} checkpoint identity mismatch")
-                    online_workers.add(event[1])
-                    continue
-                if event[0] == "complete":
-                    pending.remove(entry)
-                    completed_count += 1
-                    if not all_assigned:
-                        tasks.put(next(unassigned))
-                        if completed_count + active_limit == len(missing):
-                            all_assigned = True
-                            for _ in range(worker_count):
-                                tasks.put(None)
-                    if progress_callback is not None:
-                        progress_callback(completed_before + completed_count, config.num_games)
-                    continue
-                if event[0] == "error":
-                    _, worker_id, error, trace = event
-                    raise type(error)(f"search worker {worker_id}: {error}\n{trace}")
-                if event[0] == "done":
-                    pending.remove(entry)
-                    data = event[1]
-                    active_workers.remove(data["worker_id"])
-                    results.append(data)
+            if not pending:
+                continue
+            reason = _batch_trigger(pending, active_workers, blocked, execution.max_batch_size,
+                                    execution.candidate_buckets[-1], time.perf_counter(), deadline)
+            while reason is None:
+                coalesce_started = time.perf_counter()
+                event = None
+                try:
+                    event = ready.get(timeout=max(0, deadline - coalesce_started))
+                except queue.Empty:
+                    pass
+                elapsed = time.perf_counter() - coalesce_started
+                owner_coalesce_wait += elapsed
+                waited += elapsed
+                if event is not None:
+                    accept(event)
+                reason = _batch_trigger(pending, active_workers, blocked, execution.max_batch_size,
+                                        execution.candidate_buckets[-1], time.perf_counter(), deadline)
             if not pending:
                 continue
             candidates = [entry for entry in pending if entry["event"][0] == "batch"]
             if not candidates:
                 continue
-            reason = ("full" if ready_for_full_batch() else
-                      "drain" if not active_workers else "deadline")
             wait_reasons[reason] += 1
-            if reason != "full":
-                batches_waited += 1
+            batches_waited += int(waited > 0)
             kind = candidates[0]["event"][1][4]
-            chosen = [entry for entry in candidates if entry["event"][1][4] == kind]
+            group = _batch_group(candidates[0]["event"][1], execution.candidate_buckets[-1])
+            chosen = [entry for entry in candidates
+                      if _batch_group(entry["event"][1], execution.candidate_buckets[-1]) == group]
             parts = []
             used = 0
             for entry in chosen:
@@ -642,6 +716,11 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                     break
             if used == execution.max_batch_size:
                 batches_full += 1
+            detail = wait_detail[reason]
+            detail["batches"] += 1
+            detail["rows"] += used
+            detail["waited_batches"] += int(waited > 0)
+            detail["wait_seconds"] += waited
             width = 0 if kind == "value" else max(part[7] for part in parts)
             bucket = (next((item for item in execution.candidate_buckets if width <= item),
                            width_limit) if kind == "policy" else 0)
@@ -678,11 +757,14 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                         base_float, base_mask, action_dim)
                 padding_positions += take * max(0, bucket - src_width)
             owner_gather += time.perf_counter() - started_gather
+            gather_elapsed = time.perf_counter() - started_gather
             sink = _OutputSink(used, layout)
             try:
+                infer_started = time.perf_counter()
                 handle = (transfer.begin_value_only(sink) if kind == "value"
                           else transfer.begin_policy_value(sink))
                 handle.finish()
+                infer_elapsed = time.perf_counter() - infer_started
                 output = sink.output
                 assert output is not None
                 finite = np.isfinite(output)
@@ -708,11 +790,24 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                     entry["offset"] += take
                     if entry["offset"] == entry["event"][1][3]:
                         pending.remove(entry)
+                        returned[wid, slot_index] = generation
+                        blocked.pop(wid, None)
                         replies[wid].put(("result", slot_index, generation), timeout=30)
                     else:
                         pending.remove(entry)
                         pending.append(entry)
                 owner_dispatch += time.perf_counter() - started_dispatch
+                dispatch_elapsed = time.perf_counter() - started_dispatch
+                remaining = len(missing) - completed_count
+                interval = ("above100" if remaining > 100 else "11to100" if remaining > 10 else
+                            "9to10" if remaining > 8 else "2to8" if remaining > 1 else "last1")
+                data = tail_intervals[interval]
+                data["batches"] += 1
+                data["rows"] += used
+                data["coalesce_seconds"] += waited
+                data["gather_seconds"] += gather_elapsed
+                data["inference_seconds"] += infer_elapsed
+                data["dispatch_seconds"] += dispatch_elapsed
                 width_hist[str(bucket)] = width_hist.get(str(bucket), 0) + used
             except BaseException as error:
                 try:
@@ -741,6 +836,8 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             "peak_ready_rows": peak_inflight, "padding_positions": padding_positions,
             "width_histogram": width_hist, "batches_waited": batches_waited,
             "batches_full": batches_full, "batch_wait_reasons": wait_reasons,
+            "batch_trigger_detail": wait_detail,
+            "supply_series": supply_series, "tail_intervals_exclusive": tail_intervals,
             "owner_initialization_seconds": init_done - session_started,
             "inference": evaluator.stats.to_dict(),
             "benchmark": ({
@@ -770,6 +867,9 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                  "queue_backpressure_seconds": item["queue_backpressure_seconds"]}
                 for item in sorted(results, key=lambda result: result["worker_id"])
             ],
+            "worker_row_statistics": [{"worker_id": item["worker_id"],
+                "actual_width_rows_by_root_stage": item["actual_width_rows_by_root_stage"],
+                "descriptor_width_rows": item["descriptor_width_rows"]} for item in results],
             "gpu_peak_bytes": (torch.cuda.max_memory_allocated() if evaluator.device.type == "cuda" else 0),
             "owner_cpu_peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
         }

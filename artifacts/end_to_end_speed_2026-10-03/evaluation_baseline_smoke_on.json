@@ -1,0 +1,904 @@
+{
+  "command": [
+    "scripts/run_speed_validation.py",
+    "evaluation",
+    "--config",
+    "configs/speed_2026-10-03/evaluation_baseline_smoke.json",
+    "--run",
+    "runtime/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.json",
+    "--record",
+    "artifacts/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.json",
+    "--instrument"
+  ],
+  "start_unix": 1791029110.265086,
+  "session_number": 1,
+  "python": "3.12.14",
+  "torch": "2.14.0+cu130",
+  "cuda_build": "13.0",
+  "source": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/baseline_source/src/splendor/multiworker_gpu.py",
+  "extension": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/baseline_source/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so",
+  "extension_sha256": "94986fb4ffaa7c1d8f01437d885f2b11e5599ad85ad878a73a10eaa8bdd9b4b7",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "cpu_count": 16,
+  "threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "meminfo": {
+    "MemTotal": "32597820 kB",
+    "MemAvailable": "25583056 kB"
+  },
+  "gpu_device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "row_statistics": null,
+  "config": {
+    "policy_a": {
+      "name": "theta5_native_mcts",
+      "kind": "mcts_checkpoint",
+      "checkpoint": "runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+      "search_backend": "native",
+      "search_config": {
+        "simulations": 16,
+        "determinizations": 1,
+        "c_puct": 1.5,
+        "seed": 9300000,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "dirichlet_alpha": 0.3
+      }
+    },
+    "policy_b": {
+      "name": "theta4_native_mcts",
+      "kind": "mcts_checkpoint",
+      "checkpoint": "runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+      "search_backend": "native",
+      "search_config": {
+        "simulations": 16,
+        "determinizations": 1,
+        "c_puct": 1.5,
+        "seed": 9300000,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "dirichlet_alpha": 0.3
+      }
+    },
+    "pairs": 1,
+    "seed_start": 9300000,
+    "policy_seed_base": 9400000,
+    "workers": 1,
+    "device": "cpu",
+    "max_completed_turns": 400,
+    "adjudicate_deterministic_policy_cycles": true,
+    "metadata": {
+      "purpose": "end-to-end speed baseline, fixed theta5 vs theta4"
+    },
+    "bootstrap_resamples": 0,
+    "bootstrap_seed": 9300050
+  },
+  "instrument": true,
+  "script_sha256": "6855409ad32e8d8eb22943f148d77b0b35b237ce4f87bdafc2aecc0f6c33a28e",
+  "end_unix": 1791029111.5303178,
+  "result": {
+    "main_seconds": 1.1472817969997777,
+    "summary": {
+      "protocol": "fixed-paired-evaluation-v1",
+      "config": {
+        "policy_a": {
+          "name": "theta5_native_mcts",
+          "kind": "mcts_checkpoint",
+          "checkpoint": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+          "search_config": {
+            "simulations": 16,
+            "determinizations": 1,
+            "c_puct": 1.5,
+            "seed": 9300000,
+            "fold_forced_phases": true,
+            "max_simulation_transitions": 512,
+            "root_noise_fraction": 0.0,
+            "dirichlet_alpha": 0.3
+          },
+          "search_backend": "native"
+        },
+        "policy_b": {
+          "name": "theta4_native_mcts",
+          "kind": "mcts_checkpoint",
+          "checkpoint": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+          "search_config": {
+            "simulations": 16,
+            "determinizations": 1,
+            "c_puct": 1.5,
+            "seed": 9300000,
+            "fold_forced_phases": true,
+            "max_simulation_transitions": 512,
+            "root_noise_fraction": 0.0,
+            "dirichlet_alpha": 0.3
+          },
+          "search_backend": "native"
+        },
+        "game_seeds": [
+          9300000
+        ],
+        "policy_seed_base": 9400000,
+        "workers": 1,
+        "device": "cpu",
+        "max_completed_turns": 400,
+        "adjudicate_deterministic_policy_cycles": true,
+        "bootstrap_resamples": 0,
+        "bootstrap_seed": 9300050,
+        "metadata": {
+          "purpose": "end-to-end speed baseline, fixed theta5 vs theta4"
+        }
+      },
+      "runtime": {
+        "workers": 1,
+        "device": "cpu"
+      },
+      "output": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.json",
+      "game_log_root": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.json.games",
+      "updated_at": "2026-10-03T20:05:11+0800",
+      "elapsed_seconds_this_invocation": 1.1299535860007381,
+      "total_pairs": 1,
+      "completed_pairs": 1,
+      "total_games": 2,
+      "completed_games": 2,
+      "valid_games": 2,
+      "a_wins": 1,
+      "draws": 0,
+      "a_losses": 1,
+      "win_rate_score": 0.5,
+      "a_first": {
+        "games": 1,
+        "valid_games": 1,
+        "wins": 0,
+        "draws": 0,
+        "losses": 1,
+        "win_rate_score": 0.0
+      },
+      "a_second": {
+        "games": 1,
+        "valid_games": 1,
+        "wins": 1,
+        "draws": 0,
+        "losses": 0,
+        "win_rate_score": 1.0
+      },
+      "mean_completed_player_turns": 52.0,
+      "median_completed_player_turns": 52.0,
+      "mean_decisions": 79.5,
+      "forced_skips": 0,
+      "engineering_truncations": 0,
+      "exceptions": 0,
+      "illegal_actions": 0,
+      "invariant_failures": 0,
+      "policy_cycle_draws": 0,
+      "policy_a_stats": {
+        "changed_action_count": 4,
+        "core_forward_seconds": 0.3743221320100929,
+        "decisions": 77,
+        "determinizations": 55,
+        "expanded_nodes": 861,
+        "feature_seconds": 0.010196057,
+        "folded_actions": 176,
+        "inference_other_seconds": 0.055830437973781954,
+        "inference_positions": 916,
+        "inference_seconds": 0.0,
+        "inference_wall_seconds": 0.4545750069873975,
+        "input_tensor_seconds": 0.024422437003522646,
+        "model_batches": 0,
+        "model_positions": 916,
+        "physical_batches": 916,
+        "searchable_decisions": 55,
+        "simulations": 880,
+        "single_candidate_decisions": 22,
+        "state_transitions": 1040,
+        "terminal_hits": 19,
+        "total_seconds": 0.503896433004229,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 1335
+      },
+      "policy_b_stats": {
+        "changed_action_count": 7,
+        "core_forward_seconds": 0.3482863559929683,
+        "decisions": 82,
+        "determinizations": 52,
+        "expanded_nodes": 813,
+        "feature_seconds": 0.009616632,
+        "folded_actions": 192,
+        "inference_other_seconds": 0.052652021023277484,
+        "inference_positions": 865,
+        "inference_seconds": 0.0,
+        "inference_wall_seconds": 0.45897024500845873,
+        "input_tensor_seconds": 0.05803186799221294,
+        "model_batches": 0,
+        "model_positions": 865,
+        "physical_batches": 865,
+        "searchable_decisions": 52,
+        "simulations": 832,
+        "single_candidate_decisions": 30,
+        "state_transitions": 1008,
+        "terminal_hits": 19,
+        "total_seconds": 0.5065077870012828,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 1576
+      },
+      "paired_bootstrap": null,
+      "paired_bootstrap_unit": "one_paired_seed",
+      "passed": true,
+      "pairs": [
+        {
+          "pair_id": 0,
+          "game_seed": 9300000,
+          "games": [
+            {
+              "completed_player_turns": 56,
+              "completed_turns": [
+                28,
+                28
+              ],
+              "decision_count": 86,
+              "draw": false,
+              "error_detail": null,
+              "error_type": null,
+              "failure_scene": null,
+              "final_state_digest": "bf45647c8b6934b2c1debd5672e82173d28a0949482aab8f59b5a4740912348f",
+              "first_player": 0,
+              "forced_skips": 0,
+              "game_in_pair": 0,
+              "game_seed": 9300000,
+              "normal_end": true,
+              "outcome_for_a": "a_loss",
+              "pair_id": 0,
+              "policy_a_stats": {
+                "changed_action_count": 1,
+                "core_forward_seconds": 0.20674650400451355,
+                "decisions": 42,
+                "determinizations": 29,
+                "expanded_nodes": 464,
+                "feature_seconds": 0.005670924999999999,
+                "folded_actions": 90,
+                "inference_other_seconds": 0.03039913898373925,
+                "inference_positions": 493,
+                "inference_seconds": 0.0,
+                "inference_wall_seconds": 0.25064530498821114,
+                "input_tensor_seconds": 0.013499661999958334,
+                "model_batches": 0,
+                "model_positions": 493,
+                "physical_batches": 493,
+                "searchable_decisions": 29,
+                "simulations": 464,
+                "single_candidate_decisions": 13,
+                "state_transitions": 554,
+                "terminal_hits": 0,
+                "total_seconds": 0.27747572000043874,
+                "transition_cap_hits": 0,
+                "tree_depth_sum": 663
+              },
+              "policy_b_stats": {
+                "changed_action_count": 3,
+                "core_forward_seconds": 0.1852702910091466,
+                "decisions": 44,
+                "determinizations": 28,
+                "expanded_nodes": 432,
+                "feature_seconds": 0.005159888999999999,
+                "folded_actions": 101,
+                "inference_other_seconds": 0.027815811989967187,
+                "inference_positions": 460,
+                "inference_seconds": 0.0,
+                "inference_wall_seconds": 0.22513937700114184,
+                "input_tensor_seconds": 0.012053274002028047,
+                "model_batches": 0,
+                "model_positions": 460,
+                "physical_batches": 460,
+                "searchable_decisions": 28,
+                "simulations": 448,
+                "single_candidate_decisions": 16,
+                "state_transitions": 534,
+                "terminal_hits": 16,
+                "total_seconds": 0.2506273239996517,
+                "transition_cap_hits": 0,
+                "tree_depth_sum": 859
+              },
+              "policy_names": [
+                "theta5_native_mcts",
+                "theta4_native_mcts"
+              ],
+              "policy_seeds": [
+                9400000,
+                9400001
+              ],
+              "purchased_card_counts": [
+                14,
+                16
+              ],
+              "scores": [
+                11,
+                17
+              ],
+              "status": "natural_terminal",
+              "terminal_reason": "final_round",
+              "winner_id": 1
+            },
+            {
+              "completed_player_turns": 48,
+              "completed_turns": [
+                24,
+                24
+              ],
+              "decision_count": 73,
+              "draw": false,
+              "error_detail": null,
+              "error_type": null,
+              "failure_scene": null,
+              "final_state_digest": "643f8ec8a523f9b66e4a51cc420eaa7947416cc93ecb323b45e52ef144bb681d",
+              "first_player": 1,
+              "forced_skips": 0,
+              "game_in_pair": 1,
+              "game_seed": 9300000,
+              "normal_end": true,
+              "outcome_for_a": "a_win",
+              "pair_id": 0,
+              "policy_a_stats": {
+                "changed_action_count": 3,
+                "core_forward_seconds": 0.16757562800557935,
+                "decisions": 35,
+                "determinizations": 26,
+                "expanded_nodes": 397,
+                "feature_seconds": 0.004525132,
+                "folded_actions": 86,
+                "inference_other_seconds": 0.025431298990042706,
+                "inference_positions": 423,
+                "inference_seconds": 0.0,
+                "inference_wall_seconds": 0.20392970199918636,
+                "input_tensor_seconds": 0.010922775003564311,
+                "model_batches": 0,
+                "model_positions": 423,
+                "physical_batches": 423,
+                "searchable_decisions": 26,
+                "simulations": 416,
+                "single_candidate_decisions": 9,
+                "state_transitions": 486,
+                "terminal_hits": 19,
+                "total_seconds": 0.2264207130037903,
+                "transition_cap_hits": 0,
+                "tree_depth_sum": 672
+              },
+              "policy_b_stats": {
+                "changed_action_count": 4,
+                "core_forward_seconds": 0.1630160649838217,
+                "decisions": 38,
+                "determinizations": 24,
+                "expanded_nodes": 381,
+                "feature_seconds": 0.004456743,
+                "folded_actions": 91,
+                "inference_other_seconds": 0.024836209033310297,
+                "inference_positions": 405,
+                "inference_seconds": 0.0,
+                "inference_wall_seconds": 0.2338308680073169,
+                "input_tensor_seconds": 0.04597859399018489,
+                "model_batches": 0,
+                "model_positions": 405,
+                "physical_batches": 405,
+                "searchable_decisions": 24,
+                "simulations": 384,
+                "single_candidate_decisions": 14,
+                "state_transitions": 474,
+                "terminal_hits": 3,
+                "total_seconds": 0.25588046300163114,
+                "transition_cap_hits": 0,
+                "tree_depth_sum": 717
+              },
+              "policy_names": [
+                "theta5_native_mcts",
+                "theta4_native_mcts"
+              ],
+              "policy_seeds": [
+                9400000,
+                9400001
+              ],
+              "purchased_card_counts": [
+                11,
+                14
+              ],
+              "scores": [
+                15,
+                13
+              ],
+              "status": "natural_terminal",
+              "terminal_reason": "final_round",
+              "winner_id": 0
+            }
+          ]
+        }
+      ],
+      "checkpoint_identity": {
+        "policy_a": {
+          "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+          "sha256": "e0cba7733de4977cd0a606d35d2f328f47f285a0be81a1bd3895633dd105f97b"
+        },
+        "policy_b": {
+          "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+          "sha256": "c4e85e27c1242c640c1504fe10d158a7817efd6c0ceed7e165dbb8b68aa26e7c"
+        }
+      }
+    },
+    "torch_gpu_allocator": {
+      "max_allocated_bytes": 0,
+      "max_reserved_bytes": 0,
+      "allocated_at_end_bytes": 0,
+      "reserved_at_end_bytes": 0
+    }
+  },
+  "resources": "artifacts/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.session-1.resources.json",
+  "sessions": [
+    {
+      "command": [
+        "scripts/run_speed_validation.py",
+        "evaluation",
+        "--config",
+        "configs/speed_2026-10-03/evaluation_baseline_smoke.json",
+        "--run",
+        "runtime/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.json",
+        "--record",
+        "artifacts/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.json",
+        "--instrument"
+      ],
+      "start_unix": 1791029110.265086,
+      "session_number": 1,
+      "python": "3.12.14",
+      "torch": "2.14.0+cu130",
+      "cuda_build": "13.0",
+      "source": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/baseline_source/src/splendor/multiworker_gpu.py",
+      "extension": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/baseline_source/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so",
+      "extension_sha256": "94986fb4ffaa7c1d8f01437d885f2b11e5599ad85ad878a73a10eaa8bdd9b4b7",
+      "affinity": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "cpu_count": 16,
+      "threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1"
+      },
+      "meminfo": {
+        "MemTotal": "32597820 kB",
+        "MemAvailable": "25583056 kB"
+      },
+      "gpu_device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "row_statistics": null,
+      "config": {
+        "policy_a": {
+          "name": "theta5_native_mcts",
+          "kind": "mcts_checkpoint",
+          "checkpoint": "runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+          "search_backend": "native",
+          "search_config": {
+            "simulations": 16,
+            "determinizations": 1,
+            "c_puct": 1.5,
+            "seed": 9300000,
+            "fold_forced_phases": true,
+            "max_simulation_transitions": 512,
+            "root_noise_fraction": 0.0,
+            "dirichlet_alpha": 0.3
+          }
+        },
+        "policy_b": {
+          "name": "theta4_native_mcts",
+          "kind": "mcts_checkpoint",
+          "checkpoint": "runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+          "search_backend": "native",
+          "search_config": {
+            "simulations": 16,
+            "determinizations": 1,
+            "c_puct": 1.5,
+            "seed": 9300000,
+            "fold_forced_phases": true,
+            "max_simulation_transitions": 512,
+            "root_noise_fraction": 0.0,
+            "dirichlet_alpha": 0.3
+          }
+        },
+        "pairs": 1,
+        "seed_start": 9300000,
+        "policy_seed_base": 9400000,
+        "workers": 1,
+        "device": "cpu",
+        "max_completed_turns": 400,
+        "adjudicate_deterministic_policy_cycles": true,
+        "metadata": {
+          "purpose": "end-to-end speed baseline, fixed theta5 vs theta4"
+        },
+        "bootstrap_resamples": 0,
+        "bootstrap_seed": 9300050
+      },
+      "instrument": true,
+      "script_sha256": "6855409ad32e8d8eb22943f148d77b0b35b237ce4f87bdafc2aecc0f6c33a28e",
+      "end_unix": 1791029111.5303178,
+      "result": {
+        "main_seconds": 1.1472817969997777,
+        "summary": {
+          "protocol": "fixed-paired-evaluation-v1",
+          "config": {
+            "policy_a": {
+              "name": "theta5_native_mcts",
+              "kind": "mcts_checkpoint",
+              "checkpoint": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+              "search_config": {
+                "simulations": 16,
+                "determinizations": 1,
+                "c_puct": 1.5,
+                "seed": 9300000,
+                "fold_forced_phases": true,
+                "max_simulation_transitions": 512,
+                "root_noise_fraction": 0.0,
+                "dirichlet_alpha": 0.3
+              },
+              "search_backend": "native"
+            },
+            "policy_b": {
+              "name": "theta4_native_mcts",
+              "kind": "mcts_checkpoint",
+              "checkpoint": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+              "search_config": {
+                "simulations": 16,
+                "determinizations": 1,
+                "c_puct": 1.5,
+                "seed": 9300000,
+                "fold_forced_phases": true,
+                "max_simulation_transitions": 512,
+                "root_noise_fraction": 0.0,
+                "dirichlet_alpha": 0.3
+              },
+              "search_backend": "native"
+            },
+            "game_seeds": [
+              9300000
+            ],
+            "policy_seed_base": 9400000,
+            "workers": 1,
+            "device": "cpu",
+            "max_completed_turns": 400,
+            "adjudicate_deterministic_policy_cycles": true,
+            "bootstrap_resamples": 0,
+            "bootstrap_seed": 9300050,
+            "metadata": {
+              "purpose": "end-to-end speed baseline, fixed theta5 vs theta4"
+            }
+          },
+          "runtime": {
+            "workers": 1,
+            "device": "cpu"
+          },
+          "output": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.json",
+          "game_log_root": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.json.games",
+          "updated_at": "2026-10-03T20:05:11+0800",
+          "elapsed_seconds_this_invocation": 1.1299535860007381,
+          "total_pairs": 1,
+          "completed_pairs": 1,
+          "total_games": 2,
+          "completed_games": 2,
+          "valid_games": 2,
+          "a_wins": 1,
+          "draws": 0,
+          "a_losses": 1,
+          "win_rate_score": 0.5,
+          "a_first": {
+            "games": 1,
+            "valid_games": 1,
+            "wins": 0,
+            "draws": 0,
+            "losses": 1,
+            "win_rate_score": 0.0
+          },
+          "a_second": {
+            "games": 1,
+            "valid_games": 1,
+            "wins": 1,
+            "draws": 0,
+            "losses": 0,
+            "win_rate_score": 1.0
+          },
+          "mean_completed_player_turns": 52.0,
+          "median_completed_player_turns": 52.0,
+          "mean_decisions": 79.5,
+          "forced_skips": 0,
+          "engineering_truncations": 0,
+          "exceptions": 0,
+          "illegal_actions": 0,
+          "invariant_failures": 0,
+          "policy_cycle_draws": 0,
+          "policy_a_stats": {
+            "changed_action_count": 4,
+            "core_forward_seconds": 0.3743221320100929,
+            "decisions": 77,
+            "determinizations": 55,
+            "expanded_nodes": 861,
+            "feature_seconds": 0.010196057,
+            "folded_actions": 176,
+            "inference_other_seconds": 0.055830437973781954,
+            "inference_positions": 916,
+            "inference_seconds": 0.0,
+            "inference_wall_seconds": 0.4545750069873975,
+            "input_tensor_seconds": 0.024422437003522646,
+            "model_batches": 0,
+            "model_positions": 916,
+            "physical_batches": 916,
+            "searchable_decisions": 55,
+            "simulations": 880,
+            "single_candidate_decisions": 22,
+            "state_transitions": 1040,
+            "terminal_hits": 19,
+            "total_seconds": 0.503896433004229,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 1335
+          },
+          "policy_b_stats": {
+            "changed_action_count": 7,
+            "core_forward_seconds": 0.3482863559929683,
+            "decisions": 82,
+            "determinizations": 52,
+            "expanded_nodes": 813,
+            "feature_seconds": 0.009616632,
+            "folded_actions": 192,
+            "inference_other_seconds": 0.052652021023277484,
+            "inference_positions": 865,
+            "inference_seconds": 0.0,
+            "inference_wall_seconds": 0.45897024500845873,
+            "input_tensor_seconds": 0.05803186799221294,
+            "model_batches": 0,
+            "model_positions": 865,
+            "physical_batches": 865,
+            "searchable_decisions": 52,
+            "simulations": 832,
+            "single_candidate_decisions": 30,
+            "state_transitions": 1008,
+            "terminal_hits": 19,
+            "total_seconds": 0.5065077870012828,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 1576
+          },
+          "paired_bootstrap": null,
+          "paired_bootstrap_unit": "one_paired_seed",
+          "passed": true,
+          "pairs": [
+            {
+              "pair_id": 0,
+              "game_seed": 9300000,
+              "games": [
+                {
+                  "completed_player_turns": 56,
+                  "completed_turns": [
+                    28,
+                    28
+                  ],
+                  "decision_count": 86,
+                  "draw": false,
+                  "error_detail": null,
+                  "error_type": null,
+                  "failure_scene": null,
+                  "final_state_digest": "bf45647c8b6934b2c1debd5672e82173d28a0949482aab8f59b5a4740912348f",
+                  "first_player": 0,
+                  "forced_skips": 0,
+                  "game_in_pair": 0,
+                  "game_seed": 9300000,
+                  "normal_end": true,
+                  "outcome_for_a": "a_loss",
+                  "pair_id": 0,
+                  "policy_a_stats": {
+                    "changed_action_count": 1,
+                    "core_forward_seconds": 0.20674650400451355,
+                    "decisions": 42,
+                    "determinizations": 29,
+                    "expanded_nodes": 464,
+                    "feature_seconds": 0.005670924999999999,
+                    "folded_actions": 90,
+                    "inference_other_seconds": 0.03039913898373925,
+                    "inference_positions": 493,
+                    "inference_seconds": 0.0,
+                    "inference_wall_seconds": 0.25064530498821114,
+                    "input_tensor_seconds": 0.013499661999958334,
+                    "model_batches": 0,
+                    "model_positions": 493,
+                    "physical_batches": 493,
+                    "searchable_decisions": 29,
+                    "simulations": 464,
+                    "single_candidate_decisions": 13,
+                    "state_transitions": 554,
+                    "terminal_hits": 0,
+                    "total_seconds": 0.27747572000043874,
+                    "transition_cap_hits": 0,
+                    "tree_depth_sum": 663
+                  },
+                  "policy_b_stats": {
+                    "changed_action_count": 3,
+                    "core_forward_seconds": 0.1852702910091466,
+                    "decisions": 44,
+                    "determinizations": 28,
+                    "expanded_nodes": 432,
+                    "feature_seconds": 0.005159888999999999,
+                    "folded_actions": 101,
+                    "inference_other_seconds": 0.027815811989967187,
+                    "inference_positions": 460,
+                    "inference_seconds": 0.0,
+                    "inference_wall_seconds": 0.22513937700114184,
+                    "input_tensor_seconds": 0.012053274002028047,
+                    "model_batches": 0,
+                    "model_positions": 460,
+                    "physical_batches": 460,
+                    "searchable_decisions": 28,
+                    "simulations": 448,
+                    "single_candidate_decisions": 16,
+                    "state_transitions": 534,
+                    "terminal_hits": 16,
+                    "total_seconds": 0.2506273239996517,
+                    "transition_cap_hits": 0,
+                    "tree_depth_sum": 859
+                  },
+                  "policy_names": [
+                    "theta5_native_mcts",
+                    "theta4_native_mcts"
+                  ],
+                  "policy_seeds": [
+                    9400000,
+                    9400001
+                  ],
+                  "purchased_card_counts": [
+                    14,
+                    16
+                  ],
+                  "scores": [
+                    11,
+                    17
+                  ],
+                  "status": "natural_terminal",
+                  "terminal_reason": "final_round",
+                  "winner_id": 1
+                },
+                {
+                  "completed_player_turns": 48,
+                  "completed_turns": [
+                    24,
+                    24
+                  ],
+                  "decision_count": 73,
+                  "draw": false,
+                  "error_detail": null,
+                  "error_type": null,
+                  "failure_scene": null,
+                  "final_state_digest": "643f8ec8a523f9b66e4a51cc420eaa7947416cc93ecb323b45e52ef144bb681d",
+                  "first_player": 1,
+                  "forced_skips": 0,
+                  "game_in_pair": 1,
+                  "game_seed": 9300000,
+                  "normal_end": true,
+                  "outcome_for_a": "a_win",
+                  "pair_id": 0,
+                  "policy_a_stats": {
+                    "changed_action_count": 3,
+                    "core_forward_seconds": 0.16757562800557935,
+                    "decisions": 35,
+                    "determinizations": 26,
+                    "expanded_nodes": 397,
+                    "feature_seconds": 0.004525132,
+                    "folded_actions": 86,
+                    "inference_other_seconds": 0.025431298990042706,
+                    "inference_positions": 423,
+                    "inference_seconds": 0.0,
+                    "inference_wall_seconds": 0.20392970199918636,
+                    "input_tensor_seconds": 0.010922775003564311,
+                    "model_batches": 0,
+                    "model_positions": 423,
+                    "physical_batches": 423,
+                    "searchable_decisions": 26,
+                    "simulations": 416,
+                    "single_candidate_decisions": 9,
+                    "state_transitions": 486,
+                    "terminal_hits": 19,
+                    "total_seconds": 0.2264207130037903,
+                    "transition_cap_hits": 0,
+                    "tree_depth_sum": 672
+                  },
+                  "policy_b_stats": {
+                    "changed_action_count": 4,
+                    "core_forward_seconds": 0.1630160649838217,
+                    "decisions": 38,
+                    "determinizations": 24,
+                    "expanded_nodes": 381,
+                    "feature_seconds": 0.004456743,
+                    "folded_actions": 91,
+                    "inference_other_seconds": 0.024836209033310297,
+                    "inference_positions": 405,
+                    "inference_seconds": 0.0,
+                    "inference_wall_seconds": 0.2338308680073169,
+                    "input_tensor_seconds": 0.04597859399018489,
+                    "model_batches": 0,
+                    "model_positions": 405,
+                    "physical_batches": 405,
+                    "searchable_decisions": 24,
+                    "simulations": 384,
+                    "single_candidate_decisions": 14,
+                    "state_transitions": 474,
+                    "terminal_hits": 3,
+                    "total_seconds": 0.25588046300163114,
+                    "transition_cap_hits": 0,
+                    "tree_depth_sum": 717
+                  },
+                  "policy_names": [
+                    "theta5_native_mcts",
+                    "theta4_native_mcts"
+                  ],
+                  "policy_seeds": [
+                    9400000,
+                    9400001
+                  ],
+                  "purchased_card_counts": [
+                    11,
+                    14
+                  ],
+                  "scores": [
+                    15,
+                    13
+                  ],
+                  "status": "natural_terminal",
+                  "terminal_reason": "final_round",
+                  "winner_id": 0
+                }
+              ]
+            }
+          ],
+          "checkpoint_identity": {
+            "policy_a": {
+              "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+              "sha256": "e0cba7733de4977cd0a606d35d2f328f47f285a0be81a1bd3895633dd105f97b"
+            },
+            "policy_b": {
+              "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+              "sha256": "c4e85e27c1242c640c1504fe10d158a7817efd6c0ceed7e165dbb8b68aa26e7c"
+            }
+          }
+        },
+        "torch_gpu_allocator": {
+          "max_allocated_bytes": 0,
+          "max_reserved_bytes": 0,
+          "allocated_at_end_bytes": 0,
+          "reserved_at_end_bytes": 0
+        }
+      },
+      "resources": "artifacts/end_to_end_speed_2026-10-03/evaluation_baseline_smoke_on.session-1.resources.json"
+    }
+  ]
+}
