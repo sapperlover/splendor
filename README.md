@@ -1,12 +1,15 @@
 # Splendor 双人 AI
 
-双人基础版规则引擎、Deep-Sets Actor–Critic、PPO、冻结网络搜索和 AlphaZero 式训练循环，含 C++ 原生后端与本地人机网页。玩法仅实现双人基础版；不含 3–4 人、扩展或 Duel。
+双人基础版规则引擎、Deep-Sets 与实体注意力 Actor–Critic、PPO、冻结网络搜索和 AlphaZero 式训练循环，含 C++ 原生后端与本地人机网页。玩法仅实现双人基础版；不含 3–4 人、扩展或 Duel。
 
 - [当前状态](docs/current_project_state_zh-CN.md) 与 [文档导航](docs/index.md)。
 - [标准规则](docs/splendor_standard_rules_zh-CN.md)；卡牌、贵族与常量位于 `data/`。
 - [实验索引](artifacts/experiment_index.json)、[产物约定](artifacts/README.md)、[配置导航](configs/README.md)。
 - [采集、learner 与固定评测时间统计](docs/reports/pipeline_profile_zh-CN.md)：有限诊断、瓶颈归因与复现命令。
 - [端到端性能优化与完整验收](docs/reports/end_to_end_speed_optimization_zh-CN.md)：两组各1000局采集、各50 pairs评测、固定replay cache对照；实际加速与剩余瓶颈。
+- [旧θ5起点10×1000配置与记录](docs/guides/next_az_training_zh-CN.md)：原准备说明保留；十轮现已完成，其归档用作新模型离线数据源。
+- [实体注意力与离线训练](docs/guides/entity_attention_offline_zh-CN.md)：实现与有限验证、新旧对照及运行命令；用户已启动正式拟合，支持8 GiB缓存执行覆盖，最终棋力尚未验收。
+- [新模型10×1000自迭代](docs/guides/entity_attention_self_iteration_zh-CN.md)：同时调度1000局，每轮对固定起点搜索/greedy各50 pairs；有限验证通过，正式未启动。
 
 PPO seed1 已完成 5M learning decisions；其 DEV best 为 `local_004150000_lifetime_004662112.pt`，latest 为 `local_005000000_lifetime_005512112.pt`。AZ seed1 已完成 5 轮 × 500 局及 θ1–θ5 扩展对照。native CUDA pool 已实现并保存性能对照；窗口与整轮收益分别解读。具体结论和未验证范围见文档导航中的报告。
 

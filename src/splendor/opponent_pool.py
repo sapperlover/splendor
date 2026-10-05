@@ -10,7 +10,7 @@ from typing import Literal
 
 import torch
 
-from .actor_critic import ActorCritic, ActorCriticConfig
+from .actor_critic import ActorCritic, ActorCriticConfig, build_actor_critic
 from .alphazero_checkpoint import is_alphazero_payload, normalize_actor_critic_payload
 from .contracts import Policy
 from .features import FEATURE_SCHEMA_VERSION
@@ -78,7 +78,7 @@ def _checkpoint_payload(path: Path, device: torch.device | str) -> dict[str, obj
 def _model_from_payload(
     payload: dict[str, object], device: torch.device | str
 ) -> ActorCritic:
-    model = ActorCritic(ActorCriticConfig(**payload["model_config"]))
+    model = build_actor_critic(payload["model_config"])
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.to(device).eval().requires_grad_(False)
     return model

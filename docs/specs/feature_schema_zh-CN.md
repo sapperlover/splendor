@@ -97,6 +97,8 @@ gold_uncovered = max(0, sum(ordinary_deficit) - self_gold)
 
 稳定 card/noble ID 只在编码时用于将候选与当前可见物件对应，不进入 NumPy 特征。`EncodedDecision.candidate_actions` 是索引到原始引擎 action 的非数值映射层；`EncodedDecisionBatch` 故意不包含 action 对象。模型只消费 batch 数组，选出候选 index 后再用原单样本的 `candidate_actions[index]` 取回精确执行对象。
 
+Deep-Sets 与 `entity_attention_v1` 共用本 schema，架构差异不改变特征版本。实体注意力只在模型内部拆分/投影已有字段，完整保留148维全局输入，不新增隐藏信息；模型契约见 [学习契约](learning_contract_zh-CN.md)。
+
 编码不包含市场/reserve/noble slot、容器 index、card ID、noble ID、seed、RNG、replay 或 debug 字段。
 
 

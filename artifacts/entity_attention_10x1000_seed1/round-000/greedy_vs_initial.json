@@ -1,0 +1,180 @@
+{
+  "a_first": {
+    "draws": 0,
+    "games": 1,
+    "losses": 1,
+    "valid_games": 1,
+    "win_rate_score": 0.0,
+    "wins": 0
+  },
+  "a_losses": 1,
+  "a_second": {
+    "draws": 0,
+    "games": 1,
+    "losses": 0,
+    "valid_games": 1,
+    "win_rate_score": 1.0,
+    "wins": 1
+  },
+  "a_wins": 1,
+  "checkpoint_identity": {
+    "policy_a": {
+      "path": "/home/lc/下载/splendor/runtime/entity_attention_self_iteration_smoke/rounds/round-000/checkpoints/final.pt",
+      "sha256": "fdf87340fd460bd4f6685a1c85ec32d95d0846668b33e15849dba859b280be3d"
+    },
+    "policy_b": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_offline/checkpoints/final.pt",
+      "sha256": "ece59427a50e4730e2b8c04f41444c71906cc86fe6e196d86628f58a7d279eb0"
+    }
+  },
+  "completed_games": 2,
+  "completed_pairs": 1,
+  "config": {
+    "adjudicate_deterministic_policy_cycles": true,
+    "bootstrap_resamples": 0,
+    "bootstrap_seed": 0,
+    "device": "cuda",
+    "game_seeds": [
+      13970000
+    ],
+    "max_completed_turns": 400,
+    "metadata": {
+      "loop_protocol": "alphazero-loop-v1",
+      "panel": "greedy_vs_initial",
+      "purpose": "DEV greedy versus fixed initial weights",
+      "round_index": 0,
+      "theta_initial": "/home/lc/下载/splendor/runs/entity_attention_offline/checkpoints/final.pt",
+      "theta_new": "/home/lc/下载/splendor/runtime/entity_attention_self_iteration_smoke/rounds/round-000/checkpoints/final.pt"
+    },
+    "policy_a": {
+      "checkpoint": "/home/lc/下载/splendor/runtime/entity_attention_self_iteration_smoke/rounds/round-000/checkpoints/final.pt",
+      "kind": "greedy_checkpoint",
+      "name": "theta_new_greedy"
+    },
+    "policy_b": {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_offline/checkpoints/final.pt",
+      "kind": "greedy_checkpoint",
+      "name": "initial_greedy"
+    },
+    "policy_seed_base": 13980000,
+    "workers": 1
+  },
+  "draws": 0,
+  "elapsed_seconds_this_invocation": 0.5848533309981576,
+  "engineering_truncations": 0,
+  "exceptions": 0,
+  "forced_skips": 0,
+  "game_log_root": "/home/lc/下载/splendor/runtime/entity_attention_self_iteration_smoke/rounds/round-000/evaluation/greedy_vs_initial.games",
+  "illegal_actions": 0,
+  "invariant_failures": 0,
+  "mean_completed_player_turns": 58.0,
+  "mean_decisions": 92.0,
+  "median_completed_player_turns": 58.0,
+  "output": "/home/lc/下载/splendor/runtime/entity_attention_self_iteration_smoke/rounds/round-000/evaluation/greedy_vs_initial.json",
+  "paired_bootstrap": null,
+  "paired_bootstrap_unit": "one_paired_seed",
+  "pairs": [
+    {
+      "game_seed": 13970000,
+      "games": [
+        {
+          "completed_player_turns": 62,
+          "completed_turns": [
+            31,
+            31
+          ],
+          "decision_count": 98,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "71823c5ac750bd676af33dddbc6f563ae75c29c6a5ac93cb7795cfb1016475b5",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 13970000,
+          "normal_end": true,
+          "outcome_for_a": "a_loss",
+          "pair_id": 0,
+          "policy_a_stats": {},
+          "policy_b_stats": {},
+          "policy_names": [
+            "theta_new_greedy",
+            "initial_greedy"
+          ],
+          "policy_seeds": [
+            13980000,
+            13980001
+          ],
+          "purchased_card_counts": [
+            18,
+            17
+          ],
+          "scores": [
+            16,
+            16
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 1
+        },
+        {
+          "completed_player_turns": 54,
+          "completed_turns": [
+            27,
+            27
+          ],
+          "decision_count": 86,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "3264f1ac6fd811f1454cbf7374ecd3983ead73a7da60b513af238ee5d640f695",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 13970000,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 0,
+          "policy_a_stats": {},
+          "policy_b_stats": {},
+          "policy_names": [
+            "theta_new_greedy",
+            "initial_greedy"
+          ],
+          "policy_seeds": [
+            13980000,
+            13980001
+          ],
+          "purchased_card_counts": [
+            16,
+            16
+          ],
+          "scores": [
+            15,
+            11
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        }
+      ],
+      "pair_id": 0
+    }
+  ],
+  "passed": true,
+  "policy_a_stats": {},
+  "policy_b_stats": {},
+  "policy_cycle_draws": 0,
+  "protocol": "fixed-paired-evaluation-v1",
+  "runtime": {
+    "device": "cuda",
+    "workers": 1
+  },
+  "total_games": 2,
+  "total_pairs": 1,
+  "updated_at": "2026-10-04T22:19:37+0800",
+  "valid_games": 2,
+  "win_rate_score": 0.5
+}

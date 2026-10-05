@@ -1,0 +1,53 @@
+{
+  "protocol": "mcts-selfplay-v2",
+  "run_id": "entity_attention_v1_smoke",
+  "round_index": 0,
+  "checkpoint": "runtime/entity_attention_v1_smoke/offline/checkpoints/final.pt",
+  "num_games": 2,
+  "seed": 13330000,
+  "search_config": {
+    "simulations": 16,
+    "determinizations": 1,
+    "c_puct": 1.5,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512,
+    "root_noise_fraction": 0.0,
+    "dirichlet_alpha": 0.3,
+    "seed": 13340000
+  },
+  "add_root_noise": true,
+  "temperature_schedule": {
+    "opening_completed_turns": 10,
+    "opening_temperature": 1.0,
+    "late_temperature": 0.0
+  },
+  "validation_fraction": 0.1,
+  "split_seed": 13350000,
+  "max_completed_turns": 400,
+  "execution": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_interface": "native",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 2,
+    "max_batch_size": 2,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "precision": "float32",
+    "search_workers": 1,
+    "shared_candidate_width": 256,
+    "shared_slots": 1,
+    "torch_threads": 1,
+    "total_active_games": 2,
+    "workers": 1
+  }
+}

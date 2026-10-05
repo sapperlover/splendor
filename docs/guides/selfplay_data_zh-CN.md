@@ -1,5 +1,7 @@
 # MCTS 自对弈数据与恢复
 
+[新AZ记录字段](next_az_record_fields_zh-CN.md)规定保留原NPZ/trace、逐局SHA、同集诊断引用及抽样覆盖计数；额外全量checked replay在离线诊断阶段另列成本，根阶段按双方合计完成回合划分。新正式run尚未启动。
+
 `selfplay.py` 是历史 v1 采集入口；当前批量/native 采集使用 `selfplay_fast.py`，输出 `mcts-selfplay-v2`。`SelfPlayDataset` 可读取两种格式。双方使用同一冻结教师、独立树和种子；完整正式终局后才提交一局 NPZ。
 
 ## 冻结配置与随机性

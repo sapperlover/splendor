@@ -1,5 +1,7 @@
 # 文档导航
 
+2026-10-04新增：[实体注意力模型与离线训练](guides/entity_attention_offline_zh-CN.md)，有限GPU验证完成，用户已启动正式拟合；数据加载占主要耗时，已提供8 GiB运行时缓存覆盖及resume命令。[旧θ5起点10×1000配置与命令](guides/next_az_training_zh-CN.md)、[记录字段/分母清单](guides/next_az_record_fields_zh-CN.md) 保留准备时记录；该十轮源 run 已完成。
+
 docs 只保留需要阅读和维护的规范、操作指南、可复核报告。入口为 [当前状态](current_project_state_zh-CN.md)，实验分类与依据见 [实验索引](../artifacts/experiment_index.json)。文件中的实验日期与适用版本独立于本次整理日期。
 
 ## 规则与现行契约
@@ -15,6 +17,8 @@ docs 只保留需要阅读和维护的规范、操作指南、可复核报告。
 - [冻结网络搜索](guides/search_zh-CN.md)：PUCT 与固定深度算法/API。
 - [自对弈数据与恢复](guides/selfplay_data_zh-CN.md)：v1/v2 数值归档、compact trace、checked 重放。
 - [AlphaZero 循环](guides/alphazero_zh-CN.md)：replay、损失、跨轮状态、恢复和命令。
+- [实体注意力与离线学习](guides/entity_attention_offline_zh-CN.md)：模型架构、全量所选 train 抽样、验证/恢复和运行命令。
+- [新模型10×1000自迭代](guides/entity_attention_self_iteration_zh-CN.md)：1000局同时调度，固定起点双面板，正式命令与有限CPU/GPU验证。
 - [原生后端与推理配置](guides/native_search_zh-CN.md)：构建、后端、batch/传输与版本兼容。
 - [多 worker GPU](guides/multiworker_gpu_zh-CN.md)：共享槽、容量、故障与恢复。
 - [固定配对评测](guides/evaluation_zh-CN.md)：计分、种子、bootstrap、sweep 和结果解释。

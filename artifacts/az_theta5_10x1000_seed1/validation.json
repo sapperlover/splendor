@@ -1,0 +1,49 @@
+{
+  "protocol": "az-preparation-validation-v1",
+  "date": "2026-10-04",
+  "state": "prepared_not_started",
+  "command": "conda run -n splendor env PYTHONPATH=src python -m pytest -q tests/test_alphazero_diagnostics.py tests/test_alphazero_loop.py tests/test_alphazero_training.py tests/test_alphazero_replay.py tests/test_speed_optimization.py tests/test_paired_statistics.py tests/test_profile_speed_pipeline.py",
+  "exit_code": 0,
+  "passed": 49,
+  "tests_sha256": {
+    "tests/test_alphazero_diagnostics.py": "a54478bf0b19972aa81ca309b8313bea26f4f7bb72fa51f9a6559eea1159f8db",
+    "tests/test_alphazero_loop.py": "742c3ea45efb80eb23c674d13d4fd0ca797e04f26a20a29a2fb3195117d1d171",
+    "tests/test_alphazero_training.py": "e29e6981c9e9771f3527a97e9069a39c2ef2b7ad27b74e702efbf700997a31aa",
+    "tests/test_alphazero_replay.py": "bb651efe89aa261132d95ca9e2a9495e3e4017c37764e90c55d0e538e2a9d636",
+    "tests/test_speed_optimization.py": "5b343273bb2297bdcfdde00fb61e6f243b90abd5adda225ab7275c55212bb298",
+    "tests/test_paired_statistics.py": "00214b7b9c955935c89b843644b03e715aad7006ca97deabf48bf997560503e6",
+    "tests/test_profile_speed_pipeline.py": "1f687c0b4fe790a22121684840c942cf03de681419e522f7946214e2deb31229"
+  },
+  "scope": [
+    "CPU finite regression",
+    "original update and sampling equivalence",
+    "interrupted-step reference dedup and resume",
+    "frozen validation identity/no train leak/global RNG restoration",
+    "tiny CPU collect-replay-train-diagnostics-eval call chain in pytest temporary directory",
+    "native CPU batch routing and paired statistics",
+    "external-panel wrapper forwarding and invocation resume ledger"
+  ],
+  "not_executed": [
+    "formal 10x1000 run",
+    "standalone native CUDA smoke",
+    "formal stage/final/extension strength panels",
+    "fixed-data intensity4/8 comparison"
+  ],
+  "cli_help_verified": [
+    "splendor.alphazero_loop",
+    "scripts/analyze_az_run.py",
+    "scripts/run_recorded_evaluation.py"
+  ],
+  "document_bash_blocks_syntax_checked": 3,
+  "new_document_links_checked": true,
+  "raw_result": {
+    "path": "runtime/az_preparation_validation/pytest_result.json",
+    "sha256": "dcd44a17220a52aadf6b36e22ac93ae6dab1478f489f6d186b208a6433512b63"
+  },
+  "seed_audit": {
+    "xor_overlap_detected_and_fixed": true,
+    "stage3_stage5_intentional_reuse": true,
+    "final_inputs_unviewed": true,
+    "inventory": "artifacts/az_theta5_10x1000_seed1/seeds.json"
+  }
+}

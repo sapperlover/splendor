@@ -1,0 +1,144 @@
+{
+  "recorded_on": "2026-10-04",
+  "formal_started": false,
+  "unit_tests": {
+    "exit_code": 0,
+    "passed": 11,
+    "command": "conda run -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q tests/test_alphazero_loop.py"
+  },
+  "admission_and_legacy_config_tests": {
+    "exit_code": 0,
+    "passed": 2,
+    "active_games": 1000,
+    "search_workers": 8,
+    "active_games_per_worker": 125,
+    "gpu_batch_limit": 500,
+    "command": "conda run -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q tests/test_multiworker_gpu.py::test_full_round_admission_is_independent_of_gpu_batch_limit tests/test_alphazero_diagnostics.py::test_prepared_config_and_historical_fingerprint_compatible"
+  },
+  "gpu_smoke": {
+    "completed_rounds": 2,
+    "total_new_games": 8,
+    "total_training_steps": 4,
+    "optimizer_step": 4,
+    "checkpoint_architecture": "entity_attention_v1",
+    "fixed_initial_opponent": true,
+    "analysis_panels": 4,
+    "rounds": [
+      {
+        "round_index": 0,
+        "completed_games": 4,
+        "steps_completed": 2,
+        "theta_in": "/home/lc/下载/splendor/runs/entity_attention_offline/checkpoints/final.pt",
+        "final_checkpoint": "/home/lc/下载/splendor/runtime/entity_attention_self_iteration_smoke/rounds/round-000/checkpoints/final.pt",
+        "inference": {
+          "batch_size_histogram": {
+            "1": 41,
+            "2": 109,
+            "3": 111,
+            "4": 860
+          },
+          "d2h_seconds": 0.06769597603852162,
+          "feature_seconds": 0.0,
+          "forward_seconds": 6.5233716069487855,
+          "h2d_seconds": 0.07905277188547188,
+          "logical_model_positions": 4032,
+          "mean_batch_size": 3.5967885816235503,
+          "physical_model_batches": 1121,
+          "wait_seconds": 0.008938775135902688
+        },
+        "compile": {
+          "compile_failure_fallbacks": 0,
+          "compile_failures": [],
+          "compile_seconds": {
+            "policy_value:16": 0.0021105300038470887,
+            "policy_value:32": 2.1811507039965363,
+            "policy_value:48": 1.4187238890008302
+          },
+          "compiled_calls": {
+            "policy_value:16": 2,
+            "policy_value:32": 981,
+            "policy_value:48": 138
+          },
+          "disabled_graphs": {},
+          "dynamo_delta": {
+            "calls_captured": 573,
+            "unique_graphs": 3
+          },
+          "eager_fallbacks": 0,
+          "effective_mode": {
+            "policy_value:16": "compiled",
+            "policy_value:32": "compiled",
+            "policy_value:48": "compiled"
+          }
+        },
+        "panels": {
+          "mcts_vs_initial": {
+            "passed": true,
+            "pairs": 1,
+            "opponent": "/home/lc/下载/splendor/runs/entity_attention_offline/checkpoints/final.pt"
+          },
+          "greedy_vs_initial": {
+            "passed": true,
+            "pairs": 1,
+            "opponent": "/home/lc/下载/splendor/runs/entity_attention_offline/checkpoints/final.pt"
+          }
+        }
+      },
+      {
+        "round_index": 1,
+        "completed_games": 4,
+        "steps_completed": 2,
+        "theta_in": "/home/lc/下载/splendor/runtime/entity_attention_self_iteration_smoke/rounds/round-000/checkpoints/final.pt",
+        "final_checkpoint": "/home/lc/下载/splendor/runtime/entity_attention_self_iteration_smoke/rounds/round-001/checkpoints/final.pt",
+        "inference": {
+          "batch_size_histogram": {
+            "1": 30,
+            "2": 79,
+            "3": 2,
+            "4": 861
+          },
+          "d2h_seconds": 0.09428608114103554,
+          "feature_seconds": 0.0,
+          "forward_seconds": 2.367886547013768,
+          "h2d_seconds": 0.11765041192848003,
+          "logical_model_positions": 3638,
+          "mean_batch_size": 3.742798353909465,
+          "physical_model_batches": 972,
+          "wait_seconds": 0.009338542899058666
+        },
+        "compile": {
+          "compile_failure_fallbacks": 0,
+          "compile_failures": [],
+          "compile_seconds": {
+            "policy_value:32": 0.0020068079975317232,
+            "policy_value:48": 0.002117882002494298
+          },
+          "compiled_calls": {
+            "policy_value:32": 920,
+            "policy_value:48": 52
+          },
+          "disabled_graphs": {},
+          "dynamo_delta": {},
+          "eager_fallbacks": 0,
+          "effective_mode": {
+            "policy_value:32": "compiled",
+            "policy_value:48": "compiled"
+          }
+        },
+        "panels": {
+          "mcts_vs_initial": {
+            "passed": true,
+            "pairs": 1,
+            "opponent": "/home/lc/下载/splendor/runs/entity_attention_offline/checkpoints/final.pt"
+          },
+          "greedy_vs_initial": {
+            "passed": true,
+            "pairs": 1,
+            "opponent": "/home/lc/下载/splendor/runs/entity_attention_offline/checkpoints/final.pt"
+          }
+        }
+      }
+    ]
+  },
+  "scope": "Finite correctness checks only; no formal training, full tournament or speedup measurement."
+}

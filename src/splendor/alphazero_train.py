@@ -26,6 +26,7 @@ import json
 import math
 import os
 import time
+import numpy as np
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
@@ -45,6 +46,36 @@ from .selfplay_data import SelfPlayBatch, SelfPlaySample, collate_selfplay_sampl
 
 DEFAULT_DEVICE = "cuda"
 _EPS = torch.finfo(torch.float32).tiny
+
+
+def label_statistics(batch: SelfPlayBatch) -> dict[str, float | int]:
+    """CPU label-only statistics; no RNG, model call or CUDA synchronization."""
+    targets = np.where(batch.decisions.candidate_mask, batch.policy_targets, 0).astype(np.float64)
+    logs = np.zeros_like(targets)
+    np.log(targets, out=logs, where=targets > 0)
+    weights = batch.policy_weights.astype(np.float64)
+    values = batch.value_targets.astype(np.float64)
+    value_weights = batch.value_weights.astype(np.float64)
+    return {
+        "target_entropy_sum": float(np.sum(-targets * logs * weights[:, None])),
+        "policy_positions": int(np.count_nonzero(weights)),
+        "value_positions": int(np.count_nonzero(value_weights)),
+        "value_target_sum": float(np.sum(values * value_weights)),
+        "value_target_sq_sum": float(np.sum(values ** 2 * value_weights)),
+    }
+
+
+def metric_ratios(totals: Mapping[str, Any]) -> dict[str, Any]:
+    policy = float(totals["policy_weight_sum"])
+    value = float(totals["value_weight_sum"])
+    return {
+        "policy_loss": totals["policy_ce_sum"] / policy if policy else None,
+        "target_entropy": totals["target_entropy_sum"] / policy if policy else None,
+        "policy_entropy": totals["entropy_sum"] / policy if policy else None,
+        "policy_kl": (totals["policy_ce_sum"] - totals["target_entropy_sum"]) / policy if policy else None,
+        "value_loss": totals["value_sq_sum"] / value if value else None,
+        "value_zero_mse": totals["value_target_sq_sum"] / value if value else None,
+    }
 
 
 class NonFiniteTrainingError(RuntimeError):
@@ -421,21 +452,24 @@ class AlphazeroLearner:
         self.optimizer.step()
         self.round_train_step += 1
         self.total_train_step += 1
-        return {
+        names = ("policy_loss", "value_loss", "total_loss", "policy_entropy", "policy_weight_sum",
+                 "value_weight_sum", "policy_ce_sum", "value_sq_sum", "entropy_sum")
+        scalars = torch.stack((terms.policy_loss, terms.value_loss, total, terms.entropy,
+                               terms.policy_weight_sum, terms.value_weight_sum, terms.policy_ce_sum,
+                               terms.value_sq_sum, terms.entropy_sum)).detach().cpu().tolist()
+        record = dict(zip(names, scalars)) | label_statistics(batch) | {
             "event": "train_step",
             "round_index": self.round_index,
             "round_train_step": self.round_train_step,
             "total_train_step": self.total_train_step,
-            "policy_loss": float(terms.policy_loss.detach()),
-            "value_loss": float(terms.value_loss.detach()),
-            "total_loss": float(total.detach()),
-            "policy_entropy": float(terms.entropy.detach()),
             "grad_norm": grad_norm,
+            "grad_clipped": grad_norm > self.config.max_grad_norm,
             "learning_rate": float(self.optimizer.param_groups[0]["lr"]),
-            "policy_weight_sum": float(terms.policy_weight_sum.detach()),
-            "value_weight_sum": float(terms.value_weight_sum.detach()),
             "batch_size": int(tensors["value_targets"].shape[0]),
         }
+        ratios = metric_ratios(record)
+        record.update({key: ratios[key] for key in ("target_entropy", "policy_kl", "value_zero_mse")})
+        return record
 
     def evaluate_samples(self, samples: Sequence[SelfPlaySample]) -> dict[str, Any]:
         """Validation loss over whole games, never mixed into training pools."""
@@ -451,6 +485,11 @@ class AlphazeroLearner:
             "value_weight_sum": 0.0,
             "entropy_sum": 0.0,
             "positions": 0,
+            "target_entropy_sum": 0.0,
+            "policy_positions": 0,
+            "value_positions": 0,
+            "value_target_sum": 0.0,
+            "value_target_sq_sum": 0.0,
         }
         with torch.inference_mode():
             for start in range(0, len(samples), self.config.validation_batch_size):
@@ -473,16 +512,10 @@ class AlphazeroLearner:
                 totals["value_weight_sum"] += float(terms.value_weight_sum)
                 totals["entropy_sum"] += float(terms.entropy_sum)
                 totals["positions"] += len(chunk)
+                for name, scalar in label_statistics(batch).items():
+                    totals[name] += scalar
         self.model.train(was_training)
-        policy_denom = max(totals["policy_weight_sum"], _EPS)
-        value_denom = max(totals["value_weight_sum"], _EPS)
-        return {
-            "available": True,
-            "positions": totals["positions"],
-            "policy_loss": totals["policy_ce_sum"] / policy_denom,
-            "value_loss": totals["value_sq_sum"] / value_denom,
-            "policy_entropy": totals["entropy_sum"] / policy_denom,
-        }
+        return {"available": True, **totals, **metric_ratios(totals)}
 
 
 def _append_jsonl(path: Path, record: Mapping[str, Any]) -> None:
@@ -544,6 +577,9 @@ def run_training_round(
     checkpoint_dir: Path,
     metrics_path: Path,
     progress_callback: Callable[[Mapping[str, Any]], None] | None = None,
+    reference_writer: Any = None,
+    checkpoint_callback: Callable[[AlphazeroLearner, Path], None] | None = None,
+    max_steps_this_session: int | None = None,
 ) -> dict[str, Any]:
     """Drive one round of optimizer steps and checkpoint every N updates."""
 
@@ -551,37 +587,74 @@ def run_training_round(
         raise ValueError("steps_target cannot be negative")
     if learner.round_steps_target != steps_target:
         raise ValueError("learner step target disagrees with this training round")
+    if max_steps_this_session is not None and max_steps_this_session <= 0:
+        raise ValueError("max_steps_this_session must be positive")
+    session_target = steps_target if max_steps_this_session is None else min(
+        steps_target, learner.round_train_step + max_steps_this_session)
     checkpoint_dir = Path(checkpoint_dir)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     metrics_path = Path(metrics_path)
     metrics_path.parent.mkdir(parents=True, exist_ok=True)
     # Metrics are appended ahead of the periodic checkpoint, so a resume drops
     # the lines that its checkpoint cannot account for before appending again.
+    if reference_writer is not None and metrics_path.is_file():
+        reference_writer.archive_metrics(metrics_path)
     _reconcile_metrics_file(
         metrics_path, round_index=learner.round_index, committed_step=learner.round_train_step
     )
     started = time.perf_counter()
     history_length = 0 if history_pool is None else len(history_pool)
     step_records: list[dict[str, Any]] = []
-    while learner.round_train_step < steps_target:
+    timings = {name: 0.0 for name in ("draw_load", "collate", "update_host", "checkpoint", "validation")}
+    while learner.round_train_step < session_target:
+        cache_before = current_pool.cache_stats()
+        tick = time.perf_counter()
         drawn = draw_training_batch(current_pool, history_pool, learner.sampling_rng, learner.config)
+        draw_seconds = time.perf_counter() - tick
+        tick = time.perf_counter()
         batch = collate_training_samples(drawn.samples)
+        collate_seconds = time.perf_counter() - tick
+        tick = time.perf_counter()
         record = learner.train_step(batch, references=drawn.references)
+        update_seconds = time.perf_counter() - tick
+        record["seconds"] = {"draw_load": draw_seconds, "collate": collate_seconds, "update_host": update_seconds}
+        for key, value in record["seconds"].items():
+            timings[key] += value
         record["current_positions"] = drawn.current_positions
         record["history_positions"] = drawn.history_positions
         record["replay_cache"] = current_pool.cache_stats()
+        record["cache_delta"] = {key: record["replay_cache"][key] - cache_before[key]
+                                 for key in ("hits", "misses", "decode_count", "decoded_bytes", "load_seconds")}
+        if reference_writer is not None:
+            record["reference_sha256"] = reference_writer.append(learner.round_train_step, drawn.references)
         _append_jsonl(metrics_path, record)
-        if learner.round_train_step % learner.config.checkpoint_every_steps == 0 or learner.round_train_step == steps_target:
-            learner.save(checkpoint_dir / f"step-{learner.round_train_step:09d}.pt")
+        if reference_writer is not None:
+            reference_writer.record_step(record)
+        if learner.round_train_step % learner.config.checkpoint_every_steps == 0 or learner.round_train_step == session_target:
+            tick = time.perf_counter()
+            if reference_writer is not None:
+                reference_writer.flush()
+            learner.save(checkpoint_dir / f"step-{learner.round_train_step:09d}.pt",
+                         metadata={"reference_ledger": str(reference_writer.path.resolve()),
+                                   "last_batch_sha256": record["reference_sha256"]} if reference_writer is not None else None)
+            timings["checkpoint"] += time.perf_counter() - tick
+            if checkpoint_callback is not None:
+                tick = time.perf_counter()
+                checkpoint_callback(learner, checkpoint_dir / f"step-{learner.round_train_step:09d}.pt")
+                timings["validation"] += time.perf_counter() - tick
         if progress_callback is not None:
             progress_callback(record)
         step_records.append(record)
+    tick = time.perf_counter()
     validation = learner.evaluate_samples(validation_samples)
+    timings["validation"] += time.perf_counter() - tick
     validation["games"] = validation_games
     validation["event"] = "validation"
     validation["round_index"] = learner.round_index
     _append_jsonl(metrics_path, validation)
     losses = [record["total_loss"] for record in step_records]
+    elapsed = time.perf_counter() - started
+    timings["remainder"] = elapsed - sum(timings.values())
     return {
         "round_index": learner.round_index,
         "steps_target": steps_target,
@@ -597,5 +670,8 @@ def run_training_round(
         "last_total_loss": losses[-1] if losses else None,
         "validation": validation,
         "replay_cache": current_pool.cache_stats(),
-        "training_seconds": time.perf_counter() - started,
+        "training_seconds": elapsed,
+        "phase_seconds_this_session": timings,
+        "steps_per_second_this_session": len(step_records) / elapsed,
+        "positions_per_second_this_session": len(step_records) * learner.config.batch_size / elapsed,
     }

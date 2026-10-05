@@ -157,6 +157,65 @@
         "artifacts/end_to_end_speed_2026-10-03/learner_equivalence.json": "e5d537fb3bd71c6caac92e88924fcbd1893bd6afd11b82c1e6784dc530dfd182",
         "artifacts/end_to_end_speed_2026-10-03/tests_final.json": "f38698a11e0751dcfd9b6cf8cc932f2cec5aea7aa74c4c5229c48ce2e568af93"
       }
+    },
+    {
+      "id": "az-theta5-10x1000-seed1-preparation",
+      "status": "unverified",
+      "prepared_on": "2026-10-04",
+      "report": "docs/guides/next_az_training_zh-CN.md",
+      "evidence": [
+        "artifacts/az_theta5_10x1000_seed1/preparation_manifest.json",
+        "artifacts/az_theta5_10x1000_seed1/seeds.json",
+        "artifacts/az_theta5_10x1000_seed1/validation.json"
+      ],
+      "scope": "Frozen 10x1000 configuration and opt-in recording prepared; finite CPU regression only; formal run, standalone native CUDA smoke, stage/final strength and 4/8 comparison not executed."
+    },
+    {
+      "id": "entity-attention-v1-2026-10-04",
+      "recorded_on": "2026-10-04",
+      "status": "valid",
+      "report": "docs/guides/entity_attention_offline_zh-CN.md",
+      "evidence": [
+        "artifacts/entity_attention_v1_20261004/verification.json",
+        "artifacts/entity_attention_v1_20261004/integration.json",
+        "artifacts/entity_attention_v1_20261004/gpu_shapes.json",
+        "artifacts/entity_attention_v1_20261004/data_summary.json",
+        "artifacts/entity_attention_v1_20261004/model_identity.json",
+        "artifacts/entity_attention_v1_20261004/source_identity.json",
+        "artifacts/entity_attention_v1_20261004/delivery_source_identity.json"
+      ],
+      "scope": "fixed architecture implementation; one relevant CPU regression group, 8-update resumed GPU integration with 2 collection games and 1 mixed pair; only two FP32 compiled shapes; metadata-only original 10000-game dataset selection; 1 CPU recording check; no formal fitting or strength claim"
+    },
+    {
+      "id": "offline-training-cache-speed-2026-10-04",
+      "recorded_on": "2026-10-04",
+      "status": "valid",
+      "report": "artifacts/offline_training_speed_20261004/README.md",
+      "evidence": [
+        "artifacts/offline_training_speed_20261004/profile.json",
+        "artifacts/offline_training_speed_20261004/validation.json",
+        "artifacts/offline_training_speed_20261004/source_identity.json"
+      ],
+      "scope": "read-only live 4 GiB training snapshot at step10105; metadata-only decoded working-set bound; execution-only LRU override, CPU 4 vs 2+2 resumed equality, small 24-game draw comparison; no measured full 8 GiB GPU training speedup or new formal run"
+    },
+    {
+      "id": "entity-attention-self-iteration-preparation-2026-10-04",
+      "recorded_on": "2026-10-04",
+      "status": "valid",
+      "report": "docs/guides/entity_attention_self_iteration_zh-CN.md",
+      "evidence": [
+        "configs/entity_attention_v1/online_10x1000.json",
+        "configs/entity_attention_v1/online_smoke.json",
+        "artifacts/entity_attention_10x1000_seed1/verification.json",
+        "artifacts/entity_attention_10x1000_seed1/admission_test.txt",
+        "artifacts/entity_attention_10x1000_seed1/source_identity.json",
+        "artifacts/entity_attention_10x1000_seed1/session-00.json",
+        "artifacts/entity_attention_10x1000_seed1/round-000/mcts_vs_initial.json",
+        "artifacts/entity_attention_10x1000_seed1/round-000/greedy_vs_initial.json",
+        "artifacts/entity_attention_10x1000_seed1/round-001/mcts_vs_initial.json",
+        "artifacts/entity_attention_10x1000_seed1/round-001/greedy_vs_initial.json"
+      ],
+      "scope": "11 CPU loop cases, 1000-game admission with eight native workers in a short fixed-owner window, legacy frozen config check; real GPU two-round chain of 8 collection games, 4 learner updates and four 1-pair fixed-initial panels; no formal run, strength or full-scale speedup claim"
     }
   ],
   "other_retained_results": "Existing baseline and search aggregates remain under their original paths; absence from this focused index is not an invalidity judgment."

@@ -4,9 +4,9 @@
 
 ## 模型与权重
 
-### 网络结构
+### 默认 Deep-Sets 网络结构
 
-所有宽度集中在 `ActorCriticConfig`，使用 PyTorch `Linear` 的默认初始化。
+旧 Deep-Sets 的所有宽度集中在 `ActorCriticConfig`，使用 PyTorch `Linear` 的默认初始化。以下表格和集合聚合描述限于该架构。
 
 | 模块 | 输入 | 结构 | 输出 |
 |---|---:|---|---:|
@@ -44,6 +44,12 @@ values: [B]
 ```
 
 `M` 只等于当前 batch 的最大候选数。`masked_logits` 将 padding logit 设为 `-inf`，`distribution` 仅据此构造 `torch.distributions.Categorical`。测试确认 padding 概率严格为 0、有效概率和为 1、单候选概率严格为 1；任一样本没有候选会明确失败，forced skip 仍完全由引擎处理。
+
+### Entity attention v1
+
+`EntityAttentionConfig` 固定 architecture=`entity_attention_v1`、hidden128、heads4、layers2、FFN512、dropout0；共532,738参数。沿用相同输入 schema，将全部全局字段分为双方各14维玩家块和120维上下文，并与市场、保留、贵族、pending 组成25个实体。两层 Pre-LN 残差 self-attention 后，每个候选独立做一层 cross-attention，保留 query 残差；critic 独立读取全局 token，无界输出。角色 embedding 无任意槽位位置，同角色集合置换不变、候选置换等变，unknown 不与 padding 混同。完整前向共享一次状态编码，value-only 不依赖候选。结构及配置见 [专题](../guides/entity_attention_offline_zh-CN.md)。
+
+`build_actor_critic` 按模型配置分派。无 architecture 的旧格式构建 Deep-Sets，明确的 `deep_sets_v1` 同样可读；未知名称报错。新结构保存完整配置，pure weights、AZ build_model 和 frozen loader 均严格加载对应 state_dict。新结构推理必须 `actor_projection=false`，旧结构保留投影优化；混合架构评测分别路由。原 PPO 状态恢复机制仍只适用于原 PPO 训练格式。
 
 ### 保存与加载
 
@@ -253,4 +259,4 @@ checkpoint 格式版本为 1，保存：
 
 ## 维护入口
 
-模型：`actor_critic.py`；环境：`training_env.py`；PPO：`ppo.py`。相关回归为 `test_actor_critic_4a.py`、`test_actor_critic_invariance_4a.py`、`test_training_env_4b.py`、`test_ppo_4c.py`。5C 的采样、选模、历史池和种子域见 [PPO 训练与评测协议](ppo_training_protocol_zh-CN.md)。
+模型：`actor_critic.py`、`entity_attention.py`；离线 AZ：`offline_train.py`；环境：`training_env.py`；PPO：`ppo.py`。相关回归含 `test_entity_attention.py`、`test_actor_critic_4a.py`、`test_actor_critic_invariance_4a.py`、`test_training_env_4b.py`、`test_ppo_4c.py`。5C 的采样、选模、历史池和种子域见 [PPO 训练与评测协议](ppo_training_protocol_zh-CN.md)。

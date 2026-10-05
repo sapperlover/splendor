@@ -1,0 +1,9 @@
+{
+  "benchmark_seed": 13400000,
+  "executed_finite_cpu_check": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/offline_training_speed_20261004/validate_cache.py --output runtime/offline_cache_speed_20261004/check",
+  "initialization_seed": 13100000,
+  "recommended_resume_not_executed": "conda run --no-capture-output -n splendor env PYTHONPATH=src python -u -m splendor.offline_train --config configs/entity_attention_v1/offline_attention.json --output runs/entity_attention_offline --resume --replay-cache-mib 8192",
+  "sampling_seed": 13110000,
+  "validation_seed": 13120000,
+  "verification_script_sha256": "5d6b5b6ac2947c486985f1d55bd7ae71f4de995d02231c09a48ff5333822fd83"
+}

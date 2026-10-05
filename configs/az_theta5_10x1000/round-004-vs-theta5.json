@@ -1,0 +1,63 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 11620000,
+  "device": "cuda",
+  "execution": {
+    "active_games": 100,
+    "actor_projection": true,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "max_batch_size": 64,
+    "max_batch_wait_ms": 0.0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "panel_id": "round-004-vs-theta5",
+    "purpose": "STAGE_DEV repeated at rounds 3 and 5",
+    "run_id": "az_theta5_10x1000_seed1",
+    "schedule": "external, GPU idle, serial; loop does not pause or schedule this panel"
+  },
+  "pairs": 200,
+  "policy_a": {
+    "checkpoint": "runs/az_theta5_10x1000_seed1/rounds/round-004/checkpoints/final.pt",
+    "kind": "mcts_checkpoint",
+    "name": "new_round_004",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 8601564592,
+      "simulations": 1024
+    }
+  },
+  "policy_b": {
+    "checkpoint": "runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+    "kind": "mcts_checkpoint",
+    "name": "fixed_theta5",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 8601564592,
+      "simulations": 1024
+    }
+  },
+  "policy_seed_base": 11610000,
+  "seed_start": 11600000,
+  "workers": 1
+}

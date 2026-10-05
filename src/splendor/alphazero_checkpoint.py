@@ -23,7 +23,7 @@ from typing import Any, Mapping
 import torch
 from torch import nn
 
-from .actor_critic import ActorCritic, ActorCriticConfig
+from .actor_critic import ActorCritic, build_actor_critic
 from .features import FEATURE_SCHEMA_VERSION
 from .replay import RULESET_ID
 from .rng import RngState
@@ -57,7 +57,7 @@ class AlphazeroCheckpoint:
     path: Path | None = None
 
     def build_model(self, *, device: torch.device | str = "cpu") -> ActorCritic:
-        model = ActorCritic(ActorCriticConfig(**self.model_config))
+        model = build_actor_critic(self.model_config)
         model.load_state_dict(self.model_state_dict, strict=True)
         return model.to(device)
 

@@ -1,5 +1,7 @@
 # 固定配对评测与结果解释
 
+2026-10-04新增：[新AZ每轮/阶段/预留面板](next_az_training_zh-CN.md)，固定种子和paired bootstrap分开DEV/最终用途。`scripts/run_recorded_evaluation.py`复用本入口并补外部单面板会话/资源账本，不调度训练，也不自动暂停或选模；本次仅准备未运行。
+
 从仓库根目录执行，使用 Conda `splendor`、`PYTHONPATH=src`。基线评测入口为 `splendor.evaluate`，冻结 checkpoint/search 的统一入口为 `splendor.evaluation`。配置种类包括 `greedy_checkpoint`、`search_checkpoint`（固定深度）和 `mcts_checkpoint`（PUCT）；两侧模型可不同。
 
 ## 配对与计分

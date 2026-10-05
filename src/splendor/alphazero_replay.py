@@ -109,12 +109,14 @@ class _GameCache:
             tuple[int, int], tuple[dict[str, np.ndarray], dict[str, Any], int]
         ] = OrderedDict()
         self._bytes = 0
+        self.peak_bytes = self.peak_entries = 0
         self.hits = self.misses = self.decode_count = self.decoded_bytes = 0
         self.load_seconds = 0.0
 
     def stats(self) -> dict[str, int | float]:
         return {"capacity_bytes": self.max_bytes, "cache_bytes": self.bytes,
                 "entries": self.entries, "hits": self.hits, "misses": self.misses,
+                "peak_cache_bytes": self.peak_bytes, "peak_entries": self.peak_entries,
                 "decode_count": self.decode_count, "decoded_bytes": self.decoded_bytes,
                 "load_seconds": self.load_seconds}
 
@@ -146,6 +148,8 @@ class _GameCache:
                 while self._bytes > self.max_bytes and self._entries:
                     _, evicted = self._entries.popitem(last=False)
                     self._bytes -= evicted[2]
+                self.peak_bytes = max(self.peak_bytes, self._bytes)
+                self.peak_entries = max(self.peak_entries, len(self._entries))
         else:
             self.hits += 1
             self._entries.move_to_end(key)

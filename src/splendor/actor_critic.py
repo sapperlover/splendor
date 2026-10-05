@@ -521,6 +521,27 @@ class ActorCritic(nn.Module):
             raise ValueError("unsupported model weights format version")
         if payload.get("feature_schema_version") != FEATURE_SCHEMA.version:
             raise ValueError("model weights feature schema version mismatch")
-        model = cls(ActorCriticConfig(**payload["config"]))
+        model = build_actor_critic(payload["config"])
         model.load_state_dict(payload["state_dict"], strict=True)
         return model
+
+
+def model_config_from_dict(config: dict[str, Any] | ActorCriticConfig):
+    """Parse identity without initializing a model or consuming its RNG."""
+    values = asdict(config) if isinstance(config, ActorCriticConfig) else dict(config)
+    architecture = values.pop("architecture", "deep_sets_v1")
+    if architecture == "deep_sets_v1":
+        return ActorCriticConfig(**values)
+    if architecture == "entity_attention_v1":
+        from .entity_attention import EntityAttentionConfig
+        return EntityAttentionConfig(**values)
+    raise ValueError(f"unknown model architecture: {architecture!r}")
+
+
+def build_actor_critic(config: dict[str, Any] | ActorCriticConfig) -> ActorCritic:
+    """Dispatch explicitly; absent architecture identifies the legacy Deep-Sets format."""
+    parsed = model_config_from_dict(config)
+    if isinstance(parsed, ActorCriticConfig):
+        return ActorCritic(parsed)
+    from .entity_attention import EntityAttention
+    return EntityAttention(parsed)

@@ -185,6 +185,19 @@ def test_generic_worker_and_active_limits(tmp_path, workers, active, games, batc
     assert sum(item["peak_active_games"] for item in results) <= min(active, games)
 
 
+def test_full_round_admission_is_independent_of_gpu_batch_limit(tmp_path, monkeypatch):
+    checkpoint = _checkpoint(tmp_path / "weights.pt")
+    config = _config(checkpoint, games=1000, workers=8, active=1000,
+                     batch=500, micro=64, slots=1, simulations=1, determinizations=1)
+    monkeypatch.setattr(_FixedOwner, "warmup_native", lambda self, buckets: 0.0, raising=False)
+    results, owner = collect(config, tmp_path / "games", tuple(range(1000)),
+                             "admission-window", _sha256(checkpoint), evaluator=_FixedOwner(),
+                             benchmark_seconds=0.25, warmup_seconds=0.1)
+    assert owner["actual_active_limit"] == 1000
+    assert owner["global_max_batch"] == 500
+    assert [item["peak_active_games"] for item in sorted(results, key=lambda item: item["worker_id"])] == [125] * 8
+
+
 def test_value_only_n_gt_one_matches_reference(tmp_path):
     checkpoint = _checkpoint(tmp_path / "weights.pt")
     from dataclasses import replace

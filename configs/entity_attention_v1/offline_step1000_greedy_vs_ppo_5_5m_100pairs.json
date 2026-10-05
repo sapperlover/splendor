@@ -1,0 +1,20 @@
+{
+  "policy_a": {
+    "kind": "greedy_checkpoint",
+    "name": "entity_attention_offline_step1000",
+    "checkpoint": "runs/entity_attention_offline/checkpoints/step-000001000.pt"
+  },
+  "policy_b": {
+    "kind": "greedy_checkpoint",
+    "name": "ppo_5_5m",
+    "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt"
+  },
+  "device": "cuda",
+  "workers": 1,
+  "pairs": 100,
+  "seed_start": 13500000,
+  "policy_seed_base": 13510000,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 13530000,
+  "adjudicate_deterministic_policy_cycles": true
+}

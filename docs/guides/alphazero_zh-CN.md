@@ -1,5 +1,7 @@
 # AlphaZero 式 policy/value 循环
 
+2026-10-04新增：[10×1000独立训练准备](next_az_training_zh-CN.md)，含旧θ5权重热启动、4GiB/6000局配置、目标熵/KL、样本覆盖、两套明确集合的验证与会话计时；正式实验尚未运行。[字段清单](next_az_record_fields_zh-CN.md)补充下文原基础指标口径；固定/训练前后诊断仅在配置启用`diagnostics`时执行。
+
 当前循环已完成一次 5 轮 × 500 局的 Python batched_cpu 采集运行；不是仅 smoke。本文维护训练/恢复语义与入口，[完成报告](../reports/alphazero_seed1_zh-CN.md) 保存实验结果。native CPU、单 owner CUDA 与 CUDA pool 是独立执行配置；不能把 Python run 的验收结果直接作为 native 多轮长训验收。
 
 ## 1. 范围与定位
@@ -153,6 +155,8 @@ collect → train → evaluate(mcts_vs_parent) → evaluate(greedy_vs_initial) �
 训练完成的合法 theta_(r+1) 直接用于下一轮采集；不因小样本胜率低于某个阈值而拒绝更新。评测用于观察趋势，异常则停止并保留各代 checkpoint 便于回退。
 
 ## 7. 轻量评测
+
+本节以下面板规模与执行设备描述对应历史 `configs/alphazero_loop.json`。当前也支持用 `evaluation.mcts_vs_initial` 替代 `mcts_vs_parent`，配置必须二选一；它使搜索对手固定为本次run的initial_checkpoint，输出、恢复检查和TensorBoard标签随面板名称一致变化。新模型正式设置见 [10×1000自迭代](entity_attention_self_iteration_zh-CN.md)，每轮搜索/greedy均对固定起点各50 pairs，使用CUDA搜索评测。
 
 每轮结束后在 CPU、8 workers 上执行两组固定配对（每 pair 交换先后手）：
 

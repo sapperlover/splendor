@@ -5,6 +5,9 @@
 | 用途 | 路径 | 状态 |
 | --- | --- | --- |
 | Python AZ 主配置 | `alphazero_loop.json` | 对应已有 5x500 完成 run，原冻结 config 在 runs 中 |
+| 旧θ5起点10×1000 | `az_theta5_10x1000/` | 原准备配置/命令保留，十轮源run已完成；不据此替代其棋力评测结论 |
+| 实体注意力与离线对照 | `entity_attention_v1/` | 新旧离线、smoke、混合面板；支持8 GiB离线缓存执行覆盖；[离线专题](../docs/guides/entity_attention_offline_zh-CN.md) |
+| 新模型10×1000自迭代 | `entity_attention_v1/online_10x1000.json` | 同时调度1000局，每轮对固定起点搜索/greedy各50 pairs；有限CPU/GPU验证通过，正式未启动；[命令](../docs/guides/entity_attention_self_iteration_zh-CN.md) |
 | Python AZ smoke | `alphazero_loop_smoke.json` | 有限闭环验证 |
 | 历史 v1 自对弈 | `mcts_selfplay_round000.json`、`mcts_selfplay_smoke.json` | 读取兼容保留 |
 | 固定搜索评测 | `mcts_vs_*.json`、`mcts_50pair_sweep/` | sweep 部分完成，见报告 |

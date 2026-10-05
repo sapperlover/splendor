@@ -1,0 +1,18 @@
+{
+  "additional_recording_check": "passed, 1 CPU update with full holdout, then completed-run zero-update resumes including final frozen-file identity validation",
+  "config_parsing": "passed, online future checkpoint substituted with verified smoke checkpoint for parsing only",
+  "gpu_shapes": "passed, four model/shape cases, no compile failure fallback",
+  "integration": "passed",
+  "not_executed": [
+    "formal offline new/old fitting",
+    "50-pair strength comparisons",
+    "3x200 online iterations"
+  ],
+  "source_change_after_gpu_validation": "offline metadata/timing/latest refresh and frozen-file digest validation only; model, loaders, training update and GPU inference unchanged",
+  "tests": {
+    "failed": 0,
+    "passed": 27,
+    "reason_for_skip": "sandbox CUDA unavailable; actual host GPU separately validated",
+    "skipped": 1
+  }
+}

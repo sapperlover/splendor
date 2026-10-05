@@ -1,0 +1,80 @@
+{
+  "policy_a": {
+    "kind": "mcts_checkpoint",
+    "name": "entity_attention",
+    "checkpoint": "runs/entity_attention_offline/checkpoints/final.pt",
+    "search_backend": "native",
+    "search_config": {
+      "simulations": 1024,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "dirichlet_alpha": 0.3,
+      "seed": 13150000
+    },
+    "inference": {
+      "mode": "compiled",
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "native_transport": "reused"
+    }
+  },
+  "policy_b": {
+    "kind": "mcts_checkpoint",
+    "name": "old_theta5",
+    "checkpoint": "runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+    "search_backend": "native",
+    "search_config": {
+      "simulations": 1024,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "dirichlet_alpha": 0.3,
+      "seed": 13150000
+    },
+    "inference": {
+      "mode": "compiled",
+      "actor_projection": true,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "native_transport": "reused"
+    }
+  },
+  "device": "cuda",
+  "workers": 1,
+  "pairs": 50,
+  "seed_start": 13160000,
+  "policy_seed_base": 13170000,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 13180000,
+  "adjudicate_deterministic_policy_cycles": true,
+  "execution": {
+    "backend": "native_batched",
+    "active_games": 100,
+    "max_batch_size": 64,
+    "max_batch_wait_ms": 0.0,
+    "inference_mode": "compiled",
+    "actor_projection": true,
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ]
+  }
+}

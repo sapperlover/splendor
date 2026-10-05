@@ -1,0 +1,32 @@
+{
+  "source_run": "runs/az_theta5_10x1000_seed1",
+  "source_artifacts": "artifacts/az_theta5_10x1000_seed1",
+  "rounds": [
+    0
+  ],
+  "initialization_seed": 13100000,
+  "sampling_seed": 13110000,
+  "validation_seed": 13120000,
+  "validation_positions": 16,
+  "replay_cache_bytes": 67108864,
+  "max_steps": 8,
+  "full_validation_at_end": false,
+  "learner": {
+    "device": "cuda",
+    "batch_size": 16,
+    "history_batch_size": 8,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "policy_loss_weight": 1.0,
+    "value_loss_weight": 1.0,
+    "max_grad_norm": 1.0,
+    "steps_per_new_position": 4.0,
+    "checkpoint_every_steps": 4,
+    "validation_batch_size": 16,
+    "max_steps_per_round": null
+  },
+  "games_per_round": 6,
+  "model_config": {
+    "architecture": "entity_attention_v1"
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "diagnostics": {
+    "artifact_dir": "runtime/entity_attention_self_iteration_smoke/diagnostics",
+    "fixed_positions": 16,
+    "fixed_seed": 13940000,
+    "resource_interval_seconds": 5.0
+  },
+  "evaluation": {
+    "adjudicate_deterministic_policy_cycles": true,
+    "device": "cuda",
+    "greedy_vs_initial": {
+      "bootstrap_resamples": 0,
+      "bootstrap_seed": 0,
+      "pairs": 1,
+      "policy_seed_base": 13980000,
+      "seed_start": 13970000
+    },
+    "mcts_backend": "native",
+    "mcts_execution": {
+      "active_games": 2,
+      "actor_projection": false,
+      "backend": "native_batched",
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "inference_mode": "compiled",
+      "max_batch_size": 4,
+      "max_batch_wait_ms": 0.0
+    },
+    "workers": 1,
+    "mcts_vs_initial": {
+      "bootstrap_resamples": 0,
+      "bootstrap_seed": 0,
+      "pairs": 1,
+      "policy_seed_base": 13960000,
+      "search_config": {
+        "c_puct": 1.5,
+        "determinizations": 1,
+        "dirichlet_alpha": 0.3,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "seed": 4306397296,
+        "simulations": 16
+      },
+      "seed_start": 13950000
+    }
+  },
+  "initial_checkpoint": "runs/entity_attention_offline/checkpoints/final.pt",
+  "learner": {
+    "batch_size": 16,
+    "checkpoint_every_steps": 1,
+    "device": "cuda",
+    "history_batch_size": 8,
+    "learning_rate": 0.0001,
+    "max_grad_norm": 1.0,
+    "max_steps_per_round": 2,
+    "policy_loss_weight": 1.0,
+    "steps_per_new_position": 4.0,
+    "validation_batch_size": 16,
+    "value_loss_weight": 1.0,
+    "weight_decay": 0.0001
+  },
+  "new_games_per_round": 4,
+  "num_rounds": 2,
+  "protocol": "alphazero-loop-v1",
+  "replay_cache_bytes": 67108864,
+  "replay_max_games": 8,
+  "run_id": "entity_attention_self_iteration_smoke",
+  "seeds": {
+    "collection": 13900000,
+    "split": 13910000,
+    "sampling": 13920000
+  },
+  "selfplay": {
+    "add_root_noise": true,
+    "execution": {
+      "active_games_per_worker": 1,
+      "actor_projection": false,
+      "backend": "native_cuda_pool",
+      "batch_interface": "native",
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "engine_mode": "fast",
+      "inference_mode": "compiled",
+      "local_microbatch": 4,
+      "max_batch_size": 8,
+      "max_batch_wait_ms": 5,
+      "native_transport": "reused",
+      "precision": "float32",
+      "search_workers": 2,
+      "shared_candidate_width": 256,
+      "shared_slots": 1,
+      "torch_threads": 1,
+      "total_active_games": 4,
+      "workers": 1
+    },
+    "max_completed_turns": 400,
+    "protocol": "mcts-selfplay-v2",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "seed": 13930000,
+      "simulations": 16
+    },
+    "temperature_schedule": {
+      "late_temperature": 0.0,
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0
+    },
+    "validation_fraction": 0.25
+  }
+}

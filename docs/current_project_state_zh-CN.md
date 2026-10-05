@@ -12,8 +12,11 @@
 | 多 worker GPU pool | 已实现，有窗口和每档一次完整 500 局；整轮收益尚无重复稳定性证据 | [报告](reports/multiworker_gpu_zh-CN.md) |
 | 流程时间统计 | 历史有限learner/评测/pool分项与口径修正保留；其“未实施优化”仅适用当时版本 | [分项报告](reports/pipeline_profile_zh-CN.md) |
 | 完整性能优化 | 两组各1000局及checked replay、各50 pairs、8+128步固定learner对照完成；采集1.239×、learner总成本8.082×、评测3.292×；每组一次 | [完整报告](reports/end_to_end_speed_optimization_zh-CN.md) |
+| 旧θ5起点10×1000 | 源run轮0–9已完成；保留的10000局原split可供离线学习，训练770870/留出80699局面；本次仅核对数据元信息，不重新验收旧run棋力 | [原配置/记录](guides/next_az_training_zh-CN.md)、[数据依据](../artifacts/entity_attention_v1_20261004/data_summary.json) |
+| Entity attention v1 | 532738参数；模型调用链有限验证通过，用户已启动正式离线拟合；4 GiB加载瓶颈已定位，支持8 GiB执行覆盖及resume；最终拟合/棋力/在线收益尚未验收 | [专题与命令](guides/entity_attention_offline_zh-CN.md)、[缓存诊断](../artifacts/offline_training_speed_20261004/README.md) |
+| 新模型10×1000自迭代 | 起点使用已生成的离线final；1000局同时调度，每轮对固定起点搜索/greedy各50 pairs；有限CPU/GPU验证通过，正式未启动 | [配置、命令与验证](guides/entity_attention_self_iteration_zh-CN.md) |
 | MCTS sweep | 01/02/05 完整，03 不完整，04 无汇总；非全部完成 | [报告](reports/mcts_sweep_zh-CN.md) |
 
-不能从 smoke 推断棋力，从稳态窗口推断整轮收益，或从单 seed/多个被查看面板推断总体稳定提升。当前没有 native 多轮生产训练、多训练 seed 或扩容 ablation 的报告依据。
+不能从 smoke 推断棋力，从稳态窗口推断整轮收益，或从单 seed/多个被查看面板推断总体稳定提升。旧的“native 多轮未运行”说明不再适用于上述已完成十轮源 run；新架构正式训练、多训练 seed 和扩容 ablation 的收益仍未验证。
 
 完整文档导航见 [index](index.md)，实验状态与证据见 [experiment_index](../artifacts/experiment_index.json)。旧工作包/实施计划已打包至忽略的 `runtime/document_archive/2026-10-01/docs_before_cleanup.tar.gz`；归档旁的 manifest 保存逐文件 SHA。这是本地历史资料，不是现行需求。

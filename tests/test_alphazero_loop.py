@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -17,6 +17,7 @@ from splendor.alphazero_loop import (
     run_loop,
 )
 from splendor.alphazero_train import LearnerConfig
+from splendor.alphazero_recording import human_event
 from splendor.features import FEATURE_SCHEMA_VERSION
 from splendor.mcts_policy import MCTSConfig
 from splendor.ppo import TRAINING_CHECKPOINT_FORMAT_VERSION
@@ -91,11 +92,22 @@ def restore_torch_threads():
     torch.set_num_threads(previous)
 
 
+@pytest.mark.parametrize("mcts_opponent", ["parent", "initial"])
 def test_loop_chains_rounds_and_resumes_to_no_work(
-    tmp_path, monkeypatch, capsys, restore_torch_threads
+    tmp_path, monkeypatch, capsys, restore_torch_threads, mcts_opponent
 ):
     checkpoint = _weights_checkpoint(tmp_path / "base.pt")
     config = _loop_config(checkpoint)
+    if mcts_opponent == "initial":
+        config = replace(config, evaluation=replace(
+            config.evaluation, mcts_vs_parent=None,
+            mcts_vs_initial=config.evaluation.mcts_vs_parent,
+        ))
+    panel_name = f"mcts_vs_{mcts_opponent}"
+    # Frozen legacy configs retain their fields; fixed-initial configs omit parent.
+    serialized = config.to_dict()
+    assert f"mcts_vs_{'parent' if mcts_opponent == 'initial' else 'initial'}" not in serialized["evaluation"]
+    assert LoopConfig.from_dict(serialized).to_dict() == serialized
     output = tmp_path / "loop"
     collect_calls: list[bool] = []
     generate = alphazero_loop.generate_selfplay
@@ -117,7 +129,12 @@ def test_loop_chains_rounds_and_resumes_to_no_work(
     assert state["rounds"]["0"]["validation"]["available"] is False
     assert (output / "rounds" / "round-000" / "checkpoints" / "final.pt").is_file()
     assert (output / "rounds" / "round-001" / "checkpoints" / "final.pt").is_file()
-    assert (output / "rounds" / "round-001" / "evaluation" / "mcts_vs_parent.json").is_file()
+    panel_path = output / "rounds" / "round-001" / "evaluation" / f"{panel_name}.json"
+    panel_summary = json.loads(panel_path.read_text(encoding="utf-8"))
+    expected_opponent = state["initial_checkpoint"] if mcts_opponent == "initial" else state["rounds"]["1"]["theta_in"]
+    assert panel_summary["config"]["policy_b"]["checkpoint"] == expected_opponent["path"]
+    assert panel_summary["config"]["metadata"][f"theta_{mcts_opponent}"] == expected_opponent["path"]
+    assert set(state["rounds"]["1"]["evaluation"]) == {panel_name, "greedy_vs_initial"}
 
     # The learner continues across rounds: two steps per round, one global
     # counter, and AdamW moments that are four updates old at the end.
@@ -137,11 +154,14 @@ def test_loop_chains_rounds_and_resumes_to_no_work(
     assert [record["total_train_step"] for record in step_metrics] == [3, 4]
 
     # Long phases report progress before the phase-complete line.
-    events = [
-        json.loads(line)["event"]
+    records = [
+        json.loads(line)
         for line in capsys.readouterr().out.splitlines()
         if line.startswith("{")
     ]
+    events = [record["event"] for record in records]
+    completed = next(record for record in records if record["event"] == "evaluate_complete")
+    assert panel_name in human_event(completed)
     for expected in (
         "collect_start", "collect_progress", "collect_complete",
         "train_progress", "train_complete",
@@ -153,12 +173,21 @@ def test_loop_chains_rounds_and_resumes_to_no_work(
     tags = set(accumulator.Tags()["scalars"])
     assert {
         "train/total_loss", "collect/round-000/games_completed", "collect/games_per_second",
-        "eval/mcts_vs_parent_score_rate",
+        f"eval/{panel_name}_score_rate",
     } <= tags
 
     resumed = run_loop(config, output, resume=True)
     assert resumed["loop_complete"] is True
     assert collect_calls == [False, False]
+
+
+@pytest.mark.parametrize("both", [False, True])
+def test_loop_requires_one_mcts_opponent(tmp_path, both):
+    config = _loop_config(_weights_checkpoint(tmp_path / "base.pt"))
+    with pytest.raises(ValueError, match="exactly one"):
+        replace(config.evaluation,
+                mcts_vs_parent=config.evaluation.mcts_vs_parent if both else None,
+                mcts_vs_initial=config.evaluation.mcts_vs_parent if both else None)
 
 
 def test_loop_resume_does_not_retrain_a_committed_checkpoint(tmp_path, monkeypatch, restore_torch_threads):
