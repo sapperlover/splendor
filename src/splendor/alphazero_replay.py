@@ -24,7 +24,7 @@ import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
 
@@ -127,6 +127,17 @@ class _GameCache:
     @property
     def entries(self) -> int:
         return len(self._entries)
+
+    def retain(self, keys: Iterable[tuple[int, int]]) -> int:
+        """Release decoded games outside the active pool and fixed holdouts."""
+        keep = set(keys)
+        removed = 0
+        for key in list(self._entries):
+            if key not in keep:
+                _, _, size = self._entries.pop(key)
+                self._bytes -= size
+                removed += 1
+        return removed
 
     def sample(self, game: ReplayGame, decision_index: int) -> SelfPlaySample:
         key = game.key
@@ -382,8 +393,13 @@ def build_replay_index(
     max_games: int,
     cache_bytes: int = DEFAULT_CACHE_BYTES,
     state_path: Path | None = None,
+    allowed_game_keys: set[tuple[int, int]] | None = None,
 ) -> ReplayIndex:
-    """Scan collection runs, keep the most recent ``max_games`` complete games."""
+    """Keep recent complete games, optionally restricted to a frozen selection.
+
+    Selection precedes eviction and validation-cache persistence so partially
+    evicted parent rounds cannot re-enter a fork's active buffer.
+    """
 
     if type(max_games) is not int or max_games <= 0:
         raise ValueError("max_games must be a positive integer")
@@ -394,8 +410,10 @@ def build_replay_index(
     for run in runs:
         games, verify = _scan_run(run)
         for game in games:
+            if allowed_game_keys is not None and game.key not in allowed_game_keys:
+                continue
             verify_by_key[game.key] = verify
-        candidates.extend(games)
+            candidates.append(game)
     candidates.sort(key=lambda game: game.key)
     active = candidates[-max_games:]
     state = _load_index_state(state_path)

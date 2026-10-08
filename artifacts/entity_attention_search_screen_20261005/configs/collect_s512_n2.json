@@ -1,0 +1,61 @@
+{
+  "add_root_noise": true,
+  "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/checkpoints/final.pt",
+  "execution": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "batch_interface": "native",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "compile_mode": "native-cudagraph",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 64,
+    "max_batch_size": 128,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "pipeline_slots": 1,
+    "precision": "float32",
+    "search_workers": 8,
+    "shared_candidate_width": 256,
+    "shared_slots": 2,
+    "torch_threads": 1,
+    "total_active_games": 100,
+    "workers": 1
+  },
+  "max_completed_turns": 400,
+  "num_games": 128,
+  "protocol": "mcts-selfplay-v2",
+  "round_index": 0,
+  "run_id": "attention_sn_screen_s512_n2",
+  "search_config": {
+    "c_puct": 1.5,
+    "determinizations": 2,
+    "dirichlet_alpha": 0.3,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512,
+    "root_noise_fraction": 0.25,
+    "seed": 14820000,
+    "simulations": 512
+  },
+  "seed": 14800000,
+  "split_seed": 14810000,
+  "temperature_schedule": {
+    "late_temperature": 0.0,
+    "opening_completed_turns": 10,
+    "opening_temperature": 1.0
+  },
+  "validation_fraction": 0.1
+}

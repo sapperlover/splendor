@@ -1,0 +1,66 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 16790000,
+  "device": "cuda",
+  "execution": {
+    "active_games": 200,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "eager",
+    "max_batch_size": 200,
+    "max_batch_wait_ms": 0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "behavior_temperature": 0,
+    "diagnostic_reference": "artifacts/entity_attention_chance_search_20261007/manifest.json",
+    "network_weights_identical": true,
+    "purpose": "Frozen-model sampled-chance versus determinized PUCT strength check, equal S1024 total; 100 paired game seeds",
+    "root_noise": false
+  },
+  "pairs": 100,
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "kind": "mcts_checkpoint",
+    "name": "chance_16500_s1024",
+    "search_backend": "native_chance",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 16740000,
+      "simulations": 1024
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "kind": "mcts_checkpoint",
+    "name": "determinized_16500_s1024",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 16740000,
+      "simulations": 1024
+    }
+  },
+  "policy_seed_base": 16780000,
+  "progress_every": 5,
+  "seed_start": 16770000,
+  "summary_every": 5,
+  "workers": 1
+}

@@ -1,0 +1,52 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 16790000,
+  "device": "cpu",
+  "max_completed_turns": 400,
+  "metadata": {
+    "purpose": "Two checked CPU serial games verify CPW evaluation factory; API smoke only."
+  },
+  "pairs": 1,
+  "policy_a": {
+    "chance_widening": {
+      "alpha": 0.5,
+      "k": 1.0
+    },
+    "checkpoint": "/home/lc/\u4e0b\u8f7d/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "kind": "mcts_checkpoint",
+    "name": "chance_pw_smoke",
+    "search_backend": "native_chance",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 16740000,
+      "simulations": 8
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/\u4e0b\u8f7d/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "kind": "mcts_checkpoint",
+    "name": "native_smoke",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 16740000,
+      "simulations": 8
+    }
+  },
+  "policy_seed_base": 16780000,
+  "progress_every": 1,
+  "seed_start": 16770000,
+  "summary_every": 1,
+  "workers": 1
+}

@@ -5,6 +5,7 @@ import hashlib
 import json
 import multiprocessing as mp
 import os
+import shutil
 import time
 from concurrent.futures import ProcessPoolExecutor
 from collections.abc import Callable, Sequence
@@ -43,12 +44,20 @@ class SerializablePolicySpec:
     search_config: dict[str, Any] | None = None
     search_backend: str = "python"
     inference: dict[str, Any] | None = None
+    chance_widening: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
-        if self.search_backend not in ("python", "native"):
-            raise ValueError("search_backend must be python or native")
-        if self.search_backend == "native" and self.kind != "mcts_checkpoint":
+        if self.search_backend not in ("python", "native", "native_chance"):
+            raise ValueError("search_backend must be python, native or native_chance")
+        if self.search_backend != "python" and self.kind != "mcts_checkpoint":
             raise ValueError("native search backend requires mcts_checkpoint")
+        if self.chance_widening is not None:
+            if self.search_backend != "native_chance":
+                raise ValueError("chance_widening requires native_chance")
+            if not isinstance(self.chance_widening, Mapping):
+                raise ValueError("chance_widening must be a mapping")
+            from .native_policy import ChanceWideningConfig
+            ChanceWideningConfig(**self.chance_widening)
         if self.kind == "baseline":
             if self.baseline_name not in _BASELINES:
                 raise ValueError("parallel baseline policy is unknown")
@@ -71,7 +80,9 @@ class SerializablePolicySpec:
         if self.kind == "mcts_checkpoint":
             from .mcts_policy import MCTSConfig
 
-            MCTSConfig(**self.search_config)
+            search = MCTSConfig(**self.search_config)
+            if self.search_backend == "native_chance" and search.determinizations != 1:
+                raise ValueError("native_chance requires determinizations=1")
 
     @classmethod
     def baseline(cls, name: str) -> SerializablePolicySpec:
@@ -106,12 +117,13 @@ class SerializablePolicySpec:
     def mcts_checkpoint(
         cls, name: str, checkpoint: Path | str, *, search_config: dict[str, Any],
         search_backend: str = "python",
+        chance_widening: dict[str, Any] | None = None,
     ) -> SerializablePolicySpec:
         return cls(
             name=name,
             kind="mcts_checkpoint",
             checkpoint=str(Path(checkpoint).resolve()),
-            search_config=dict(search_config), search_backend=search_backend,
+            search_config=dict(search_config), search_backend=search_backend, chance_widening=chance_widening,
         )
 
     @classmethod
@@ -120,8 +132,10 @@ class SerializablePolicySpec:
 
         kind = str(value.get("kind", ""))
         backend = str(value.get("search_backend", "python"))
-        if backend not in ("python", "native") or (backend == "native" and kind != "mcts_checkpoint"):
+        if backend not in ("python", "native", "native_chance") or (backend != "python" and kind != "mcts_checkpoint"):
             raise ValueError("native search backend requires mcts_checkpoint")
+        if value.get("chance_widening") is not None and backend != "native_chance":
+            raise ValueError("chance_widening requires native_chance")
         name = str(value.get("name", kind))
         if kind == "baseline":
             return cls.baseline(str(value.get("baseline_name", name)))
@@ -132,7 +146,8 @@ class SerializablePolicySpec:
         if inference is not None and not isinstance(inference, Mapping):
             raise ValueError(f"policy {name!r} inference settings must be a mapping")
         if kind == "greedy_checkpoint":
-            return cls.greedy_checkpoint(name, checkpoint)
+            spec = cls.greedy_checkpoint(name, checkpoint)
+            return replace(spec, inference=None if inference is None else dict(inference))
         if kind == "search_checkpoint":
             search_config = value.get("search_config")
             if not isinstance(search_config, Mapping):
@@ -146,6 +161,7 @@ class SerializablePolicySpec:
             spec = cls.mcts_checkpoint(
                 name, checkpoint, search_config=dict(search_config),
                 search_backend=backend,
+                chance_widening=value.get("chance_widening"),
             )
             return replace(spec, inference=None if inference is None else dict(inference))
         raise ValueError(f"unsupported policy kind: {kind!r}")
@@ -162,6 +178,8 @@ class SerializablePolicySpec:
             result["search_config"] = dict(self.search_config)
         if self.search_backend != "python":
             result["search_backend"] = self.search_backend
+        if self.chance_widening is not None:
+            result["chance_widening"] = dict(self.chance_widening)
         return result
 
 
@@ -292,8 +310,10 @@ class FixedEvaluationConfig:
             if self.workers != 1:
                 raise ValueError("batched evaluation has one inference owner; workers must be 1")
             for spec in (self.policy_a, self.policy_b):
-                if spec.kind != "mcts_checkpoint" or spec.search_backend != "native":
-                    raise ValueError("batched evaluation requires two native mcts_checkpoint policies")
+                if spec.kind == "greedy_checkpoint":
+                    continue
+                if spec.kind != "mcts_checkpoint" or spec.search_backend not in ("native", "native_chance"):
+                    raise ValueError("batched evaluation requires native mcts_checkpoint or greedy_checkpoint policies")
 
     def to_dict(self) -> dict[str, object]:
         value = {
@@ -668,11 +688,15 @@ class EvaluationGameStore:
         return self.complete_pairs(index, block, require_scored=True)
 
     def discard_pair(
-        self, index: int, block: int, pair_id: int
+        self, index: int, block: int, pair_id: int, *, archive_dir: Path | None = None
     ) -> None:
         path = self._record_dir(index, block) / f"pair-{pair_id:07d}.jsonl"
         if path.exists():
-            path.unlink()
+            if archive_dir is None:
+                path.unlink()
+            else:
+                archive_dir.mkdir(parents=True, exist_ok=True)
+                path.replace(archive_dir / path.name)
         self.invalidate(index, block)
 
 
@@ -743,14 +767,17 @@ def _create_serializable_policy(
         )
     if spec.kind == "mcts_checkpoint":
         from .mcts_policy import MCTSConfig, PUCTSearchPolicy
-        if spec.search_backend == "native":
-            from .native_policy import NativePUCTSearchPolicy
-            policy_cls = NativePUCTSearchPolicy
+        if spec.search_backend in ("native", "native_chance"):
+            from .native_policy import NativePUCTSearchPolicy, NativeChancePUCTSearchPolicy
+            policy_cls = NativeChancePUCTSearchPolicy if spec.search_backend == "native_chance" else NativePUCTSearchPolicy
         else:
             policy_cls = PUCTSearchPolicy
 
         kwargs = {}
-        if spec.search_backend == "native":
+        if spec.chance_widening is not None:
+            from .native_policy import ChanceWideningConfig
+            kwargs["chance_widening"] = ChanceWideningConfig(**spec.chance_widening)
+        if spec.search_backend in ("native", "native_chance"):
             version = _PARALLEL_MODEL_HASH_CACHE.get(spec.checkpoint)
             if version is None:
                 version = hashlib.sha256(Path(spec.checkpoint).read_bytes()).hexdigest()
@@ -1389,11 +1416,19 @@ def run_fixed_evaluation(
                 if record.get("policy_seeds") != list(expected_policy_seeds):
                     raise ValueError(f"stored pair {pair_id} has different policy seeds")
         complete = store.complete_pairs(require_scored=require_scored_pairs)
+        retry_archive = None
         for pair_id in selected_ids:
             if pair_id not in complete and pair_id in existing:
                 # Discard a partial pair before replay to keep one authoritative
                 # record per game slot and avoid duplicate lines after a restart.
-                store.discard_pair(0, 0, pair_id)
+                # Scored-only recovery also retries engineering failures; keep
+                # their original pair logs and summary for diagnosis.
+                if require_scored_pairs and retry_archive is None:
+                    retry_archive = root / "retries" / str(time.time_ns())
+                    retry_archive.mkdir(parents=True)
+                    if output_path.exists():
+                        shutil.copyfile(output_path, retry_archive / "summary.json")
+                store.discard_pair(0, 0, pair_id, archive_dir=retry_archive)
         store.invalidate()
         complete = store.complete_pairs(require_scored=require_scored_pairs)
         missing_ids = tuple(pair_id for pair_id in selected_ids if pair_id not in complete)

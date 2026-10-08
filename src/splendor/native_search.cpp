@@ -7,6 +7,8 @@
 #include <cmath>
 #include <cstdint>
 #include <numeric>
+#include <memory>
+#include <map>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -196,8 +198,50 @@ static void erase_id(std::vector<int>& values,int id) {
     if(it==values.end()) throw std::logic_error("missing card or noble in native state");
     values.erase(it);
 }
-static void refill(State& s,int tier) {
-    if(!s.decks[tier].empty()) {int id=s.decks[tier].back();s.decks[tier].pop_back();s.market[tier].push_back(id);}
+static void key_int(std::string& key,int value) {
+    uint32_t v=uint32_t(value);for(int i=0;i<4;++i)key.push_back(char((v>>(8*i))&255));
+}
+struct ChancePool {
+    int visits=0,pool_size=0;
+    std::vector<int> outcomes;
+};
+using ChancePools=std::map<std::string,ChancePool>;
+struct ChanceStream {
+    uint64_t state;int draws=0;
+    ChancePools* pools=nullptr;double pw_k=0,pw_alpha=.5;
+    int pw_fresh=0,pw_reused=0;
+};
+static int draw_card(State& s,int tier,ChanceStream* chance=nullptr) {
+    auto& deck=s.decks[tier];
+    if(chance) {
+        size_t index;
+        if(chance->pools) {
+            // Condition on the actual remaining pool: an opponent's resampled blind
+            // card must never be drawn again. Cache only card IDs, never a successor
+            // State, so private particles and deterministic rules remain current.
+            auto sorted=deck;std::sort(sorted.begin(),sorted.end());std::string key;
+            key_int(key,tier);for(int card:sorted)key_int(key,card);
+            auto& pool=(*chance->pools)[key];++pool.visits;pool.pool_size=int(deck.size());
+            double limit=std::max(1.0,std::ceil(chance->pw_k*std::pow(pool.visits,chance->pw_alpha)));
+            size_t capacity=size_t(std::min(double(deck.size()),limit));
+            if(pool.outcomes.size()<capacity) {
+                index=randbelow(chance->state,deck.size());int card=deck[index];++chance->pw_fresh;
+                if(std::find(pool.outcomes.begin(),pool.outcomes.end(),card)==pool.outcomes.end())
+                    pool.outcomes.push_back(card);
+            } else {
+                // Every card in a Splendor pool has equal physical probability.
+                // Normalize that probability on the admitted support, not visit
+                // counts or value estimates (which would bias toward a lucky draw).
+                int card=pool.outcomes[randbelow(chance->state,pool.outcomes.size())];
+                index=size_t(std::find(deck.begin(),deck.end(),card)-deck.begin());++chance->pw_reused;
+            }
+        } else index=randbelow(chance->state,deck.size());
+        std::swap(deck[index],deck.back());++chance->draws;
+    }
+    int id=deck.back();deck.pop_back();return id;
+}
+static void refill(State& s,int tier,ChanceStream* chance=nullptr) {
+    if(!s.decks[tier].empty()) s.market[tier].push_back(draw_card(s,tier,chance));
 }
 static void finish(State& s,const Catalog& c) {
     int actor=s.actor;
@@ -215,23 +259,23 @@ static void settle(State& s,const Catalog& c,const Action& main) {
     if(!s.eligible.empty()) {s.phase=3;s.pending=main;s.has_pending=true;}
     else finish(s,c);
 }
-static void apply(State& s,const Action& a,const Catalog& c) {
+static void apply(State& s,const Action& a,const Catalog& c,ChanceStream* chance=nullptr) {
     if(a.type<=5) s.skips=0;
     Player& p=s.players[s.actor];
     if(a.type==0 || a.type==1) {
         for(int i=0;i<6;++i){p.tokens[i]+=a.tokens[i];s.supply[i]-=a.tokens[i];}
     } else if(a.type==2) {
         int tier=c.cards[a.id].tier;erase_id(s.market[tier],a.id);
-        p.reserved.push_back({a.id,0});refill(s,tier);
+        p.reserved.push_back({a.id,0});refill(s,tier,chance);
         if(s.supply[5]){--s.supply[5];++p.tokens[5];}
     } else if(a.type==3) {
-        int id=s.decks[a.tier].back();s.decks[a.tier].pop_back();p.reserved.push_back({id,1});
+        int id=draw_card(s,a.tier,chance);p.reserved.push_back({id,1});
         if(s.supply[5]){--s.supply[5];++p.tokens[5];}
     } else if(a.type==4 || a.type==5) {
         s.pending=a;s.has_pending=true;s.phase=1;return;
     } else if(a.type==6) {
         int id=s.pending.id;
-        if(s.pending.type==4){int tier=c.cards[id].tier;erase_id(s.market[tier],id);refill(s,tier);}
+        if(s.pending.type==4){int tier=c.cards[id].tier;erase_id(s.market[tier],id);refill(s,tier,chance);}
         else {
             auto it=std::find_if(p.reserved.begin(),p.reserved.end(),[&](const Reservation& r){return r.card==id;});
             if(it==p.reserved.end()) throw std::logic_error("missing reserved purchase");
@@ -508,6 +552,9 @@ static py::dict encode(const State& s,const std::vector<Action>& acts,const Cata
 struct Edge {
     int visits=0,child=-1,terminal=-2;double value_sum=0;
     std::vector<Action> branch;
+    // Sampled outcomes aggregate into this decision edge's N/W, never maximize over chance.
+    std::unique_ptr<std::unordered_map<std::string,int>> outcomes;
+    std::unique_ptr<ChancePools> draw_pools;
 };
 struct Node {
     State state;std::vector<Action> actions;std::vector<double> prior;std::vector<Edge> edges;
@@ -519,12 +566,91 @@ struct Leaf {
     std::vector<Action> branch;
     int transitions=0,simulation=0;bool cap=false;
     bool exported=false; // claimed by a batch row until that row is submitted
+    std::string information_key;
 };
 struct World {
     int budget=0,completed=0;
     std::vector<Node> nodes;
     bool has_leaf=false;Leaf leaf;
+    std::unordered_map<std::string,int> information_nodes;
 };
+
+// Exact, observer-safe signatures (not floating model features or full hidden states).
+// Histories include each player's own private observations and public actions, retaining recall.
+template<typename Values> static void key_values(std::string& key,const Values& values) {
+    key_int(key,int(values.size()));for(int value:values)key_int(key,value);
+}
+static void key_sorted(std::string& key,std::vector<int> values) {
+    std::sort(values.begin(),values.end());key_values(key,values);
+}
+static bool private_purchase(const State& s,const Action& a,int observer) {
+    if(a.type!=5 || observer==s.actor)return false;
+    auto& reserved=s.players[s.actor].reserved;
+    auto it=std::find_if(reserved.begin(),reserved.end(),[&](const Reservation& r){return r.card==a.id;});
+    return it!=reserved.end() && it->source==1;
+}
+static void key_action(std::string& key,const State& s,const Action& a,int observer,const Catalog& c) {
+    bool hidden=private_purchase(s,a,observer);
+    key_int(key,s.actor);key_int(key,a.type);key_int(key,hidden?-1:a.id);
+    key_int(key,a.tier);key_values(key,a.tokens);
+}
+static std::string information_signature(const State& s,const Catalog& c,int observer) {
+    std::string key;key.reserve(512);
+    for(int value:{observer,s.actor,s.first,s.phase,s.turns[0],s.turns[1],s.skips,s.trigger,s.winner})key_int(key,value);
+    key_values(key,s.supply);
+    for(int t=0;t<3;++t){key_int(key,int(s.decks[t].size()));key_sorted(key,s.market[t]);}
+    for(int player=0;player<2;++player) {
+        auto& p=s.players[player];key_values(key,p.tokens);key_sorted(key,p.purchased);key_sorted(key,p.nobles);
+        std::vector<int> reservations;
+        for(auto& r:p.reserved) {
+            // Blind opponents' identities are absent, including their ordering.
+            int visible=(player==observer || r.source==0)?r.card:-1;
+            reservations.push_back((c.cards[r.card].tier+1)*1000+r.source*100+visible+1);
+        }
+        key_sorted(key,reservations);
+    }
+    key_sorted(key,s.nobles);key_int(key,s.has_pending);key_int(key,s.return_count);key_sorted(key,s.eligible);
+    if(s.has_pending)key_action(key,s,s.pending,observer,c);
+    return key;
+}
+static void append_history(std::array<std::string,2>& histories,const State& before,const Action& a,
+                           const State& after,const Catalog& c) {
+    for(int observer=0;observer<2;++observer) {
+        key_action(histories[observer],before,a,observer,c);
+        histories[observer]+=information_signature(after,c,observer);
+    }
+}
+static State sample_hidden_root(const State& root,const Catalog& c,uint64_t seed) {
+    State s=root;uint64_t rng=seed;
+    for(int tier=0;tier<3;++tier) {
+        std::vector<int> pool=root.decks[tier];std::vector<int> slots;
+        for(size_t i=0;i<root.players[1].reserved.size();++i) {
+            auto& r=root.players[1].reserved[i];
+            if(r.source==1 && c.cards[r.card].tier==tier){pool.push_back(r.card);slots.push_back(int(i));}
+        }
+        std::sort(pool.begin(),pool.end());
+        for(int slot:slots) {
+            size_t index=randbelow(rng,pool.size());
+            s.players[1].reserved[slot].card=pool[index];
+            std::swap(pool[index],pool.back());pool.pop_back();
+        }
+        // An unordered remaining pool, not a fixed future deck order.
+        std::sort(pool.begin(),pool.end());s.decks[tier]=std::move(pool);
+    }
+    return s;
+}
+static int apply_chance_folded(State& s,const Action& first,const Catalog& c,bool fold,int cap,
+                              std::vector<Action>& trail,std::array<std::string,2>& histories,ChanceStream& chance) {
+    Action action=first;int transitions=0;
+    do {
+        State before=s;apply(s,action,c,&chance);trail.push_back(action);++transitions;
+        auto next=decide(s,c);append_history(histories,before,action,s,c);
+        if(!fold || s.phase==4 || next.size()!=1 || transitions>=cap)break;
+        action=next[0];
+    } while(true);
+    return transitions;
+}
+static py::dict state_snapshot(const State& state);
 struct SearchConfig {
     int simulations=256,determinizations=2,max_transitions=512;
     double c_puct=1.5,root_noise_fraction=.25,dirichlet_alpha=.3;
@@ -548,6 +674,10 @@ class SearchJob {
     std::vector<double> network_prior,used_prior;
     uint64_t public_word,base_seed,sampling_seed;
     bool noise,root_pending=true,finished=false,root_exported=false;
+    bool stochastic=false;
+    double chance_pw_k=0,chance_pw_alpha=.5;
+    int root_samples=0,chance_draws=0,information_hits=0;
+    int chance_pw_fresh=0,chance_pw_reused=0;
     double temperature;
     int max_depth=0,cap_hits=0,expanded=0,terminal_hits=0,transitions=0,folded=0,model_positions=0;
     double rule_seconds=0,feature_seconds=0,compute_seconds=0;
@@ -583,6 +713,7 @@ class SearchJob {
         return best;
     }
     void advance(int index) {
+        if(stochastic){advance_chance(index);return;}
         auto compute_start=std::chrono::steady_clock::now();
         World& w=worlds[index];int root_actor=w.nodes[0].state.actor;
         while(w.completed<w.budget && !w.has_leaf) {
@@ -623,6 +754,59 @@ class SearchJob {
         if(!root_pending && std::all_of(worlds.begin(),worlds.end(),[](const World& x){return x.completed==x.budget && !x.has_leaf;})) finish();
         compute_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-compute_start).count();
     }
+    void advance_chance(int index) {
+        auto started=std::chrono::steady_clock::now();
+        World& w=worlds[index];int root_actor=root_state.actor;
+        while(w.completed<w.budget && !w.has_leaf) {
+            current_world=index;current_simulation=w.completed;current_branch.clear();has_attempted=false;
+            State state=sample_hidden_root(root_state,catalog,derived_seed(public_word,base_seed,w.completed));
+            ++root_samples;
+            ChanceStream chance{derived_seed(public_word,base_seed^0x4348414E4345ULL,w.completed)};
+            std::array<std::string,2> histories={information_signature(state,catalog,0),information_signature(state,catalog,1)};
+            std::vector<std::pair<int,int>> path;std::vector<Action> branch;
+            int node_index=0,steps=0;
+            for(;;) {
+                int edge_index=select(w.nodes[node_index],root_actor);
+                path.emplace_back(node_index,edge_index);
+                Action action=w.nodes[node_index].actions[edge_index];int observer=state.actor;
+                if(chance_pw_k>0) {
+                    auto& pools=w.nodes[node_index].edges[edge_index].draw_pools;
+                    if(!pools)pools=std::make_unique<ChancePools>();
+                    chance.pools=pools.get();chance.pw_k=chance_pw_k;chance.pw_alpha=chance_pw_alpha;
+                }
+                current_attempted=action;has_attempted=true;
+                auto rule_start=std::chrono::steady_clock::now();std::vector<Action> trail;
+                int before_draws=chance.draws;
+                int before_fresh=chance.pw_fresh,before_reused=chance.pw_reused;
+                int applied=apply_chance_folded(state,action,catalog,cfg.fold,cfg.max_transitions-steps,trail,histories,chance);
+                steps+=applied;chance_draws+=chance.draws-before_draws;
+                chance_pw_fresh+=chance.pw_fresh-before_fresh;chance_pw_reused+=chance.pw_reused-before_reused;
+                rule_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-rule_start).count();
+                has_attempted=false;transitions+=applied;folded+=applied-1;
+                branch.insert(branch.end(),trail.begin(),trail.end());current_branch=branch;
+                // Revisit the chance event on every simulation, sharing only decision statistics.
+                auto& outcomes=w.nodes[node_index].edges[edge_index].outcomes;
+                if(!outcomes)outcomes=std::make_unique<std::unordered_map<std::string,int>>();
+                ++(*outcomes)[information_signature(state,catalog,observer)];
+                if(state.phase==4) {
+                    ++terminal_hits;backup(w,path,state.winner==root_actor?1:state.winner<0?0:-1);break;
+                }
+                bool cap=steps>=cfg.max_transitions;if(cap)++cap_hits;
+                auto next=actions(state,catalog);
+                std::string key=histories[state.actor];auto found=w.information_nodes.find(key);
+                if(!cap && found!=w.information_nodes.end()) {
+                    node_index=found->second;++information_hits;
+                    if(w.nodes[node_index].actions!=next)throw std::logic_error("information set legal actions differ");
+                    continue;
+                }
+                w.leaf=Leaf{std::move(state),cap?std::vector<Action>{}:std::move(next),std::move(path),
+                            std::move(branch),steps,w.completed,cap};
+                w.leaf.information_key=std::move(key);w.has_leaf=true;++model_positions;break;
+            }
+        }
+        if(!root_pending && w.completed==w.budget && !w.has_leaf)finish();
+        compute_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count();
+    }
     void finish() {
         if(finished)return;
         int width=int(root_actions.size());rows.clear();counts.assign(width,0);target.assign(width,0);
@@ -647,9 +831,14 @@ class SearchJob {
         finished=true;
     }
 public:
-    SearchJob(const Catalog& catalog_,py::object request,py::object config,uint64_t word,uint64_t seed,bool noise_,double temp):
+    SearchJob(const Catalog& catalog_,py::object request,py::object config,uint64_t word,uint64_t seed,bool noise_,double temp,bool stochastic_=false,
+              double chance_pw_k_=0,double chance_pw_alpha_=.5):
         catalog(catalog_),cfg(config),public_word(word),base_seed(PyLong_AsUnsignedLongLongMask(config.attr("seed").ptr())),
-        sampling_seed(seed),noise(noise_),temperature(temp) {
+        sampling_seed(seed),noise(noise_),stochastic(stochastic_),chance_pw_k(chance_pw_k_),chance_pw_alpha(chance_pw_alpha_),temperature(temp) {
+        if(stochastic && cfg.determinizations!=1)throw std::invalid_argument("sampled chance search requires determinizations=1 (one shared statistics pool)");
+        if(!std::isfinite(chance_pw_k) || chance_pw_k<0 || !std::isfinite(chance_pw_alpha) || chance_pw_alpha<=0 || chance_pw_alpha>=1)
+            throw std::invalid_argument("chance widening requires finite k>=0 and 0<alpha<1");
+        if(chance_pw_k>0 && !stochastic)throw std::invalid_argument("chance widening requires stochastic search");
         py::object obs=request.attr("observation");
         for(py::handle a:request.attr("legal_actions"))root_actions.push_back(parse_action(a,catalog));
         if(root_actions.empty())throw std::invalid_argument("root needs legal actions");
@@ -716,7 +905,9 @@ public:
         Leaf leaf=std::move(w.leaf);w.has_leaf=false;
         if(!leaf.cap) {
             int child=int(w.nodes.size());w.nodes.emplace_back(std::move(leaf.state),std::move(leaf.actions),std::move(prior));
-            auto [parent,edge]=leaf.path.back();w.nodes[parent].edges[edge].child=child;++expanded;
+            if(stochastic)w.information_nodes.emplace(std::move(leaf.information_key),child);
+            else {auto [parent,edge]=leaf.path.back();w.nodes[parent].edges[edge].child=child;}
+            ++expanded;
             int root_actor=w.nodes[0].state.actor;
             double v=w.nodes[child].state.actor==root_actor?value:-value;
             backup(w,leaf.path,v);
@@ -806,6 +997,7 @@ public:
             auto root=decide(s,catalog);
             if(root!=root_actions)throw std::invalid_argument("sampled world root candidates differ");
             w.nodes.emplace_back(std::move(s),root,used_prior);
+            if(stochastic)w.information_nodes.emplace(information_signature(root_state,catalog,root_state.actor),0);
         }
         py::gil_scoped_release release;
         for(int j=0;j<cfg.determinizations;++j)advance(j);
@@ -815,6 +1007,11 @@ public:
         if(world<0 || world>=int(worlds.size()) || !worlds[world].has_leaf)world=current_world;
         py::dict out;out["world_index"]=world>=0?py::cast(world):py::none();
         out["simulation_index"]=world>=0?py::cast(worlds[world].has_leaf?worlds[world].leaf.simulation:current_simulation):py::none();
+        if(stochastic) {
+            int simulation=world>=0?(worlds[world].has_leaf?worlds[world].leaf.simulation:current_simulation):0;
+            out["hidden_sample_seed"]=derived_seed(public_word,base_seed,simulation);
+            out["chance_seed"]=derived_seed(public_word,base_seed^0x4348414E4345ULL,simulation);
+        }
         out["determinization_seed"]=world>=0?py::cast(derived_seed(public_word,base_seed,world)):py::none();
         auto& branch=(world>=0 && worlds[world].has_leaf)?worlds[world].leaf.branch:current_branch;
         py::list items;
@@ -844,6 +1041,40 @@ public:
         out["rule_seconds"]=rule_seconds;out["feature_seconds"]=feature_seconds;
         out["native_compute_seconds"]=compute_seconds;
         return out;
+    }
+    py::dict chance_diagnostics() const {
+        py::dict out;out["stochastic"]=stochastic;out["root_hidden_samples"]=root_samples;
+        out["chance_draws"]=chance_draws;out["information_set_hits"]=information_hits;
+        out["decision_nodes"]=worlds.empty()?0:int(worlds[0].nodes.size());
+        py::list outcomes;std::vector<double> values;
+        if(!worlds.empty())for(auto& edge:worlds[0].nodes[0].edges) {
+            std::vector<int> counts;if(edge.outcomes)for(auto& item:*edge.outcomes)counts.push_back(item.second);
+            std::sort(counts.begin(),counts.end());outcomes.append(counts);values.push_back(edge.value_sum);
+        }
+        out["root_outcome_visits"]=outcomes;out["root_value_sums"]=values;
+        if(chance_pw_k>0) {
+            out["chance_widening"]=py::dict("k"_a=chance_pw_k,"alpha"_a=chance_pw_alpha);
+            out["chance_pw_fresh_samples"]=chance_pw_fresh;out["chance_pw_reuses"]=chance_pw_reused;
+            int contexts=0,support=0;py::list root_pools;
+            if(!worlds.empty())for(size_t n=0;n<worlds[0].nodes.size();++n) {
+                for(auto& edge:worlds[0].nodes[n].edges) {
+                    py::list pools;
+                    if(edge.draw_pools)for(auto& item:*edge.draw_pools) {
+                        auto& pool=item.second;++contexts;support+=int(pool.outcomes.size());
+                        if(n==0)pools.append(py::dict("visits"_a=pool.visits,"pool_size"_a=pool.pool_size,
+                                                     "outcomes"_a=pool.outcomes));
+                    }
+                    if(n==0)root_pools.append(pools);
+                }
+            }
+            out["chance_pw_contexts"]=contexts;out["chance_pw_admitted_outcomes"]=support;
+            out["root_chance_pools"]=root_pools;
+        }
+        return out;
+    }
+    py::dict debug_leaf_state(int world) const {
+        if(!worlds.at(world).has_leaf)throw std::logic_error("no pending search leaf");
+        return state_snapshot(worlds.at(world).leaf.state);
     }
 };
 // One contiguous batch of encoded pending leaves.  Every float field lives in
@@ -1180,6 +1411,21 @@ static State truth_state(py::object source,const Catalog& c) {
     return s;
 }
 static py::tuple code_action(const Action& a) {return py::make_tuple(a.type,a.id,a.tier,a.tokens);}
+static py::dict state_snapshot(const State& state) {
+    py::dict out;out["phase"]=state.phase;out["actor"]=state.actor;
+    out["first"]=state.first;out["supply"]=state.supply;out["turns"]=py::make_tuple(state.turns[0],state.turns[1]);
+    out["skips"]=state.skips;out["forced_skip_total"]=state.forced_skip_total;out["trigger"]=state.trigger;out["winner"]=state.winner;
+    out["decks"]=state.decks;out["market"]=state.market;out["nobles"]=state.nobles;
+    py::list players;
+    for(auto& p:state.players) {
+        py::dict item;item["tokens"]=p.tokens;item["purchased"]=p.purchased;item["nobles"]=p.nobles;
+        py::list reserved;for(auto& r:p.reserved)reserved.append(py::make_tuple(r.card,r.source));
+        item["reserved"]=reserved;players.append(item);
+    }
+    out["players"]=players;
+    out["pending"]=state.has_pending?py::object(code_action(state.pending)):py::none();
+    out["return_count"]=state.return_count;out["eligible"]=state.eligible;return out;
+}
 class NativeGame {
     const Catalog& catalog;State state;std::vector<Action> legal;
 public:
@@ -1195,26 +1441,15 @@ public:
         apply(state,legal[index],catalog);legal=decide(state,catalog);
     }
     py::dict snapshot() const {
-        py::dict out;out["phase"]=state.phase;out["actor"]=state.actor;
-        out["first"]=state.first;out["supply"]=state.supply;out["turns"]=py::make_tuple(state.turns[0],state.turns[1]);
-        out["skips"]=state.skips;out["forced_skip_total"]=state.forced_skip_total;out["trigger"]=state.trigger;out["winner"]=state.winner;
-        out["decks"]=state.decks;out["market"]=state.market;out["nobles"]=state.nobles;
-        py::list players;
-        for(auto& p:state.players) {
-            py::dict item;item["tokens"]=p.tokens;item["purchased"]=p.purchased;
-            item["nobles"]=p.nobles;
-            py::list reserved;for(auto& r:p.reserved)reserved.append(py::make_tuple(r.card,r.source));
-            item["reserved"]=reserved;players.append(item);
-        }
-        out["players"]=players;
-        if(state.has_pending)out["pending"]=code_action(state.pending);
-        else out["pending"]=py::none();
-        out["return_count"]=state.return_count;out["eligible"]=state.eligible;
-        return out;
+        return state_snapshot(state);
     }
     py::dict encoded() const {if(state.phase==4)throw std::logic_error("terminal state has no decision features");return encode(state,legal,catalog);}
 };
 PYBIND11_MODULE(_native_search,m) {
+    m.def("information_key",[](const Catalog& c,py::object source,int observer) {
+        if(observer<0 || observer>1)throw std::invalid_argument("observer must be 0 or 1");
+        return py::bytes(information_signature(truth_state(source,c),c,observer));
+    });
     py::class_<Catalog>(m,"Catalog")
         .def(py::init<py::object>());
     py::class_<NativeGame>(m,"NativeGame")
@@ -1244,7 +1479,11 @@ PYBIND11_MODULE(_native_search,m) {
         .def("submit",&NativeBatch::submit)
         .def("submit_fused",&NativeBatch::submit_fused);
     py::class_<SearchJob,std::shared_ptr<SearchJob>>(m,"SearchJob")
-        .def(py::init<const Catalog&,py::object,py::object,uint64_t,uint64_t,bool,double>(),py::keep_alive<1,2>())
+        .def(py::init<const Catalog&,py::object,py::object,uint64_t,uint64_t,bool,double,bool,double,double>(),
+             py::arg("catalog"),py::arg("request"),py::arg("config"),py::arg("public_word"),
+             py::arg("sampling_seed"),py::arg("add_root_noise"),py::arg("temperature"),py::arg("stochastic")=false,
+             py::arg("chance_pw_k")=0.,py::arg("chance_pw_alpha")=.5,
+             py::keep_alive<1,2>())
         .def("done",&SearchJob::done)
         .def("pending",&SearchJob::pending)
         .def("pending_count",&SearchJob::pending_count)
@@ -1252,6 +1491,8 @@ PYBIND11_MODULE(_native_search,m) {
         .def("initialize_worlds",&SearchJob::initialize_worlds)
         .def("result",&SearchJob::result)
         .def("stats",&SearchJob::stats)
+        .def("chance_diagnostics",&SearchJob::chance_diagnostics)
+        .def("debug_leaf_state",&SearchJob::debug_leaf_state)
         .def("failure_context",&SearchJob::failure_context)
         .def("pending_width",&SearchJob::pending_width)
         .def("pending_rows",&SearchJob::pending_rows)

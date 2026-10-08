@@ -1,0 +1,1521 @@
+{
+  "arms": [
+    "native",
+    "chance",
+    "cpw"
+  ],
+  "client_date": "2026-10-07",
+  "commands": {
+    "analyze": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_chance_training_probe_20261007/experiment.py analyze",
+    "confirm": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_chance_training_probe_20261007/confirm.py",
+    "diagnostics": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_chance_training_probe_20261007/diagnostics.py",
+    "plot": "MPLCONFIGDIR=/tmp/splendor_probe_matplotlib python artifacts/entity_attention_chance_training_probe_20261007/plot.py",
+    "prepare": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_chance_training_probe_20261007/experiment.py prepare",
+    "run": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_chance_training_probe_20261007/run_suite.py",
+    "sampling_analysis": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_chance_training_probe_20261007/sampling_analysis.py",
+    "strength_statistics": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_chance_training_probe_20261007/strength_statistics.py",
+    "value_drift": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_chance_training_probe_20261007/value_drift.py",
+    "verify": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_chance_training_probe_20261007/verify.py"
+  },
+  "conclusion": "No demonstrated training-strength improvement for unrestricted chance or CPW at S1024 in this finite one-start/one-training-seed probe. CPW100 DEV relative+6pp failed independent100-pair confirmation:49.75% vs control50%, paired delta-.25pp CI[-10,+9.75]. Formal teacher unchanged; long-run and multi-training-seed effects not established.",
+  "confirmation_panels": [
+    {
+      "arm": "native",
+      "id": "confirm_native_100_native",
+      "mode": "native",
+      "pairs": 100,
+      "step": 100
+    },
+    {
+      "arm": "cpw",
+      "id": "confirm_cpw_100_native",
+      "mode": "native",
+      "pairs": 100,
+      "step": 100
+    }
+  ],
+  "confirmation_script": {
+    "bytes": 2265,
+    "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/confirm.py",
+    "sha256": "9072aab1d0a61e6610a2ab23af3ca2ef0a9ed342738ca7f941b81aadd23e9906"
+  },
+  "confirmation_selection": {
+    "bootstrap_seed": 16890000,
+    "dev_difference": {
+      "difference": 0.06,
+      "lower": -0.07,
+      "pairs": 50,
+      "upper": 0.19
+    },
+    "independent_game_seed_start": 16870000,
+    "mode": "native",
+    "policy_seed_base": 16880000,
+    "reason": "Primary100-step DEV panel CPW51% vs matched old-data45%; preliminary relative benefit6pp, no absolute gain over initial-native52%. Test whether this relative difference survives independent game seeds;500 is diagnostic, not used to select primary.",
+    "selected_arm": "cpw",
+    "step": 100
+  },
+  "delivery": {
+    "collection_games": 600,
+    "completed_at_utc": "2026-10-07 07:21 UTC",
+    "confirmation_panels": 2,
+    "evaluation_games": 2000,
+    "full_audit_passed": true,
+    "gpu_smoke_games": 6,
+    "main_panels": 16,
+    "plots_visually_checked": true,
+    "regression_cuda_skipped": 2,
+    "regression_passed": 73
+  },
+  "execution_only_amendments": [
+    {
+      "after": {
+        "bytes": 26904,
+        "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/experiment.py",
+        "sha256": "fa2c392961697ac31285f33da2ba64126c6ddf2751b30da7d1c82251aec131bf"
+      },
+      "before": {
+        "bytes": 26779,
+        "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/experiment.py",
+        "sha256": "786df161b78564746150e3cc202c11185e2af4209e9f54eaf9d5b5df4012f1e4"
+      },
+      "configs": [
+        {
+          "after": {
+            "bytes": 942,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_100_greedy.json",
+            "sha256": "341cda298dc001653fe0a98282be498f86baf33a3e73e6395c311118a018d9c0"
+          },
+          "before": {
+            "bytes": 1203,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_100_greedy.json",
+            "sha256": "fa3e7d1c81ae70575bd04cc786c09a66cf79f7c1a3612e849f7d443563177fb0"
+          },
+          "original_config_snapshot": "/home/lc/下载/splendor/runtime/entity_attention_chance_training_probe_20261007/source/configs_before_serial_fix/native_100_greedy.json"
+        },
+        {
+          "after": {
+            "bytes": 942,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_500_greedy.json",
+            "sha256": "342ac819126ce6ef70690b17508616cae6bcd9ae2392e1e45afdf121c63b649b"
+          },
+          "before": {
+            "bytes": 1203,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_500_greedy.json",
+            "sha256": "28e58267b68fe42e5a56593aa40126e04f0b0672110e1d7e74bbc4de6008a163"
+          },
+          "original_config_snapshot": "/home/lc/下载/splendor/runtime/entity_attention_chance_training_probe_20261007/source/configs_before_serial_fix/native_500_greedy.json"
+        },
+        {
+          "after": {
+            "bytes": 942,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_100_greedy.json",
+            "sha256": "831d3e672b06b2fde2af7af90cfa432722558bd85cc64ff41a6daffb5c778bf9"
+          },
+          "before": {
+            "bytes": 1203,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_100_greedy.json",
+            "sha256": "6505ea0ffa17bfbde8203f92a8bc49a61f70d58f00f2d574619ac83671891227"
+          },
+          "original_config_snapshot": "/home/lc/下载/splendor/runtime/entity_attention_chance_training_probe_20261007/source/configs_before_serial_fix/chance_100_greedy.json"
+        },
+        {
+          "after": {
+            "bytes": 942,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_500_greedy.json",
+            "sha256": "e8ae385e39c57a67df14f07ca02779ceaa88b6c6c8ef41bbe27b88cc77db2fd6"
+          },
+          "before": {
+            "bytes": 1203,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_500_greedy.json",
+            "sha256": "42db103bd6de86f85d63fc160251afce2411b833c5b6790548629a31cb87cd4a"
+          },
+          "original_config_snapshot": "/home/lc/下载/splendor/runtime/entity_attention_chance_training_probe_20261007/source/configs_before_serial_fix/chance_500_greedy.json"
+        },
+        {
+          "after": {
+            "bytes": 933,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_100_greedy.json",
+            "sha256": "d5f9423a48f9782138000e2074e1961d1bb3403eb60c26ca2a71fc96254854e4"
+          },
+          "before": {
+            "bytes": 1194,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_100_greedy.json",
+            "sha256": "b36d4cf3ecd020d263bfbd530a58668e8f04adfd82da5d29d1d8a19ca9680671"
+          },
+          "original_config_snapshot": "/home/lc/下载/splendor/runtime/entity_attention_chance_training_probe_20261007/source/configs_before_serial_fix/cpw_100_greedy.json"
+        },
+        {
+          "after": {
+            "bytes": 933,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_500_greedy.json",
+            "sha256": "da72fb80d2b55a53c83e05bb1f002332df8e848a61d1e470c1f8845ef0241b39"
+          },
+          "before": {
+            "bytes": 1194,
+            "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_500_greedy.json",
+            "sha256": "ecfe3b128f8742042b5f07cfe270df7f6b8c3a9da96d26d52f2994522c9f7a2e"
+          },
+          "original_config_snapshot": "/home/lc/下载/splendor/runtime/entity_attention_chance_training_probe_20261007/source/configs_before_serial_fix/cpw_500_greedy.json"
+        }
+      ],
+      "original_script_snapshot": "/home/lc/下载/splendor/runtime/entity_attention_chance_training_probe_20261007/source/experiment_before_serial_config_fix.py",
+      "reason": "Greedy evaluation uses the existing default serial path (omit execution). Explicit backend=serial was rejected before any games; policy, seeds, budget and all completed collection/training unchanged. Generator corrected accordingly."
+    }
+  ],
+  "initial": {
+    "bytes": 6492243,
+    "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+  },
+  "inputs": [
+    {
+      "bytes": 6492243,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+    },
+    {
+      "bytes": 26904,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/experiment.py",
+      "sha256": "fa2c392961697ac31285f33da2ba64126c6ddf2751b30da7d1c82251aec131bf"
+    },
+    {
+      "bytes": 914,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/run_suite.py",
+      "sha256": "0fad1b350ecfbbcab6e61174039ab71f9e7159582c33109753573d81ee7a3c3b"
+    },
+    {
+      "bytes": 5276,
+      "path": "/home/lc/下载/splendor/configs/entity_attention_v1/hybrid_split_policy_value.json",
+      "sha256": "c3c1491af2f2227534eae77c6e81b72d968f0d9673c20386f974cb3e3db21320"
+    },
+    {
+      "bytes": 1589,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/collect_native.json",
+      "sha256": "f89f0e18b652e288f554e846cfc12a7cd8f8c362bfa9812bb0d1c4b34d4885df"
+    },
+    {
+      "bytes": 1544,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/smoke_native.json",
+      "sha256": "9224952d5e0378f43689b17b7d1e65ca77a25a217c85cb0c560a48413bc4d950"
+    },
+    {
+      "bytes": 1626,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/collect_chance.json",
+      "sha256": "f2529f0b13c8aa589931c8894552a9af94d86813b75734895a6b5d869abc850f"
+    },
+    {
+      "bytes": 1581,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/smoke_chance.json",
+      "sha256": "a166f930c38a51b14b9b41c445c318059133142f2a46a382439c76e31cd99b1c"
+    },
+    {
+      "bytes": 1683,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/collect_cpw.json",
+      "sha256": "515f0f1bd4b4cd458b0ec86bd5541096927bda2e525b980cbc4a71946c21eaf5"
+    },
+    {
+      "bytes": 1638,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/smoke_cpw.json",
+      "sha256": "3f640c60a248f2955834b014e76740ffea6cf4309fb16444ed86b471e775636c"
+    },
+    {
+      "bytes": 2976068,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_target_noise_20261007/root_bank.json",
+      "sha256": "7642e6264e4178d3ba6de7a461341f6ab0779ee3da7857be63e27d115dc5aa88"
+    },
+    {
+      "bytes": 1317601,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_target_noise_20261007/per_root.json",
+      "sha256": "7a8fe1133ded611c4254e814c0f1e493ad2ee96a537fceacd053b345d37d77bd"
+    },
+    {
+      "bytes": 2304189,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_target_noise_20261007/raw_targets.npz",
+      "sha256": "dbaa3146e37bd49b11fccfbf84ceda94864f9a8e0dea950deac7d70eb34229d2"
+    },
+    {
+      "bytes": 1312893,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_search_20261007/per_root.json",
+      "sha256": "b6367c0b0aaa21fbaf3272f44c465f453e75cac82fd4418ed87a29cc038f593c"
+    },
+    {
+      "bytes": 1316338,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_pw_noise_20261007/per_root.json",
+      "sha256": "7c22cd0fd7a322b17558f4ddb4472a930fbe79712ac417151f56bc21ee374209"
+    },
+    {
+      "bytes": 44842,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000016.npz",
+      "sha256": "9483be5f93d988dfdc02207dde75b96b222bed0c1ed5513806a00424d5c87026"
+    },
+    {
+      "bytes": 40979,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000025.npz",
+      "sha256": "86202958b22577dc5b248234d76013afcbe6c559aa86c5a9aa293d1904e5ac7d"
+    },
+    {
+      "bytes": 48511,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000031.npz",
+      "sha256": "48ba685d26507dadeec7f4dd9703827adf7a5d5874cc2b45f0823802be3f036b"
+    },
+    {
+      "bytes": 40022,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000037.npz",
+      "sha256": "907d02d004fcb6a50e94a3bf293a727d1a61ca5525fcd54cdd7de1f6436219ee"
+    },
+    {
+      "bytes": 44658,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000050.npz",
+      "sha256": "a6767c8b64c173aa7196e6f2d77ac9c94a67bf7c28862b1a06678fa7f6b325ea"
+    },
+    {
+      "bytes": 46266,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000064.npz",
+      "sha256": "b43fda0b3a287139714ea1a00418c394bd2a37aee62dc8f6ebeacd4b9f026ba8"
+    },
+    {
+      "bytes": 42232,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000077.npz",
+      "sha256": "e9c08887261a5c266ebbfa6f93dc5e7ffdd6eb6b2d21fb2ee6e4ae6a07401c84"
+    },
+    {
+      "bytes": 43763,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000099.npz",
+      "sha256": "566272c594b4934a66e5f0409487826a0831d7ff73355352be0f821fc8634ed6"
+    },
+    {
+      "bytes": 45220,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000112.npz",
+      "sha256": "a1b61a7acffe72274dd76cd4b9794d6fa67f8161191c2a2cbe716a88f6877ca9"
+    },
+    {
+      "bytes": 46361,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000120.npz",
+      "sha256": "78dd601a9f88318b802502d8b5156f8aeb52b2d4351293dae22845cbfd28f885"
+    },
+    {
+      "bytes": 47820,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000132.npz",
+      "sha256": "d8947c151d12002a58e61fa2fce29908d52ba55d8fd404ae4cdd019ef7841839"
+    },
+    {
+      "bytes": 44979,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000135.npz",
+      "sha256": "3e3b77d48a143564d42d95f64ade414a2ae813ce9f63302ed5f92b89dc5561f0"
+    },
+    {
+      "bytes": 46946,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000136.npz",
+      "sha256": "e23e40d23faa1a0d1fff6f4d0dc920fcea2e9bf0ada758beff3f96d87ce66d4c"
+    },
+    {
+      "bytes": 37847,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000144.npz",
+      "sha256": "1f6135dcf4a3f92eaf8bc75ee04257c2b6928ad120792695f3afd2e453f0a09e"
+    },
+    {
+      "bytes": 44156,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000145.npz",
+      "sha256": "b00b791ed67587156c358eb2d85af83992f8ac3f647dca670a68a3baa39bb98c"
+    },
+    {
+      "bytes": 45987,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000146.npz",
+      "sha256": "7101ae9313ebb5c6593e7ec542a8c625e82c6814c127b1c67f6cdbb82ba9d4a8"
+    },
+    {
+      "bytes": 45315,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000148.npz",
+      "sha256": "709bc3a353f88f3ef4a3371892a8598035652d3164929f57d2337e6a7d8bbb90"
+    },
+    {
+      "bytes": 46357,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000174.npz",
+      "sha256": "130f3ceba30477899081b7be7c32f1ba0bf31164cb80ed0c1770e8293ec03a16"
+    },
+    {
+      "bytes": 43901,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000176.npz",
+      "sha256": "0c832d9075151a3f84236e03f9c218ab86149890aba881ef710ba666fbb35b76"
+    },
+    {
+      "bytes": 48409,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/selfplay/games/game-000183.npz",
+      "sha256": "9a590f0d0fb8a9ce4c20004f19622ce71fb432cb17ff62ce7e8aa7323c7b3e99"
+    },
+    {
+      "bytes": 49916,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000004.npz",
+      "sha256": "c9bb9e525c2b9ddfdd560887a32c0abefff2d40a51a77d32b305a83c1680cfa7"
+    },
+    {
+      "bytes": 42177,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000022.npz",
+      "sha256": "eae972f89a4c563b24fab28de4761fc8f23f076d63c08aa9bd3df387f9229871"
+    },
+    {
+      "bytes": 44398,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000030.npz",
+      "sha256": "ccaafb0988f842ff454ddd68a3a89c697f3dff57d80d352d2eb6b8baadf1854c"
+    },
+    {
+      "bytes": 45267,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000032.npz",
+      "sha256": "a2de6891bd29b29e465ea62aa6f03f895ff1c7d9c3dbb4fc10d2027a803052d8"
+    },
+    {
+      "bytes": 49079,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000035.npz",
+      "sha256": "ff5d4744516b2e1b41b9146be186958be360dc0b877039a04b816acbbc279654"
+    },
+    {
+      "bytes": 44416,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000072.npz",
+      "sha256": "090fb624d5f3dd385d9f91a6286918798c661bce1f996412b0fabc4ec5acad58"
+    },
+    {
+      "bytes": 46103,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000105.npz",
+      "sha256": "b703a7aebd621d57be8473493d37e77d1c6d368dbf5e93205d7a3a34c11b6646"
+    },
+    {
+      "bytes": 42861,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000116.npz",
+      "sha256": "c7976f34af98db9e2e73ab50fc526c512b3dfed634a7d3526ff9125de81aadd2"
+    },
+    {
+      "bytes": 39347,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000122.npz",
+      "sha256": "e7887ea026124081f1e4380b28378e091589c84db93fb9c2789f15d708ed46b5"
+    },
+    {
+      "bytes": 43331,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000152.npz",
+      "sha256": "67436e45f8992195c1179aecb11d59bd48f8efe12d51642998e74ec0c73eaafe"
+    },
+    {
+      "bytes": 50693,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000177.npz",
+      "sha256": "9d22b545c683311ec8c7b8d091506b8b22b34970eed42b78dd82da6c368f4ad4"
+    },
+    {
+      "bytes": 46509,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000181.npz",
+      "sha256": "7f986d0d4f73fd17b632caeac21317987e2e8c424325c8aa8f4c5bcbdac55544"
+    },
+    {
+      "bytes": 42880,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000190.npz",
+      "sha256": "0ac7735ae799d0387ca562973497f19bb00bbb8aeda91cba6c67ece753767f34"
+    },
+    {
+      "bytes": 48468,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/selfplay/games/game-000197.npz",
+      "sha256": "bf7769c707c5546aa26a8063bdeb1fc12d4154fdb5b8694df6436c50e72db603"
+    },
+    {
+      "bytes": 44879,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000006.npz",
+      "sha256": "7233a4416e13c3fb34fb47c510d7ab7a15b49c5f19f7399bb750cd66048183f2"
+    },
+    {
+      "bytes": 44120,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000011.npz",
+      "sha256": "f35b4cb659f7a6780892d216b2d5eb0fb8d54055ed31e09768cd1df45e2a6c9e"
+    },
+    {
+      "bytes": 46869,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000021.npz",
+      "sha256": "45f859a021286f91624252e89eba9f890e9c8b69a2a7e97d4ab1a347afc4ef69"
+    },
+    {
+      "bytes": 43386,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000026.npz",
+      "sha256": "a0333724f7b1b1b3bd9c0eb25b15b4165eda3ab177808542ef050a51cef0502b"
+    },
+    {
+      "bytes": 43687,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000032.npz",
+      "sha256": "1c91aae131872ec1407a3b716e98df011e5921bebacbc2bfb0984c5ab6079dae"
+    },
+    {
+      "bytes": 43074,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000033.npz",
+      "sha256": "18d670dc2de18c123ff20649c0ac680f1fd6bbfebe40146809b62767e9f60706"
+    },
+    {
+      "bytes": 48315,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000041.npz",
+      "sha256": "e4f2b55703658dd2581957f72a5ee2dfefda32b8f8b9f669fa393b762902f2e7"
+    },
+    {
+      "bytes": 45757,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000044.npz",
+      "sha256": "4cf3c4f00a45020d64049a3ee3ec1a290cbe46416848d32fd093a9af05e81988"
+    },
+    {
+      "bytes": 45976,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000061.npz",
+      "sha256": "a4180e0b55b1ac51219ba9b533b231f6a092108a134f13c28d6dea584229854d"
+    },
+    {
+      "bytes": 48551,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000063.npz",
+      "sha256": "0865ec1e03e73789345879a472742a9ae10af3b1555a8e352d73081ad7cd5d8e"
+    },
+    {
+      "bytes": 46691,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000093.npz",
+      "sha256": "882e57a848f15c447fe20fc66b17457d61e6afd6d21344be28a21707a1c45442"
+    },
+    {
+      "bytes": 45345,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000103.npz",
+      "sha256": "7dedc6c5e3c98cf17d5dfc68dbf7f4f783acee52dc94292adf487d43570a47fa"
+    },
+    {
+      "bytes": 47344,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000113.npz",
+      "sha256": "c79b4a18975ab9c63ec3c51acd1f82dd7049d46769a808b4ecb1635495b22d9b"
+    },
+    {
+      "bytes": 49630,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000118.npz",
+      "sha256": "2800431578e08137f87900094bad2734e4a78de9e7ace2d83f8e153ca2b6799b"
+    },
+    {
+      "bytes": 46176,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000137.npz",
+      "sha256": "42ab758be10d47cba2c3b135c3a3e8b5e89d907407378a80d6d3f7f5d14baef1"
+    },
+    {
+      "bytes": 45205,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000151.npz",
+      "sha256": "f87f2603599958cb2013416a259f800bfc2befece4d5fc30fc1761f49772c9f5"
+    },
+    {
+      "bytes": 44634,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000153.npz",
+      "sha256": "5585623f6aed2ad73fd06b4a4c10d84e70c872993cf749a4362b0cc02af2e0bd"
+    },
+    {
+      "bytes": 47060,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000155.npz",
+      "sha256": "17795012cc778d1670b3d2945955e0c7fc7488e2a092629c0f45d1d69021df62"
+    },
+    {
+      "bytes": 48307,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000174.npz",
+      "sha256": "8614b7a959c40dcc88c6caddad10f2a0792aaab121f877d5927b369eefe8a5ac"
+    },
+    {
+      "bytes": 47244,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000183.npz",
+      "sha256": "1e87f38275b68c7df8a16f87b9abec84b126f9cc494df5f653f274ea79574666"
+    },
+    {
+      "bytes": 47249,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000192.npz",
+      "sha256": "5e2e88f40a5c10e19f313ecd731ab80382551c480b846e2d178ef628c2b8889f"
+    },
+    {
+      "bytes": 44763,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000197.npz",
+      "sha256": "0385cfa0cb82732d06522a2aa23ede9a3495adacdc34be6710ea3789de238ca8"
+    },
+    {
+      "bytes": 47238,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/selfplay/games/game-000199.npz",
+      "sha256": "5d7b227f70065f87e07e5f8bc252431b104837df0eea52cf6352c7a036db96d6"
+    },
+    {
+      "bytes": 48274,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000015.npz",
+      "sha256": "d84151122642c4a9e7e1a07cbc50eb9db156d9b5ec79187830ebe8ba2a2d9233"
+    },
+    {
+      "bytes": 46485,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000017.npz",
+      "sha256": "2b13b16d3ec81eaeba3244385992bb3e56b3c0647ccd5b07564a4b935db38e38"
+    },
+    {
+      "bytes": 43285,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000031.npz",
+      "sha256": "c173697bc2b38fa3c15f0304e121e7e04caa1188dd47f03b64b8826dbcaa2739"
+    },
+    {
+      "bytes": 49634,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000046.npz",
+      "sha256": "3bd5419ca3f191eb66124921535d704d2836cd0f469064491876a9455c58a4b7"
+    },
+    {
+      "bytes": 46581,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000047.npz",
+      "sha256": "67eac43b61463d6a5751027c3c7a854133d74f715f513e5b9a8b8eee76919947"
+    },
+    {
+      "bytes": 47498,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000049.npz",
+      "sha256": "e40af5f726627497a607c9ee0d2b1750e0aac1caf61f308e7bb37da0bb0d45ff"
+    },
+    {
+      "bytes": 47436,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000052.npz",
+      "sha256": "e08acab4ce2121176c011dda1f9c208d8301f978a72857782bae48296337cd95"
+    },
+    {
+      "bytes": 46209,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000057.npz",
+      "sha256": "daef47a04402c38f711f3e2bacb811d8a3c02bf9c94f067e9c00379d016c8a6e"
+    },
+    {
+      "bytes": 41172,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000059.npz",
+      "sha256": "554069c8c4f0a1fb2ba01f9966ee4bfe4ea52448ac8507d08d688e584bf93c13"
+    },
+    {
+      "bytes": 48125,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000063.npz",
+      "sha256": "544017a6052d7de24919b0d2b56980028bb1b5c2ccb364e7991367c35813973a"
+    },
+    {
+      "bytes": 43320,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000090.npz",
+      "sha256": "d510935d05a00f3280e001b41d9669c804d55b7d104b8ea1cd3546b88a2a8c67"
+    },
+    {
+      "bytes": 42602,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000091.npz",
+      "sha256": "5cab1b513b1dff6971300ebe5432c920d77b521132be6f4229a5d1216ab11467"
+    },
+    {
+      "bytes": 45656,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000126.npz",
+      "sha256": "8167c26a666f24cb1be3b9316e5b3787246a9471c5090568f54dd4045b9f9f07"
+    },
+    {
+      "bytes": 43042,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000132.npz",
+      "sha256": "92cba04bd3ec480fbec53801db933eb62b62167d953a190165053cf27f5a7ca3"
+    },
+    {
+      "bytes": 48437,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000139.npz",
+      "sha256": "7e997bf68568caa89772ebbb353cd87527dfd204e47c6ce62daa7b4fa3e5f08f"
+    },
+    {
+      "bytes": 48172,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000140.npz",
+      "sha256": "05213bdf55905108f29998b5f38dc7bedcf702cf566f914f0ac241411ff6a73e"
+    },
+    {
+      "bytes": 49829,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000141.npz",
+      "sha256": "c4e022173d01fc48b03ef6019f1ffb0fba98bf8c4fa89a09e2bfb9ea6a341d7e"
+    },
+    {
+      "bytes": 44449,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000143.npz",
+      "sha256": "2b554e912d4fb85551773d67728c333164a596e7e833809e6621680244bc65ed"
+    },
+    {
+      "bytes": 47363,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000167.npz",
+      "sha256": "7b56ce8cb7c5a1eac8b324ce4453dce02e4731965a114e45bf1faffaaca2330a"
+    },
+    {
+      "bytes": 47846,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000182.npz",
+      "sha256": "c8aef526db2b6175c08286a34dce0bd1592ea7fb0fde7c8abbc93c78face764d"
+    },
+    {
+      "bytes": 46735,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/selfplay/games/game-000191.npz",
+      "sha256": "3ca2ac38047283cf518ea84347ef7140a88cfffb799044d7af0be0c934f5e22a"
+    },
+    {
+      "bytes": 942,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_100_greedy.json",
+      "sha256": "341cda298dc001653fe0a98282be498f86baf33a3e73e6395c311118a018d9c0"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_100_native.json",
+      "sha256": "56c6d3b867455d0a4a7f2ab4113669459b5e4433286da416df514eb8792ef5ab"
+    },
+    {
+      "bytes": 942,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_500_greedy.json",
+      "sha256": "342ac819126ce6ef70690b17508616cae6bcd9ae2392e1e45afdf121c63b649b"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_500_native.json",
+      "sha256": "3f17e425e84b7bfe41983a12758d67a20e1a598736b164c60f31d36d9524a928"
+    },
+    {
+      "bytes": 2210,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_500_cpw.json",
+      "sha256": "370c82bdeb79dfe7f120d0494a0f0e3a74bfccbc841da92e61d3c3d3aa9180fa"
+    },
+    {
+      "bytes": 942,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_100_greedy.json",
+      "sha256": "831d3e672b06b2fde2af7af90cfa432722558bd85cc64ff41a6daffb5c778bf9"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_100_native.json",
+      "sha256": "338701c122f7e2b3be6d6993d095a7abc87544cb62d1ecb13bf758a994f0b2d7"
+    },
+    {
+      "bytes": 942,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_500_greedy.json",
+      "sha256": "e8ae385e39c57a67df14f07ca02779ceaa88b6c6c8ef41bbe27b88cc77db2fd6"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_500_native.json",
+      "sha256": "6ff056d3a2687e98649ee9fbb75ccabed7ea3b04322ec0db00149574bf1e4be4"
+    },
+    {
+      "bytes": 2210,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_500_cpw.json",
+      "sha256": "56da7e57f61c01c5a53ee3bd004c13d2fc64aec9b70e42bab37a8e2873b9461a"
+    },
+    {
+      "bytes": 933,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_100_greedy.json",
+      "sha256": "d5f9423a48f9782138000e2074e1961d1bb3403eb60c26ca2a71fc96254854e4"
+    },
+    {
+      "bytes": 2132,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_100_native.json",
+      "sha256": "3f491760b093498e28d53e87242847fe70f977f2b015b586844d9f80cecb1944"
+    },
+    {
+      "bytes": 933,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_500_greedy.json",
+      "sha256": "da72fb80d2b55a53c83e05bb1f002332df8e848a61d1e470c1f8845ef0241b39"
+    },
+    {
+      "bytes": 2132,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_500_native.json",
+      "sha256": "12a027071c57384e5fae4db89d4ec134eecb73cd0a0b3e3de77243bbb8e4f755"
+    },
+    {
+      "bytes": 2201,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_500_cpw.json",
+      "sha256": "a8c073000fba1165aaee498de504640570f09ffceceaf9e0c79cf08afecffe94"
+    },
+    {
+      "bytes": 2149,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/initial_native.json",
+      "sha256": "467b5db5bcca359a3c51762a8a583229a3a8d8f3e71b676c057d83b0170034ef"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/confirm_native_100_native.json",
+      "sha256": "fdf2ebc20bede968a674ed295c7130ce355e0e3b7984411b9a666494b5eecd86"
+    },
+    {
+      "bytes": 2132,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/confirm_cpw_100_native.json",
+      "sha256": "173d57c9fb3ec4b7126f7ba8f1cac574d4b63f3ec555bf5a7ceb3f61e81ceeec"
+    },
+    {
+      "bytes": 2265,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/confirm.py",
+      "sha256": "9072aab1d0a61e6610a2ab23af3ca2ef0a9ed342738ca7f941b81aadd23e9906"
+    }
+  ],
+  "observations": [
+    0,
+    100,
+    300,
+    500
+  ],
+  "outputs": [
+    {
+      "bytes": 14591,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/README.md",
+      "sha256": "54ba675ef1516a9804a55b182ea753bf1da5dc116961545559fd892d888a4b43"
+    },
+    {
+      "bytes": 1743633,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/analysis.json",
+      "sha256": "c396a60f931ff6783848945c21d25557af67633ba308eef79e5bba616524e0cf"
+    },
+    {
+      "bytes": 25528,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/collect_chance_result.json",
+      "sha256": "a1eef2b9da643a4e5e8ff2a2d83fc39410b18cebec6e811d95c12470cfa626f8"
+    },
+    {
+      "bytes": 26120,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/collect_cpw_result.json",
+      "sha256": "550f56243baf0fc2dfca2be937df0702edeb6cbfb90376c301a42a3b2efd35a6"
+    },
+    {
+      "bytes": 26089,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/collect_native_result.json",
+      "sha256": "99f3c7c1fcb174f8f67505a898e3f0a8ae5716f0b4dbd271a4a0d2bad589b4b6"
+    },
+    {
+      "bytes": 942,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_100_greedy.json",
+      "sha256": "831d3e672b06b2fde2af7af90cfa432722558bd85cc64ff41a6daffb5c778bf9"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_100_native.json",
+      "sha256": "338701c122f7e2b3be6d6993d095a7abc87544cb62d1ecb13bf758a994f0b2d7"
+    },
+    {
+      "bytes": 2210,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_500_cpw.json",
+      "sha256": "56da7e57f61c01c5a53ee3bd004c13d2fc64aec9b70e42bab37a8e2873b9461a"
+    },
+    {
+      "bytes": 942,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_500_greedy.json",
+      "sha256": "e8ae385e39c57a67df14f07ca02779ceaa88b6c6c8ef41bbe27b88cc77db2fd6"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/chance_500_native.json",
+      "sha256": "6ff056d3a2687e98649ee9fbb75ccabed7ea3b04322ec0db00149574bf1e4be4"
+    },
+    {
+      "bytes": 1626,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/collect_chance.json",
+      "sha256": "f2529f0b13c8aa589931c8894552a9af94d86813b75734895a6b5d869abc850f"
+    },
+    {
+      "bytes": 1683,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/collect_cpw.json",
+      "sha256": "515f0f1bd4b4cd458b0ec86bd5541096927bda2e525b980cbc4a71946c21eaf5"
+    },
+    {
+      "bytes": 1589,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/collect_native.json",
+      "sha256": "f89f0e18b652e288f554e846cfc12a7cd8f8c362bfa9812bb0d1c4b34d4885df"
+    },
+    {
+      "bytes": 2132,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/confirm_cpw_100_native.json",
+      "sha256": "173d57c9fb3ec4b7126f7ba8f1cac574d4b63f3ec555bf5a7ceb3f61e81ceeec"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/confirm_native_100_native.json",
+      "sha256": "fdf2ebc20bede968a674ed295c7130ce355e0e3b7984411b9a666494b5eecd86"
+    },
+    {
+      "bytes": 933,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_100_greedy.json",
+      "sha256": "d5f9423a48f9782138000e2074e1961d1bb3403eb60c26ca2a71fc96254854e4"
+    },
+    {
+      "bytes": 2132,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_100_native.json",
+      "sha256": "3f491760b093498e28d53e87242847fe70f977f2b015b586844d9f80cecb1944"
+    },
+    {
+      "bytes": 2201,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_500_cpw.json",
+      "sha256": "a8c073000fba1165aaee498de504640570f09ffceceaf9e0c79cf08afecffe94"
+    },
+    {
+      "bytes": 933,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_500_greedy.json",
+      "sha256": "da72fb80d2b55a53c83e05bb1f002332df8e848a61d1e470c1f8845ef0241b39"
+    },
+    {
+      "bytes": 2132,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/cpw_500_native.json",
+      "sha256": "12a027071c57384e5fae4db89d4ec134eecb73cd0a0b3e3de77243bbb8e4f755"
+    },
+    {
+      "bytes": 2149,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/initial_native.json",
+      "sha256": "467b5db5bcca359a3c51762a8a583229a3a8d8f3e71b676c057d83b0170034ef"
+    },
+    {
+      "bytes": 942,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_100_greedy.json",
+      "sha256": "341cda298dc001653fe0a98282be498f86baf33a3e73e6395c311118a018d9c0"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_100_native.json",
+      "sha256": "56c6d3b867455d0a4a7f2ab4113669459b5e4433286da416df514eb8792ef5ab"
+    },
+    {
+      "bytes": 2210,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_500_cpw.json",
+      "sha256": "370c82bdeb79dfe7f120d0494a0f0e3a74bfccbc841da92e61d3c3d3aa9180fa"
+    },
+    {
+      "bytes": 942,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_500_greedy.json",
+      "sha256": "342ac819126ce6ef70690b17508616cae6bcd9ae2392e1e45afdf121c63b649b"
+    },
+    {
+      "bytes": 2141,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/native_500_native.json",
+      "sha256": "3f17e425e84b7bfe41983a12758d67a20e1a598736b164c60f31d36d9524a928"
+    },
+    {
+      "bytes": 1581,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/smoke_chance.json",
+      "sha256": "a166f930c38a51b14b9b41c445c318059133142f2a46a382439c76e31cd99b1c"
+    },
+    {
+      "bytes": 1638,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/smoke_cpw.json",
+      "sha256": "3f640c60a248f2955834b014e76740ffea6cf4309fb16444ed86b471e775636c"
+    },
+    {
+      "bytes": 1544,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/smoke_native.json",
+      "sha256": "9224952d5e0378f43689b17b7d1e65ca77a25a217c85cb0c560a48413bc4d950"
+    },
+    {
+      "bytes": 2265,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/confirm.py",
+      "sha256": "9072aab1d0a61e6610a2ab23af3ca2ef0a9ed342738ca7f941b81aadd23e9906"
+    },
+    {
+      "bytes": 2681,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/confirmation.json",
+      "sha256": "a1e7e805b9cbeea6b907dedc5456ec172027ee80787d88954b915a013b8eb60a"
+    },
+    {
+      "bytes": 18211,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/confirmation.pdf",
+      "sha256": "ba23694ad0a7a26de9857c83949a92ccb324d5a999e71bec0bdcf4b4dea48475"
+    },
+    {
+      "bytes": 84213,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/confirmation.png",
+      "sha256": "7ff92a8b99176c0f19da68a25f57c78c2285c140ba934583d27d72a527976666"
+    },
+    {
+      "bytes": 299293,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/curve_chance.jsonl",
+      "sha256": "8cd41ced77238ec57bc787ccf0a01e485a53c0905f3bf456862a0f4c57b73637"
+    },
+    {
+      "bytes": 299214,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/curve_cpw.jsonl",
+      "sha256": "cdddbbb0025ee823f1173c850972a491ec5ae432e36fd12401f18e3b5d620960"
+    },
+    {
+      "bytes": 299312,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/curve_native.jsonl",
+      "sha256": "2f1e8e1f6b18b64718cdff56b2a5dca0c3179356e17f6e0f71d3ef16e256e046"
+    },
+    {
+      "bytes": 30816,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/curves.pdf",
+      "sha256": "b83860e08cc90431269b3603db1b68b8fcf06cc6b64b210f0711878f32c76c4d"
+    },
+    {
+      "bytes": 326401,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/curves.png",
+      "sha256": "ed49db5c65b475f479ae1713b049920cad27a977f2b03cc7e150d9e20933d49d"
+    },
+    {
+      "bytes": 85281,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/dataset_chance.json",
+      "sha256": "cb76833bd41196a0ea6b34b824a2955bbeda57750d6cd865bd6250fcdc35835a"
+    },
+    {
+      "bytes": 84078,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/dataset_cpw.json",
+      "sha256": "840a1e52f8b15caf6196b24520c694c20bd91806af512cfd2c751357ddb2482c"
+    },
+    {
+      "bytes": 85281,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/dataset_native.json",
+      "sha256": "73c688024ef3471dc4f5995e1826bfc8b15d3244ef57b3e905e6bdd4b83189f6"
+    },
+    {
+      "bytes": 6997,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/diagnostics.py",
+      "sha256": "eb5c4ad14d532ff16463d3f999dae80a75cc9977e123917bfa0c1f3da8384412"
+    },
+    {
+      "bytes": 119226,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_100_greedy.json",
+      "sha256": "14058c61f6952692b5a20ebcdcbfa19d979805437475e69092971146df2adee3"
+    },
+    {
+      "bytes": 3487,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_100_greedy_recording.json",
+      "sha256": "9148290793147baef7b6411b01cccd260b2ed7b0377fa2780f21aefd1af93d7e"
+    },
+    {
+      "bytes": 268420,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_100_native.json",
+      "sha256": "c7930ff8324e63fc0b4e2846097a01b230eb2ee80fe26f223270d7c32a7dfed7"
+    },
+    {
+      "bytes": 3488,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_100_native_recording.json",
+      "sha256": "5f5298a4fd6bebbc256eec4b9519faeb2dee90e3fbfb777876ff405e49157cf2"
+    },
+    {
+      "bytes": 268414,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_500_cpw.json",
+      "sha256": "543c6aa2933000df2824d1a2bc1d74a33de45e1f72304b4b4ee071271010b482"
+    },
+    {
+      "bytes": 3482,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_500_cpw_recording.json",
+      "sha256": "416ece8362b11280485fac4b52fc8ae0a0ca5c62781fba020ce4511d8537ea93"
+    },
+    {
+      "bytes": 119230,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_500_greedy.json",
+      "sha256": "03e19485739dd4ef0b915b8d691be1b4a90649cb9ea75c844c535140e187323c"
+    },
+    {
+      "bytes": 3487,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_500_greedy_recording.json",
+      "sha256": "e66d0d55dac97760a617773cc80d46c27e2a2365336e978cf45f2624859f1be0"
+    },
+    {
+      "bytes": 268528,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_500_native.json",
+      "sha256": "7cf103d9ba7628b33ecbaf0ad109f446991bf0fe2df7f02968c25739841837e6"
+    },
+    {
+      "bytes": 3488,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/chance_500_native_recording.json",
+      "sha256": "1fe11b878b6fd7462d7ca9e191a1f981d7b5261a669ea4540b4961e23718812c"
+    },
+    {
+      "bytes": 527003,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/confirm_cpw_100_native.json",
+      "sha256": "84a0b2491e342f8172053e4de459ab346da0a9e7e7c668f936cf29c114fac45a"
+    },
+    {
+      "bytes": 3495,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/confirm_cpw_100_native_recording.json",
+      "sha256": "16707f44a80819b01c0aab7ad8393e366a58a43a5a689009a0fb61441f945ea2"
+    },
+    {
+      "bytes": 527662,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/confirm_native_100_native.json",
+      "sha256": "fad7fe6e916baa9f276469638f2a657d1750071a505487be0b1d8deac608ce9b"
+    },
+    {
+      "bytes": 3504,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/confirm_native_100_native_recording.json",
+      "sha256": "dcdd618ece2261eb8a2ae81a1aebd9e1e39d63414af36d51d7452d9274a5ca9c"
+    },
+    {
+      "bytes": 118918,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_100_greedy.json",
+      "sha256": "01c7e334d4ba06a4cf01f78c3653a61d670861539174c33791d72c0ead232f26"
+    },
+    {
+      "bytes": 3478,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_100_greedy_recording.json",
+      "sha256": "e63e15074989e3f5599a43932962b6d26158fa0f9b53b15ed05e8cd491540793"
+    },
+    {
+      "bytes": 268397,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_100_native.json",
+      "sha256": "57a8266a346eebf9ff97113f9a643a11d396519658a43df4c6c17a3f68bf0ade"
+    },
+    {
+      "bytes": 3479,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_100_native_recording.json",
+      "sha256": "ae491f8bbcfefadbcf4cdd8c45df581a0620899ed7dd409ce2040d61cc6b4a1d"
+    },
+    {
+      "bytes": 268083,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_500_cpw.json",
+      "sha256": "aef8d5f4bc319639d715a215ec6bef257fb6a7f895cd150179ba845d5d8ad060"
+    },
+    {
+      "bytes": 3473,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_500_cpw_recording.json",
+      "sha256": "85d22f6c06a2ffc3cc07a0441002d0ebdaec8b837a11932d083b324c54c73e90"
+    },
+    {
+      "bytes": 118911,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_500_greedy.json",
+      "sha256": "0c11b345ca0dfc3a30993650ba550de9c94f9b627679d99db8c409df9a5de890"
+    },
+    {
+      "bytes": 3478,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_500_greedy_recording.json",
+      "sha256": "81cf70b20949b27ee576c943eef78aded313bf3643378e556466ee3358407184"
+    },
+    {
+      "bytes": 268198,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_500_native.json",
+      "sha256": "15656de080c34688d20820eaa8f3d3676f61261a50228a575d5cc4f76541ec37"
+    },
+    {
+      "bytes": 3479,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/cpw_500_native_recording.json",
+      "sha256": "094874bb3255f9356e97e657ad865cf5dd80e48599491eb788977fd37fdd63fc"
+    },
+    {
+      "bytes": 265941,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/initial_native.json",
+      "sha256": "30023e8487e658c3664d0371265dbe98a5b798edbed9334afc4aedab9b86e860"
+    },
+    {
+      "bytes": 3494,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/initial_native_recording.json",
+      "sha256": "d2b43db0bdeb00a3b046a01af60143b9986c35fc415c87d53a03e4c38534dba0"
+    },
+    {
+      "bytes": 119223,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_100_greedy.json",
+      "sha256": "6c1ef77cc0ec78da439e031c5a532134e2dfec7b7198c18f7ab09a960644cbfe"
+    },
+    {
+      "bytes": 3487,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_100_greedy_recording.json",
+      "sha256": "d86f7f692ae7992a7cba9759e9018b76d1456d1b380b7f0232824f0b54e4483f"
+    },
+    {
+      "bytes": 268317,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_100_native.json",
+      "sha256": "69c431077940569572a801aed731ee81a49232e2e4bf1855eaffbf23b98e0354"
+    },
+    {
+      "bytes": 3488,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_100_native_recording.json",
+      "sha256": "510c39133ea43ce61661cffb3c31eb5c80c41f56fffcbbb8ac7267d5e7cf4acb"
+    },
+    {
+      "bytes": 268414,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_500_cpw.json",
+      "sha256": "d37493f943100e8d849e70219c19f88d0686bb5898f028d2f93b7fba86905989"
+    },
+    {
+      "bytes": 3482,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_500_cpw_recording.json",
+      "sha256": "f8fa9be8839db29928cc33dd6daa5d382d4f3b634403fc220dd0645ac211e578"
+    },
+    {
+      "bytes": 119227,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_500_greedy.json",
+      "sha256": "f944fb3d3eaea4f394f68e3b4030d5d65658db756911b59751c685ec756ba925"
+    },
+    {
+      "bytes": 3487,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_500_greedy_recording.json",
+      "sha256": "e2af0bf50d38fe832791ee4c87aeb3294033a25b8b82fe73590feb96d10c6f3a"
+    },
+    {
+      "bytes": 268521,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_500_native.json",
+      "sha256": "732d51fe2c66da4741db5d9c9a686cbc63d118832124a726536e80229c4a5c81"
+    },
+    {
+      "bytes": 3488,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/native_500_native_recording.json",
+      "sha256": "b8d3bba8e4ebd5d05e0ec1ca91cbb30e6f7910f07b0025c3e619c6b1f4920328"
+    },
+    {
+      "bytes": 26904,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/experiment.py",
+      "sha256": "fa2c392961697ac31285f33da2ba64126c6ddf2751b30da7d1c82251aec131bf"
+    },
+    {
+      "bytes": 29896,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/holdout_diagnostics.json",
+      "sha256": "1c687b8cce766c22526716f42cb435bfb05e3e3415ed5cd22d3e94670d73669b"
+    },
+    {
+      "bytes": 4291228,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/holdout_predictions_chance.json",
+      "sha256": "b6d887a075cfd0f7a8df1efd1e0cd17abba4621295c460129eac32cd4f100e15"
+    },
+    {
+      "bytes": 4244712,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/holdout_predictions_cpw.json",
+      "sha256": "dc99cffe7e8d33da8f7d0dec9a698ba64c9309f33c4697b4bb7af4905bca4ec3"
+    },
+    {
+      "bytes": 4177653,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/holdout_predictions_native.json",
+      "sha256": "490e2e4ecb9c0cb641efdfc4dd00bc2f62a5011eae9aa5ef0a794824ba95ad1a"
+    },
+    {
+      "bytes": 489208,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/metrics_chance.jsonl",
+      "sha256": "4f8c591d0262e78f629541f6a7c7025637a2bda8a2575aa8f794b03bf0915c07"
+    },
+    {
+      "bytes": 489260,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/metrics_cpw.jsonl",
+      "sha256": "899141b3decb719af5057b4234a61870e9b09c9fda7ebbe03d789d013f5120ed"
+    },
+    {
+      "bytes": 489279,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/metrics_native.jsonl",
+      "sha256": "f242781dffd457ddffcb26fada075744ced6348b97da08b402dfe8682ce9a0ae"
+    },
+    {
+      "bytes": 5085,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/plot.py",
+      "sha256": "c0c9339962c87a141d135838f23d37a1d163d0b046249ea67cdb3bdfbc643aaa"
+    },
+    {
+      "bytes": 2060,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/plot_environment.json",
+      "sha256": "2fb76be8c3bc60627f30e0f75f8dee7f4b12e69de64ac6fcfa1a0cfe7a8c4cd8"
+    },
+    {
+      "bytes": 914,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/run_suite.py",
+      "sha256": "0fad1b350ecfbbcab6e61174039ab71f9e7159582c33109753573d81ee7a3c3b"
+    },
+    {
+      "bytes": 11977,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/sampling_analysis.json",
+      "sha256": "ec51e01bed7b6c66c14f4ee88cfd839b982db75cba2542cdb9953c7c4eec76b5"
+    },
+    {
+      "bytes": 3375,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/sampling_analysis.py",
+      "sha256": "9330d95808932a6faf7011227345ee3afc3b965a2ad6a3d71cd537b65e36f8b1"
+    },
+    {
+      "bytes": 10615,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/smoke_chance_result.json",
+      "sha256": "b93d6fb76693b018557aee759bfe3b0b4b7fc1d13107bbb9ef250639e563c2ad"
+    },
+    {
+      "bytes": 10584,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/smoke_cpw_result.json",
+      "sha256": "751cad5a04d187fa6f648011694d6f3ed2ceb82e4a34cd48fdf61b2d02c103f6"
+    },
+    {
+      "bytes": 10612,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/smoke_native_result.json",
+      "sha256": "74b7c5ea56f2664d6606c3fe5fe55d15b0f3f0df3df85bc9ca02940ceaf3ca54"
+    },
+    {
+      "bytes": 6452,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/strength_statistics.json",
+      "sha256": "e65f92bafdf2660704e238b61559dfd0339545a26ddb9bc161fe8c67bcda460c"
+    },
+    {
+      "bytes": 1546,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/strength_statistics.py",
+      "sha256": "c28713b278f47329401892c01940ad625db21d3bfb6608f05fbf88dba2967acd"
+    },
+    {
+      "bytes": 884,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/tests.json",
+      "sha256": "d329547d6a9fb34925561b7b8511cb6fdf6851d7b1e7a69893b01bec0cba5723"
+    },
+    {
+      "bytes": 446985,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/train_chance.json",
+      "sha256": "b74b37e432313229f6cf2433e789abe9b0451f36034f75492f8007d49924380e"
+    },
+    {
+      "bytes": 446891,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/train_cpw.json",
+      "sha256": "72dd4b655f18d39379d1b7c7b97e96d40f03e9752f0923376270438b67dbcf94"
+    },
+    {
+      "bytes": 447007,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/train_native.json",
+      "sha256": "941e233290652bddea80148c06f0c6d4830bd3f0ec27ab6da5e57fca2954044a"
+    },
+    {
+      "bytes": 799214,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/value_drift.json",
+      "sha256": "8515745d4e63d51073f6919dbf23806c20921b18f4817c272b393858887450c5"
+    },
+    {
+      "bytes": 3653,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/value_drift.py",
+      "sha256": "c5d2c8122e8b6b6b2523c2f52e4a3065c361d8888f78c7b9b6f31a4e680927f0"
+    },
+    {
+      "bytes": 229395,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/verification.json",
+      "sha256": "bf172042c08380472c96c762db166beb28a109f41442db74e9642e84bc4a6f36"
+    },
+    {
+      "bytes": 6382,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/verify.py",
+      "sha256": "c18e2864520180022e7f21c14c7f6d721ec40e997f6d3e22afef2138a8034b71"
+    }
+  ],
+  "panels": [
+    {
+      "arm": "native",
+      "id": "initial_native",
+      "mode": "native",
+      "pairs": 50,
+      "step": 0
+    },
+    {
+      "arm": "native",
+      "id": "native_100_greedy",
+      "mode": "greedy",
+      "pairs": 50,
+      "step": 100
+    },
+    {
+      "arm": "native",
+      "id": "native_100_native",
+      "mode": "native",
+      "pairs": 50,
+      "step": 100
+    },
+    {
+      "arm": "native",
+      "id": "native_500_greedy",
+      "mode": "greedy",
+      "pairs": 50,
+      "step": 500
+    },
+    {
+      "arm": "native",
+      "id": "native_500_native",
+      "mode": "native",
+      "pairs": 50,
+      "step": 500
+    },
+    {
+      "arm": "native",
+      "id": "native_500_cpw",
+      "mode": "cpw",
+      "pairs": 50,
+      "step": 500
+    },
+    {
+      "arm": "chance",
+      "id": "chance_100_greedy",
+      "mode": "greedy",
+      "pairs": 50,
+      "step": 100
+    },
+    {
+      "arm": "chance",
+      "id": "chance_100_native",
+      "mode": "native",
+      "pairs": 50,
+      "step": 100
+    },
+    {
+      "arm": "chance",
+      "id": "chance_500_greedy",
+      "mode": "greedy",
+      "pairs": 50,
+      "step": 500
+    },
+    {
+      "arm": "chance",
+      "id": "chance_500_native",
+      "mode": "native",
+      "pairs": 50,
+      "step": 500
+    },
+    {
+      "arm": "chance",
+      "id": "chance_500_cpw",
+      "mode": "cpw",
+      "pairs": 50,
+      "step": 500
+    },
+    {
+      "arm": "cpw",
+      "id": "cpw_100_greedy",
+      "mode": "greedy",
+      "pairs": 50,
+      "step": 100
+    },
+    {
+      "arm": "cpw",
+      "id": "cpw_100_native",
+      "mode": "native",
+      "pairs": 50,
+      "step": 100
+    },
+    {
+      "arm": "cpw",
+      "id": "cpw_500_greedy",
+      "mode": "greedy",
+      "pairs": 50,
+      "step": 500
+    },
+    {
+      "arm": "cpw",
+      "id": "cpw_500_native",
+      "mode": "native",
+      "pairs": 50,
+      "step": 500
+    },
+    {
+      "arm": "cpw",
+      "id": "cpw_500_cpw",
+      "mode": "cpw",
+      "pairs": 50,
+      "step": 500
+    }
+  ],
+  "protocol": "chance-training-probe-v1",
+  "report_only_amendments": [
+    {
+      "after": {
+        "bytes": 26749,
+        "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/experiment.py",
+        "sha256": "3c9bbf6a2fa6c18b4e4c16b051315ba6194f622e061d09a6ee0e16aa51f002cd"
+      },
+      "before": {
+        "bytes": 26693,
+        "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/experiment.py",
+        "sha256": "5069050eea63b0e2ba7839a0168b3354e27accf0a72d04ddf6e6feb33cc1e5dc"
+      },
+      "original_script_snapshot": "/home/lc/下载/splendor/runtime/entity_attention_chance_training_probe_20261007/source/experiment_before_summary_fix.py",
+      "reason": "Serial greedy evaluation exports no execution_stats. Omit that optional batch-counter field in analysis; collection, training, evaluation configurations and behavior unchanged."
+    },
+    {
+      "after": {
+        "bytes": 26779,
+        "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/experiment.py",
+        "sha256": "786df161b78564746150e3cc202c11185e2af4209e9f54eaf9d5b5df4012f1e4"
+      },
+      "before": {
+        "bytes": 26749,
+        "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/experiment.py",
+        "sha256": "3c9bbf6a2fa6c18b4e4c16b051315ba6194f622e061d09a6ee0e16aa51f002cd"
+      },
+      "original_script_snapshot": "/home/lc/下载/splendor/runtime/entity_attention_chance_training_probe_20261007/source/experiment_before_cpw_summary_fix.py",
+      "reason": "Unrestricted chance exports common chance counters only. Restrict widening-specific summary counters to CPW; no collection/training/evaluation behavior change."
+    }
+  ],
+  "scope": "One frozen16500-step teacher, one200-game collection per algorithm, fixed labels and finite split training; no self-iteration or causal isolation of label noise from trajectories.",
+  "source": {
+    "additional_files": {
+      "data/splendor_cards.csv": "e53d99cfb70517be6cf747f4bdc7961d3d27f3e1626fa3383e8bc185dc8d10e3",
+      "data/splendor_config.json": "8b4deff205395c321b09f86c8f2e30719f79378a5b4769afbbb1057b7d35f157",
+      "data/splendor_nobles.csv": "3bc019c5c938d13073b92428082d5cabd0f69e6b1dd88347790556d9b02d4337",
+      "setup.py": "0ec4cb5d01cf26f38468fcce0daf311b2cf1c3643e16c4ab2eb1c35d2a835b2b",
+      "src/splendor/native_search.cpp": "654b08b2922e5fd19090a8734db6b5d6db84a3a322f4786adb9f8f181f4f7d1f",
+      "tests/test_hybrid_training.py": "a613771c2c97c4c2194299c65c7946507cebae7711abcf4dc14751c9310f6584",
+      "tests/test_multiworker_gpu.py": "8ace0baf337945237a4c9a9907addef2dfe43a288bcd17ae192ec022b1d63211",
+      "tests/test_native_chance_search.py": "1a71f1bb94b36eb69c6ed76e8f34a8a934f8c0701ac773c2ddd7aa629c20c38d"
+    },
+    "dirty_diff_sha256": "f50004521da836b4b6f16ad1b2015502841b56d07e0da22f1dd7b4a6bc4533ea",
+    "git_head": "0a176b1a269a9850f51e7350e475a6c801f82644",
+    "git_status": " M README.md\n M artifacts/experiment_index.json\n M configs/entity_attention_v1/README.md\n M docs/current_project_state_zh-CN.md\n M docs/guides/entity_attention_offline_zh-CN.md\n M docs/guides/entity_attention_self_iteration_zh-CN.md\n M docs/guides/evaluation_zh-CN.md\n M docs/guides/multiworker_gpu_zh-CN.md\n M docs/guides/native_search_zh-CN.md\n M docs/guides/search_zh-CN.md\n M docs/index.md\n M scripts/benchmark_collect_throughput.py\n M src/splendor/alphazero_replay.py\n M src/splendor/alphazero_train.py\n M src/splendor/evaluation.py\n M src/splendor/evaluation_batch.py\n M src/splendor/multiworker_gpu.py\n M src/splendor/native_policy.py\n M src/splendor/native_search.cpp\n M src/splendor/search_inference.py\n M src/splendor/selfplay_fast.py\n M tests/test_alphazero_replay.py\n M tests/test_evaluation_3a.py\n M tests/test_inference_modes.py\n M tests/test_multiworker_gpu.py\n M tests/test_speed_optimization.py\n?? artifacts/entity_attention_100_vs_500_20261005/\n?? artifacts/entity_attention_chance_depth_20261007/\n?? artifacts/entity_attention_chance_pw_20261007/\n?? artifacts/entity_attention_chance_pw_greedy_20261007/\n?? artifacts/entity_attention_chance_pw_noise_20261007/\n?? artifacts/entity_attention_chance_pw_strength_20261007/\n?? artifacts/entity_attention_chance_search_20261007/\n?? artifacts/entity_attention_chance_strength_20261007/\n?? artifacts/entity_attention_chance_training_probe_20261007/\n?? artifacts/entity_attention_execution_speed_20261005/\n?? artifacts/entity_attention_graph200_20261006/\n?? artifacts/entity_attention_hybrid_fork_20261005/\n?? artifacts/entity_attention_hybrid_s1024_n1_20261006/\n?? artifacts/entity_attention_memory_window_20261006/\n?? artifacts/entity_attention_policy_value_ablation_20261006/\n?? artifacts/entity_attention_search_screen_20261005/\n?? artifacts/entity_attention_split_training_20261006/\n?? artifacts/entity_attention_strong_anchor_20261006/\n?? artifacts/entity_attention_target_noise_20261007/\n?? artifacts/entity_attention_worker_cleanup_20261005/\n?? configs/entity_attention_v1/collection_static_graph.json\n?? configs/entity_attention_v1/hybrid_cpu_smoke.json\n?? configs/entity_attention_v1/hybrid_fork_s1024_n1.json\n?? configs/entity_attention_v1/hybrid_fork_s1024_n2.json\n?? configs/entity_attention_v1/hybrid_fork_s512_n2.json\n?? configs/entity_attention_v1/hybrid_split_policy_value.json\n?? configs/entity_attention_v1/hybrid_static_graph.json\n?? docs/guides/entity_attention_fresh_share_zh-CN.md\n?? docs/guides/entity_attention_hybrid_fork_zh-CN.md\n?? docs/guides/entity_attention_hybrid_s1024_n1_zh-CN.md\n?? docs/guides/entity_attention_hybrid_zh-CN.md\n?? docs/guides/entity_attention_split_training_zh-CN.md\n?? docs/reports/entity_attention_execution_speed_zh-CN.md\n?? src/splendor/hybrid_train.py\n?? tests/test_hybrid_training.py\n?? tests/test_native_chance_search.py\n",
+    "native_extensions": {
+      "/home/lc/下载/splendor/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so": "04a17d17f4ece7b8486054e4bfba1c1ae403528c6e4c5effe2a2f05e513038d7"
+    },
+    "source_files": {
+      "scripts/analyze_az_run.py": "a75b5265d697cbcc785d69b0c2ee59927236df7487a11768d9fb90f0acd82c8d",
+      "scripts/benchmark_batched_search.py": "43ef41b360f0cea4d7ae5f3e311c6891de9ffef0382fb567414f674e05277e06",
+      "scripts/benchmark_collect_throughput.py": "45309de75b6731fdd4c0df94f738d29e8e2709e6d46593bb274deb097923c464",
+      "scripts/benchmark_inference_modes.py": "890f014ef18da939edf12a2b88e2bbb555e1c9f3473fe7c30d6df3887e2df122",
+      "scripts/benchmark_large_batch_inference.py": "9d0acaa2bf3e61d624b9a1c15011caef999be68876ac03f58a0ac4ab38976182",
+      "scripts/benchmark_native_search.py": "f9dbbe04a3d8cef9708e2623ab582427de6988822867af831b7e382520a7c79d",
+      "scripts/benchmark_transfer_modes.py": "dbb17c4c93f60cc2d4ab0ce0dfad6843fbabb506cdf2eb69e06c88cf2a354cbe",
+      "scripts/compare_speed_inference.py": "fe6d880c8fdee06fd604a6fbf339221c9f32264c0ca49f9fd2c9bb0f67ed3542",
+      "scripts/prepare_next_az.py": "25ee8e30f30f4a75822c343556c3add3f37b180c4daa43dd4151465a61fe3aa3",
+      "scripts/profile_inference_pipeline.py": "3db8299c7155a0f0b19c30af7569e54aa8de6549f1d64cfed7b9e1a130769419",
+      "scripts/profile_speed_pipeline.py": "8dfc1739848a2998d73e9cfee36af718c23251807c5c29d06a5ca65ecd692052",
+      "scripts/run_az_generation_evals.py": "097a78a10a120051e359a6f65c645420625547182e0265b8319bee503fffd018",
+      "scripts/run_mcts_50pair_sweep.py": "f53c80acd4e90b0a7d0f2567d2fca11a2b9b1d083fdc77f36da1214374de13d9",
+      "scripts/run_recorded_evaluation.py": "cbdd2b01e889ee8a44696cd318ab1d4acc94478820d5752715f4358ff70b8a59",
+      "scripts/run_search_accel_short_benchmark.py": "61ee4887496b0fe3c920c80b8c5687276b3268cd9dad5e3395525a259364a6db",
+      "scripts/run_speed_validation.py": "943e1e80fdcfa3a7a8effdcf010e9636afa3f88d43c9140cc7ba75f95ba04010",
+      "scripts/summarize_speed_validation.py": "c50f6ad84b3620238be1863964c3ad1e81bc7725fc5b80d7e66ea86f42cb9db2",
+      "scripts/validate_entity_attention.py": "3c7a673c808315f2e14acfb374c0e2d648226c41831d764c5201532367587f25",
+      "src/splendor/__init__.py": "3b3764c6329eb16a437f5e6426c5de6acc84caa2f75200ab058744d0ddcb11b8",
+      "src/splendor/_state.py": "64df1e3b0864173fe9c42b0919e698c4cb3d2185a7ee2473aad2f0682d95bac9",
+      "src/splendor/actions.py": "f3bcd17deec8aeab81f38a457d7a516b69fed4ce6e09cc46b24a1a87edb93877",
+      "src/splendor/actor_critic.py": "fd01a9bf62c0026ca27d98f7479ddbaa4941614f2ba4d0a9d315ff9542d16523",
+      "src/splendor/alphazero_analysis.py": "6871474aec17c9964685810b3831590b6843db816e7a1853e65165d4f7175163",
+      "src/splendor/alphazero_checkpoint.py": "3a4499e0a313b3049fb29fc6930fa0c59963f9866e6e357c78210f6a702de4b0",
+      "src/splendor/alphazero_diagnostics.py": "11530ca440ebbb1c48887f31438e063a21fa9f4f7699b1adc8ed846b48654f1b",
+      "src/splendor/alphazero_loop.py": "e1216dc4fb0c9346892a8efc9abfc2d293f21a71f894bf1179755c9897a09609",
+      "src/splendor/alphazero_recording.py": "53a3dcfc67145ee8ea104f832b208f5625bab09c92f1c64cdf997a6a80e4036f",
+      "src/splendor/alphazero_replay.py": "6174ca36560a557736168e6b18ba5e164e652c8af9145cd3be107fd808f373e1",
+      "src/splendor/alphazero_train.py": "88f05c927d39f221df1c7eb6802586c633f25a975682d5bf4de4488a28e41b1e",
+      "src/splendor/analyze_5c.py": "637dc6d19d1f9ce46f4ebe091abe7e79f02635e7b6e91fc075fef097cb6bd564",
+      "src/splendor/batched_search.py": "54e0f43103418d1e1639ff49d30c4962fde6b8b822c021f7b37c9e98fe2a8eaa",
+      "src/splendor/benchmark_5b.py": "3bc8f4d8639708adc7ede8b92f1d44f313eeee992d5ccc775e60018273facc4c",
+      "src/splendor/benchmark_5c_multiprocess.py": "18117739fa0d3c90b54cfbfd516ddbdfa7d2c045d72e8b56b961f3fa1a33776c",
+      "src/splendor/benchmark_search.py": "c2d8b4134728cfb04ff9b33d3abf8b9367e62b89b2a64fd2fe8f6f9a834445ea",
+      "src/splendor/catalog.py": "9fc9f80057f292b3099851355a8cd99d2d9ec2ff0a9cf4a986926916ed42fadf",
+      "src/splendor/compact_trace.py": "74a287c8eb4df9ee9046ea44a3610baa4bcccca2d8b0f684fdb0cc76066b7172",
+      "src/splendor/contracts.py": "f613f0b814cf5b3ee01dfa63236346b4c43de307e2ea3220c950e77d06d254f4",
+      "src/splendor/engine.py": "f82b5a04a2f4ac900d63576909de170b9406e1f6a07fea7b4a6406e2efb364a8",
+      "src/splendor/entity_attention.py": "9e5c32f50bf656d6c0188cb01c6a5795b14c6dbadeea8fddfdf4926f72a1e7e4",
+      "src/splendor/evaluate.py": "4f44453a7aec9e88bc27b322505d2b8f39d3b98b911bacf1012da23389a1bcd8",
+      "src/splendor/evaluate_5c.py": "233123827903a617bd24dcf17100c6bf25a9af523574750db2da090610c280ef",
+      "src/splendor/evaluate_search.py": "967ab9257262752362ef46d133a03052f7e7efd2816ad007238d18de0da5e746",
+      "src/splendor/evaluate_stage4_ci.py": "02830720f7c7f629faf46fa35144eb7cd3d0f73b85f2036582579ae740ca5399",
+      "src/splendor/evaluation.py": "0b329387a1b20b44f6d030daac5a49799c5cf1dca970fd7679efa92bce3124dd",
+      "src/splendor/evaluation_batch.py": "669c0c17c85291c0570b8cb3c51fb4be16629dcb39d629bbaa2b4dce5a9fab37",
+      "src/splendor/features.py": "f829fb06dc4c92184f3120fdad052cf50eec410b38e83fe20b88355153ac96e9",
+      "src/splendor/heuristic_policy.py": "02b6bfa4cdf43c5fff89c36f889bdeb7c9fceb288c3fefb4f268d1dbee454057",
+      "src/splendor/hybrid_train.py": "f2ee1d521792ea29c001c103beea86e45f91a5643f4c0d395b947b9630bc4350",
+      "src/splendor/invariants.py": "f94acb6b96504f160357add33d23d7736cca505e72ef10beed7cfa6cd6c513fb",
+      "src/splendor/ladder_search.py": "6eda6b030d6952dd45fa0e1d17edf32f401c762bf86a22947fc400b6651aae0c",
+      "src/splendor/match_stepper.py": "629789491417a6946e7ab6089f74379a930a40b6adf970331cc93953c996e39b",
+      "src/splendor/mcts_policy.py": "6eeaae45f4dfc26b1aa5e5c050f63e3f693d4c9a2abba7295748e9b8e7a0727f",
+      "src/splendor/model.py": "c90efb5c1e0716a7a044a88f9097f617d4218ae95ec2f59c8c19fe97fe006443",
+      "src/splendor/multiprocess_collector.py": "de693e9198de185870e236a568ba9a92f63d8fada10345df493188a13320b852",
+      "src/splendor/multiworker_gpu.py": "9b6aa394ceeee029ae6dccce1cdc158b746c4739b60e0903c117885b775ef57f",
+      "src/splendor/native_match_stepper.py": "c1ac9d2531a9dfa4920f150f769f1541869df71cf6958aa111da38d3b7c7b329",
+      "src/splendor/native_policy.py": "7a4167faf706e6343d35b813fbeb985240b82faaae696647e59427f271089b86",
+      "src/splendor/neural_policy.py": "dee37a2891726c677d192f0000cd418015bfccaf202d7ff82b5a632e2a0b0751",
+      "src/splendor/observation.py": "866348f21a62e66d73e5c0bf93a571d65d7a9f8bff1f6336e5c4ccd86d9b1c30",
+      "src/splendor/offline_train.py": "bf4e5d035ee9f50c121a31d53823e55244d1148d9c9e2b59a5a0d011d950106a",
+      "src/splendor/opponent_pool.py": "01714a7699c723d4ff155d6e6d5242773c5874c9b58b9536c7b20feceb29c01f",
+      "src/splendor/paired_statistics.py": "3ce2c653c268065cbc61c4184fb0060fd0aac6850e361a5472ea1ddaa1f11980",
+      "src/splendor/ppo.py": "342595e599a8988592a9dcbba80323345b243b8a7a159e394bc540018beeb1d0",
+      "src/splendor/random_policy.py": "d10a21bd77b70ae8d0e544c56b589dccf4cb595d1b49138a76c4c801610173f7",
+      "src/splendor/replay.py": "0087bf78b852a59885c207f5b81d47aed1fb842330a4b072a6e17f90040df4da",
+      "src/splendor/reproduce_failure.py": "ee58726606a3281e0c424ba82ee1f3de9973a95a1c9822d51d419fde7a040431",
+      "src/splendor/result.py": "338782d0f3b4c38a853777b7abe474bfdeac016c7299e104734b83d567403c28",
+      "src/splendor/rng.py": "9aee501ea01f6b002c90d80743e38efac6a6190fe4e7e1156d1b11aff3fd340b",
+      "src/splendor/rules.py": "b88d3ccb9aba619dedc4f30aece51426805e192d0ef5983736f2a6b18e677ab3",
+      "src/splendor/runner.py": "3bb839f704aa6e177e5d457c9eedf37a6e9ef6d66c7bcb009898eee29d46a7bf",
+      "src/splendor/search_inference.py": "088da23d26d31182e908d6d227f63af1d814a534d3ec11c80e9b7b155dfedf4b",
+      "src/splendor/search_policy.py": "c39e84ea3a4fbe96d5cb2bf6d20ab420ff21c012608bba84ae9ffed3d030c629",
+      "src/splendor/selfplay.py": "dd5bd2a9ae9036c4e63d93868467a842dae16c6f5a8cc7bcbd707701dddc3b85",
+      "src/splendor/selfplay_data.py": "a65ca777e60553645bb36311b70c60a7e016db6a863652b4bb61b54e3ccbc98f",
+      "src/splendor/selfplay_fast.py": "a62a84b85b876eb8fd636c5b013f98a7e9612e8b6571102241425b7ddb78327c",
+      "src/splendor/state_machine.py": "623cfb6ce76fcebc5c483ddd95be60861faa21161dd7aadf2f6f652ef586a0d3",
+      "src/splendor/train_5a.py": "c3ca46eea544b51f5dfb4fe04956aaa3f77e7775d9dedadbddcea21b6367dacd",
+      "src/splendor/train_5b.py": "0683b19d6e412ee1aaf5da027a53e8d175ecbdeb65a7ec9ab4424f6489ced3c1",
+      "src/splendor/train_5b_stage4.py": "13e1eccb84bb5c9cfbf528f8693733e48e65b975c1c0c98f863c4bd15137d807",
+      "src/splendor/train_5c.py": "86eea275cab30b7908a04c047e216f6457853b08c7cf1973dd50170481d478fe",
+      "src/splendor/training_env.py": "ec489d864df79a898dd912acb61171867426880aea03b67ae949c2d5971cc874",
+      "src/splendor/validation.py": "2e0ddb69d298c678ecf76c12755e5e5711469bc5ae7496f3973fbe443bfa6dbc",
+      "src/splendor/web_app.py": "36223609a44b478377208ec07a5a052d955399ae57d13f2b4e551b9d3cc55fae"
+    },
+    "source_sha256": "bfed51c8c20fd30686652244fdd3cad1ecc044fc2addbc16dfc4b0e94170a5b3"
+  },
+  "status": "complete",
+  "training": {
+    "data": "100% each arm new train split, no history",
+    "optimizer": "Restore full original AdamW state and both RNG states at each arm start",
+    "policy_batch": 256,
+    "policy_max_grad_norm": 1.0,
+    "steps": 500,
+    "value_batch": 256,
+    "value_max_grad_norm": 1.0,
+    "value_trunk_detached": true
+  }
+}

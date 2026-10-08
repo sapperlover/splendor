@@ -10,10 +10,12 @@ import multiprocessing as mp
 import os
 import queue
 import resource
+import threading
 import time
 import traceback
 from collections import Counter, deque
 from dataclasses import dataclass
+from multiprocessing.connection import wait
 from multiprocessing.shared_memory import SharedMemory
 from pathlib import Path
 from typing import Any, Callable
@@ -125,10 +127,28 @@ def _checked_result(outstanding: dict[int, Any], worker_id: int,
     return current
 
 
+def _watch_owner(parent_pid: int) -> None:
+    """Exit on owner death even if a queue put or its feeder is blocked."""
+    parent = mp.parent_process()
+    if parent is None or parent.pid != parent_pid:
+        raise RuntimeError("search worker must be spawned by its GPU owner")
+
+    def exit_when_owner_dies() -> None:
+        wait((parent.sentinel,))
+        # Queue finalizers can wait forever for a dead reader.  Closing the
+        # process directly releases mappings and the resource-tracker pipe;
+        # the shared tracker unlinks segments after the last client exits.
+        os._exit(1)
+
+    threading.Thread(target=exit_when_owner_dies, name="gpu-owner-lifetime",
+                     daemon=True).start()
+
+
 def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
             slots: tuple[SlotNames, ...], tasks: Any, ready: Any, replies: Any,
             fingerprint: str, checkpoint_sha: str, parent_pid: int,
             start_event: Any = None, stop_event: Any = None) -> None:
+    _watch_owner(parent_pid)
     initialization_started = time.perf_counter()
     torch.set_num_threads(1)
     try:
@@ -369,6 +389,12 @@ class _FixedPoolHandle:
     def __init__(self, owner: Any, sink: Any, width: int, state_only: bool) -> None:
         self.owner, self.sink, self.width, self.state_only = owner, sink, width, state_only
 
+    def done(self) -> bool:
+        return True
+
+    def discard(self) -> None:
+        pass
+
     def finish(self) -> None:
         rows = self.sink.row_count()
         if self.state_only:
@@ -509,6 +535,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
     slot_names: list[tuple[SlotNames, ...]] = []
     processes = []
     succeeded = False
+    inflight = None
     try:
         unassigned = iter(missing)
         for _ in range(active_limit):
@@ -558,12 +585,13 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             evaluator = FrozenSearchInference(model, device="cuda", config=InferenceConfig(
                 mode=execution.inference_mode, actor_projection=execution.actor_projection,
                 candidate_buckets=execution.candidate_buckets, compile_mode=execution.compile_mode,
-                compile_failure_policy=execution.compile_failure_policy, native_transport="reused"))
+                compile_failure_policy=execution.compile_failure_policy, native_transport="reused",
+                batch_buckets=execution.batch_buckets))
             torch.cuda.reset_peak_memory_stats()
         init_done = time.perf_counter()
         compile_warmup_seconds = (evaluator.warmup_native(execution.candidate_buckets)
                                   if benchmark_seconds is not None else 0.0)
-        transfers: dict[tuple[str, int], tuple[Any, Any, dict[str, Any]]] = {}
+        transfers: dict[tuple[int, str, int], tuple[Any, Any, dict[str, Any]]] = {}
         pending: deque[dict[str, Any]] = deque()
         results: list[dict[str, Any]] = []
         active_workers = set(range(worker_count))
@@ -573,6 +601,9 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
         owner_cpu_start = _cpu_seconds()
         owner_wait = owner_coalesce_wait = owner_gather = owner_dispatch = 0.0
         peak_inflight = padding_positions = 0
+        batch_padding_positions = 0
+        next_lane = batches_prepared_while_inflight = 0
+        overlapped_gather_seconds = 0.0
         width_hist: dict[str, int] = {}
         batches_waited = batches_full = 0
         wait_reasons = {name: 0 for name in ("full", "deadline", "all_supply_arrived", "producers_exhausted")}
@@ -590,7 +621,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
         def accept(event):
             nonlocal completed_count, all_assigned
             if event[0] == "batch":
-                pending.append({"event": event, "offset": 0})
+                pending.append({"event": event, "offset": 0, "completed": 0})
             elif event[0] == "hello":
                 if event[2] != checkpoint_sha:
                     raise RuntimeError(f"search worker {event[1]} checkpoint identity mismatch")
@@ -618,7 +649,78 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                 blocked.pop(data["worker_id"], None)
                 results.append(data)
 
-        while active_workers or pending:
+        def finish_batch(job):
+            nonlocal owner_dispatch
+            parts, kind, bucket = job["parts"], job["kind"], job["bucket"]
+            used, waited, gather_elapsed = job["used"], job["waited"], job["gather_seconds"]
+            handle, sink = job["handle"], job["sink"]
+            finish_started = time.perf_counter()
+            try:
+                handle.finish()
+                infer_elapsed = job["launch_seconds"] + time.perf_counter() - finish_started
+                output = sink.output
+                assert output is not None
+                finite = np.isfinite(output)
+                bad = np.flatnonzero(~finite if finite.ndim == 1 else ~finite.all(axis=1))
+                if len(bad):
+                    physical_row = int(bad[0])
+                    affected = next(part for part in parts
+                                    if part[5] <= physical_row < part[5] + part[6])
+                    raise ValueError(
+                        f"nonfinite pooled output worker={affected[1]} slot={affected[2]} "
+                        f"generation={affected[3]} row={affected[4] + physical_row - affected[5]}")
+                started_dispatch = time.perf_counter()
+                for entry, wid, slot_index, generation, src_offset, dst_offset, take, src_width in parts:
+                    dest = created[wid * execution.shared_slots + slot_index].results
+                    if kind == "value":
+                        dest[src_offset:src_offset + take] = output[dst_offset:dst_offset + take]
+                    else:
+                        dest_view = dest[:micro * (src_width + 1)].reshape(micro, src_width + 1)
+                        dest_view[src_offset:src_offset + take, :src_width] = output[
+                            dst_offset:dst_offset + take, :src_width]
+                        dest_view[src_offset:src_offset + take, src_width] = output[
+                            dst_offset:dst_offset + take, bucket]
+                    entry["completed"] += take
+                    if entry["completed"] == entry["event"][1][3]:
+                        returned[wid, slot_index] = generation
+                        blocked.pop(wid, None)
+                        replies[wid].put(("result", slot_index, generation), timeout=30)
+                owner_dispatch += time.perf_counter() - started_dispatch
+                dispatch_elapsed = time.perf_counter() - started_dispatch
+                remaining = len(missing) - completed_count
+                interval = ("above100" if remaining > 100 else "11to100" if remaining > 10 else
+                            "9to10" if remaining > 8 else "2to8" if remaining > 1 else "last1")
+                data = tail_intervals[interval]
+                data["batches"] += 1
+                data["rows"] += used
+                data["coalesce_seconds"] += waited
+                data["gather_seconds"] += gather_elapsed
+                data["inference_seconds"] += infer_elapsed
+                data["dispatch_seconds"] += dispatch_elapsed
+                width_hist[str(bucket)] = width_hist.get(str(bucket), 0) + used
+            except BaseException as error:
+                try:
+                    _atomic_json(root / "failures" / "owner.json", {
+                        "protocol": "native-cuda-pool-failure-v1", "origin": "inference",
+                        "error_type": type(error).__name__, "error_detail": str(error),
+                        "traceback": traceback.format_exc(),
+                        "requests": [{"worker_id": p[1], "slot": p[2], "generation": p[3],
+                                      "row_offset": p[4], "rows": p[6]} for p in parts],
+                    })
+                except Exception:
+                    pass
+                raise
+
+        while active_workers or pending or inflight is not None:
+            if inflight is not None:
+                while True:
+                    try:
+                        accept(ready.get_nowait())
+                    except queue.Empty:
+                        break
+                if not pending or inflight["handle"].done():
+                    finish_batch(inflight)
+                    inflight = None
             now = time.perf_counter()
             if now - last_supply_time >= 5:
                 last_supply_time = now
@@ -637,6 +739,9 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                         "dispatch_seconds": owner_dispatch,
                         "wait_input_seconds": owner_wait,
                         "wait_coalesce_seconds": owner_coalesce_wait,
+                        "batch_padding_positions": batch_padding_positions,
+                        "batches_prepared_while_inflight": batches_prepared_while_inflight,
+                        "overlapped_gather_seconds": overlapped_gather_seconds,
                         "inference": evaluator.stats.to_dict(),
                     }
                     start_event.set()
@@ -648,6 +753,9 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                         "dispatch_seconds": owner_dispatch,
                         "wait_input_seconds": owner_wait,
                         "wait_coalesce_seconds": owner_coalesce_wait,
+                        "batch_padding_positions": batch_padding_positions,
+                        "batches_prepared_while_inflight": batches_prepared_while_inflight,
+                        "overlapped_gather_seconds": overlapped_gather_seconds,
                         "inference": evaluator.stats.to_dict(),
                     }
                     stop_event.set()
@@ -676,6 +784,9 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             reason = _batch_trigger(pending, active_workers, blocked, execution.max_batch_size,
                                     execution.candidate_buckets[-1], time.perf_counter(), deadline)
             while reason is None:
+                if inflight is not None and inflight["handle"].done():
+                    finish_batch(inflight)
+                    inflight = None
                 coalesce_started = time.perf_counter()
                 event = None
                 try:
@@ -724,7 +835,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             width = 0 if kind == "value" else max(part[7] for part in parts)
             bucket = (next((item for item in execution.candidate_buckets if width <= item),
                            width_limit) if kind == "policy" else 0)
-            key = (kind, bucket)
+            key = (next_lane, kind, bucket)
             cached = transfers.get(key)
             if cached is None:
                 probe = _extension().NativeBatch(native_catalog, kind == "value", 1, bucket or 1)
@@ -758,57 +869,33 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                 padding_positions += take * max(0, bucket - src_width)
             owner_gather += time.perf_counter() - started_gather
             gather_elapsed = time.perf_counter() - started_gather
-            sink = _OutputSink(used, layout)
+            if inflight is not None:
+                overlapped_gather_seconds += gather_elapsed
+                batches_prepared_while_inflight += 1
+                finish_batch(inflight)
+                inflight = None
             try:
+                # Reserve rows before launching: a split shared request may have
+                # one prefix in flight and its suffix staged in the other bank.
+                for entry, wid, slot_index, generation, src_offset, dst_offset, take, src_width in parts:
+                    entry["offset"] += take
+                    pending.remove(entry)
+                    if entry["offset"] < entry["event"][1][3]:
+                        pending.append(entry)
+                sink = _OutputSink(used, layout)
                 infer_started = time.perf_counter()
                 handle = (transfer.begin_value_only(sink) if kind == "value"
                           else transfer.begin_policy_value(sink))
-                handle.finish()
-                infer_elapsed = time.perf_counter() - infer_started
-                output = sink.output
-                assert output is not None
-                finite = np.isfinite(output)
-                bad = np.flatnonzero(~finite if finite.ndim == 1 else ~finite.all(axis=1))
-                if len(bad):
-                    physical_row = int(bad[0])
-                    affected = next(part for part in parts
-                                    if part[5] <= physical_row < part[5] + part[6])
-                    raise ValueError(
-                        f"nonfinite pooled output worker={affected[1]} slot={affected[2]} "
-                        f"generation={affected[3]} row={affected[4] + physical_row - affected[5]}")
-                started_dispatch = time.perf_counter()
-                for entry, wid, slot_index, generation, src_offset, dst_offset, take, src_width in parts:
-                    dest = created[wid * execution.shared_slots + slot_index].results
-                    if kind == "value":
-                        dest[src_offset:src_offset + take] = output[dst_offset:dst_offset + take]
-                    else:
-                        dest_view = dest[:micro * (src_width + 1)].reshape(micro, src_width + 1)
-                        dest_view[src_offset:src_offset + take, :src_width] = output[
-                            dst_offset:dst_offset + take, :src_width]
-                        dest_view[src_offset:src_offset + take, src_width] = output[
-                            dst_offset:dst_offset + take, bucket]
-                    entry["offset"] += take
-                    if entry["offset"] == entry["event"][1][3]:
-                        pending.remove(entry)
-                        returned[wid, slot_index] = generation
-                        blocked.pop(wid, None)
-                        replies[wid].put(("result", slot_index, generation), timeout=30)
-                    else:
-                        pending.remove(entry)
-                        pending.append(entry)
-                owner_dispatch += time.perf_counter() - started_dispatch
-                dispatch_elapsed = time.perf_counter() - started_dispatch
-                remaining = len(missing) - completed_count
-                interval = ("above100" if remaining > 100 else "11to100" if remaining > 10 else
-                            "9to10" if remaining > 8 else "2to8" if remaining > 1 else "last1")
-                data = tail_intervals[interval]
-                data["batches"] += 1
-                data["rows"] += used
-                data["coalesce_seconds"] += waited
-                data["gather_seconds"] += gather_elapsed
-                data["inference_seconds"] += infer_elapsed
-                data["dispatch_seconds"] += dispatch_elapsed
-                width_hist[str(bucket)] = width_hist.get(str(bucket), 0) + used
+                if execution.batch_buckets:
+                    batch_padding_positions += next(size for size in execution.batch_buckets if used <= size) - used
+                inflight = dict(parts=parts, kind=kind, bucket=bucket, used=used,
+                                waited=waited, gather_seconds=gather_elapsed,
+                                handle=handle, sink=sink, lane=next_lane,
+                                launch_seconds=time.perf_counter() - infer_started)
+                next_lane = (next_lane + 1) % execution.pipeline_slots
+                if execution.pipeline_slots == 1:
+                    finish_batch(inflight)
+                    inflight = None
             except BaseException as error:
                 try:
                     _atomic_json(root / "failures" / "owner.json", {
@@ -827,6 +914,9 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             "actual_active_limit": active_limit,
             "global_max_batch": execution.max_batch_size, "local_microbatch": micro,
             "shared_slots_per_worker": execution.shared_slots,
+            "owner_pipeline_slots": execution.pipeline_slots,
+            "batches_prepared_while_inflight": batches_prepared_while_inflight,
+            "overlapped_gather_seconds": overlapped_gather_seconds,
             "shared_bytes": sum(sum(seg.size for seg in slot.segments) for slot in created),
             "owner_cpu_seconds": _cpu_seconds() - owner_cpu_start,
             "owner_wait_input_seconds": owner_wait,
@@ -834,6 +924,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             "owner_gather_seconds": owner_gather,
             "owner_dispatch_seconds": owner_dispatch,
             "peak_ready_rows": peak_inflight, "padding_positions": padding_positions,
+            "batch_padding_positions": batch_padding_positions,
             "width_histogram": width_hist, "batches_waited": batches_waited,
             "batches_full": batches_full, "batch_wait_reasons": wait_reasons,
             "batch_trigger_detail": wait_detail,
@@ -898,6 +989,8 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                 pass
         raise
     finally:
+        if inflight is not None:
+            inflight["handle"].discard()
         if not succeeded or benchmark_seconds is not None:
             tasks.cancel_join_thread()
             for reply in replies:

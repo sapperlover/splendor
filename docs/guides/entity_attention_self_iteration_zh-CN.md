@@ -1,6 +1,6 @@
 # 新模型自迭代：10×1000
 
-2026-10-04，按本次用户要求沿用旧10×1000训练策略，使用新模型采集、新模型训练。正式配置已准备，正式运行未启动。有限验证见 [原始结果与摘要](../../artifacts/entity_attention_10x1000_seed1/README.md)。
+2026-10-04，按本次用户要求沿用旧10×1000训练策略，使用新模型采集、新模型训练。配置交付时正式运行未启动；用户随后已运行，2026-10-05的loop_state记录轮0–2完成、下一轮采集曾中断。有限验证见 [原始结果与摘要](../../artifacts/entity_attention_10x1000_seed1/README.md)。
 
 | 项目 | 设置 |
 | --- | --- |
@@ -42,3 +42,5 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src python -u -m splend
 已通过11个循环相关CPU用例、2个调度/历史配置检查，以及真实RTX4050 GPU两轮短测（每轮4局、2步、S16/N1、每种评测1 pair）。调度短窗口实际确认8×125局同时进入调度；GPU短测确认第二轮采集/训练继承上一代、optimizer累计4步，两轮评测均使用固定起点，四个面板均完整通过。短测不证明棋力或1000活跃局的提速倍率。
 
 `online_smoke.json` 是本次有限验证配置；`online_3x200.json` 保留此前建议，当前正式任务以 `online_10x1000.json` 为准，不修改已有运行的冻结配置。
+
+2026-10-05新增[固定形状、kernel启动与独立双缓冲实测](../reports/entity_attention_execution_speed_zh-CN.md)。现有run的冻结配置继续使用原执行设置。新采集预设`collection_static_graph.json`采用shared_slots=2、固定地址CUDA Graph和owner单缓冲；双缓冲额外收益未稳定，未作为推荐默认。这些采集执行设置不改变learner或轮间评测；不得把新配置直接用于原run的`--resume`。

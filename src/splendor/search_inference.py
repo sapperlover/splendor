@@ -42,6 +42,7 @@ class InferenceConfig:
     compile_mode: str | None = None
     compile_failure_policy: str = "fallback"
     native_transport: str = "reused"
+    batch_buckets: tuple[int, ...] = ()
 
     def __post_init__(self) -> None:
         if self.mode not in ("eager", "compiled"):
@@ -60,9 +61,16 @@ class InferenceConfig:
             raise ValueError("compile_failure_policy must be fallback or fail_fast")
         if self.native_transport not in ("reused", "packed"):
             raise ValueError("native_transport must be reused or packed")
+        if self.batch_buckets and (self.mode != "compiled" or
+                any(type(size) is not int or size <= 0 for size in self.batch_buckets) or
+                tuple(sorted(set(self.batch_buckets))) != tuple(self.batch_buckets)):
+            raise ValueError("batch_buckets require compiled mode and sorted positive sizes")
+        if self.compile_mode == "native-cudagraph" and (self.mode != "compiled" or
+                not self.batch_buckets or self.native_transport != "reused"):
+            raise ValueError("native-cudagraph requires compiled static batches and reused transport")
 
     def to_dict(self) -> dict[str, object]:
-        return {
+        result = {
             "mode": self.mode,
             "actor_projection": self.actor_projection,
             "candidate_buckets": list(self.candidate_buckets),
@@ -70,6 +78,9 @@ class InferenceConfig:
             "compile_failure_policy": self.compile_failure_policy,
             "native_transport": self.native_transport,
         }
+        if self.batch_buckets:
+            result["batch_buckets"] = list(self.batch_buckets)
+        return result
 
 
 _POLICY_FIELDS: tuple[str, ...] = (
@@ -154,7 +165,8 @@ def _compile_failure_types() -> tuple[type[BaseException], ...]:
 class CompiledForward:
     """Shape-bucketed compiled forward for the frozen search model.
 
-    One graph per candidate width bucket (batch dimension dynamic); widths
+    One graph per candidate width bucket (batch dimension dynamic by default,
+    or padded to explicit static batch buckets); widths
     beyond the widest bucket fall back to eager rather than compiling an
     unbounded number of graphs.  A recognised compiler or backend failure while
     constructing a graph or on its first real call disables that graph and
@@ -170,12 +182,14 @@ class CompiledForward:
         compile_mode: str | None,
         failure_policy: str = "fallback",
         stats_sink: "InferenceStats | None" = None,
+        batch_buckets: Sequence[int] = (),
     ) -> None:
         if failure_policy not in ("fallback", "fail_fast"):
             raise ValueError("compile failure policy must be fallback or fail_fast")
         self.model = model
         self.projection = projection
         self.buckets = tuple(sorted(set(buckets)))
+        self.batch_buckets = tuple(batch_buckets)
         self.compile_mode = compile_mode
         self.failure_policy = failure_policy
         self.failure_types = _compile_failure_types()
@@ -194,6 +208,28 @@ class CompiledForward:
             if candidates <= bucket:
                 return bucket
         return None
+
+    def batch_for(self, rows: int) -> int:
+        if not self.batch_buckets:
+            return rows
+        for size in self.batch_buckets:
+            if rows <= size:
+                return size
+        raise ValueError(f"batch of {rows} exceeds batch_buckets={self.batch_buckets}")
+
+    def _pad_batch(self, batch: TorchDecisionBatch | TorchStateBatch):
+        rows = batch.global_features.shape[0]
+        padded = self.batch_for(rows)
+        if rows == padded:
+            return batch
+        return type(batch)(feature_schema_version=batch.feature_schema_version, **{
+            name: torch.cat((getattr(batch, name), getattr(batch, name).new_zeros(
+                (padded - rows, *getattr(batch, name).shape[1:]))), dim=0)
+            for name in batch.__dataclass_fields__ if name != "feature_schema_version"
+        })
+
+    def _graph_name(self, name: str, rows: int) -> str:
+        return f"{name}:b{rows}" if self.batch_buckets else name
 
     @staticmethod
     def _pad_width(batch: TorchDecisionBatch, width: int) -> TorchDecisionBatch:
@@ -219,22 +255,29 @@ class CompiledForward:
         if width is None:
             self.stats.fallbacks += 1
             return self.model._forward_prepared(batch, projection=self.projection)
-        prepared = self._pad_width(batch, width)
-        return self._dispatch(f"policy_value:{width}", width, self._policy_value_impl,
-                              self._tensors(prepared, _POLICY_FIELDS))
+        rows = batch.global_features.shape[0]
+        prepared = self._pad_batch(self._pad_width(batch, width))
+        logits, values = self._dispatch(self._graph_name(f"policy_value:{width}", prepared.global_features.shape[0]),
+                                       width, self._policy_value_impl, self._tensors(prepared, _POLICY_FIELDS))
+        return logits[:rows], values[:rows]
 
     def policy_only(self, batch: TorchDecisionBatch) -> torch.Tensor:
         width = self.width_for(batch.candidate_features.shape[1])
         if width is None:
             self.stats.fallbacks += 1
             return self.model._policy_logits_prepared(batch, projection=self.projection)
-        prepared = self._pad_width(batch, width)
-        return self._dispatch(f"policy_only:{width}", width, self._policy_only_impl,
-                              self._tensors(prepared, _POLICY_FIELDS))
+        rows = batch.global_features.shape[0]
+        prepared = self._pad_batch(self._pad_width(batch, width))
+        logits = self._dispatch(self._graph_name(f"policy_only:{width}", prepared.global_features.shape[0]),
+                               width, self._policy_only_impl, self._tensors(prepared, _POLICY_FIELDS))
+        return logits[:rows]
 
     def value_only(self, batch: TorchStateBatch) -> torch.Tensor:
-        return self._dispatch("value_only", None, self._value_only_impl,
-                              self._tensors(batch, _STATE_FIELDS))
+        rows = batch.global_features.shape[0]
+        prepared = self._pad_batch(batch)
+        values = self._dispatch(self._graph_name("value_only", prepared.global_features.shape[0]),
+                                None, self._value_only_impl, self._tensors(prepared, _STATE_FIELDS))
+        return values[:rows]
 
     # -- graph bodies ------------------------------------------------------
 
@@ -264,8 +307,9 @@ class CompiledForward:
 
     def _tensors(self, batch: object, names: Sequence[str]) -> tuple[torch.Tensor, ...]:
         values = tuple(getattr(batch, name) for name in names)
-        for tensor in values:
-            torch._dynamo.mark_dynamic(tensor, 0)
+        if not self.batch_buckets:
+            for tensor in values:
+                torch._dynamo.mark_dynamic(tensor, 0)
         return values
 
     def _dispatch(self, name: str, width: int | None, implementation: Callable[..., object],
@@ -295,11 +339,18 @@ class CompiledForward:
 
     def _compile(self, name: str, width: int | None,
                  implementation: Callable[..., object]) -> Callable[..., object] | None:
-        import functools
+        def body(*tensors):
+            return implementation(width, *tensors)
 
-        body = functools.partial(implementation, width)
+        # Dynamo caches guards per code object. Compiling functools.partial
+        # puts all models, entry points and widths into external_utils.inner's
+        # shared cache, which survives collection and repeated evaluations.
+        # Give this graph its own code object; ordinary closures share theirs.
+        body.__code__ = body.__code__.replace()
         try:
-            graph = torch.compile(body, mode=self.compile_mode)
+            options = {"dynamic": False} if self.batch_buckets else {}
+            mode = "default" if self.compile_mode == "native-cudagraph" else self.compile_mode
+            graph = torch.compile(body, mode=mode, **options)
         except self.failure_types as error:
             self._record_failure(name, "construct", error)
             if self.failure_policy == "fail_fast":
@@ -311,9 +362,12 @@ class CompiledForward:
             try:
                 # Torch otherwise silently executes eager code when its guard
                 # cache limit is reached. Honor the explicit fail-fast contract.
-                strict = (torch._dynamo.config.patch(fail_on_recompile_limit_hit=True)
-                          if self.failure_policy == "fail_fast" else nullcontext())
-                with strict:
+                compile_options = {}
+                if self.failure_policy == "fail_fast":
+                    compile_options["fail_on_recompile_limit_hit"] = True
+                context = (torch._dynamo.config.patch(**compile_options)
+                           if compile_options else nullcontext())
+                with context:
                     result = graph(*tensors)
             except self.failure_types as error:
                 self._graphs.pop(name, None)
@@ -342,6 +396,8 @@ class InferenceStats:
     batch_sizes: Counter[int] = field(default_factory=Counter)
     config: dict[str, object] = field(default_factory=dict)
     compile: dict[str, object] = field(default_factory=dict)
+    native_graph_captures: int = 0
+    native_graph_replays: int = 0
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -356,6 +412,9 @@ class InferenceStats:
             "mean_batch_size": self.positions / self.batches if self.batches else 0.0,
             "inference": self.config,
             "compile": self.compile,
+            **({"native_graph_captures": self.native_graph_captures,
+                "native_graph_replays": self.native_graph_replays}
+               if self.native_graph_captures else {}),
         }
 
 
@@ -525,6 +584,34 @@ class NativePackedTransfer:
         # reuse the device views per row count instead of rebuilding them.
         self._layout: Mapping[str, object] | None = None
         self._views: dict[int, object] = {}
+        self._graphs: dict[int, object] = {}
+
+    def _direct_graph(self, prepared, rows: int) -> bool:
+        if (self.evaluator.config.compile_mode != "native-cudagraph" or
+                (not self.state_only and self.width > self.evaluator.config.candidate_buckets[-1])):
+            return False
+        graph = self._graphs.get(rows)
+        if graph is None:
+            def forward_into_output():
+                if self.state_only:
+                    self.values_dev[:rows].copy_(self.evaluator._forward_value(prepared))
+                else:
+                    logits, values = self.evaluator._forward(prepared)
+                    self.out_dev[:rows, :self.width].copy_(logits)
+                    self.out_dev[:rows, self.width].copy_(values)
+            # Compile outside capture. Each transfer owns the device addresses,
+            # output and graph pool; another lane never replays these buffers.
+            for _ in range(2):
+                forward_into_output()
+            torch.cuda.synchronize()
+            graph = torch.cuda.CUDAGraph()
+            with torch.cuda.graph(graph):
+                forward_into_output()
+            self._graphs[rows] = graph
+            self.evaluator.stats.native_graph_captures += 1
+        graph.replay()
+        self.evaluator.stats.native_graph_replays += 1
+        return True
 
     def _layout_for(self, buffer) -> Mapping[str, object]:
         layout = self._layout
@@ -558,24 +645,32 @@ class NativePackedTransfer:
 
     def _stage_inputs(self, packed: Mapping[str, object], rows: int) -> float:
         started = time.perf_counter()
-        self.float_dev[:rows * self.float_stride].copy_(
-            self.float_host[:rows * self.float_stride], non_blocking=True)
-        self.mask_dev[:rows * self.mask_stride].copy_(
-            self.mask_host[:rows * self.mask_stride], non_blocking=True)
+        padded = self.evaluator.compiled.batch_for(rows) if self.evaluator.compiled is not None else rows
+        if padded != rows:
+            self.float_host[rows * self.float_stride:padded * self.float_stride].zero_()
+            self.mask_host[rows * self.mask_stride:padded * self.mask_stride].zero_()
+        self.float_dev[:padded * self.float_stride].copy_(
+            self.float_host[:padded * self.float_stride], non_blocking=True)
+        self.mask_dev[:padded * self.mask_stride].copy_(
+            self.mask_host[:padded * self.mask_stride], non_blocking=True)
         return time.perf_counter() - started
 
     def begin_policy_value(self, buffer) -> NativeForwardHandle:
         layout = self._layout_for(buffer)
         rows = buffer.row_count()
         h2d = self._stage_inputs(layout, rows)
-        prepared = self._prepared(layout, rows)
+        padded = self.evaluator.compiled.batch_for(rows) if self.evaluator.compiled is not None else rows
+        prepared = self._prepared(layout, padded)
         started = time.perf_counter()
         with torch.inference_mode():
-            logits, values = self.evaluator._forward(prepared)
+            direct = self._direct_graph(prepared, padded)
+            if not direct:
+                logits, values = self.evaluator._forward(prepared)
             forward = time.perf_counter() - started
             started = time.perf_counter()
-            self.out_dev[:rows, :self.width].copy_(logits)
-            self.out_dev[:rows, self.width].copy_(values)
+            if not direct:
+                self.out_dev[:rows, :self.width].copy_(logits[:rows])
+                self.out_dev[:rows, self.width].copy_(values[:rows])
             self.out_host[:rows].copy_(self.out_dev[:rows], non_blocking=True)
         d2h = time.perf_counter() - started
         self.event.record()
@@ -593,13 +688,17 @@ class NativePackedTransfer:
         layout = self._layout_for(buffer)
         rows = buffer.row_count()
         h2d = self._stage_inputs(layout, rows)
-        prepared = self._prepared(layout, rows)
+        padded = self.evaluator.compiled.batch_for(rows) if self.evaluator.compiled is not None else rows
+        prepared = self._prepared(layout, padded)
         started = time.perf_counter()
         with torch.inference_mode():
-            values = self.evaluator._forward_value(prepared)
+            direct = self._direct_graph(prepared, padded)
+            if not direct:
+                values = self.evaluator._forward_value(prepared)
             forward = time.perf_counter() - started
             started = time.perf_counter()
-            self.values_dev[:rows].copy_(values)
+            if not direct:
+                self.values_dev[:rows].copy_(values[:rows])
             self.values_host[:rows].copy_(self.values_dev[:rows], non_blocking=True)
         d2h = time.perf_counter() - started
         self.event.record()
@@ -678,6 +777,8 @@ class FrozenSearchInference:
         if self.device.type == "cuda" and not torch.cuda.is_available():
             raise RuntimeError("CUDA search inference requested but CUDA is unavailable")
         self.config = config or InferenceConfig()
+        if self.config.compile_mode == "native-cudagraph" and self.device.type != "cuda":
+            raise ValueError("native-cudagraph requires a CUDA device")
         self.model = (copy.deepcopy(model) if model.training else model).to(self.device).eval()
         self.projection = (
             self.model.build_actor_projection() if self.config.actor_projection else None
@@ -688,7 +789,7 @@ class FrozenSearchInference:
                             buckets=self.config.candidate_buckets,
                             compile_mode=self.config.compile_mode,
                             failure_policy=self.config.compile_failure_policy,
-                            stats_sink=self.stats)
+                            stats_sink=self.stats, batch_buckets=self.config.batch_buckets)
             if self.config.mode == "compiled" else None
         )
         if self.compiled is not None:
@@ -746,15 +847,38 @@ class FrozenSearchInference:
         if self.compiled is None:
             return 0.0
         started = time.perf_counter()
-        for width in widths:
-            batch = self._synthetic_decisions(rows, width, self.device)
+        for size in self.config.batch_buckets or (rows,):
+            # Static CUDA warm-up must use the same row-strided native views as
+            # collection; contiguous synthetic inputs would compile other guards.
+            if (self.config.batch_buckets and self.device.type == "cuda" and
+                    self.config.native_transport == "reused"):
+                from .native_policy import _default_catalog, _extension, _native_catalog
+                catalog = _native_catalog(_default_catalog())
+                for state_only, width in [(False, w) for w in widths] + [(True, 0)]:
+                    probe = _extension().NativeBatch(catalog, state_only, 1, width or 1)
+                    transfer = self.new_native_transfer(
+                        state_only=state_only, capacity=size, width=width,
+                        float_stride=probe.float_stride(), mask_stride=probe.mask_stride())
+                    transfer.float_dev.zero_()
+                    transfer.mask_dev.fill_(True)
+                    batch = transfer._prepared(probe.packed(), size)
+                    with torch.inference_mode():
+                        for _ in range(3):  # compile, capture, then replay
+                            if state_only:
+                                self._forward_value(batch)
+                            else:
+                                self._forward(batch)
+                continue
+            for width in widths:
+                batch = self._synthetic_decisions(size, width, self.device)
+                with torch.inference_mode():
+                    self._forward(batch)
+            state = self._synthetic_state(size, self.device)
             with torch.inference_mode():
-                self._forward(batch)
-        state = self._synthetic_state(rows, self.device)
-        with torch.inference_mode():
-            self._forward_value(state)
+                self._forward_value(state)
         if self.device.type == "cuda":
             torch.cuda.synchronize()
+        self.stats.compile = self.compiled.stats.to_dict()
         return time.perf_counter() - started
 
     def new_native_transfer(self, *, state_only: bool, capacity: int, width: int,
@@ -762,6 +886,8 @@ class FrozenSearchInference:
         """Reusable staging for one native batch shape on this evaluator's device."""
 
         if self.device.type == "cuda":
+            if self.compiled is not None:
+                capacity = self.compiled.batch_for(capacity)
             if self.config.native_transport == "packed":
                 return NativeArrayPackedTransfer(self)
             return NativePackedTransfer(self, state_only=state_only, capacity=capacity, width=width,

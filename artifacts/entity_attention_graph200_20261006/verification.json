@@ -1,0 +1,35 @@
+{
+  "protocol": "graph-batching-validation-v1",
+  "recorded_on": "2026-10-06",
+  "tests": {
+    "tests": 26,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "pytest_seconds": 48.272,
+  "test_command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest -q tests/test_hybrid_training.py tests/test_inference_modes.py --junitxml=artifacts/entity_attention_graph200_20261006/regression_tests.xml",
+  "changed_config_fields": [
+    "selfplay.execution.batch_buckets",
+    "selfplay.execution.max_batch_size"
+  ],
+  "formal_frozen_config_path": "runs/entity_attention_hybrid_s1024_n1_from_round9_seed1/config.json",
+  "formal_frozen_config_sha256": "2c3338d56eb6207dd76738eb99286ca28e981e5fc644af5071d8c5050e6c0f63",
+  "cuda_available": false,
+  "torch_version": "2.14.0+cu130",
+  "gpu_capture_or_speed_verified": false,
+  "no_new_long_training_or_strength_evaluation": true,
+  "source_sha256": {
+    "src/splendor/hybrid_train.py": "6f44f3b713ff3eb38031f8044dc19e6c9f020a189cb8724ba19f53b1613941c9",
+    "tests/test_hybrid_training.py": "c985449de11c6a35dc173e73854931eb4f18d99fc20b295108ecef8cbcce80d7",
+    "tests/test_inference_modes.py": "801ee00199e5293dfeaaa89aecc5ba56ece61efb5e71cbe7c37f3b4c4732b2c5"
+  },
+  "evidence_sha256": {
+    "artifacts/entity_attention_graph200_20261006/README.md": "58c13b1796ef73f7b1498594cb9b29f6d152e9a21bcb13af83f95f3ecfafdf90",
+    "artifacts/entity_attention_graph200_20261006/config_graph200.json": "543060ba3f38b23f6acaae7e6ccb86238f16a77931fa4cc8269d90586a325708",
+    "artifacts/entity_attention_graph200_20261006/padding_projection.json": "55a76bce08c98074061be5abf9a4d3481ffd309318289e6108464483ac2cb99e",
+    "artifacts/entity_attention_graph200_20261006/regression_tests.xml": "c1d3b6b14b87783a4d187025fc3c343e8d886a22b92da3ade9d3cebee896158e",
+    "artifacts/entity_attention_graph200_20261006/resume_source_identity.json": "0215f13e6327b1394efe3973f357db4a1ff853a1f2957f08e1f1edcdf23606b2",
+    "artifacts/entity_attention_graph200_20261006/resume_verification.json": "a975f25f928f1fba95c10bf6fe1f6689574167ec61cf99c553dbbcb2d5e74d33"
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "checkpoint": {
+    "bytes": 6484307,
+    "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/checkpoints/final.pt",
+    "sha256": "af3b2b64007705cc9adcbb3e8a6ad68239f4dc967c31c515e857b1240479e44a"
+  },
+  "existing_reference": "s1024_n1",
+  "limitations": [
+    "100-game paired confidence intervals for candidate-minus-baseline overlap zero; equivalence is not established.",
+    "35-second opening/early-game windows are not completed games/sec or full-round speedups.",
+    "Lower full-distribution JS does not imply better targets or lower top-1 action sensitivity.",
+    "Long-term learning speed and value-target quality were not measured.",
+    "A matched N1 training control is required to attribute a training effect to N2."
+  ],
+  "next_training_proposal": {
+    "compare_by": [
+      "same number of new games",
+      "same collection wall time"
+    ],
+    "evaluation_search": {
+      "determinizations": 1,
+      "simulations": 1024
+    },
+    "executable_training_config": false,
+    "hold_constant": [
+      "starting weights and optimizer state",
+      "replay limit and sampling",
+      "offline/online mixing schedule",
+      "batch size",
+      "learning rate",
+      "value/policy loss weights",
+      "exploration and seeds",
+      "execution layout"
+    ],
+    "launched": false,
+    "new_games_per_round": 100,
+    "start_global_step": 9500,
+    "train_steps_per_round": 100
+  },
+  "protocol": "attention-sn-screen-v1",
+  "scope": "Candidates for subsequent training; fixed-model screening only; no training run or production config changes.",
+  "selected": [
+    {
+      "case": "s512_n2",
+      "role": "lower_collection_cost",
+      "score_ci95": {
+        "confidence": 0.95,
+        "estimate": 0.59,
+        "lower": 0.48,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 14720000,
+        "upper": 0.69
+      },
+      "score_difference_vs_s1024_n1": {
+        "confidence": 0.95,
+        "estimate": -0.105,
+        "lower": -0.23,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 14720000,
+        "upper": 0.02
+      },
+      "score_vs_theta5000": 0.59,
+      "search": {
+        "determinizations": 2,
+        "per_world_simulations": 256,
+        "simulations": 512
+      },
+      "selection_reason": "Fastest production window; score point estimate near S512/N1; lower target sensitivity to world seeds.",
+      "short_window_speed_ratio_repeat_range": [
+        2.838158582217477,
+        3.0039180132882204
+      ],
+      "short_window_speed_ratio_vs_s1024_n1": 2.9210382977528484,
+      "target_js_across_world_seeds_with_fixed_training_noise": 0.007409891200010923
+    },
+    {
+      "case": "s1024_n2",
+      "role": "higher_per_world_budget",
+      "score_ci95": {
+        "confidence": 0.95,
+        "estimate": 0.655,
+        "lower": 0.57,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 14720000,
+        "upper": 0.74
+      },
+      "score_difference_vs_s1024_n1": {
+        "confidence": 0.95,
+        "estimate": -0.04,
+        "lower": -0.16,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 14720000,
+        "upper": 0.085
+      },
+      "score_vs_theta5000": 0.655,
+      "search": {
+        "determinizations": 2,
+        "per_world_simulations": 512,
+        "simulations": 1024
+      },
+      "selection_reason": "Higher teacher score point estimate than S512/N2; 512 simulations per world; faster than current S1024/N1.",
+      "short_window_speed_ratio_repeat_range": [
+        1.3694844980104541,
+        1.416854983542631
+      ],
+      "short_window_speed_ratio_vs_s1024_n1": 1.3931697407765427,
+      "target_js_across_world_seeds_with_fixed_training_noise": 0.011655359003569739
+    }
+  ],
+  "selection_count": 2
+}

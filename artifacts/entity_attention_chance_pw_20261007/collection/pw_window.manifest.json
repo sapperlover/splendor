@@ -1,0 +1,89 @@
+{
+  "protocol": "mcts-selfplay-v2",
+  "semantic_fingerprint": "f052e4aa818504948abcca835845f983f5a282fb39f3fe9edb93e3470676cc4e",
+  "config": {
+    "protocol": "mcts-selfplay-v2",
+    "run_id": "pw_collection_k025_s1024",
+    "round_index": 0,
+    "checkpoint": "/home/lc/\u4e0b\u8f7d/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "num_games": 200,
+    "seed": 16810000,
+    "search_config": {
+      "simulations": 1024,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "seed": 14630000,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "dirichlet_alpha": 0.3
+    },
+    "execution": {
+      "backend": "native_cuda_pool",
+      "engine_mode": "fast",
+      "workers": 1,
+      "active_games_per_worker": 1,
+      "max_batch_size": 200,
+      "max_batch_wait_ms": 5,
+      "torch_threads": 1,
+      "precision": "float32",
+      "batch_interface": "native",
+      "inference_mode": "compiled",
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_mode": "native-cudagraph",
+      "compile_failure_policy": "fail_fast",
+      "native_transport": "reused",
+      "pipeline_slots": 1,
+      "search_workers": 8,
+      "total_active_games": 200,
+      "local_microbatch": 64,
+      "shared_slots": 2,
+      "shared_candidate_width": 256,
+      "batch_buckets": [
+        16,
+        32,
+        64,
+        128,
+        200
+      ]
+    },
+    "add_root_noise": true,
+    "temperature_schedule": {
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0,
+      "late_temperature": 0.0
+    },
+    "validation_fraction": 0.1,
+    "split_seed": 16820000,
+    "max_completed_turns": 400
+  },
+  "checkpoint_identity": {
+    "path": "/home/lc/\u4e0b\u8f7d/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+  },
+  "versions": {
+    "data": "splendor-mcts-selfplay-v2",
+    "search": "sampled-chance-pw-puct-native-v1",
+    "numeric": "native-cpp-fp32-v1",
+    "rules": "splendor-base-two-player-v2-forced-skip",
+    "replay": 2,
+    "rng": "splitmix64-chance-root-resampling-v1",
+    "native_rules": "cpp17-native-game-v1",
+    "inference": "compiled-stock",
+    "batch_interface": "native",
+    "native_gpu_pool": "shared-slots-v1",
+    "feature": "splendor-observation-action-v1",
+    "seed": "splendor-selfplay-seed-v1",
+    "chance_widening": "{\"alpha\": 0.5, \"k\": 0.25}"
+  },
+  "source": {
+    "git_revision": "0a176b1a269a9850f51e7350e475a6c801f82644",
+    "git_dirty": true
+  }
+}

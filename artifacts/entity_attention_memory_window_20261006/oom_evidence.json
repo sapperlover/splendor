@@ -1,0 +1,28 @@
+{
+  "source": "journalctl -k",
+  "records": [
+    {
+      "timestamp": "2026-10-06T13:23:00.619133+08:00",
+      "message": "Chrome_ChildIOT invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0"
+    },
+    {
+      "timestamp": "2026-10-06T13:23:00.940004+08:00",
+      "message": "Free swap  = 0kB"
+    },
+    {
+      "timestamp": "2026-10-06T13:23:00.940026+08:00",
+      "message": "Total swap = 0kB"
+    },
+    {
+      "timestamp": "2026-10-06T13:23:00.950256+08:00",
+      "message": "oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=user.slice,mems_allowed=0,global_oom,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/app-com.microsoft.VSCode-7219.scope,task=python,pid=17949,uid=1000"
+    },
+    {
+      "timestamp": "2026-10-06T13:23:00.950286+08:00",
+      "message": "Out of memory: Killed process 17949 (python) total-vm:32859300kB, anon-rss:22203104kB, file-rss:66944kB, shmem-rss:18164kB, UID:1000 pgtables:46736kB oom_score_adj:0"
+    }
+  ],
+  "killed_pid": 17949,
+  "killed_rss_kib": 22288212,
+  "scope": "Exact kernel evidence; additional process-local allocations are not fully attributed."
+}

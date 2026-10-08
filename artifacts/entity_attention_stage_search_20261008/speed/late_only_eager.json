@@ -1,0 +1,1566 @@
+{
+  "a_first": {
+    "draws": 0,
+    "games": 8,
+    "losses": 4,
+    "valid_games": 8,
+    "win_rate_score": 0.5,
+    "wins": 4
+  },
+  "a_losses": 7,
+  "a_second": {
+    "draws": 0,
+    "games": 8,
+    "losses": 3,
+    "valid_games": 8,
+    "win_rate_score": 0.625,
+    "wins": 5
+  },
+  "a_wins": 9,
+  "checkpoint_identity": {
+    "policy_a": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+    },
+    "policy_b": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+    }
+  },
+  "completed_games": 16,
+  "completed_pairs": 8,
+  "config": {
+    "adjudicate_deterministic_policy_cycles": true,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 22300000,
+    "device": "cuda",
+    "execution": {
+      "active_games": 64,
+      "actor_projection": false,
+      "backend": "native_batched",
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "inference_mode": "eager",
+      "max_batch_size": 64,
+      "max_batch_wait_ms": 0.0
+    },
+    "game_seeds": [
+      22400000,
+      22400001,
+      22400002,
+      22400003,
+      22400004,
+      22400005,
+      22400006,
+      22400007
+    ],
+    "max_completed_turns": 400,
+    "metadata": {
+      "code_fingerprint": "bounded-cuda-smoke",
+      "late_score_threshold": 10,
+      "protocol": "entity-attention-stage-search-v1",
+      "required_runner": "artifacts/entity_attention_stage_search_20261008/run.py",
+      "stage_rule": "max(self_public.score, opponent_public.score) >= threshold",
+      "stage_search_mode": "late_only"
+    },
+    "policy_a": {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "inference": {
+        "actor_projection": false,
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "compile_failure_policy": "fail_fast",
+        "mode": "eager",
+        "native_transport": "reused"
+      },
+      "kind": "mcts_checkpoint",
+      "name": "late_only",
+      "search_backend": "native",
+      "search_config": {
+        "c_puct": 1.5,
+        "determinizations": 1,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "seed": 22200000,
+        "simulations": 1024
+      }
+    },
+    "policy_b": {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "inference": {
+        "actor_projection": false,
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "compile_failure_policy": "fail_fast",
+        "mode": "eager",
+        "native_transport": "reused"
+      },
+      "kind": "greedy_checkpoint",
+      "name": "same_weight_greedy"
+    },
+    "policy_seed_base": 22100000,
+    "workers": 1
+  },
+  "draws": 0,
+  "elapsed_seconds_this_invocation": 11.840301677999378,
+  "engineering_truncations": 0,
+  "exceptions": 0,
+  "execution_stats": {
+    "checked_rule_seconds": 0.5990491710090282,
+    "games": [
+      {
+        "pair_id": 1,
+        "seat": 0,
+        "wall_seconds": 3.679009325000152
+      },
+      {
+        "pair_id": 5,
+        "seat": 1,
+        "wall_seconds": 3.799443793000137
+      },
+      {
+        "pair_id": 5,
+        "seat": 0,
+        "wall_seconds": 4.591911763999633
+      },
+      {
+        "pair_id": 3,
+        "seat": 1,
+        "wall_seconds": 5.107761166999808
+      },
+      {
+        "pair_id": 4,
+        "seat": 1,
+        "wall_seconds": 5.181591288000163
+      },
+      {
+        "pair_id": 7,
+        "seat": 0,
+        "wall_seconds": 6.380413610999312
+      },
+      {
+        "pair_id": 1,
+        "seat": 1,
+        "wall_seconds": 6.5961699039999075
+      },
+      {
+        "pair_id": 7,
+        "seat": 1,
+        "wall_seconds": 6.870298478999757
+      },
+      {
+        "pair_id": 3,
+        "seat": 0,
+        "wall_seconds": 7.440144237999448
+      },
+      {
+        "pair_id": 6,
+        "seat": 0,
+        "wall_seconds": 7.459222933000092
+      },
+      {
+        "pair_id": 6,
+        "seat": 1,
+        "wall_seconds": 7.599586145000103
+      },
+      {
+        "pair_id": 0,
+        "seat": 0,
+        "wall_seconds": 9.085780564000743
+      },
+      {
+        "pair_id": 4,
+        "seat": 0,
+        "wall_seconds": 9.245546877000379
+      },
+      {
+        "pair_id": 2,
+        "seat": 1,
+        "wall_seconds": 10.216016147999653
+      },
+      {
+        "pair_id": 2,
+        "seat": 0,
+        "wall_seconds": 11.30159910600014
+      },
+      {
+        "pair_id": 0,
+        "seat": 1,
+        "wall_seconds": 11.571525792999637
+      }
+    ],
+    "greedy_decisions": 641,
+    "greedy_seconds": 1.4196951849980906,
+    "model_creation_seconds": 0.12044437900021876,
+    "models": {
+      "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4:0": {
+        "actual_candidate_positions": 612547,
+        "batch_non_inference_seconds": 0.8611894429714084,
+        "batch_wall_seconds": 8.072142965977037,
+        "decision_latency": {
+          "50": 0.0804168204999769,
+          "90": 0.13690316779993741,
+          "99": 1.8505240390704423
+        },
+        "inference": {
+          "batch_size_histogram": {
+            "1": 122,
+            "10": 77,
+            "11": 716,
+            "12": 52,
+            "13": 253,
+            "14": 470,
+            "15": 86,
+            "16": 420,
+            "2": 658,
+            "3": 577,
+            "4": 206,
+            "5": 823,
+            "6": 87,
+            "7": 20,
+            "8": 325,
+            "9": 199
+          },
+          "compile": {},
+          "d2h_seconds": 0.1725715909651626,
+          "feature_seconds": 0.0,
+          "forward_seconds": 6.861005366028621,
+          "h2d_seconds": 0.1483522450162127,
+          "inference": {
+            "actor_projection": false,
+            "candidate_buckets": [
+              16,
+              32,
+              48,
+              64
+            ],
+            "compile_failure_policy": "fail_fast",
+            "compile_mode": null,
+            "mode": "eager",
+            "native_transport": "reused"
+          },
+          "logical_model_positions": 40310,
+          "mean_batch_size": 7.917894323315655,
+          "physical_model_batches": 5091,
+          "wait_seconds": 0.02902432099563157
+        },
+        "native_consume_seconds": 0.3589762630235782,
+        "native_fill_seconds": 0.17833850202896429,
+        "physical_candidate_positions": 1371440,
+        "policy_rows": 40310,
+        "root_rows": 71,
+        "root_start_seconds": 1.3820109790094648,
+        "value_rows": 0,
+        "width_batches": {
+          "16": 154,
+          "32": 4229,
+          "48": 699,
+          "64": 9
+        },
+        "width_rows": {
+          "16": 482,
+          "32": 34345,
+          "48": 5389,
+          "64": 94
+        }
+      }
+    },
+    "scope": "this invocation; mutually exclusive owner host intervals",
+    "sidecar_seconds": 0.07311376199959341
+  },
+  "forced_skips": 0,
+  "game_log_root": "/home/lc/下载/splendor/artifacts/entity_attention_stage_search_20261008/speed/late_only_eager.json.games",
+  "illegal_actions": 0,
+  "invariant_failures": 0,
+  "mean_completed_player_turns": 55.625,
+  "mean_decisions": 80.0625,
+  "median_completed_player_turns": 56.0,
+  "output": "/home/lc/下载/splendor/artifacts/entity_attention_stage_search_20261008/speed/late_only_eager.json",
+  "paired_bootstrap": {
+    "confidence": 0.95,
+    "estimate": 0.5625,
+    "lower": 0.5,
+    "pair_count": 8,
+    "resamples": 10000,
+    "seed": 22300000,
+    "upper": 0.6875
+  },
+  "paired_bootstrap_unit": "one_paired_seed",
+  "pairs": [
+    {
+      "game_seed": 22400000,
+      "games": [
+        {
+          "completed_player_turns": 52,
+          "completed_turns": [
+            26,
+            26
+          ],
+          "decision_count": 74,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "55731252dc786180623bdbc50a4ce65a919142ac7a20bacd7cf7a0a04475d522",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 22400000,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 0,
+          "policy_a_stats": {
+            "changed_action_count": 4,
+            "decisions": 37,
+            "determinizations": 5,
+            "early_decisions": 30,
+            "early_greedy_decisions": 30,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 3525,
+            "feature_seconds": 0.0,
+            "folded_actions": 617,
+            "inference_seconds": 0.0,
+            "late_decisions": 7,
+            "late_entry_completed_turns_sum": 42,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 7,
+            "late_simulations": 5120,
+            "late_terminal_hits": 1595,
+            "late_tree_depth_sum": 20380,
+            "model_batches": 0,
+            "model_positions": 3530,
+            "searchable_decisions": 5,
+            "simulations": 5120,
+            "single_candidate_decisions": 10,
+            "state_transitions": 4701,
+            "terminal_hits": 1595,
+            "total_seconds": 6.346551186000397,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 20380
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100000,
+            22100001
+          ],
+          "purchased_card_counts": [
+            11,
+            11
+          ],
+          "scores": [
+            15,
+            12
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        },
+        {
+          "completed_player_turns": 54,
+          "completed_turns": [
+            27,
+            27
+          ],
+          "decision_count": 78,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "2fbc68bea873e56acec39f5ffebc55e3239002558b1c2d03599cdcb1ae3867cf",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 22400000,
+          "normal_end": true,
+          "outcome_for_a": "a_loss",
+          "pair_id": 0,
+          "policy_a_stats": {
+            "changed_action_count": 1,
+            "decisions": 39,
+            "determinizations": 7,
+            "early_decisions": 28,
+            "early_greedy_decisions": 28,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 5082,
+            "feature_seconds": 0.0,
+            "folded_actions": 1012,
+            "inference_seconds": 0.0,
+            "late_decisions": 11,
+            "late_entry_completed_turns_sum": 41,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 11,
+            "late_simulations": 7168,
+            "late_terminal_hits": 2086,
+            "late_tree_depth_sum": 23025,
+            "model_batches": 0,
+            "model_positions": 5089,
+            "searchable_decisions": 7,
+            "simulations": 7168,
+            "single_candidate_decisions": 4,
+            "state_transitions": 6885,
+            "terminal_hits": 2086,
+            "total_seconds": 9.09763901900169,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 23025
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100000,
+            22100001
+          ],
+          "purchased_card_counts": [
+            12,
+            12
+          ],
+          "scores": [
+            13,
+            18
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 1
+        }
+      ],
+      "pair_id": 0
+    },
+    {
+      "game_seed": 22400001,
+      "games": [
+        {
+          "completed_player_turns": 56,
+          "completed_turns": [
+            28,
+            28
+          ],
+          "decision_count": 79,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "257d67b84f89e5d184ed80ec49462a744f4c2075e7a94c685d0cedc4128f5607",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 22400001,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 1,
+          "policy_a_stats": {
+            "changed_action_count": 0,
+            "decisions": 40,
+            "determinizations": 2,
+            "early_decisions": 37,
+            "early_greedy_decisions": 37,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 420,
+            "feature_seconds": 0.0,
+            "folded_actions": 145,
+            "inference_seconds": 0.0,
+            "late_decisions": 3,
+            "late_entry_completed_turns_sum": 52,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 3,
+            "late_simulations": 2048,
+            "late_terminal_hits": 1628,
+            "late_tree_depth_sum": 6594,
+            "model_batches": 0,
+            "model_positions": 422,
+            "searchable_decisions": 2,
+            "simulations": 2048,
+            "single_candidate_decisions": 9,
+            "state_transitions": 873,
+            "terminal_hits": 1628,
+            "total_seconds": 0.7366431200007355,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 6594
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100002,
+            22100003
+          ],
+          "purchased_card_counts": [
+            12,
+            9
+          ],
+          "scores": [
+            15,
+            9
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        },
+        {
+          "completed_player_turns": 56,
+          "completed_turns": [
+            28,
+            28
+          ],
+          "decision_count": 79,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "b30103fc0de9e41900092070cf88ae48aeb72d72e9fac44aaef09c011a5f075e",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 22400001,
+          "normal_end": true,
+          "outcome_for_a": "a_loss",
+          "pair_id": 1,
+          "policy_a_stats": {
+            "changed_action_count": 0,
+            "decisions": 39,
+            "determinizations": 4,
+            "early_decisions": 35,
+            "early_greedy_decisions": 35,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 2071,
+            "feature_seconds": 0.0,
+            "folded_actions": 433,
+            "inference_seconds": 0.0,
+            "late_decisions": 4,
+            "late_entry_completed_turns_sum": 51,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 4,
+            "late_simulations": 4096,
+            "late_terminal_hits": 2025,
+            "late_tree_depth_sum": 13094,
+            "model_batches": 0,
+            "model_positions": 2075,
+            "searchable_decisions": 4,
+            "simulations": 4096,
+            "single_candidate_decisions": 3,
+            "state_transitions": 3089,
+            "terminal_hits": 2025,
+            "total_seconds": 3.70637918400098,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 13094
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100002,
+            22100003
+          ],
+          "purchased_card_counts": [
+            9,
+            12
+          ],
+          "scores": [
+            9,
+            15
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 1
+        }
+      ],
+      "pair_id": 1
+    },
+    {
+      "game_seed": 22400002,
+      "games": [
+        {
+          "completed_player_turns": 56,
+          "completed_turns": [
+            28,
+            28
+          ],
+          "decision_count": 79,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "54a942c7c1f8bfa04fa064b3af3a3091a2a78275bd5978b9c17115a934c0376d",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 22400002,
+          "normal_end": true,
+          "outcome_for_a": "a_loss",
+          "pair_id": 2,
+          "policy_a_stats": {
+            "changed_action_count": 2,
+            "decisions": 41,
+            "determinizations": 7,
+            "early_decisions": 30,
+            "early_greedy_decisions": 30,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 4958,
+            "feature_seconds": 0.0,
+            "folded_actions": 1566,
+            "inference_seconds": 0.0,
+            "late_decisions": 11,
+            "late_entry_completed_turns_sum": 42,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 11,
+            "late_simulations": 7168,
+            "late_terminal_hits": 2210,
+            "late_tree_depth_sum": 24747,
+            "model_batches": 0,
+            "model_positions": 4965,
+            "searchable_decisions": 7,
+            "simulations": 7168,
+            "single_candidate_decisions": 11,
+            "state_transitions": 6746,
+            "terminal_hits": 2210,
+            "total_seconds": 8.669710778999615,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 24747
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100004,
+            22100005
+          ],
+          "purchased_card_counts": [
+            12,
+            10
+          ],
+          "scores": [
+            13,
+            16
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 1
+        },
+        {
+          "completed_player_turns": 56,
+          "completed_turns": [
+            28,
+            28
+          ],
+          "decision_count": 79,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "5b8054caa9ac9e672b5f18a1fdc2e2c3f11dbf8760b6550a7982603f0d088f99",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 22400002,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 2,
+          "policy_a_stats": {
+            "changed_action_count": 1,
+            "decisions": 38,
+            "determinizations": 7,
+            "early_decisions": 28,
+            "early_greedy_decisions": 28,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 4307,
+            "feature_seconds": 0.0,
+            "folded_actions": 1340,
+            "inference_seconds": 0.0,
+            "late_decisions": 10,
+            "late_entry_completed_turns_sum": 43,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 10,
+            "late_simulations": 7168,
+            "late_terminal_hits": 2861,
+            "late_tree_depth_sum": 23148,
+            "model_batches": 0,
+            "model_positions": 4314,
+            "searchable_decisions": 7,
+            "simulations": 7168,
+            "single_candidate_decisions": 8,
+            "state_transitions": 5900,
+            "terminal_hits": 2861,
+            "total_seconds": 7.750029139000617,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 23148
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100004,
+            22100005
+          ],
+          "purchased_card_counts": [
+            10,
+            12
+          ],
+          "scores": [
+            16,
+            12
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        }
+      ],
+      "pair_id": 2
+    },
+    {
+      "game_seed": 22400003,
+      "games": [
+        {
+          "completed_player_turns": 60,
+          "completed_turns": [
+            30,
+            30
+          ],
+          "decision_count": 88,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "072e8dda0a3b4d6051a5410894afc8c6598e4eaed7aea32d36d9b59f4febd1e6",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 22400003,
+          "normal_end": true,
+          "outcome_for_a": "a_loss",
+          "pair_id": 3,
+          "policy_a_stats": {
+            "changed_action_count": 1,
+            "decisions": 46,
+            "determinizations": 5,
+            "early_decisions": 39,
+            "early_greedy_decisions": 39,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 2587,
+            "feature_seconds": 0.0,
+            "folded_actions": 847,
+            "inference_seconds": 0.0,
+            "late_decisions": 7,
+            "late_entry_completed_turns_sum": 50,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 7,
+            "late_simulations": 5120,
+            "late_terminal_hits": 2533,
+            "late_tree_depth_sum": 17595,
+            "model_batches": 0,
+            "model_positions": 2592,
+            "searchable_decisions": 5,
+            "simulations": 5120,
+            "single_candidate_decisions": 14,
+            "state_transitions": 3653,
+            "terminal_hits": 2533,
+            "total_seconds": 4.46635385099944,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 17595
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100006,
+            22100007
+          ],
+          "purchased_card_counts": [
+            14,
+            12
+          ],
+          "scores": [
+            17,
+            17
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 1
+        },
+        {
+          "completed_player_turns": 56,
+          "completed_turns": [
+            28,
+            28
+          ],
+          "decision_count": 82,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "59b9b187b430f92ea4eec60c5fddf56b56f074ed467802a071620c82d344d238",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 22400003,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 3,
+          "policy_a_stats": {
+            "changed_action_count": 2,
+            "decisions": 39,
+            "determinizations": 3,
+            "early_decisions": 35,
+            "early_greedy_decisions": 35,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 1229,
+            "feature_seconds": 0.0,
+            "folded_actions": 271,
+            "inference_seconds": 0.0,
+            "late_decisions": 4,
+            "late_entry_completed_turns_sum": 51,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 4,
+            "late_simulations": 3072,
+            "late_terminal_hits": 1843,
+            "late_tree_depth_sum": 7911,
+            "model_batches": 0,
+            "model_positions": 1232,
+            "searchable_decisions": 3,
+            "simulations": 3072,
+            "single_candidate_decisions": 5,
+            "state_transitions": 1533,
+            "terminal_hits": 1843,
+            "total_seconds": 2.2204071460000705,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 7911
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100006,
+            22100007
+          ],
+          "purchased_card_counts": [
+            11,
+            13
+          ],
+          "scores": [
+            17,
+            11
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        }
+      ],
+      "pair_id": 3
+    },
+    {
+      "game_seed": 22400004,
+      "games": [
+        {
+          "completed_player_turns": 58,
+          "completed_turns": [
+            29,
+            29
+          ],
+          "decision_count": 88,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "c4efcd4fc78cdeb40b1dfac8889cb7d83f24765fd8db9aaceb5082e54aeceed1",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 22400004,
+          "normal_end": true,
+          "outcome_for_a": "a_loss",
+          "pair_id": 4,
+          "policy_a_stats": {
+            "changed_action_count": 3,
+            "decisions": 42,
+            "determinizations": 5,
+            "early_decisions": 34,
+            "early_greedy_decisions": 34,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 3724,
+            "feature_seconds": 0.0,
+            "folded_actions": 1027,
+            "inference_seconds": 0.0,
+            "late_decisions": 8,
+            "late_entry_completed_turns_sum": 48,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 8,
+            "late_simulations": 5120,
+            "late_terminal_hits": 1396,
+            "late_tree_depth_sum": 16278,
+            "model_batches": 0,
+            "model_positions": 3729,
+            "searchable_decisions": 5,
+            "simulations": 5120,
+            "single_candidate_decisions": 12,
+            "state_transitions": 4940,
+            "terminal_hits": 1396,
+            "total_seconds": 6.393331546999434,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 16278
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100008,
+            22100009
+          ],
+          "purchased_card_counts": [
+            13,
+            17
+          ],
+          "scores": [
+            13,
+            16
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 1
+        },
+        {
+          "completed_player_turns": 54,
+          "completed_turns": [
+            27,
+            27
+          ],
+          "decision_count": 83,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "5cf8cf4ed0a784bdfe851a7bd5431379bf98fe921ae1158117fcc0a054d8add8",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 22400004,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 4,
+          "policy_a_stats": {
+            "changed_action_count": 2,
+            "decisions": 43,
+            "determinizations": 3,
+            "early_decisions": 39,
+            "early_greedy_decisions": 39,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 1274,
+            "feature_seconds": 0.0,
+            "folded_actions": 301,
+            "inference_seconds": 0.0,
+            "late_decisions": 4,
+            "late_entry_completed_turns_sum": 49,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 4,
+            "late_simulations": 3072,
+            "late_terminal_hits": 1798,
+            "late_tree_depth_sum": 8899,
+            "model_batches": 0,
+            "model_positions": 1277,
+            "searchable_decisions": 3,
+            "simulations": 3072,
+            "single_candidate_decisions": 16,
+            "state_transitions": 1665,
+            "terminal_hits": 1798,
+            "total_seconds": 2.2318955440005084,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 8899
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100008,
+            22100009
+          ],
+          "purchased_card_counts": [
+            16,
+            13
+          ],
+          "scores": [
+            17,
+            10
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        }
+      ],
+      "pair_id": 4
+    },
+    {
+      "game_seed": 22400005,
+      "games": [
+        {
+          "completed_player_turns": 50,
+          "completed_turns": [
+            25,
+            25
+          ],
+          "decision_count": 71,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "de89a9ece8e854d3e6fa17f74b90d129c677a9e073951508b0b7a6a72d09076f",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 22400005,
+          "normal_end": true,
+          "outcome_for_a": "a_loss",
+          "pair_id": 5,
+          "policy_a_stats": {
+            "changed_action_count": 0,
+            "decisions": 36,
+            "determinizations": 2,
+            "early_decisions": 33,
+            "early_greedy_decisions": 33,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 978,
+            "feature_seconds": 0.0,
+            "folded_actions": 246,
+            "inference_seconds": 0.0,
+            "late_decisions": 3,
+            "late_entry_completed_turns_sum": 46,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 3,
+            "late_simulations": 2048,
+            "late_terminal_hits": 1070,
+            "late_tree_depth_sum": 5228,
+            "model_batches": 0,
+            "model_positions": 980,
+            "searchable_decisions": 2,
+            "simulations": 2048,
+            "single_candidate_decisions": 6,
+            "state_transitions": 1322,
+            "terminal_hits": 1070,
+            "total_seconds": 1.8182136630002788,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 5228
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100010,
+            22100011
+          ],
+          "purchased_card_counts": [
+            11,
+            10
+          ],
+          "scores": [
+            7,
+            15
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 1
+        },
+        {
+          "completed_player_turns": 50,
+          "completed_turns": [
+            25,
+            25
+          ],
+          "decision_count": 71,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "2dc1ecf09f5d9ee9d47c330d3ae766a6ce0a5bdb96a348a5e044c98d0061eafb",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 22400005,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 5,
+          "policy_a_stats": {
+            "changed_action_count": 0,
+            "decisions": 35,
+            "determinizations": 2,
+            "early_decisions": 32,
+            "early_greedy_decisions": 32,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 511,
+            "feature_seconds": 0.0,
+            "folded_actions": 157,
+            "inference_seconds": 0.0,
+            "late_decisions": 3,
+            "late_entry_completed_turns_sum": 47,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 3,
+            "late_simulations": 2048,
+            "late_terminal_hits": 1537,
+            "late_tree_depth_sum": 3977,
+            "model_batches": 0,
+            "model_positions": 513,
+            "searchable_decisions": 2,
+            "simulations": 2048,
+            "single_candidate_decisions": 7,
+            "state_transitions": 799,
+            "terminal_hits": 1537,
+            "total_seconds": 1.0880028319998019,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 3977
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100010,
+            22100011
+          ],
+          "purchased_card_counts": [
+            10,
+            11
+          ],
+          "scores": [
+            15,
+            7
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        }
+      ],
+      "pair_id": 5
+    },
+    {
+      "game_seed": 22400006,
+      "games": [
+        {
+          "completed_player_turns": 58,
+          "completed_turns": [
+            29,
+            29
+          ],
+          "decision_count": 81,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "66aee4f979d5e4006ea6181936c4208f3d27f210405983f32aebda50afd0b400",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 22400006,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 6,
+          "policy_a_stats": {
+            "changed_action_count": 2,
+            "decisions": 41,
+            "determinizations": 4,
+            "early_decisions": 35,
+            "early_greedy_decisions": 35,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 2612,
+            "feature_seconds": 0.0,
+            "folded_actions": 865,
+            "inference_seconds": 0.0,
+            "late_decisions": 6,
+            "late_entry_completed_turns_sum": 50,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 6,
+            "late_simulations": 4096,
+            "late_terminal_hits": 1484,
+            "late_tree_depth_sum": 16064,
+            "model_batches": 0,
+            "model_positions": 2616,
+            "searchable_decisions": 4,
+            "simulations": 4096,
+            "single_candidate_decisions": 11,
+            "state_transitions": 4114,
+            "terminal_hits": 1484,
+            "total_seconds": 4.586639486999957,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 16064
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100012,
+            22100013
+          ],
+          "purchased_card_counts": [
+            12,
+            11
+          ],
+          "scores": [
+            15,
+            14
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        },
+        {
+          "completed_player_turns": 60,
+          "completed_turns": [
+            30,
+            30
+          ],
+          "decision_count": 83,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "4fbdd3eaa47d074ba9f946c8fddf20f4ffb9716de3f0b3db1a9ae18557983bbe",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 22400006,
+          "normal_end": true,
+          "outcome_for_a": "a_loss",
+          "pair_id": 6,
+          "policy_a_stats": {
+            "changed_action_count": 1,
+            "decisions": 41,
+            "determinizations": 6,
+            "early_decisions": 33,
+            "early_greedy_decisions": 33,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 2697,
+            "feature_seconds": 0.0,
+            "folded_actions": 959,
+            "inference_seconds": 0.0,
+            "late_decisions": 8,
+            "late_entry_completed_turns_sum": 49,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 8,
+            "late_simulations": 6144,
+            "late_terminal_hits": 3447,
+            "late_tree_depth_sum": 20806,
+            "model_batches": 0,
+            "model_positions": 2703,
+            "searchable_decisions": 6,
+            "simulations": 6144,
+            "single_candidate_decisions": 8,
+            "state_transitions": 5050,
+            "terminal_hits": 3447,
+            "total_seconds": 4.78796886300097,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 20806
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100012,
+            22100013
+          ],
+          "purchased_card_counts": [
+            11,
+            12
+          ],
+          "scores": [
+            12,
+            16
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 1
+        }
+      ],
+      "pair_id": 6
+    },
+    {
+      "game_seed": 22400007,
+      "games": [
+        {
+          "completed_player_turns": 58,
+          "completed_turns": [
+            29,
+            29
+          ],
+          "decision_count": 84,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "7f584ad75ee74c006429a276cb88b18aba9e6d7c97583788c65d46f4d28ddd9b",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 22400007,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 7,
+          "policy_a_stats": {
+            "changed_action_count": 2,
+            "decisions": 42,
+            "determinizations": 4,
+            "early_decisions": 36,
+            "early_greedy_decisions": 36,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 1996,
+            "feature_seconds": 0.0,
+            "folded_actions": 738,
+            "inference_seconds": 0.0,
+            "late_decisions": 6,
+            "late_entry_completed_turns_sum": 50,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 6,
+            "late_simulations": 4096,
+            "late_terminal_hits": 2100,
+            "late_tree_depth_sum": 17873,
+            "model_batches": 0,
+            "model_positions": 2000,
+            "searchable_decisions": 4,
+            "simulations": 4096,
+            "single_candidate_decisions": 10,
+            "state_transitions": 3285,
+            "terminal_hits": 2100,
+            "total_seconds": 3.4842206769999393,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 17873
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100014,
+            22100015
+          ],
+          "purchased_card_counts": [
+            12,
+            13
+          ],
+          "scores": [
+            16,
+            14
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        },
+        {
+          "completed_player_turns": 56,
+          "completed_turns": [
+            28,
+            28
+          ],
+          "decision_count": 82,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "2a6d306bbe9a298090109d03167f8e997aa3acc30802b18f3194cdeb8f5a19b6",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 22400007,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 7,
+          "policy_a_stats": {
+            "changed_action_count": 2,
+            "decisions": 41,
+            "determinizations": 5,
+            "early_decisions": 35,
+            "early_greedy_decisions": 35,
+            "early_search_decisions": 0,
+            "early_simulations": 0,
+            "early_terminal_hits": 0,
+            "early_tree_depth_sum": 0,
+            "expanded_nodes": 2268,
+            "feature_seconds": 0.0,
+            "folded_actions": 728,
+            "inference_seconds": 0.0,
+            "late_decisions": 6,
+            "late_entry_completed_turns_sum": 49,
+            "late_entry_count": 1,
+            "late_greedy_decisions": 0,
+            "late_search_decisions": 6,
+            "late_simulations": 5120,
+            "late_terminal_hits": 2852,
+            "late_tree_depth_sum": 17194,
+            "model_batches": 0,
+            "model_positions": 2273,
+            "searchable_decisions": 5,
+            "simulations": 5120,
+            "single_candidate_decisions": 11,
+            "state_transitions": 3091,
+            "terminal_hits": 2852,
+            "total_seconds": 4.000267886999609,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 17194
+          },
+          "policy_b_stats": {},
+          "policy_names": [
+            "late_only",
+            "same_weight_greedy"
+          ],
+          "policy_seeds": [
+            22100014,
+            22100015
+          ],
+          "purchased_card_counts": [
+            13,
+            12
+          ],
+          "scores": [
+            16,
+            13
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        }
+      ],
+      "pair_id": 7
+    }
+  ],
+  "passed": true,
+  "policy_a_stats": {
+    "changed_action_count": 23,
+    "decisions": 640,
+    "determinizations": 71,
+    "early_decisions": 539,
+    "early_greedy_decisions": 539,
+    "early_search_decisions": 0,
+    "early_simulations": 0,
+    "early_terminal_hits": 0,
+    "early_tree_depth_sum": 0,
+    "expanded_nodes": 40239,
+    "feature_seconds": 0.0,
+    "folded_actions": 11252,
+    "inference_seconds": 0.0,
+    "late_decisions": 101,
+    "late_entry_completed_turns_sum": 760,
+    "late_entry_count": 16,
+    "late_greedy_decisions": 0,
+    "late_search_decisions": 101,
+    "late_simulations": 72704,
+    "late_terminal_hits": 32465,
+    "late_tree_depth_sum": 242813,
+    "model_batches": 0,
+    "model_positions": 40310,
+    "searchable_decisions": 71,
+    "simulations": 72704,
+    "single_candidate_decisions": 145,
+    "state_transitions": 57646,
+    "terminal_hits": 32465,
+    "total_seconds": 71.38425392400404,
+    "transition_cap_hits": 0,
+    "tree_depth_sum": 242813
+  },
+  "policy_b_stats": {},
+  "policy_cycle_draws": 0,
+  "protocol": "fixed-paired-evaluation-v1",
+  "runtime": {
+    "device": "cuda",
+    "workers": 1
+  },
+  "total_games": 16,
+  "total_pairs": 8,
+  "updated_at": "2026-10-08T11:47:29+0800",
+  "valid_games": 16,
+  "win_rate_score": 0.5625
+}

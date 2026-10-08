@@ -1,0 +1,4471 @@
+{
+  "backend": "native_chance",
+  "batch_capacity": 12,
+  "chance_widening": {
+    "alpha": 0.5,
+    "k": 1.0
+  },
+  "cpu_seconds": 2.093648922,
+  "environment": {
+    "compile_cache": {
+      "path": "default /tmp/torchinductor_<user>",
+      "warm_state": "unknown; compilation hit/miss counters in owner status are authoritative"
+    },
+    "cpu_count": 16,
+    "cpu_model": "13th Gen Intel(R) Core(TM) i5-13500H",
+    "cuda_available": true,
+    "executable": "/home/lc/anaconda3/envs/splendor/bin/python",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU, GPU-328e3c53-3afb-333f-7325-d411dd30f366, 580.178.04, 6141",
+    "meminfo": "MemTotal:       32597828 kB\nMemFree:        15099868 kB\nMemAvailable:   23638572 kB\nBuffers:          524260 kB\nCached:          8064796 kB\nSwapCached:            0 kB\nActive:         10626052 kB\nInactive:        4915232 kB\nActive(anon):    7209280 kB\nInactive(anon):        0 kB\nActive(file):    3416772 kB\nInactive(file):  4915232 kB\nUnevictable:       15444 kB\nMlocked:             112 kB\nSwapTotal:             0 kB\nSwapFree:              0 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:               468 kB\nWriteback:             0 kB\nAnonPages:       6967828 kB\nMapped:          2491000 kB\nShmem:            257076 kB\nKReclaimable:     678484 kB\nSlab:             988536 kB\nSReclaimable:     678484 kB\nSUnreclaim:       310052 kB\nKernelStack:       29552 kB\nPageTables:        99220 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    16298912 kB\nCommitted_AS:   33248948 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      232528 kB\nVmallocChunk:          0 kB\nPercpu:            18432 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:    10240 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:     1206528 kB\nDirectMap2M:    19499008 kB\nDirectMap1G:    12582912 kB\n",
+    "performance_environment": {
+      "CONDA_DEFAULT_ENV": "splendor",
+      "MKL_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "PYTHONPATH": "src"
+    },
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14 (main, Sep  2 2026, 23:27:36) [GCC 15.3.0]",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0",
+    "torch_threads": 1
+  },
+  "inference_config": {
+    "actor_projection": false,
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fallback",
+    "compile_mode": null,
+    "mode": "eager",
+    "native_transport": "reused"
+  },
+  "mean_depth": 2.6808268229166665,
+  "peak_process_rss_kib_cumulative": 965604,
+  "protocol": "attention-chance-pw-depth-case-v1",
+  "records": [
+    {
+      "bank_index": 96,
+      "chance": {
+        "chance_draws": 1267,
+        "chance_pw_admitted_outcomes": 575,
+        "chance_pw_contexts": 339,
+        "chance_pw_fresh_samples": 593,
+        "chance_pw_reuses": 674,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 2366,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                10,
+                1,
+                14,
+                5
+              ],
+              "pool_size": 34,
+              "visits": 14
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                39
+              ],
+              "pool_size": 34,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                37,
+                35
+              ],
+              "pool_size": 34,
+              "visits": 5
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                23,
+                12,
+                4
+              ],
+              "pool_size": 34,
+              "visits": 5
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                49,
+                43,
+                62
+              ],
+              "pool_size": 26,
+              "visits": 8
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                69
+              ],
+              "pool_size": 26,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                59
+              ],
+              "pool_size": 26,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                58,
+                40,
+                50
+              ],
+              "pool_size": 26,
+              "visits": 8
+            }
+          ],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                70,
+                76,
+                85,
+                86
+              ],
+              "pool_size": 16,
+              "visits": 10
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                80
+              ],
+              "pool_size": 16,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                37,
+                21,
+                13,
+                39
+              ],
+              "pool_size": 34,
+              "visits": 16
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                63,
+                62,
+                41
+              ],
+              "pool_size": 26,
+              "visits": 5
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                77
+              ],
+              "pool_size": 16,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                11
+              ],
+              "pool_size": 34,
+              "visits": 1
+            }
+          ],
+          []
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            173
+          ],
+          [
+            316
+          ],
+          [
+            91
+          ],
+          [
+            359
+          ],
+          [
+            2,
+            3,
+            4,
+            5
+          ],
+          [
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            1,
+            2,
+            2
+          ],
+          [
+            1,
+            3,
+            4
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            2,
+            3,
+            3
+          ],
+          [],
+          [],
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            3,
+            4,
+            8
+          ],
+          [
+            1,
+            2,
+            2
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            8
+          ]
+        ],
+        "root_value_sums": [
+          10.877394307404757,
+          25.546504830010235,
+          2.532403651624918,
+          21.92354681622237,
+          -0.32378866430372,
+          -0.1215020939707756,
+          -0.10050978511571884,
+          -0.20558561757206917,
+          -0.40482207387685776,
+          -0.09300287812948227,
+          -0.12313634902238846,
+          -0.018761081621050835,
+          0.0,
+          0.0,
+          -0.13621123135089874,
+          -0.23222856223583221,
+          0.0827393438667059,
+          -0.16924463771283627,
+          -0.12939226627349854,
+          -0.10910604149103165,
+          -0.026945970952510834
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 3,
+      "mean_depth": 3.310546875,
+      "opponent_blind_reserved": 0,
+      "prior": [
+        0.14703798735703946,
+        0.15220272815895836,
+        0.14245157702260283,
+        0.31634984863024607,
+        0.03850445109513824,
+        0.0024484159350410717,
+        0.014999231337439578,
+        0.014152399540466022,
+        0.027220968767338875,
+        0.00781916775684805,
+        0.006643675027155915,
+        0.01951552311226659,
+        0.0011957614067406744,
+        0.0012879630951236037,
+        0.02176478165809766,
+        0.0031787018366543217,
+        0.0333124705826736,
+        0.0162111470271595,
+        0.0068154236369027035,
+        0.007012712303298291,
+        0.019875064712808713
+      ],
+      "root_counts": [
+        173,
+        316,
+        91,
+        359,
+        14,
+        1,
+        5,
+        5,
+        8,
+        1,
+        1,
+        8,
+        0,
+        0,
+        10,
+        1,
+        16,
+        5,
+        1,
+        1,
+        8
+      ],
+      "stage": "early",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 577,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.03245585600000001,
+        "rule_seconds": 0.016024205000000014,
+        "simulations": 1024,
+        "state_transitions": 3967,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 3390
+      },
+      "target": [
+        0.1689453125,
+        0.30859375,
+        0.0888671875,
+        0.3505859375,
+        0.013671875,
+        0.0009765625,
+        0.0048828125,
+        0.0048828125,
+        0.0078125,
+        0.0009765625,
+        0.0009765625,
+        0.0078125,
+        0.0,
+        0.0,
+        0.009765625,
+        0.0009765625,
+        0.015625,
+        0.0048828125,
+        0.0009765625,
+        0.0009765625,
+        0.0078125
+      ]
+    },
+    {
+      "bank_index": 118,
+      "chance": {
+        "chance_draws": 1215,
+        "chance_pw_admitted_outcomes": 701,
+        "chance_pw_contexts": 418,
+        "chance_pw_fresh_samples": 728,
+        "chance_pw_reuses": 487,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 1857,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                28,
+                11
+              ],
+              "pool_size": 22,
+              "visits": 3
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                31,
+                27
+              ],
+              "pool_size": 22,
+              "visits": 4
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                17,
+                28
+              ],
+              "pool_size": 22,
+              "visits": 3
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                27,
+                22
+              ],
+              "pool_size": 22,
+              "visits": 4
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                67,
+                50
+              ],
+              "pool_size": 26,
+              "visits": 3
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                44,
+                42
+              ],
+              "pool_size": 26,
+              "visits": 4
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                66,
+                65
+              ],
+              "pool_size": 26,
+              "visits": 4
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                52,
+                63
+              ],
+              "pool_size": 26,
+              "visits": 3
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                83,
+                74,
+                79,
+                81,
+                87
+              ],
+              "pool_size": 16,
+              "visits": 23
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                70,
+                80,
+                77
+              ],
+              "pool_size": 16,
+              "visits": 8
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                80,
+                78
+              ],
+              "pool_size": 16,
+              "visits": 3
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                79,
+                78
+              ],
+              "pool_size": 16,
+              "visits": 4
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                27,
+                33,
+                30
+              ],
+              "pool_size": 22,
+              "visits": 5
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                66,
+                57,
+                43
+              ],
+              "pool_size": 26,
+              "visits": 5
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                74,
+                86,
+                76
+              ],
+              "pool_size": 16,
+              "visits": 8
+            }
+          ]
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            185
+          ],
+          [
+            164
+          ],
+          [
+            127
+          ],
+          [
+            191
+          ],
+          [
+            76
+          ],
+          [
+            61
+          ],
+          [
+            56
+          ],
+          [
+            29
+          ],
+          [
+            28
+          ],
+          [
+            23
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            4,
+            5,
+            5,
+            6
+          ],
+          [
+            2,
+            3,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            1,
+            3
+          ],
+          [
+            1,
+            2,
+            2
+          ],
+          [
+            1,
+            2,
+            5
+          ]
+        ],
+        "root_value_sums": [
+          7.39951004460454,
+          7.577634926885366,
+          7.033579232171178,
+          11.556198701262474,
+          3.4085788875818253,
+          1.9670498091727495,
+          1.7593056950718164,
+          0.7850106731057167,
+          0.8814062997698784,
+          0.2985707297921181,
+          -0.014243289828300476,
+          -0.10082308948040009,
+          -0.02672196924686432,
+          -0.219169482588768,
+          -0.18819665163755417,
+          -0.2810145989060402,
+          -0.29897017776966095,
+          -0.22423846274614334,
+          -0.605914544314146,
+          -0.15315746515989304,
+          -0.0997060164809227,
+          -0.35257477313280106,
+          -0.11616344004869461,
+          -0.4250017609447241,
+          -1.390236722305417
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 3,
+      "mean_depth": 2.8134765625,
+      "opponent_blind_reserved": 0,
+      "prior": [
+        0.17234590935842517,
+        0.13146980888772783,
+        0.0784829209747722,
+        0.1048145649684246,
+        0.060257227880850396,
+        0.06668132410794997,
+        0.06097733346289125,
+        0.03422789959304674,
+        0.03153131657180857,
+        0.03059963048336223,
+        0.005022707727888744,
+        0.009703656269260315,
+        0.006131623041146782,
+        0.01358383346920236,
+        0.0061184582299951525,
+        0.009240303459743067,
+        0.010086838582853986,
+        0.0038625690333738993,
+        0.05512163647078967,
+        0.0160218441369194,
+        0.004861151351212287,
+        0.011714184969744076,
+        0.01240570119015129,
+        0.019632213208843504,
+        0.04510534256961622
+      ],
+      "root_counts": [
+        185,
+        164,
+        127,
+        191,
+        76,
+        61,
+        56,
+        29,
+        28,
+        23,
+        3,
+        4,
+        3,
+        4,
+        3,
+        4,
+        4,
+        3,
+        23,
+        8,
+        3,
+        4,
+        5,
+        5,
+        8
+      ],
+      "stage": "middle",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 939,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.023480581000000004,
+        "rule_seconds": 0.012427831999999969,
+        "simulations": 1024,
+        "state_transitions": 3820,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 2881
+      },
+      "target": [
+        0.1806640625,
+        0.16015625,
+        0.1240234375,
+        0.1865234375,
+        0.07421875,
+        0.0595703125,
+        0.0546875,
+        0.0283203125,
+        0.02734375,
+        0.0224609375,
+        0.0029296875,
+        0.00390625,
+        0.0029296875,
+        0.00390625,
+        0.0029296875,
+        0.00390625,
+        0.00390625,
+        0.0029296875,
+        0.0224609375,
+        0.0078125,
+        0.0029296875,
+        0.00390625,
+        0.0048828125,
+        0.0048828125,
+        0.0078125
+      ]
+    },
+    {
+      "bank_index": 111,
+      "chance": {
+        "chance_draws": 1770,
+        "chance_pw_admitted_outcomes": 588,
+        "chance_pw_contexts": 444,
+        "chance_pw_fresh_samples": 627,
+        "chance_pw_reuses": 1143,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1024,
+        "information_set_hits": 2193,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                23,
+                13,
+                8
+              ],
+              "pool_size": 18,
+              "visits": 7
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                5,
+                27
+              ],
+              "pool_size": 18,
+              "visits": 4
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                14,
+                38,
+                15
+              ],
+              "pool_size": 18,
+              "visits": 5
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                13,
+                12,
+                1
+              ],
+              "pool_size": 18,
+              "visits": 6
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                68,
+                42,
+                52
+              ],
+              "pool_size": 23,
+              "visits": 9
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                58,
+                53,
+                40,
+                41
+              ],
+              "pool_size": 23,
+              "visits": 14
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                40,
+                61,
+                56
+              ],
+              "pool_size": 23,
+              "visits": 8
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                64,
+                63,
+                56,
+                53
+              ],
+              "pool_size": 23,
+              "visits": 16
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                78,
+                72,
+                85,
+                76,
+                70,
+                80
+              ],
+              "pool_size": 13,
+              "visits": 29
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                83,
+                87,
+                85,
+                89,
+                75
+              ],
+              "pool_size": 13,
+              "visits": 22
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                78,
+                72,
+                85
+              ],
+              "pool_size": 13,
+              "visits": 7
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                72,
+                77,
+                85
+              ],
+              "pool_size": 13,
+              "visits": 8
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                27,
+                13,
+                38,
+                4
+              ],
+              "pool_size": 18,
+              "visits": 17
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                61,
+                48,
+                63,
+                58,
+                53,
+                45,
+                64
+              ],
+              "pool_size": 23,
+              "visits": 38
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                85,
+                89,
+                72,
+                75,
+                83,
+                80,
+                81,
+                87,
+                74,
+                76,
+                78,
+                70,
+                77
+              ],
+              "pool_size": 13,
+              "visits": 618
+            }
+          ],
+          [],
+          [
+            {
+              "outcomes": [
+                5
+              ],
+              "pool_size": 18,
+              "visits": 1
+            }
+          ],
+          []
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            42
+          ],
+          [
+            47
+          ],
+          [
+            56
+          ],
+          [
+            54
+          ],
+          [
+            5
+          ],
+          [
+            2,
+            2,
+            3
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            1,
+            3
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            1,
+            3,
+            3,
+            7
+          ],
+          [
+            2,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4,
+            7
+          ],
+          [
+            2,
+            3,
+            4,
+            4,
+            8,
+            8
+          ],
+          [
+            3,
+            3,
+            4,
+            5,
+            7
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            1,
+            3,
+            4
+          ],
+          [
+            3,
+            3,
+            4,
+            7
+          ],
+          [
+            1,
+            3,
+            3,
+            6,
+            7,
+            7,
+            11
+          ],
+          [
+            31,
+            35,
+            37,
+            44,
+            44,
+            45,
+            47,
+            48,
+            54,
+            55,
+            55,
+            58,
+            65
+          ],
+          [
+            7
+          ],
+          [
+            1
+          ],
+          [
+            4
+          ]
+        ],
+        "root_value_sums": [
+          -32.69688704609871,
+          -35.463364481925964,
+          -42.802146166563034,
+          -40.61728982627392,
+          -4.354881644248962,
+          -5.257627904415131,
+          -3.1673052310943604,
+          -4.029684960842133,
+          -4.635925769805908,
+          -7.143482089042664,
+          -10.444936096668243,
+          -6.526002883911133,
+          -11.80892550945282,
+          -22.12107002735138,
+          -15.97095376253128,
+          -5.568797290325165,
+          -6.315394222736359,
+          -12.027272582054138,
+          -26.775438010692596,
+          -401.88726238906384,
+          -5.582590103149414,
+          -0.9647054076194763,
+          -3.452177584171295
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 19,
+      "mean_depth": 3.1416015625,
+      "opponent_blind_reserved": 0,
+      "prior": [
+        0.1160085152801334,
+        0.10615943020076035,
+        0.13817140592998395,
+        0.11735602162312228,
+        0.023108465034534936,
+        0.016380195538858906,
+        0.012515615671228268,
+        0.015553695697071594,
+        0.01582111880935024,
+        0.029331126525205985,
+        0.030273851008378604,
+        0.02577939250436117,
+        0.028829433035184534,
+        0.070499475981757,
+        0.033302328871640564,
+        0.023332830236768142,
+        0.022141261887642004,
+        0.01949580207593438,
+        0.044472601090804455,
+        0.06107819310842578,
+        0.021748241807329618,
+        0.010406242351235795,
+        0.01823475573028809
+      ],
+      "root_counts": [
+        42,
+        47,
+        56,
+        54,
+        5,
+        7,
+        4,
+        5,
+        6,
+        9,
+        14,
+        8,
+        16,
+        29,
+        22,
+        7,
+        8,
+        17,
+        38,
+        618,
+        7,
+        1,
+        4
+      ],
+      "stage": "late",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1023,
+        "feature_seconds": 0.0,
+        "folded_actions": 515,
+        "model_positions": 1024,
+        "native_compute_seconds": 0.026211490000000004,
+        "rule_seconds": 0.013297195999999952,
+        "simulations": 1024,
+        "state_transitions": 3732,
+        "terminal_hits": 1,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 3217
+      },
+      "target": [
+        0.041015625,
+        0.0458984375,
+        0.0546875,
+        0.052734375,
+        0.0048828125,
+        0.0068359375,
+        0.00390625,
+        0.0048828125,
+        0.005859375,
+        0.0087890625,
+        0.013671875,
+        0.0078125,
+        0.015625,
+        0.0283203125,
+        0.021484375,
+        0.0068359375,
+        0.0078125,
+        0.0166015625,
+        0.037109375,
+        0.603515625,
+        0.0068359375,
+        0.0009765625,
+        0.00390625
+      ]
+    },
+    {
+      "bank_index": 8,
+      "chance": {
+        "chance_draws": 1903,
+        "chance_pw_admitted_outcomes": 699,
+        "chance_pw_contexts": 404,
+        "chance_pw_fresh_samples": 742,
+        "chance_pw_reuses": 1161,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 2948,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                32,
+                39
+              ],
+              "pool_size": 34,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                8,
+                30,
+                14,
+                7,
+                37,
+                12,
+                27
+              ],
+              "pool_size": 34,
+              "visits": 41
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                29,
+                13
+              ],
+              "pool_size": 34,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                6,
+                30,
+                15
+              ],
+              "pool_size": 34,
+              "visits": 8
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                50
+              ],
+              "pool_size": 26,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                46
+              ],
+              "pool_size": 26,
+              "visits": 1
+            }
+          ],
+          [],
+          [
+            {
+              "outcomes": [
+                49,
+                54
+              ],
+              "pool_size": 26,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                82
+              ],
+              "pool_size": 16,
+              "visits": 1
+            }
+          ],
+          [],
+          [
+            {
+              "outcomes": [
+                85,
+                71,
+                72
+              ],
+              "pool_size": 16,
+              "visits": 6
+            }
+          ],
+          [],
+          [
+            {
+              "outcomes": [
+                19,
+                9,
+                25,
+                10
+              ],
+              "pool_size": 34,
+              "visits": 15
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                54
+              ],
+              "pool_size": 26,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                80
+              ],
+              "pool_size": 16,
+              "visits": 1
+            }
+          ]
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            458
+          ],
+          [
+            56
+          ],
+          [
+            88
+          ],
+          [
+            341
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            3,
+            5,
+            6,
+            7,
+            7,
+            11
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2,
+            4
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [],
+          [
+            1,
+            1
+          ],
+          [
+            1
+          ],
+          [],
+          [
+            1,
+            2,
+            3
+          ],
+          [],
+          [
+            3,
+            3,
+            4,
+            5
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ]
+        ],
+        "root_value_sums": [
+          92.2724642381072,
+          4.722405049949884,
+          14.85657968558371,
+          71.97065459564328,
+          -0.08438056707382202,
+          2.76152079179883,
+          -0.07234038412570953,
+          0.004445655271410942,
+          -0.06845537573099136,
+          -0.04868968576192856,
+          0.0,
+          -0.020700570195913315,
+          -0.035319630056619644,
+          0.0,
+          0.04642760008573532,
+          0.0,
+          1.6362109333276749,
+          -0.04044485092163086,
+          -0.05415719747543335
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 0,
+      "mean_depth": 3.87890625,
+      "opponent_blind_reserved": 0,
+      "prior": [
+        0.237998186551132,
+        0.17138985108495336,
+        0.10823526779530718,
+        0.13744667155057796,
+        0.015775174037414567,
+        0.1406978898993622,
+        0.015193916199675606,
+        0.03857235093201807,
+        0.005713242304324382,
+        0.008321318476574961,
+        0.004431386855351987,
+        0.01257522428788619,
+        0.009569630157537494,
+        0.0036147666798537685,
+        0.03131757935642802,
+        0.004283869456975646,
+        0.036153520237218115,
+        0.010725171427643914,
+        0.007984982709764579
+      ],
+      "root_counts": [
+        458,
+        56,
+        88,
+        341,
+        2,
+        41,
+        2,
+        8,
+        1,
+        1,
+        0,
+        2,
+        1,
+        0,
+        6,
+        0,
+        15,
+        1,
+        1
+      ],
+      "stage": "early",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 698,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.027244710999999998,
+        "rule_seconds": 0.014174119000000015,
+        "simulations": 1024,
+        "state_transitions": 4670,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 3972
+      },
+      "target": [
+        0.447265625,
+        0.0546875,
+        0.0859375,
+        0.3330078125,
+        0.001953125,
+        0.0400390625,
+        0.001953125,
+        0.0078125,
+        0.0009765625,
+        0.0009765625,
+        0.0,
+        0.001953125,
+        0.0009765625,
+        0.0,
+        0.005859375,
+        0.0,
+        0.0146484375,
+        0.0009765625,
+        0.0009765625
+      ]
+    },
+    {
+      "bank_index": 164,
+      "chance": {
+        "chance_draws": 1579,
+        "chance_pw_admitted_outcomes": 723,
+        "chance_pw_contexts": 438,
+        "chance_pw_fresh_samples": 758,
+        "chance_pw_reuses": 821,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 2654,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                33
+              ],
+              "pool_size": 27,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                23
+              ],
+              "pool_size": 27,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                0
+              ],
+              "pool_size": 27,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                28,
+                3
+              ],
+              "pool_size": 27,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                41,
+                50,
+                60
+              ],
+              "pool_size": 24,
+              "visits": 5
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                46
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                57
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                67
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                72
+              ],
+              "pool_size": 14,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                70
+              ],
+              "pool_size": 14,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                87
+              ],
+              "pool_size": 14,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                75
+              ],
+              "pool_size": 14,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                7,
+                0,
+                14,
+                19,
+                28
+              ],
+              "pool_size": 27,
+              "visits": 23
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                60,
+                56,
+                64,
+                66,
+                42,
+                59
+              ],
+              "pool_size": 24,
+              "visits": 27
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                87
+              ],
+              "pool_size": 14,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                4
+              ],
+              "pool_size": 27,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                19,
+                7
+              ],
+              "pool_size": 27,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                29,
+                16,
+                33,
+                35,
+                2,
+                5,
+                4,
+                22,
+                28,
+                38
+              ],
+              "pool_size": 27,
+              "visits": 85
+            }
+          ]
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            70
+          ],
+          [
+            445
+          ],
+          [
+            103
+          ],
+          [
+            249
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2,
+            2
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            2,
+            4,
+            4,
+            6,
+            7
+          ],
+          [
+            2,
+            2,
+            4,
+            5,
+            6,
+            8
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2,
+            3,
+            8,
+            9,
+            11,
+            11,
+            11,
+            14,
+            15
+          ]
+        ],
+        "root_value_sums": [
+          -8.566702609881759,
+          -27.398716919124126,
+          -16.195540187880397,
+          -19.57407784834504,
+          -0.29301637411117554,
+          -0.22481460869312286,
+          -0.24773024022579193,
+          -0.2518669366836548,
+          -0.4642941504716873,
+          -0.7344390973448753,
+          -0.2302805632352829,
+          -0.2110232263803482,
+          -0.20631331205368042,
+          -0.23370572924613953,
+          -0.25280842185020447,
+          -0.23229800164699554,
+          -0.22015057504177094,
+          -1.6953220963478088,
+          -2.0930499266833067,
+          -0.2294394075870514,
+          -0.3456493318080902,
+          -0.44742023944854736,
+          -8.882866580039263
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 1,
+      "mean_depth": 3.591796875,
+      "opponent_blind_reserved": 0,
+      "prior": [
+        0.11802504520015658,
+        0.20052728373383283,
+        0.25209310291089365,
+        0.1975359960011278,
+        0.005870545128676654,
+        0.003913766665256585,
+        0.0048977227742446425,
+        0.004248923817416765,
+        0.010920074522046281,
+        0.013341203248583223,
+        0.0027088444880020417,
+        0.007060789762112065,
+        0.004318560218010426,
+        0.0012569069172572835,
+        0.0016023583655189826,
+        0.0014317454805984069,
+        0.0025255107158524215,
+        0.016418432903414458,
+        0.01859654379842962,
+        0.00614039993125544,
+        0.003040999246913172,
+        0.0110429530757939,
+        0.1124822910946069
+      ],
+      "root_counts": [
+        70,
+        445,
+        103,
+        249,
+        1,
+        1,
+        1,
+        1,
+        2,
+        5,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        23,
+        27,
+        1,
+        1,
+        2,
+        85
+      ],
+      "stage": "middle",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 809,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.028844757000000023,
+        "rule_seconds": 0.015145497000000025,
+        "simulations": 1024,
+        "state_transitions": 4487,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 3678
+      },
+      "target": [
+        0.068359375,
+        0.4345703125,
+        0.1005859375,
+        0.2431640625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.001953125,
+        0.0048828125,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0224609375,
+        0.0263671875,
+        0.0009765625,
+        0.0009765625,
+        0.001953125,
+        0.0830078125
+      ]
+    },
+    {
+      "bank_index": 58,
+      "chance": {
+        "chance_draws": 1351,
+        "chance_pw_admitted_outcomes": 493,
+        "chance_pw_contexts": 318,
+        "chance_pw_fresh_samples": 548,
+        "chance_pw_reuses": 803,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 1224,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                25,
+                4,
+                37,
+                24,
+                29,
+                5,
+                2,
+                31,
+                15,
+                8,
+                6,
+                11,
+                12,
+                34,
+                30,
+                38,
+                21
+              ],
+              "pool_size": 24,
+              "visits": 271
+            }
+          ],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                72,
+                79,
+                85,
+                71,
+                84,
+                87
+              ],
+              "pool_size": 12,
+              "visits": 29
+            }
+          ],
+          []
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            11
+          ],
+          [
+            442
+          ],
+          [
+            69
+          ],
+          [
+            1,
+            5,
+            6,
+            7,
+            9,
+            9,
+            10,
+            11,
+            16,
+            19,
+            23,
+            24,
+            24,
+            25,
+            26,
+            26,
+            30
+          ],
+          [
+            53
+          ],
+          [
+            120
+          ],
+          [
+            1,
+            3,
+            4,
+            5,
+            7,
+            9
+          ],
+          [
+            29
+          ]
+        ],
+        "root_value_sums": [
+          -10.93172138929367,
+          -397.4220589995384,
+          -66.46226960420609,
+          -252.62190741300583,
+          -52.21313291788101,
+          -117.34325569868088,
+          -28.9476261138916,
+          -28.848227620124817
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 1,
+      "mean_depth": 2.1953125,
+      "opponent_blind_reserved": 1,
+      "prior": [
+        0.02676124954327789,
+        0.12130907420848082,
+        0.11267605338841215,
+        0.26133236411613,
+        0.11139101391535708,
+        0.23024368264241407,
+        0.07004835921150762,
+        0.06623820297442033
+      ],
+      "root_counts": [
+        11,
+        442,
+        69,
+        271,
+        53,
+        120,
+        29,
+        29
+      ],
+      "stage": "late",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 426,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.017724960999999987,
+        "rule_seconds": 0.008602542000000022,
+        "simulations": 1024,
+        "state_transitions": 2674,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 2248
+      },
+      "target": [
+        0.0107421875,
+        0.431640625,
+        0.0673828125,
+        0.2646484375,
+        0.0517578125,
+        0.1171875,
+        0.0283203125,
+        0.0283203125
+      ]
+    },
+    {
+      "bank_index": 136,
+      "chance": {
+        "chance_draws": 1231,
+        "chance_pw_admitted_outcomes": 362,
+        "chance_pw_contexts": 230,
+        "chance_pw_fresh_samples": 376,
+        "chance_pw_reuses": 855,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 1605,
+        "root_chance_pools": [
+          [],
+          [
+            {
+              "outcomes": [
+                20
+              ],
+              "pool_size": 36,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                13,
+                38
+              ],
+              "pool_size": 36,
+              "visits": 4
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                31,
+                12
+              ],
+              "pool_size": 36,
+              "visits": 3
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                36,
+                0
+              ],
+              "pool_size": 36,
+              "visits": 4
+            }
+          ],
+          [],
+          [
+            {
+              "outcomes": [
+                51
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                61
+              ],
+              "pool_size": 24,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                50
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                57
+              ],
+              "pool_size": 24,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                60
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                26,
+                7,
+                39,
+                29,
+                1
+              ],
+              "pool_size": 36,
+              "visits": 20
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                68
+              ],
+              "pool_size": 24,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                43
+              ],
+              "pool_size": 24,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                62
+              ],
+              "pool_size": 24,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                55
+              ],
+              "pool_size": 24,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                43
+              ],
+              "pool_size": 24,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                68
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                80,
+                72
+              ],
+              "pool_size": 16,
+              "visits": 2
+            }
+          ],
+          []
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            175
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [],
+          [
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            2,
+            2,
+            3,
+            5,
+            8
+          ],
+          [
+            1,
+            1,
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            804
+          ]
+        ],
+        "root_value_sums": [
+          8.520676329731941,
+          -0.037727199494838715,
+          0.0767685268074274,
+          0.0024887565523386,
+          0.021110421046614647,
+          0.0,
+          0.03995061665773392,
+          0.08698389865458012,
+          0.13872791826725006,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4128219988197088,
+          0.1723290253430605,
+          -0.043127549812197685,
+          70.50294041261077
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 16,
+      "mean_depth": 2.5673828125,
+      "opponent_blind_reserved": 1,
+      "prior": [
+        0.27527231401359364,
+        0.005324935967138768,
+        0.010427406420895903,
+        0.008201250513510358,
+        0.010335118502773695,
+        0.0019127507280899255,
+        0.002784817365320128,
+        0.004117561024821532,
+        0.0033412645611944885,
+        0.0012885727935268761,
+        0.0024515228815137815,
+        0.001658142003992098,
+        0.0017205951072049714,
+        0.044114680116651,
+        0.011737062857157738,
+        0.005483473815082128,
+        0.6098285313275329
+      ],
+      "root_counts": [
+        175,
+        1,
+        4,
+        3,
+        4,
+        0,
+        1,
+        2,
+        2,
+        0,
+        0,
+        0,
+        0,
+        20,
+        6,
+        2,
+        804
+      ],
+      "stage": "early",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 139,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.017767442000000015,
+        "rule_seconds": 0.007940678000000001,
+        "simulations": 1024,
+        "state_transitions": 2768,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 2629
+      },
+      "target": [
+        0.1708984375,
+        0.0009765625,
+        0.00390625,
+        0.0029296875,
+        0.00390625,
+        0.0,
+        0.0009765625,
+        0.001953125,
+        0.001953125,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.01953125,
+        0.005859375,
+        0.001953125,
+        0.78515625
+      ]
+    },
+    {
+      "bank_index": 49,
+      "chance": {
+        "chance_draws": 1021,
+        "chance_pw_admitted_outcomes": 324,
+        "chance_pw_contexts": 196,
+        "chance_pw_fresh_samples": 391,
+        "chance_pw_reuses": 630,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 846,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                45,
+                46,
+                47,
+                42,
+                54,
+                51,
+                50,
+                62,
+                66,
+                56,
+                55,
+                60,
+                64,
+                68,
+                48,
+                61,
+                40,
+                41,
+                65,
+                67,
+                63,
+                49,
+                53,
+                43
+              ],
+              "pool_size": 24,
+              "visits": 617
+            }
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                24
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                0
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                4,
+                16
+              ],
+              "pool_size": 28,
+              "visits": 2
+            },
+            {
+              "outcomes": [
+                38
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                16
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                12
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                0
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                31
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                9
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                31
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                32
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                5
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                21
+              ],
+              "pool_size": 28,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                8
+              ],
+              "pool_size": 28,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                67,
+                41,
+                61,
+                60,
+                51,
+                49,
+                40
+              ],
+              "pool_size": 24,
+              "visits": 42
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                82,
+                86,
+                70
+              ],
+              "pool_size": 14,
+              "visits": 8
+            }
+          ],
+          [],
+          [],
+          [],
+          []
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            59
+          ],
+          [
+            36
+          ],
+          [
+            138
+          ],
+          [
+            109
+          ],
+          [],
+          [],
+          [],
+          [],
+          [
+            4,
+            6,
+            7,
+            10,
+            11,
+            12,
+            16,
+            17,
+            17,
+            22,
+            26,
+            26,
+            28,
+            28,
+            29,
+            30,
+            30,
+            37,
+            38,
+            38,
+            41,
+            44,
+            49,
+            51
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2
+          ],
+          [
+            1,
+            2,
+            5,
+            6,
+            7,
+            10,
+            11
+          ],
+          [
+            1,
+            3,
+            4
+          ],
+          [],
+          [],
+          [],
+          []
+        ],
+        "root_value_sums": [
+          14.457886705175042,
+          9.335281297564507,
+          28.132168721407652,
+          21.188256667926908,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          174.32802269607782,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          2.7813354581594467,
+          8.269727513194084,
+          1.2504252344369888,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 8,
+      "mean_depth": 1.826171875,
+      "opponent_blind_reserved": 1,
+      "prior": [
+        0.06487447942903007,
+        0.028887509384753814,
+        0.27370534170916566,
+        0.23906503110280383,
+        0.0025220596984312413,
+        0.002020319270987409,
+        0.0025047154141972427,
+        0.0013709820935187262,
+        0.21386193457937905,
+        0.0017343957471020023,
+        0.005495438351777837,
+        0.002255589000244022,
+        0.0010491543938863652,
+        0.0011018336029944243,
+        0.003274918638718562,
+        0.0036022637498611646,
+        0.03575484150678704,
+        0.09138700038737932,
+        0.021155603625875343,
+        0.0005890927918835172,
+        0.0005030334537593315,
+        0.0006873527919939179,
+        0.0025971092754700784
+      ],
+      "root_counts": [
+        59,
+        36,
+        138,
+        109,
+        0,
+        0,
+        0,
+        0,
+        617,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        15,
+        42,
+        8,
+        0,
+        0,
+        0,
+        0
+      ],
+      "stage": "middle",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 396,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.016733032999999987,
+        "rule_seconds": 0.0077755219999999965,
+        "simulations": 1024,
+        "state_transitions": 2266,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 1870
+      },
+      "target": [
+        0.0576171875,
+        0.03515625,
+        0.134765625,
+        0.1064453125,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.6025390625,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0146484375,
+        0.041015625,
+        0.0078125,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "bank_index": 53,
+      "chance": {
+        "chance_draws": 53,
+        "chance_pw_admitted_outcomes": 50,
+        "chance_pw_contexts": 40,
+        "chance_pw_fresh_samples": 50,
+        "chance_pw_reuses": 3,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 41,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                61
+              ],
+              "pool_size": 18,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                66
+              ],
+              "pool_size": 18,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                56
+              ],
+              "pool_size": 18,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                52
+              ],
+              "pool_size": 18,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                43
+              ],
+              "pool_size": 18,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                70
+              ],
+              "pool_size": 14,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                73
+              ],
+              "pool_size": 14,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                83
+              ],
+              "pool_size": 14,
+              "visits": 1
+            }
+          ],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                19
+              ],
+              "pool_size": 22,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                62,
+                53
+              ],
+              "pool_size": 18,
+              "visits": 4
+            },
+            {
+              "outcomes": [
+                56
+              ],
+              "pool_size": 18,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                55
+              ],
+              "pool_size": 18,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                47,
+                59
+              ],
+              "pool_size": 18,
+              "visits": 2
+            },
+            {
+              "outcomes": [
+                53,
+                43
+              ],
+              "pool_size": 18,
+              "visits": 2
+            },
+            {
+              "outcomes": [
+                44
+              ],
+              "pool_size": 18,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                62,
+                48
+              ],
+              "pool_size": 18,
+              "visits": 2
+            },
+            {
+              "outcomes": [
+                40,
+                47
+              ],
+              "pool_size": 18,
+              "visits": 2
+            },
+            {
+              "outcomes": [
+                61
+              ],
+              "pool_size": 18,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                49,
+                41
+              ],
+              "pool_size": 18,
+              "visits": 2
+            },
+            {
+              "outcomes": [
+                44,
+                61
+              ],
+              "pool_size": 18,
+              "visits": 3
+            },
+            {
+              "outcomes": [
+                59,
+                53
+              ],
+              "pool_size": 18,
+              "visits": 2
+            },
+            {
+              "outcomes": [
+                52
+              ],
+              "pool_size": 18,
+              "visits": 1
+            },
+            {
+              "outcomes": [
+                49,
+                51
+              ],
+              "pool_size": 18,
+              "visits": 2
+            },
+            {
+              "outcomes": [
+                62
+              ],
+              "pool_size": 18,
+              "visits": 1
+            }
+          ]
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            14
+          ],
+          [
+            50
+          ],
+          [
+            77
+          ],
+          [
+            53
+          ],
+          [
+            27
+          ],
+          [
+            671
+          ],
+          [
+            20
+          ],
+          [
+            1
+          ],
+          [
+            37
+          ],
+          [
+            38
+          ],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ],
+          [],
+          [],
+          [],
+          [
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            5
+          ]
+        ],
+        "root_value_sums": [
+          3.2887425273656845,
+          13.034951822832227,
+          23.21901523694396,
+          15.282156832516193,
+          6.628272110596299,
+          220.3379358947277,
+          5.506566040217876,
+          -0.2547008991241455,
+          8.861767647787929,
+          10.057343102991581,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.20247146487236023,
+          -0.10159394145011902,
+          0.0,
+          0.0,
+          0.0,
+          0.11641242355108261,
+          7.21220575273037
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 5,
+      "mean_depth": 1.0400390625,
+      "opponent_blind_reserved": 3,
+      "prior": [
+        0.027165681221240728,
+        0.09518573044378707,
+        0.07843902210378677,
+        0.0699623644579987,
+        0.05686643180660968,
+        0.33151704843449625,
+        0.02639258814430527,
+        0.02341857552806356,
+        0.08294977800703675,
+        0.06598757817714879,
+        0.001349938732336598,
+        0.0020582021933222734,
+        0.0017235342480011785,
+        0.0019071609173925597,
+        0.0049204718033799355,
+        0.0016032134559799624,
+        0.005291545747683558,
+        0.0015865673370831954,
+        0.0024042136952449125,
+        0.0022674662296625404,
+        0.0008481344417967489,
+        0.003010929383885015,
+        0.004909336150715307,
+        0.026327657354718766,
+        0.01622486283195468,
+        0.001768460257177447,
+        0.0058391898338663074,
+        0.0018737704859914885,
+        0.007926789792710895,
+        0.04827375678262291
+      ],
+      "root_counts": [
+        14,
+        50,
+        77,
+        53,
+        27,
+        671,
+        20,
+        1,
+        37,
+        38,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        3,
+        0,
+        0,
+        0,
+        1,
+        27
+      ],
+      "stage": "late",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 52,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.009540769999999994,
+        "rule_seconds": 0.0033797670000000023,
+        "simulations": 1024,
+        "state_transitions": 1117,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 1065
+      },
+      "target": [
+        0.013671875,
+        0.048828125,
+        0.0751953125,
+        0.0517578125,
+        0.0263671875,
+        0.6552734375,
+        0.01953125,
+        0.0009765625,
+        0.0361328125,
+        0.037109375,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0048828125,
+        0.0029296875,
+        0.0,
+        0.0,
+        0.0,
+        0.0009765625,
+        0.0263671875
+      ]
+    },
+    {
+      "bank_index": 69,
+      "chance": {
+        "chance_draws": 833,
+        "chance_pw_admitted_outcomes": 560,
+        "chance_pw_contexts": 418,
+        "chance_pw_fresh_samples": 572,
+        "chance_pw_reuses": 261,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 2218,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                22,
+                11,
+                33
+              ],
+              "pool_size": 34,
+              "visits": 7
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                34,
+                3,
+                7
+              ],
+              "pool_size": 34,
+              "visits": 9
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                7,
+                19
+              ],
+              "pool_size": 34,
+              "visits": 3
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                9,
+                36,
+                19,
+                12
+              ],
+              "pool_size": 34,
+              "visits": 12
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                43,
+                58
+              ],
+              "pool_size": 25,
+              "visits": 4
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                45,
+                54,
+                52
+              ],
+              "pool_size": 25,
+              "visits": 6
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                46,
+                50,
+                65
+              ],
+              "pool_size": 25,
+              "visits": 6
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                59,
+                53,
+                66
+              ],
+              "pool_size": 25,
+              "visits": 7
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                81
+              ],
+              "pool_size": 15,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                81,
+                70,
+                88
+              ],
+              "pool_size": 15,
+              "visits": 6
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                87
+              ],
+              "pool_size": 15,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                81,
+                72,
+                87
+              ],
+              "pool_size": 15,
+              "visits": 9
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                38,
+                0,
+                13
+              ],
+              "pool_size": 34,
+              "visits": 7
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                55,
+                59,
+                65
+              ],
+              "pool_size": 25,
+              "visits": 5
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                77,
+                72
+              ],
+              "pool_size": 15,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                30,
+                0,
+                31
+              ],
+              "pool_size": 34,
+              "visits": 6
+            }
+          ],
+          []
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            137
+          ],
+          [
+            79
+          ],
+          [
+            209
+          ],
+          [
+            66
+          ],
+          [
+            190
+          ],
+          [
+            151
+          ],
+          [
+            15
+          ],
+          [
+            29
+          ],
+          [
+            24
+          ],
+          [
+            23
+          ],
+          [
+            9
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            1,
+            3,
+            5
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2,
+            4,
+            5
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            1,
+            3,
+            3
+          ],
+          [
+            1,
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1
+          ]
+        ],
+        "root_value_sums": [
+          -43.09486149251461,
+          -26.334305688738823,
+          -62.68110366165638,
+          -22.547862246632576,
+          -57.232409581542015,
+          -47.34749311208725,
+          -6.096582353115082,
+          -10.313875049352646,
+          -8.901565045118332,
+          -8.883427083492279,
+          -3.0749010145664215,
+          -2.3773776590824127,
+          -2.9765277206897736,
+          -1.0248529016971588,
+          -4.009863972663879,
+          -1.3629920482635498,
+          -1.9707916975021362,
+          -1.968396157026291,
+          -2.241466224193573,
+          -0.3643163740634918,
+          -1.8894842267036438,
+          -0.3822720944881439,
+          -2.8393989503383636,
+          -2.539277136325836,
+          -1.8127695620059967,
+          -0.758550226688385,
+          -2.5087623596191406,
+          -0.4793430268764496
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 2,
+      "mean_depth": 3.166015625,
+      "opponent_blind_reserved": 0,
+      "prior": [
+        0.1165900816261335,
+        0.0983319618430881,
+        0.11331007260299727,
+        0.09428683896609652,
+        0.1085184863889155,
+        0.1232159289259004,
+        0.043698788839162436,
+        0.047963645834473004,
+        0.050020791446686426,
+        0.05607958512698241,
+        0.012536773614014972,
+        0.009804707426150751,
+        0.009700248910703571,
+        0.004433093076846632,
+        0.016187336438901995,
+        0.0069162558687156095,
+        0.007640597695687431,
+        0.007181966205065764,
+        0.006621910447162349,
+        0.002762957291727212,
+        0.005228618556324573,
+        0.0023102920119012884,
+        0.008303207083434258,
+        0.01352479044472425,
+        0.009197876476462367,
+        0.0055952355454758195,
+        0.018201610444359785,
+        0.0018363408619058222
+      ],
+      "root_counts": [
+        137,
+        79,
+        209,
+        66,
+        190,
+        151,
+        15,
+        29,
+        24,
+        23,
+        9,
+        7,
+        9,
+        3,
+        12,
+        4,
+        6,
+        6,
+        7,
+        1,
+        6,
+        1,
+        9,
+        7,
+        5,
+        2,
+        6,
+        1
+      ],
+      "stage": "early",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 282,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.023727652999999998,
+        "rule_seconds": 0.011308174999999986,
+        "simulations": 1024,
+        "state_transitions": 3524,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 3242
+      },
+      "target": [
+        0.1337890625,
+        0.0771484375,
+        0.2041015625,
+        0.064453125,
+        0.185546875,
+        0.1474609375,
+        0.0146484375,
+        0.0283203125,
+        0.0234375,
+        0.0224609375,
+        0.0087890625,
+        0.0068359375,
+        0.0087890625,
+        0.0029296875,
+        0.01171875,
+        0.00390625,
+        0.005859375,
+        0.005859375,
+        0.0068359375,
+        0.0009765625,
+        0.005859375,
+        0.0009765625,
+        0.0087890625,
+        0.0068359375,
+        0.0048828125,
+        0.001953125,
+        0.005859375,
+        0.0009765625
+      ]
+    },
+    {
+      "bank_index": 85,
+      "chance": {
+        "chance_draws": 1490,
+        "chance_pw_admitted_outcomes": 508,
+        "chance_pw_contexts": 342,
+        "chance_pw_fresh_samples": 562,
+        "chance_pw_reuses": 928,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 1684,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                26,
+                30
+              ],
+              "pool_size": 27,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                12
+              ],
+              "pool_size": 27,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                32
+              ],
+              "pool_size": 27,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                31
+              ],
+              "pool_size": 27,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                53
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                61,
+                52
+              ],
+              "pool_size": 24,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                42
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                69
+              ],
+              "pool_size": 24,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                88
+              ],
+              "pool_size": 16,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                81
+              ],
+              "pool_size": 16,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                77
+              ],
+              "pool_size": 16,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                72
+              ],
+              "pool_size": 16,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                5
+              ],
+              "pool_size": 27,
+              "visits": 1
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                52,
+                59
+              ],
+              "pool_size": 24,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                82
+              ],
+              "pool_size": 16,
+              "visits": 2
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                20,
+                14,
+                5,
+                0,
+                37,
+                19,
+                29,
+                27,
+                1,
+                21,
+                23,
+                30,
+                12,
+                31,
+                28,
+                32,
+                33,
+                3,
+                24,
+                22,
+                4,
+                34,
+                16,
+                26,
+                39,
+                10,
+                2
+              ],
+              "pool_size": 27,
+              "visits": 707
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                16,
+                28,
+                23,
+                26,
+                37,
+                24,
+                30,
+                29,
+                34,
+                3,
+                2,
+                22,
+                1
+              ],
+              "pool_size": 27,
+              "visits": 162
+            }
+          ],
+          [
+            {
+              "outcomes": [
+                24,
+                34,
+                39,
+                28
+              ],
+              "pool_size": 27,
+              "visits": 12
+            }
+          ]
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            20
+          ],
+          [
+            17
+          ],
+          [
+            17
+          ],
+          [
+            16
+          ],
+          [
+            17
+          ],
+          [
+            21
+          ],
+          [
+            6
+          ],
+          [
+            2
+          ],
+          [
+            2
+          ],
+          [
+            6
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2
+          ],
+          [
+            4,
+            4,
+            6,
+            7,
+            7,
+            9,
+            12,
+            13,
+            14,
+            21,
+            22,
+            22,
+            24,
+            25,
+            27,
+            28,
+            30,
+            34,
+            35,
+            39,
+            39,
+            42,
+            43,
+            44,
+            49,
+            52,
+            55
+          ],
+          [
+            2,
+            4,
+            7,
+            9,
+            10,
+            11,
+            11,
+            12,
+            14,
+            15,
+            19,
+            23,
+            25
+          ],
+          [
+            2,
+            2,
+            4,
+            4
+          ]
+        ],
+        "root_value_sums": [
+          -5.045277219265699,
+          -4.2223942298442125,
+          -4.236303616315126,
+          -4.399481248110533,
+          -4.269974945113063,
+          -5.1317220740020275,
+          -1.7988855615258217,
+          -0.8959687650203705,
+          -0.9023084342479706,
+          -1.8254583030939102,
+          -0.8075746297836304,
+          -0.38438907265663147,
+          -0.4212687611579895,
+          -0.36773404479026794,
+          -0.41089922189712524,
+          -0.7111567854881287,
+          -0.385809987783432,
+          -0.3782651424407959,
+          -0.37889811396598816,
+          -0.3710915148258209,
+          -0.35564491152763367,
+          -0.3962858021259308,
+          -0.3752675950527191,
+          -0.9100850820541382,
+          -1.0794874727725983,
+          -125.47135326266289,
+          -32.0350638628006,
+          -4.149214714765549
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 25,
+      "mean_depth": 2.64453125,
+      "opponent_blind_reserved": 0,
+      "prior": [
+        0.042251555437416655,
+        0.036128626017919274,
+        0.032130611489373066,
+        0.042781259660309046,
+        0.03687318559410778,
+        0.0386896255656786,
+        0.02107324403330829,
+        0.016976283800165727,
+        0.01660011542270314,
+        0.021469265624485284,
+        0.011918259078768912,
+        0.00799797017173253,
+        0.003517403248809134,
+        0.008799078532147212,
+        0.005078171589806866,
+        0.007592127977598464,
+        0.00908245919371218,
+        0.005881031909043957,
+        0.0037667652475329464,
+        0.002709972203836194,
+        0.005012967388501351,
+        0.005213934084966966,
+        0.008866788236426544,
+        0.010916033943546056,
+        0.016503997204591905,
+        0.3743924884104527,
+        0.1598795883490974,
+        0.04789719058396186
+      ],
+      "root_counts": [
+        20,
+        17,
+        17,
+        16,
+        17,
+        21,
+        6,
+        2,
+        2,
+        6,
+        2,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        707,
+        162,
+        12
+      ],
+      "stage": "middle",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 1429,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.022900520000000008,
+        "rule_seconds": 0.012044396,
+        "simulations": 1024,
+        "state_transitions": 4137,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 2708
+      },
+      "target": [
+        0.01953125,
+        0.0166015625,
+        0.0166015625,
+        0.015625,
+        0.0166015625,
+        0.0205078125,
+        0.005859375,
+        0.001953125,
+        0.001953125,
+        0.005859375,
+        0.001953125,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.001953125,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.0009765625,
+        0.001953125,
+        0.001953125,
+        0.6904296875,
+        0.158203125,
+        0.01171875
+      ]
+    },
+    {
+      "bank_index": 106,
+      "chance": {
+        "chance_draws": 390,
+        "chance_pw_admitted_outcomes": 51,
+        "chance_pw_contexts": 32,
+        "chance_pw_fresh_samples": 68,
+        "chance_pw_reuses": 322,
+        "chance_widening": {
+          "alpha": 0.5,
+          "k": 1.0
+        },
+        "decision_nodes": 1025,
+        "information_set_hits": 1018,
+        "root_chance_pools": [
+          [],
+          [],
+          [],
+          [],
+          [
+            {
+              "outcomes": [
+                17,
+                1,
+                5,
+                3,
+                23,
+                22,
+                35,
+                20,
+                15,
+                29,
+                2,
+                4,
+                32,
+                10,
+                24,
+                27,
+                25,
+                18,
+                11
+              ],
+              "pool_size": 25,
+              "visits": 357
+            }
+          ]
+        ],
+        "root_hidden_samples": 1024,
+        "root_outcome_visits": [
+          [
+            119
+          ],
+          [
+            176
+          ],
+          [
+            244
+          ],
+          [
+            128
+          ],
+          [
+            5,
+            5,
+            5,
+            8,
+            8,
+            11,
+            12,
+            12,
+            21,
+            23,
+            24,
+            26,
+            26,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31
+          ]
+        ],
+        "root_value_sums": [
+          -2.7711142394691706,
+          -3.588942924514413,
+          -5.329515282064676,
+          -3.4222753942012787,
+          -1.803997676819563
+        ],
+        "stochastic": true
+      },
+      "chosen_candidate_index": 4,
+      "mean_depth": 1.994140625,
+      "opponent_blind_reserved": 1,
+      "prior": [
+        0.1339713228980638,
+        0.18694606333051364,
+        0.2643725975357903,
+        0.15247185281919545,
+        0.2622381634164369
+      ],
+      "root_counts": [
+        119,
+        176,
+        244,
+        128,
+        357
+      ],
+      "stage": "late",
+      "stats": {
+        "determinizations": 1,
+        "expanded_nodes": 1024,
+        "feature_seconds": 0.0,
+        "folded_actions": 363,
+        "model_positions": 1025,
+        "native_compute_seconds": 0.016023847999999993,
+        "rule_seconds": 0.007277305000000001,
+        "simulations": 1024,
+        "state_transitions": 2405,
+        "terminal_hits": 0,
+        "transition_cap_hits": 0,
+        "tree_depth_sum": 2042
+      },
+      "target": [
+        0.1162109375,
+        0.171875,
+        0.23828125,
+        0.125,
+        0.3486328125
+      ]
+    }
+  ],
+  "roots": 12,
+  "simulations_per_root": 1024,
+  "subset": "pilot",
+  "tf32_cudnn": false,
+  "tf32_matmul": false,
+  "total_simulations": 12288,
+  "wall_seconds": 2.082636864000051
+}

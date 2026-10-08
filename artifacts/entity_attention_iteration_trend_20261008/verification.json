@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-08",
+  "status": "passed_focused_validation",
+  "formal_long_run_started": false,
+  "checks": {
+    "focused_cpu_tests": {
+      "passed": 3,
+      "seconds": 32.61,
+      "raw": "focused_tests.xml",
+      "command": "conda run -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest -q tests/test_iteration_suite.py::test_trend_design_runs_b_then_c_then_d_without_extra_panels tests/test_iteration_suite.py::test_bootstrap_keeps_training_replicates_fixed tests/test_hybrid_training.py::test_suite_real_cpu_pipeline_resumes_missing_completion_marker",
+      "scope": "Design, paired-seed trend statistics and real CPU train/eval pipeline; B then C then D, interruption after round commit and after panel completion, no completed checkpoint or panel replayed, already-complete restart skips all work."
+    },
+    "cuda_prepare_only": {
+      "status": "ready",
+      "raw": "preflight.json",
+      "stages": 1,
+      "seconds": 2.003419559000122,
+      "peak_cgroup_bytes": 347295744
+    }
+  },
+  "preserved_memory_limits": {
+    "memory_high_gib": 14,
+    "memory_max_gib": 16,
+    "swap_max_bytes": 0,
+    "replay_cache_mib": 4096
+  },
+  "scope": "Finite CPU pipeline and CUDA environment check only. No high-budget GPU training, scientific strength result or full-run stability measurement."
+}

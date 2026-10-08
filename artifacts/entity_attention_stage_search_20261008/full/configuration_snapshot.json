@@ -1,0 +1,52 @@
+{
+  "arms": [
+    "full_search"
+  ],
+  "artifact_root": "artifacts/entity_attention_stage_search_20261008/full",
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 22300000,
+  "checkpoint": "runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+  "checkpoint_sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4",
+  "comparison_root": "artifacts/entity_attention_stage_search_20261008/fast",
+  "device": "cuda",
+  "execution": {
+    "active_games": 200,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "max_batch_size": 200,
+    "max_batch_wait_ms": 0.0
+  },
+  "game_seed_start": 22000000,
+  "inference": {
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      200
+    ],
+    "compile_mode": "native-cudagraph"
+  },
+  "late_score_threshold": 10,
+  "max_completed_turns": 400,
+  "pairs": 500,
+  "policy_seed_base": 22100000,
+  "protocol": "entity-attention-full-search-v1",
+  "runtime_root": "runtime/entity_attention_stage_search_20261008/full",
+  "search_config": {
+    "c_puct": 1.5,
+    "determinizations": 1,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512,
+    "root_noise_fraction": 0.0,
+    "simulations": 1024
+  },
+  "search_seed": 22200000
+}

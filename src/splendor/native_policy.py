@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import math
 import time
 from collections import deque
 from functools import cache
@@ -57,6 +58,22 @@ class NativePendingEvaluation:
 _JOB_IDS = count()
 
 
+@dataclass(frozen=True, slots=True)
+class ChanceWideningConfig:
+    """Bound each physical draw's admitted support by ceil(k * visits**alpha)."""
+
+    k: float = 1.0
+    alpha: float = 0.5
+
+    def __post_init__(self) -> None:
+        for name in ("k", "alpha"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f"chance widening {name} must be finite")
+        if self.k <= 0 or not 0 < self.alpha < 1:
+            raise ValueError("chance widening requires k>0 and 0<alpha<1")
+
+
 class NativeSearchJob:
     def __init__(
         self, policy: NativePUCTSearchPolicy, request: DecisionRequest, *,
@@ -70,9 +87,12 @@ class NativeSearchJob:
         self.sequence = 0
         self.sampling_seed = policy.config.seed if sampling_seed is None else sampling_seed
         self.public_word = _request_public_word(request) if len(request.legal_actions) > 1 else 0
+        widening = policy.chance_widening
+        kwargs = {} if widening is None else {"chance_pw_k": widening.k, "chance_pw_alpha": widening.alpha}
         self._core = _extension().SearchJob(
             policy.native_catalog, request, policy.config, self.public_word,
-            self.sampling_seed & ((1 << 64) - 1), add_root_noise, temperature,
+            self.sampling_seed & ((1 << 64) - 1), add_root_noise, temperature, policy.stochastic,
+            **kwargs,
         )
         self._pending: dict[str, NativePendingEvaluation] | None = None
         self._pending_dirty = True
@@ -216,13 +236,18 @@ class NativeSearchJob:
 
     def _failure_context(self, world: int, request_id: str | None) -> dict[str, Any]:
         native = self._core.failure_context(world)
+        protocol = ("sampled-chance-pw-puct-native-v1" if self.policy.chance_widening is not None else
+                    "sampled-chance-puct-native-v1" if self.policy.stochastic else "determinized-puct-native-v1")
         return {
-            "algorithm": "determinized-puct-native-v1",
-            "search_protocol": "determinized-puct-native-v1",
+            "algorithm": protocol,
+            "search_protocol": protocol,
+            **({"chance_widening": {"k": self.policy.chance_widening.k, "alpha": self.policy.chance_widening.alpha}}
+               if self.policy.chance_widening is not None else {}),
             "root_request": self.request,
             "sampling_seed": self.sampling_seed,
             "world_index": native["world_index"],
-            "determinization_seed": native["determinization_seed"],
+            "determinization_seed": native.get("hidden_sample_seed", native["determinization_seed"]),
+            **({"chance_seed": native["chance_seed"]} if self.policy.stochastic else {}),
             "simulation_index": native["simulation_index"],
             "branch_actions": [self._action_from_native(action) for action in native["branch_actions"]],
             "attempted_action": (None if native["attempted_action"] is None else
@@ -493,6 +518,9 @@ class NativeBatchRunner:
 
 
 class NativePUCTSearchPolicy:
+    stochastic = False
+    chance_widening: ChanceWideningConfig | None = None
+
     def __init__(self, model, *, config: MCTSConfig | None = None,
                  device: str = "cpu", catalog: Catalog | None = None,
                  evaluator=None, model_version: str = "in-memory") -> None:
@@ -539,3 +567,17 @@ class NativePUCTSearchPolicy:
 
     def choose(self, request: DecisionRequest):
         return request.legal_actions[self.search(request).chosen_candidate_index]
+
+
+class NativeChancePUCTSearchPolicy(NativePUCTSearchPolicy):
+    """Sample chance at transitions, resample root hidden cards, share observer-history PUCT."""
+
+    stochastic = True
+
+    def __init__(self, model, *, config: MCTSConfig | None = None,
+                 chance_widening: ChanceWideningConfig | None = None, **kwargs) -> None:
+        config = config or MCTSConfig(determinizations=1)
+        if config.determinizations != 1:
+            raise ValueError("sampled chance search requires determinizations=1 for shared statistics")
+        self.chance_widening = chance_widening
+        super().__init__(model, config=config, **kwargs)

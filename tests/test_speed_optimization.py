@@ -105,6 +105,49 @@ def test_batched_evaluation_two_models_reference_and_resume(tmp_path, monkeypatc
                              pooled.output_path, resume=True)
 
 
+@pytest.mark.parametrize('backend', ['native', 'native_chance'])
+@pytest.mark.parametrize('search_first', [True, False])
+def test_batched_search_vs_greedy_matches_serial(tmp_path, backend, search_first):
+    torch.set_num_threads(1)
+    a, b = _weights(tmp_path / 'search.pt', 7), _weights(tmp_path / 'greedy.pt', 8)
+    search = SerializablePolicySpec.mcts_checkpoint('search', a, search_backend=backend,
+        search_config={'simulations': 3, 'determinizations': 1, 'root_noise_fraction': 0., 'seed': 123},
+        chance_widening={'k': .25, 'alpha': .5} if backend == 'native_chance' else None)
+    greedy = SerializablePolicySpec.greedy_checkpoint('greedy', b)
+    policies = (search, greedy) if search_first else (greedy, search)
+    config = FixedEvaluationConfig(*policies, (91,), policy_seed_base=52,
+        execution={'active_games': 2, 'max_batch_size': 2,
+                   'inference_mode': 'eager', 'actor_projection': False})
+    pooled = run_fixed_evaluation(config, tmp_path / 'batch.json')
+    serial = run_fixed_evaluation(replace(config, execution=None), tmp_path / 'serial.json')
+    assert pooled.summary['passed'] and serial.summary['passed']
+    assert pooled.summary['execution_stats']['greedy_decisions'] > 0
+    assert pooled.summary['policy_b_stats' if search_first else 'policy_a_stats'] == {}
+    actual_rows = sorted(pooled.pair_records[0], key=lambda row: row['game_in_pair'])
+    expected_rows = sorted(serial.pair_records[0], key=lambda row: row['game_in_pair'])
+    for actual, expected in zip(actual_rows, expected_rows):
+        for key in ('policy_seeds', 'first_player', 'game_seed', 'final_state_digest',
+                    'status', 'decision_count', 'outcome_for_a'):
+            assert actual[key] == expected[key], key
+
+
+def test_batched_greedy_failure_is_recorded(tmp_path, monkeypatch):
+    from splendor.neural_policy import GreedyActorCriticPolicy
+    a = _weights(tmp_path / 'a.pt', 9)
+    search = SerializablePolicySpec.mcts_checkpoint('search', a, search_backend='native',
+        search_config={'simulations': 2, 'determinizations': 1})
+    greedy = SerializablePolicySpec.greedy_checkpoint('greedy', a)
+    config = FixedEvaluationConfig(search, greedy, (52,),
+        execution={'active_games': 2, 'max_batch_size': 2, 'inference_mode': 'eager'})
+    def fail(self, request):
+        raise ValueError('controlled greedy failure')
+    monkeypatch.setattr(GreedyActorCriticPolicy, 'choose', fail)
+    result = run_fixed_evaluation(config, tmp_path / 'failure.json')
+    assert not result.summary['passed'] and result.summary['exceptions'] == 2
+    assert result.summary['execution_stats']['greedy_decisions'] == 2
+    assert all(row['error_type'] == 'ValueError' for row in result.pair_records[0])
+
+
 def test_batched_failure_and_partial_pair_recovery(tmp_path, monkeypatch):
     from splendor.native_policy import NativeBatchRunner
     a = _weights(tmp_path / 'a.pt', 3)
@@ -135,6 +178,24 @@ def test_batched_execution_rejects_unsupported_policy_and_participates_in_identi
     from splendor.evaluation_batch import BatchEvaluationConfig
     with pytest.raises(ValueError, match='wait=0'):
         BatchEvaluationConfig(max_batch_wait_ms=5)
+
+
+def test_greedy_inference_roundtrip_shares_same_weight_evaluator(tmp_path):
+    a = _weights(tmp_path / 'weights.pt', 9)
+    inference = {'mode': 'eager', 'actor_projection': False,
+                 'candidate_buckets': [16, 32, 48, 64], 'native_transport': 'reused',
+                 'compile_failure_policy': 'fail_fast'}
+    greedy = SerializablePolicySpec.from_dict({'kind': 'greedy_checkpoint', 'name': 'greedy',
+                                               'checkpoint': str(a), 'inference': inference})
+    assert greedy.inference == inference
+    assert SerializablePolicySpec.from_dict(greedy.to_dict()) == greedy
+    search = replace(SerializablePolicySpec.mcts_checkpoint('search', a, search_backend='native',
+                     search_config={'simulations': 2, 'determinizations': 1}), inference=inference)
+    config = FixedEvaluationConfig(search, greedy, (52,), execution={
+        'active_games': 2, 'max_batch_size': 2, 'inference_mode': 'eager'})
+    result = run_fixed_evaluation(config, tmp_path / 'shared.json')
+    assert result.summary['passed']
+    assert len(result.summary['execution_stats']['models']) == 1
 
 
 def test_batched_cycle_adjudication_and_turn_watchdog(tmp_path, monkeypatch):

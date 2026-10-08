@@ -1,0 +1,66 @@
+{
+  "protocol": "entity-attention-iteration-suite-v1",
+  "suite_id": "entity_attention_iteration_suite_20261008",
+  "base_config": "configs/entity_attention_v1/hybrid_split_policy_value.json",
+  "parent_run": "runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1",
+  "fork_round": 20,
+  "start_checkpoint": "runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+  "start_sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4",
+  "run_root": "runs/entity_attention_iteration_suite_20261008",
+  "runtime_root": "runtime/entity_attention_iteration_suite_20261008",
+  "artifact_root": "artifacts/entity_attention_iteration_suite_20261008",
+  "rounds": 16,
+  "replay_cache_mib": 4096,
+  "arms": [
+    {"id": "baseline100", "updates_per_round": 100},
+    {"id": "steps50", "updates_per_round": 50},
+    {"id": "lr_low", "updates_per_round": 100, "learning_rate_override": 0.000025},
+    {"id": "fresh50", "updates_per_round": 50, "policy_recent_rounds": 1}
+  ],
+  "contrasts": [
+    {"id": "steps", "a": "steps50", "b": "baseline100"},
+    {"id": "lr", "a": "lr_low", "b": "baseline100"},
+    {"id": "fresh", "a": "fresh50", "b": "steps50"}
+  ],
+  "replicates": [
+    {"id": "seed1", "collection_seed": 18000000, "split_seed": 18100000, "search_seed": 18200000,
+     "eval_game_seed": 18400000, "eval_policy_seed": 18600000, "eval_search_seed": 18800000, "eval_bootstrap_seed": 19000000},
+    {"id": "seed2", "collection_seed": 20000000, "split_seed": 20100000, "search_seed": 20200000,
+     "eval_game_seed": 20400000, "eval_policy_seed": 20600000, "eval_search_seed": 20800000, "eval_bootstrap_seed": 21000000}
+  ],
+  "collection_execution": {
+    "search_workers": 8,
+    "total_active_games": 200,
+    "local_microbatch": 32,
+    "max_batch_size": 128,
+    "batch_buckets": [16, 32, 64, 128],
+    "shared_slots": 2,
+    "pipeline_slots": 1,
+    "precision": "float32"
+  },
+  "evaluation_execution": {
+    "backend": "native_batched",
+    "active_games": 64,
+    "max_batch_size": 64,
+    "inference_mode": "eager",
+    "max_batch_wait_ms": 0.0
+  },
+  "evaluation": {
+    "midpoint_round": 8,
+    "midpoint_pairs": 100,
+    "anchor_pairs": 100,
+    "ppo_pairs": 200,
+    "direct_pairs": 400,
+    "bootstrap_resamples": 20000
+  },
+  "analysis_seed": 21200000,
+  "resources": {
+    "memory_high_gib": 14,
+    "memory_max_gib": 16,
+    "min_available_gib": 3,
+    "min_gpu_free_mib": 3500,
+    "expected_disk_gib": 8,
+    "disk_reserve_gib": 3,
+    "poll_seconds": 1
+  }
+}

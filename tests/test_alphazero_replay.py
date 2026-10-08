@@ -230,6 +230,29 @@ def test_whole_game_cache_evicts_oldest_and_skips_oversized_games(replay_runs):
     assert oversized.stats()['decoded_bytes'] == sizes[0]
 
 
+def test_cache_retention_releases_old_arrays_and_keeps_fixed_holdout(replay_runs):
+    import gc
+    import weakref
+
+    _, first, second = replay_runs
+    index = build_replay_index([first, second], max_games=16, cache_bytes=CACHE_BYTES)
+    old, holdout, active = index.games[:3]
+    sample = index.cache.sample(old, 0)
+    released = weakref.ref(sample.arrays['value_target'])
+    del sample
+    holdout_arrays = index.cache.sample(holdout, 0).arrays
+    active_arrays = index.cache.sample(active, 0).arrays
+    expected_bytes = sum(a.nbytes for arrays in (holdout_arrays, active_arrays) for a in arrays.values())
+    assert index.cache.retain((holdout.key, active.key)) == 1
+    gc.collect()
+    assert released() is None
+    assert index.cache.bytes == expected_bytes and index.cache.entries == 2
+    assert index.cache.sample(holdout, 0).arrays is holdout_arrays
+    assert index.cache.sample(active, 0).arrays is active_arrays
+    assert index.cache.retain(()) == 2
+    assert index.cache.entries == index.cache.bytes == 0
+
+
 def test_collection_reports_committed_game_progress(tmp_path):
     checkpoint = _weights_checkpoint(tmp_path / "base.pt")
     config = FastSelfPlayConfig(

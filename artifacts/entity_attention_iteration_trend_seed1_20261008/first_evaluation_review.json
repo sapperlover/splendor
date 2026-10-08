@@ -1,0 +1,57 @@
+{
+  "conclusion": "No confirmed strength gain; +1.25 percentage points over half score, CI includes 50%. Current holdout policy KL and value MSE increased within both rounds; exploratory diagnostics, no long-term failure claim.",
+  "diagnostics": [
+    {
+      "current_holdout": {
+        "policy_kl": {
+          "after": 0.41448323174850793,
+          "before": 0.41373707301029755,
+          "delta": 0.0007461587382103785
+        },
+        "value_loss": {
+          "after": 0.8491746366150031,
+          "before": 0.8337565305117068,
+          "delta": 0.015418106103296303
+        }
+      },
+      "round": 1
+    },
+    {
+      "current_holdout": {
+        "policy_kl": {
+          "after": 0.4131859579083919,
+          "before": 0.40668076823139093,
+          "delta": 0.006505189677000978
+        },
+        "value_loss": {
+          "after": 0.8770715725014148,
+          "before": 0.8592233561893824,
+          "delta": 0.017848216312032372
+        }
+      },
+      "round": 2
+    }
+  ],
+  "outcomes": {
+    "a_loss": 97,
+    "a_win": 102,
+    "draw": 1
+  },
+  "paired_bootstrap": {
+    "confidence": 0.95,
+    "estimate": 0.5125,
+    "lower": 0.445,
+    "pair_count": 100,
+    "resamples": 10000,
+    "seed": 19000000,
+    "upper": 0.58
+  },
+  "raw_game_log_files": 100,
+  "raw_game_records": 200,
+  "scope": "First B/steps50 node only; two online rounds,400 new games,100 optimizer updates,16500->16600 steps; single training trajectory.",
+  "source": "artifacts/entity_attention_iteration_trend_seed1_20261008/evaluations/seed1_steps50_r002.json",
+  "source_sha256": "bdc3e85511933361d8bde88fea574f29e592d768fab9104a993f28ebd2c1c10f",
+  "statuses": {
+    "natural_terminal": 200
+  }
+}

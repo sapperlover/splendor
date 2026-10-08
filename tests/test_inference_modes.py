@@ -1,6 +1,7 @@
 """Frozen inference execution modes: projection reuse and compiled forwards."""
 
 import numpy as np
+import pytest
 import torch
 
 from splendor.actor_critic import ActorCritic, ActorCriticConfig
@@ -82,6 +83,95 @@ def test_inference_config_rejects_unknown_modes():
         InferenceConfig(mode="turbo")
     with pytest.raises(ValueError):
         InferenceConfig(candidate_buckets=(32, 16))
+    with pytest.raises(ValueError, match="native-cudagraph requires"):
+        InferenceConfig(mode="compiled", compile_mode="native-cudagraph")
+    with pytest.raises(ValueError, match="CUDA device"):
+        _evaluator(_model(), mode="compiled", compile_mode="native-cudagraph", batch_buckets=(4,))
+
+
+@pytest.mark.parametrize('buckets,rows', [
+    ((4, 8), (1, 3, 5, 4, 2)),
+    ((16, 32, 64, 128, 200), (1, 17, 33, 65, 129, 200, 128)),
+])
+def test_static_batch_buckets_preserve_entity_outputs_and_reuse_guards(monkeypatch, buckets, rows):
+    from splendor.entity_attention import EntityAttention
+    original = torch.compile
+    monkeypatch.setattr(torch, "compile", lambda function, **kw:
+                        original(function, backend="eager", dynamic=kw.get("dynamic")))
+    torch._dynamo.reset()
+
+    torch.manual_seed(128)
+    model = EntityAttention().eval().requires_grad_(False)
+    reference = _evaluator(model, mode="eager", actor_projection=False)
+    compiled = _evaluator(model, mode="compiled", actor_projection=False,
+                          candidate_buckets=(32,), batch_buckets=buckets,
+                          compile_failure_policy="fail_fast")
+    items = _requests()
+    for count in rows:
+        batch = [items[i % len(items)] for i in range(count)]
+        actual = compiled.policy_value_encoded(batch)
+        expected = reference.policy_value_encoded(batch)
+        assert len(actual) == count
+        for (logits, value), (ref_logits, ref_value) in zip(actual, expected):
+            np.testing.assert_allclose(logits, ref_logits, rtol=0, atol=1e-5)
+            assert abs(value - ref_value) <= 1e-6
+    stats = compiled.stats.to_dict()["compile"]
+    assert set(stats["compiled_calls"]) == {f"policy_value:32:b{b}" for b in buckets}
+    assert stats["eager_fallbacks"] == 0
+    assert "batch_buckets" not in InferenceConfig().to_dict()
+    with pytest.raises(ValueError, match="exceeds batch_buckets"):
+        compiled.policy_value_encoded([items[0]] * (max(buckets) + 1))
+    with pytest.raises(ValueError, match="batch_buckets require"):
+        InferenceConfig(batch_buckets=(4,))
+    torch._dynamo.reset()
+
+
+def test_static_warmup_all_configured_shapes_exceeds_default_guard_limit(monkeypatch):
+    original = torch.compile
+    monkeypatch.setattr(torch, "compile", lambda function, **kw:
+                        original(function, backend="eager", dynamic=kw.get("dynamic")))
+    torch._dynamo.reset()
+    limit = torch._dynamo.config.recompile_limit
+    evaluator = _evaluator(_model(), mode="compiled", actor_projection=False,
+                           candidate_buckets=(16, 32, 48, 64), batch_buckets=(2, 4),
+                           compile_failure_policy="fail_fast")
+    evaluator.warmup_native((16, 32, 48, 64))
+    stats = evaluator.stats.to_dict()["compile"]
+    assert len(stats["compiled_calls"]) == 10
+    assert not stats["compile_failures"] and not stats["disabled_graphs"]
+    assert torch._dynamo.config.recompile_limit == limit
+    torch._dynamo.reset()
+
+
+def test_compile_caches_are_isolated_across_models_widths_and_entry_points(monkeypatch):
+    from splendor.entity_attention import EntityAttention
+
+    original = torch.compile
+    monkeypatch.setattr(torch, "compile", lambda function, **kw:
+                        original(function, backend="eager", dynamic=kw.get("dynamic")))
+    torch._dynamo.reset()
+    threads = torch.get_num_threads()
+    torch.set_num_threads(1)
+    try:
+        # Eval repeatedly loads two new checkpoints in the same training process.
+        # All candidate widths and value-only calls must have their own guards;
+        # the native batch can shrink from 64 to 50 or a smaller tail.
+        with torch._dynamo.config.patch(recompile_limit=1):
+            for _ in range(3):
+                evaluator = _evaluator(EntityAttention().eval().requires_grad_(False),
+                                       mode="compiled", actor_projection=False,
+                                       candidate_buckets=(16, 32, 48, 64),
+                                       compile_failure_policy="fail_fast")
+                for rows in (64, 50, 2):
+                    evaluator.warmup_native((16, 32, 48, 64), rows=rows)
+                stats = evaluator.stats.to_dict()["compile"]
+                assert len(stats["compiled_calls"]) == 5
+                assert not stats["compile_failures"] and not stats["disabled_graphs"]
+                assert stats["eager_fallbacks"] == 0
+            assert torch._dynamo.config.recompile_limit == 1
+    finally:
+        torch.set_num_threads(threads)
+        torch._dynamo.reset()
 
 
 def _broken_compile(stage: str, counter: dict[str, int]):
@@ -162,8 +252,9 @@ def test_compile_fail_fast_does_not_silently_hit_guard_cache_limit(monkeypatch):
     evaluator = _evaluator(_model(), mode='compiled', actor_projection=True,
                            candidate_buckets=(16, 32), compile_failure_policy='fail_fast')
     with torch._dynamo.config.patch(recompile_limit=1):
+        evaluator.warmup_native((16,), rows=1)
         with pytest.raises(torch._dynamo.exc.FailOnRecompileLimitHit):
-            evaluator.warmup_native((16, 32), rows=2)
+            evaluator.warmup_native((16,), rows=2)
     failures = evaluator.stats.to_dict()['compile']['compile_failures']
     assert failures and failures[-1]['error_type'] == 'FailOnRecompileLimitHit'
     torch._dynamo.reset()

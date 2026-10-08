@@ -38,6 +38,10 @@ conda run -n splendor env PYTHONPATH=src python scripts/run_mcts_50pair_sweep.py
 
 新配置可增加 `execution`：`backend=native_batched`、`active_games`、`max_batch_size`、`candidate_buckets`、`inference_mode` 和 `actor_projection`；`workers=1` 指唯一推理 owner，`device` 可选 CPU/CUDA。示例为 `configs/speed_2026-10-03/evaluation_optimized.json`。固定θ5/θ4各50 pairs真实对照已完成：CPU eager8 workers为682.17秒，唯一CUDA owner active100/B64为207.21秒，100局终态/结果/长度一致；详见[完整性能专题](../reports/end_to_end_speed_optimization_zh-CN.md)。这是整条执行路径收益，非棋力提升证据。
 
-此路径只接受双方均为 `native` 的 `mcts_checkpoint`。每局各自保留 policy seed，按 checkpoint 内容身份和推理配置隔离 evaluator/批次；原 checked runner 以协程推进真实规则、循环裁决、异常和截断。所有就绪局已经提供当前可用叶请求，因此 `max_batch_wait_ms` 必须为 0，尾批立即执行。恢复仍以完整 pair 为单位，半个 pair 使用原种子重跑；执行配置参与 manifest 身份，不允许与旧 CPU 路径拼接。
+此路径接受 `native`／`native_chance` 的 `mcts_checkpoint`，以及 `greedy_checkpoint`，可混合对打。greedy沿用`GreedyActorCriticPolicy`，以eager单请求forward的logits argmax行动，零搜索模拟；native批次只推进搜索一侧的作业。相同checkpoint和推理配置复用同一冻结模型。`execution_stats.greedy_seconds`／`greedy_decisions`单独记录裸网开销，搜索inference计数不包含这些greedy请求；greedy的policy搜索stats为空。
+
+2026-10-08修复`greedy_checkpoint` JSON读取丢弃`inference`的问题：两侧显式填写相同推理配置后可共享同一evaluator，greedy选招仍沿用eager。CUDA搜索可在两侧policy的`inference`中填写`mode=compiled`、`compile_mode=native-cudagraph`、`batch_buckets=[16,32,64,128,200]`、`native_transport=reused`、`compile_failure_policy=fail_fast`，并用`execution.active_games=200`、`max_batch_size=200`；这些字段不是新增搜索预算。配置和短窗依据见[分阶段加速方案](../../artifacts/entity_attention_stage_search_20261008/README.md)。其单模型200固定根热身后比eager64快1.84×，含冷编译的小面板可能更慢；不能当作完整双模型棋力赛耗时保证。该入口不设置RAM硬上限，正式旧面板必须保持原执行配置，新的执行方案使用新的输出目录。
+
+每局各自保留 policy seed，按 checkpoint 内容身份和推理配置隔离 evaluator/批次；原 checked runner 以协程推进真实规则、循环裁决、异常和截断，greedy异常也经相同规则runner记录。所有就绪局已经提供当前可用叶请求，因此 `max_batch_wait_ms` 必须为 0，尾批立即执行。恢复仍以完整 pair 为单位，半个 pair 使用原种子重跑；执行配置参与 manifest 身份，不允许与旧 CPU 路径拼接。
 
 AZ 的 `evaluation.mcts_execution` 接通同一路径；需要 `mcts_backend=native`、`workers=1`，不影响旧配置的默认 CPU 多进程入口。两个配置应使用不同运行目录。

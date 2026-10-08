@@ -1,0 +1,87 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 16860000,
+  "device": "cuda",
+  "execution": {
+    "active_games": 100,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "eager",
+    "max_batch_size": 200,
+    "max_batch_wait_ms": 0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "arm": "chance",
+    "confirm": false,
+    "evaluation_mode": "native",
+    "fixed_value": false,
+    "protocol": "chance-training-probe-v1",
+    "student_step": 100
+  },
+  "pairs": 50,
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_chance_training_probe_20261007/chance/checkpoints/step-000100.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "mode": "eager"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "chance_100_native",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 16850000,
+      "simulations": 1024
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "mode": "eager"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "frozen_16500_native",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 16850000,
+      "simulations": 1024
+    }
+  },
+  "policy_seed_base": 16840000,
+  "progress_every": 5,
+  "seed_start": 16830000,
+  "summary_every": 5,
+  "workers": 1
+}

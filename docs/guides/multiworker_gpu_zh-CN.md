@@ -42,6 +42,8 @@ policy/value-only 分别合批。owner 一批不必等待所有 worker，满 B �
 
 主进程是共享段的唯一创建者和 unlink 责任方。worker 成功退出或异常退出时关闭映射；主进程在 finally 中 join/terminate 全部子进程、关闭并 unlink 全部共享段。worker 异常写 failures/worker-*.json，包含去重的活跃游戏 seed、trace、root request、搜索现场及在途 slot/generation；owner 的输出和批量异常写 failures/owner.json，保留受影响描述符。未完成局不归档，已完成局保留。任务 ID 只预先放入全局活跃额度对应的数量，完成一局后补入下一局；提前终止时取消尚未消费消息的队列发送线程退出等待。进程退出与结果等待有有限超时及对端存活检查。`validate_run()` 将 worker/owner 故障报告与旧格式一起汇总，并按 game ID 去重。新一次 --resume 只跳过完整归档游戏，并重新创建所有进程与槽。
 
+2026-10-05 的 OOM 暴露了上述正常异常清理的边界：owner 被 SIGKILL 时不会运行 finally，worker 可能阻塞在 Queue.put 或队列发送线程退出刷新，原先只在 replies.get 超时后检查父进程不足以防止孤儿进程。现在 worker 入口启动独立线程等待 multiprocessing 父进程 sentinel；owner 死亡时直接退出进程，不再等待没有读端的队列刷新。操作系统释放 worker 的映射和描述符，共享 resource tracker 在最后一个客户端退出后 unlink 共享段。该机制也覆盖 owner 在 worker 启动阶段就被杀死的情况；正常采集仍保留原来的结果刷新、finally 和错误现场协议。强制终止时不保证生成失败现场，已经完整提交的对局保留。回归及本机孤儿清理记录见[退出清理验证](../../artifacts/entity_attention_worker_cleanup_20261005/README.md)。
+
 每次 generate() 调用加载本轮唯一冻结模型，结束后不再持有 worker 或共享段。AlphaZero 的 learner 接在 collect 返回之后，可使用同一 GPU。
 
 ## 统计与已验证范围
@@ -101,3 +103,15 @@ worker 在当前可供给槽全部提交后报告 `blocked` 及槽 generation。
 `supply_series` 以5秒间隔记录全轮剩余局数、active/blocked worker、pending rows/slots；`tail_intervals_exclusive` 的above100、11to100、9to10、2to8、last1互斥。额外汇总的last100/10/8/1区间则嵌套，不能相加。根opening/middle/late按双方合计回合<10、10–49、≥50统计，与全轮剩余局数分开。
 
 `compile_failure_policy=fail_fast` 除后端编译错误也覆盖Dynamo缓存限额的隐式eager退化；不通过增加无限图数量掩盖。共享容量以内而编译档位外的合法宽请求仍有明确eager执行语义，统计单列，和编译失败回退区分。
+
+## 2026-10-05 固定形状与独立双缓冲
+
+新增`execution.batch_buckets`（默认空）与pool的`execution.pipeline_slots=2`（默认1）。固定B先将真实行补齐到最小覆盖档位；复用的pinned输入和device视图按固定行数执行，D2H及worker结果仅取真实行。`batch_padding_positions`计额外B行，既有`padding_positions`仍计候选宽度补齐单元，二者单位不同。静态CUDA预热使用与实际采集相同的native行stride。Dynamo的partial包装共享代码缓存，静态模式按`len(B) × (2 × len(C) + 1)`设置局部、有限图上限，保留fail-fast；没有关闭缓存限额或默许编译失败回退。
+
+`compile_mode="native-cudagraph"`是项目的native执行模式：用torch.compile的default模式生成固定形状kernel，然后每个transfer按固定B捕获自己的前向及设备输出融合，直接重放固定device输入地址。H2D与真实行D2H仍在图外；与PyTorch的`reduce-overhead`路径相比，避免每批17个字段的额外D2D拷贝。图按lane/kind/C/B独立持有，不跨lane共享地址；首次捕获在测量预热中完成，捕获异常直接失败，超C档位仍走原有eager路径。该模式要求native CUDA、native批接口、静态B和reused transport。`inference.native_graph_captures/replays`区分实际捕获和重放，编译调用数不代表重放次数。
+
+owner双缓冲为每个lane、kind、候选档位持有独立的pinned输入、device输入和pinned输出。当前前向执行时，owner可gather下一批；完成并分发当前结果后才启动下一次前向，始终只有一个模型前向在途。拆分请求分别记录已预留行和已完成行，所有分段结果归还后才通知worker。异常时先等待在途拷贝，再执行原有进程/共享段清理。
+
+`shared_slots`是每个CPU worker能提交的共享请求槽，与owner缓冲数量独立。只增加owner缓冲可能让B500请求的12行后缀成为独立小批；不能从减少GPU event等待直接断言更快。`batches_prepared_while_inflight`和`overlapped_gather_seconds`记录在句柄尚未finish时准备的批次和gather主机时间，表示重叠机会，不等于测得的GPU时间或净节省。
+
+有限GPU数值、启动数量、完整短对局和S1024/N1窗口结论见[新模型执行性能报告](../reports/entity_attention_execution_speed_zh-CN.md)。基准CLI支持`--batch-buckets 256,512 --compile-mode reduce-overhead --slots 2`；这些是试验开关，不能直接修改已有run的冻结配置后resume。

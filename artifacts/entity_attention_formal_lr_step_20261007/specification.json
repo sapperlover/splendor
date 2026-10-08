@@ -1,0 +1,554 @@
+{
+  "arms": {
+    "lr1e4": {
+      "learning_rate": 0.0001,
+      "nodes": [
+        25,
+        50,
+        100
+      ],
+      "start": "start",
+      "steps": 100
+    },
+    "lr2p5e5": {
+      "learning_rate": 2.5e-05,
+      "nodes": [
+        25,
+        50,
+        100
+      ],
+      "start": "start",
+      "steps": 100
+    },
+    "lr5e5": {
+      "learning_rate": 5e-05,
+      "nodes": [
+        25,
+        50,
+        100
+      ],
+      "start": "start",
+      "steps": 100
+    }
+  },
+  "client_date": "2026-10-07",
+  "commands": {
+    "analyze": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_formal_lr_step_20261007/experiment.py analyze",
+    "diagnostics": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_formal_lr_step_20261007/experiment.py diagnostics",
+    "prepare": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_formal_lr_step_20261007/experiment.py prepare",
+    "repro": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_formal_lr_step_20261007/experiment.py repro",
+    "train-all": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_formal_lr_step_20261007/experiment.py train-all",
+    "verify": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_formal_lr_step_20261007/experiment.py verify"
+  },
+  "ledger": {
+    "composition_by_round": {
+      "policy_recent": {
+        "75": 6564,
+        "76": 6622,
+        "77": 6162,
+        "78": 6252
+      },
+      "value_history": {
+        "64": 1206,
+        "65": 1121,
+        "66": 1175,
+        "67": 1142,
+        "68": 1196,
+        "69": 1154,
+        "70": 1179,
+        "71": 1098,
+        "72": 1134,
+        "73": 1232,
+        "74": 1163
+      },
+      "value_recent": {
+        "75": 3171,
+        "76": 3300,
+        "77": 3120,
+        "78": 3209
+      }
+    },
+    "copies": {
+      "policy_recent": {
+        "bytes": 819200,
+        "path": "/home/lc/下载/splendor/runtime/entity_attention_formal_lr_step_20261007/policy_recent/1791291725806093755.bin",
+        "sha256": "380cf28f89f7ab4d3f1d7289a5e0f51883ec6b0dbab36f39de1920a7d03f2cd1"
+      },
+      "value_history": {
+        "bytes": 409600,
+        "path": "/home/lc/下载/splendor/runtime/entity_attention_formal_lr_step_20261007/value_history/1791291725806093755.bin",
+        "sha256": "cd399e2d6a4f6f146a6ef9af8718a1623bfd67c094817dff37815502589b7c52"
+      },
+      "value_recent": {
+        "bytes": 409600,
+        "path": "/home/lc/下载/splendor/runtime/entity_attention_formal_lr_step_20261007/value_recent/1791291725806093755.bin",
+        "sha256": "34b632c38f5e8747e73e541632c1fa9c1e692761e2a85951b13a0a9abdd8a8b1"
+      }
+    },
+    "digest": "b57b2011409ca86204e036fd5d4502eeaccf5167e0cb2c9121a163bb14c634dc",
+    "heads": {
+      "policy_recent": {
+        "bytes": 819200,
+        "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/usage/policy_recent/1791291725806093755.bin",
+        "per_step": 256,
+        "rows": 25600,
+        "sha256": "380cf28f89f7ab4d3f1d7289a5e0f51883ec6b0dbab36f39de1920a7d03f2cd1"
+      },
+      "value_history": {
+        "bytes": 409600,
+        "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/usage/value_history/1791291725806093755.bin",
+        "per_step": 128,
+        "rows": 12800,
+        "sha256": "cd399e2d6a4f6f146a6ef9af8718a1623bfd67c094817dff37815502589b7c52"
+      },
+      "value_recent": {
+        "bytes": 409600,
+        "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/usage/value_recent/1791291725806093755.bin",
+        "per_step": 128,
+        "rows": 12800,
+        "sha256": "34b632c38f5e8747e73e541632c1fa9c1e692761e2a85951b13a0a9abdd8a8b1"
+      }
+    },
+    "snapshot_copy": {
+      "bytes": 1136861,
+      "path": "/home/lc/下载/splendor/runtime/entity_attention_formal_lr_step_20261007/replay_snapshot.json",
+      "sha256": "b4d7cb2f57f7341e7e523b9dbd5d5a0198b209022dbadfdd99b151dfaef3e995"
+    },
+    "steps": 100
+  },
+  "panels": {
+    "opponent": "frozen 16500 start",
+    "pairs": 50,
+    "search": "S1024/N1 native, both sides old determinized search",
+    "seed_sets": {
+      "dev": {
+        "bootstrap": 16860000,
+        "game": 16830000,
+        "policy": 16840000
+      },
+      "head": {
+        "bootstrap": 16980000,
+        "game": 16960000,
+        "policy": 16970000
+      }
+    }
+  },
+  "protocol": "formal-lr-step-probe-v1",
+  "repro_arm": {
+    "learning_rate": 0.0001,
+    "name": "repro_round019",
+    "steps": 100
+  },
+  "repro_reference": {
+    "bytes": 6492243,
+    "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+  },
+  "repro_rng_identity": {
+    "sampling_rng": {
+      "algorithm": "splitmix64-v1",
+      "draws": 4684800,
+      "state": 11630589264360978160
+    },
+    "sampling_rng_sha256": "f4f1f48d82b16d4a43b1c9f916932421cc69eca798a61b32a7124edd838d85d9",
+    "torch_cpu_sha256": "59dc9664172345daadbe9da9ecbed98b5bd29c79be1ad3bfa2b9840c7e99e50b",
+    "torch_cuda_sha256": [
+      "ba556a08888c9046d66253ef7edb56411ff4c1d477d9215d0d03c3617b3f61c8"
+    ]
+  },
+  "repro_start": {
+    "bytes": 6492243,
+    "model_state_sha256": "eaa68b830c09a78bd4552bb6782e95d27a37240c7ebd1106378eeade3820c1ec",
+    "optimizer_state_sha256": "7c9a7590ee525fcaf0450f7c4c49847efc3b28b6c902e741b6917390d66a516c",
+    "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/checkpoints/final.pt",
+    "sha256": "cab13feca700cdc15ad20e0d4ece731ae648f3d873e62b26933b8238b6eef3ca",
+    "total_train_step": 16400
+  },
+  "rng_identity": {
+    "sampling_rng": {
+      "algorithm": "splitmix64-v1",
+      "draws": 4736000,
+      "state": 17906614220781625072
+    },
+    "sampling_rng_sha256": "cf161704ba7e30bad7581b26df96b3ef49fca66cf7cede3fe2a9be49ba0782fb",
+    "torch_cpu_sha256": "59dc9664172345daadbe9da9ecbed98b5bd29c79be1ad3bfa2b9840c7e99e50b",
+    "torch_cuda_sha256": [
+      "ba556a08888c9046d66253ef7edb56411ff4c1d477d9215d0d03c3617b3f61c8"
+    ]
+  },
+  "snapshot": {
+    "bytes": 1136861,
+    "digest": "96a948d7e3673cf5794752fd70271eeab04077257daf3518340896fcb900d40d",
+    "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/replay_snapshot.json",
+    "recent_round_indices": [
+      75,
+      76,
+      77,
+      78
+    ],
+    "sha256": "b4d7cb2f57f7341e7e523b9dbd5d5a0198b209022dbadfdd99b151dfaef3e995",
+    "split_training": {
+      "config": {
+        "policy_max_grad_norm": 1.0,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "mode": "split_policy_detached_value",
+      "policy_batch_size": 256,
+      "pool_positions": {
+        "history": 162020,
+        "recent": 59325
+      },
+      "quotas": {
+        "policy_recent": 256,
+        "value_history": 128,
+        "value_recent": 128
+      },
+      "recent_round_indices": [
+        75,
+        76,
+        77,
+        78
+      ],
+      "sampling": "uniform_positions_with_replacement",
+      "teachers": [
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-004/checkpoints/final.pt",
+            "sha256": "dda26db5f47c1f43a984c5bdb1d35555c8241c2c5f9b2ea3487556fbdff26a37"
+          },
+          "games": 200,
+          "manifest_sha256": "68914cbb5f2807e81da83897700184b14ee07ed3b877562185706499ef07ea84",
+          "policy_expected_fraction": 0.0,
+          "round_index": 64,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-005",
+          "train_games": 177,
+          "train_positions": 14529,
+          "value_expected_fraction": 0.044837057153437845
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-005/checkpoints/final.pt",
+            "sha256": "008b4fdf81cedd9cbeed479c2178d72f52715f21a45980b7e8ca437bc0c63fed"
+          },
+          "games": 200,
+          "manifest_sha256": "df913f1252a2a08f2bfbaa1d59dda7c2a58d3495e7c6b5994b57dd4db37d9438",
+          "policy_expected_fraction": 0.0,
+          "round_index": 65,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-006",
+          "train_games": 179,
+          "train_positions": 14655,
+          "value_expected_fraction": 0.04522589803727935
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-006/checkpoints/final.pt",
+            "sha256": "97cf46e2f4fea49b8c7b2a34f8ef2102883b1fabf99f132b139bb22cf75a067f"
+          },
+          "games": 200,
+          "manifest_sha256": "00af99a2e64bc16398690e8f863f54ec39578be97e523f2c2f1d3d5bf24fdd70",
+          "policy_expected_fraction": 0.0,
+          "round_index": 66,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-007",
+          "train_games": 175,
+          "train_positions": 14363,
+          "value_expected_fraction": 0.04432477471917047
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-007/checkpoints/final.pt",
+            "sha256": "e7897d3461e5283a00932a3eaf30d020283251b76115beacd85adfec790d6b7c"
+          },
+          "games": 200,
+          "manifest_sha256": "289770a35c0689e0ab614c3d399f2e62ee22e7b4a58d774586653b0a3030f51a",
+          "policy_expected_fraction": 0.0,
+          "round_index": 67,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-008",
+          "train_games": 180,
+          "train_positions": 14845,
+          "value_expected_fraction": 0.045812245401802246
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-008/checkpoints/final.pt",
+            "sha256": "c7fb68d0bd56c5a47cc4565affe8f80a6db43a8930f95bbf6acfe3bd05d3838f"
+          },
+          "games": 200,
+          "manifest_sha256": "95fdd00f6760508a594dacc8e4705567d7baf9489a040263af478f120443d424",
+          "policy_expected_fraction": 0.0,
+          "round_index": 68,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-009",
+          "train_games": 180,
+          "train_positions": 14907,
+          "value_expected_fraction": 0.04600357980496235
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-009/checkpoints/final.pt",
+            "sha256": "58131eb92c8ac8e8223ea5e7a95e62a6bbd8c0637ae28422fddd49d6ac5e46be"
+          },
+          "games": 200,
+          "manifest_sha256": "3c329a0fb386ed2fbcc6e5fd8ac9495e7d69d2ba1f3d8eec7a0504db2d97ad03",
+          "policy_expected_fraction": 0.0,
+          "round_index": 69,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-010",
+          "train_games": 180,
+          "train_positions": 14793,
+          "value_expected_fraction": 0.04565177138624861
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-010/checkpoints/final.pt",
+            "sha256": "c764e30fc64e092436d0c06f81d95e823407ca1f211fe74451eb05e28e407d93"
+          },
+          "games": 200,
+          "manifest_sha256": "80b7f54782fa77e14d8c82141d808953e1aba940d85aeff3eae27d0048148f95",
+          "policy_expected_fraction": 0.0,
+          "round_index": 70,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-011",
+          "train_games": 185,
+          "train_positions": 15335,
+          "value_expected_fraction": 0.047324404394519196
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-011/checkpoints/final.pt",
+            "sha256": "68442abaff3d479cdf8d598e148cdd8ae3a248b174dd24e0599945bef86c2e83"
+          },
+          "games": 200,
+          "manifest_sha256": "82f4107fb9e1e7902cff0c058ceefab2cf681affc9dc6b13db7a3688f09f4a6c",
+          "policy_expected_fraction": 0.0,
+          "round_index": 71,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-012",
+          "train_games": 178,
+          "train_positions": 14522,
+          "value_expected_fraction": 0.04481545488211332
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-012/checkpoints/final.pt",
+            "sha256": "82a074e18fe1b4f1a67b0696c5659c1be7c7174ff0b3ee564e62832c8edd0d3a"
+          },
+          "games": 200,
+          "manifest_sha256": "07c72526b407302b72b2ebbfda2d28df2299f65ac4933b184843f23407a1ac73",
+          "policy_expected_fraction": 0.0,
+          "round_index": 72,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-013",
+          "train_games": 177,
+          "train_positions": 14411,
+          "value_expected_fraction": 0.04447290457968152
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-013/checkpoints/final.pt",
+            "sha256": "b8e6b35e1ff8dff34374ae88a69b1cb59caf9fa6a990993750aa9cf3f3de6111"
+          },
+          "games": 200,
+          "manifest_sha256": "ed344915b9836691f609584a456c2ea0d8b4e30c3f3b89586113c70583da3340",
+          "policy_expected_fraction": 0.0,
+          "round_index": 73,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-014",
+          "train_games": 180,
+          "train_positions": 14876,
+          "value_expected_fraction": 0.0459079126033823
+        },
+        {
+          "bucket": "history",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-014/checkpoints/final.pt",
+            "sha256": "4167ceb98d99aaca0640e2c2bfa868fee9fe2f86ef235b68f0592fd12e8323b4"
+          },
+          "games": 200,
+          "manifest_sha256": "4700efc200f237c4668a725a2dfe4a52b437987dc89dcf3a6e744ecf15fa9938",
+          "policy_expected_fraction": 0.0,
+          "round_index": 74,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-015",
+          "train_games": 179,
+          "train_positions": 14784,
+          "value_expected_fraction": 0.04562399703740279
+        },
+        {
+          "bucket": "recent",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-015/checkpoints/final.pt",
+            "sha256": "e48ec7c38003cd99a58c651d053b8b4e00b142319ee1e459476ca4b6d4c8d787"
+          },
+          "games": 200,
+          "manifest_sha256": "607c7ab3ef37bce758420abd580dd26d395da0d035d85721e9650a3a6cc578e2",
+          "policy_expected_fraction": 0.2531479140328698,
+          "round_index": 75,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-016",
+          "train_games": 180,
+          "train_positions": 15018,
+          "value_expected_fraction": 0.1265739570164349
+        },
+        {
+          "bucket": "recent",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-016/checkpoints/final.pt",
+            "sha256": "21c39109a6eb3a230a3b029718565ce4d4ecf951cb2d943ebf6ac9db78f29a74"
+          },
+          "games": 200,
+          "manifest_sha256": "90ed9a18ed0c7094f4093d9b517016e453968627b1094bd67a5ea9ed62d4d665",
+          "policy_expected_fraction": 0.2553898019384745,
+          "round_index": 76,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-017",
+          "train_games": 186,
+          "train_positions": 15151,
+          "value_expected_fraction": 0.12769490096923725
+        },
+        {
+          "bucket": "recent",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-017/checkpoints/final.pt",
+            "sha256": "da1b74d830169ecaf884f6fbcdbb04891762ceee9ff7ba8db6a6bb2e152fb4e4"
+          },
+          "games": 200,
+          "manifest_sha256": "76a7a71d48110249ad2974e4bc95c9863bb91eb577c8f29262fb2e80b05a874f",
+          "policy_expected_fraction": 0.24556257901390643,
+          "round_index": 77,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-018",
+          "train_games": 177,
+          "train_positions": 14568,
+          "value_expected_fraction": 0.12278128950695322
+        },
+        {
+          "bucket": "recent",
+          "checkpoint_identity": {
+            "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-018/checkpoints/final.pt",
+            "sha256": "cab13feca700cdc15ad20e0d4ece731ae648f3d873e62b26933b8238b6eef3ca"
+          },
+          "games": 200,
+          "manifest_sha256": "1fd9fbd36a39b9b0bf8afd2f8aede66d36238d6dca5aa8409b5900c1ce5c4de5",
+          "policy_expected_fraction": 0.24589970501474925,
+          "round_index": 78,
+          "run_id": "entity_attention_hybrid_split_p4_v15_from_round50_seed1-round-019",
+          "train_games": 179,
+          "train_positions": 14588,
+          "value_expected_fraction": 0.12294985250737463
+        }
+      ],
+      "value_batch_size": 256
+    }
+  },
+  "source": {
+    "dirty_diff_sha256": "39d63743bf8ebb583d3ad0ef7d1209fea84bc0dedc0cde43cc62b4733008eea5",
+    "git_head": "0a176b1a269a9850f51e7350e475a6c801f82644",
+    "git_status": " M README.md\n M artifacts/experiment_index.json\n M configs/entity_attention_v1/README.md\n M docs/current_project_state_zh-CN.md\n M docs/guides/entity_attention_offline_zh-CN.md\n M docs/guides/entity_attention_self_iteration_zh-CN.md\n M docs/guides/evaluation_zh-CN.md\n M docs/guides/multiworker_gpu_zh-CN.md\n M docs/guides/native_search_zh-CN.md\n M docs/guides/search_zh-CN.md\n M docs/index.md\n M scripts/benchmark_collect_throughput.py\n M src/splendor/alphazero_replay.py\n M src/splendor/alphazero_train.py\n M src/splendor/evaluation.py\n M src/splendor/evaluation_batch.py\n M src/splendor/multiworker_gpu.py\n M src/splendor/native_policy.py\n M src/splendor/native_search.cpp\n M src/splendor/search_inference.py\n M src/splendor/selfplay_fast.py\n M tests/test_alphazero_replay.py\n M tests/test_evaluation_3a.py\n M tests/test_inference_modes.py\n M tests/test_multiworker_gpu.py\n M tests/test_speed_optimization.py\n?? artifacts/entity_attention_100_vs_500_20261005/\n?? artifacts/entity_attention_chance_depth_20261007/\n?? artifacts/entity_attention_chance_pw_20261007/\n?? artifacts/entity_attention_chance_pw_greedy_20261007/\n?? artifacts/entity_attention_chance_pw_noise_20261007/\n?? artifacts/entity_attention_chance_pw_strength_20261007/\n?? artifacts/entity_attention_chance_search_20261007/\n?? artifacts/entity_attention_chance_strength_20261007/\n?? artifacts/entity_attention_chance_training_probe_20261007/\n?? artifacts/entity_attention_execution_speed_20261005/\n?? artifacts/entity_attention_formal_lr_step_20261007/\n?? artifacts/entity_attention_graph200_20261006/\n?? artifacts/entity_attention_hybrid_fork_20261005/\n?? artifacts/entity_attention_hybrid_s1024_n1_20261006/\n?? artifacts/entity_attention_memory_window_20261006/\n?? artifacts/entity_attention_policy_value_ablation_20261006/\n?? artifacts/entity_attention_search_screen_20261005/\n?? artifacts/entity_attention_split_training_20261006/\n?? artifacts/entity_attention_step_dose_20261007/\n?? artifacts/entity_attention_strong_anchor_20261006/\n?? artifacts/entity_attention_target_averaging_20261007/\n?? artifacts/entity_attention_target_noise_20261007/\n?? artifacts/entity_attention_worker_cleanup_20261005/\n?? configs/entity_attention_v1/collection_static_graph.json\n?? configs/entity_attention_v1/hybrid_cpu_smoke.json\n?? configs/entity_attention_v1/hybrid_fork_s1024_n1.json\n?? configs/entity_attention_v1/hybrid_fork_s1024_n2.json\n?? configs/entity_attention_v1/hybrid_fork_s512_n2.json\n?? configs/entity_attention_v1/hybrid_split_policy_value.json\n?? configs/entity_attention_v1/hybrid_static_graph.json\n?? docs/guides/entity_attention_fresh_share_zh-CN.md\n?? docs/guides/entity_attention_hybrid_fork_zh-CN.md\n?? docs/guides/entity_attention_hybrid_s1024_n1_zh-CN.md\n?? docs/guides/entity_attention_hybrid_zh-CN.md\n?? docs/guides/entity_attention_split_training_zh-CN.md\n?? docs/reports/entity_attention_execution_speed_zh-CN.md\n?? docs/reports/entity_attention_search_teachers_zh-CN.md\n?? src/splendor/hybrid_train.py\n?? tests/test_hybrid_training.py\n?? tests/test_native_chance_search.py\n",
+    "native_extensions": {
+      "/home/lc/下载/splendor/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so": "04a17d17f4ece7b8486054e4bfba1c1ae403528c6e4c5effe2a2f05e513038d7"
+    },
+    "source_files": {
+      "scripts/analyze_az_run.py": "a75b5265d697cbcc785d69b0c2ee59927236df7487a11768d9fb90f0acd82c8d",
+      "scripts/benchmark_batched_search.py": "43ef41b360f0cea4d7ae5f3e311c6891de9ffef0382fb567414f674e05277e06",
+      "scripts/benchmark_collect_throughput.py": "45309de75b6731fdd4c0df94f738d29e8e2709e6d46593bb274deb097923c464",
+      "scripts/benchmark_inference_modes.py": "890f014ef18da939edf12a2b88e2bbb555e1c9f3473fe7c30d6df3887e2df122",
+      "scripts/benchmark_large_batch_inference.py": "9d0acaa2bf3e61d624b9a1c15011caef999be68876ac03f58a0ac4ab38976182",
+      "scripts/benchmark_native_search.py": "f9dbbe04a3d8cef9708e2623ab582427de6988822867af831b7e382520a7c79d",
+      "scripts/benchmark_transfer_modes.py": "dbb17c4c93f60cc2d4ab0ce0dfad6843fbabb506cdf2eb69e06c88cf2a354cbe",
+      "scripts/compare_speed_inference.py": "fe6d880c8fdee06fd604a6fbf339221c9f32264c0ca49f9fd2c9bb0f67ed3542",
+      "scripts/prepare_next_az.py": "25ee8e30f30f4a75822c343556c3add3f37b180c4daa43dd4151465a61fe3aa3",
+      "scripts/profile_inference_pipeline.py": "3db8299c7155a0f0b19c30af7569e54aa8de6549f1d64cfed7b9e1a130769419",
+      "scripts/profile_speed_pipeline.py": "8dfc1739848a2998d73e9cfee36af718c23251807c5c29d06a5ca65ecd692052",
+      "scripts/run_az_generation_evals.py": "097a78a10a120051e359a6f65c645420625547182e0265b8319bee503fffd018",
+      "scripts/run_mcts_50pair_sweep.py": "f53c80acd4e90b0a7d0f2567d2fca11a2b9b1d083fdc77f36da1214374de13d9",
+      "scripts/run_recorded_evaluation.py": "cbdd2b01e889ee8a44696cd318ab1d4acc94478820d5752715f4358ff70b8a59",
+      "scripts/run_search_accel_short_benchmark.py": "61ee4887496b0fe3c920c80b8c5687276b3268cd9dad5e3395525a259364a6db",
+      "scripts/run_speed_validation.py": "943e1e80fdcfa3a7a8effdcf010e9636afa3f88d43c9140cc7ba75f95ba04010",
+      "scripts/summarize_speed_validation.py": "c50f6ad84b3620238be1863964c3ad1e81bc7725fc5b80d7e66ea86f42cb9db2",
+      "scripts/validate_entity_attention.py": "3c7a673c808315f2e14acfb374c0e2d648226c41831d764c5201532367587f25",
+      "src/splendor/__init__.py": "3b3764c6329eb16a437f5e6426c5de6acc84caa2f75200ab058744d0ddcb11b8",
+      "src/splendor/_state.py": "64df1e3b0864173fe9c42b0919e698c4cb3d2185a7ee2473aad2f0682d95bac9",
+      "src/splendor/actions.py": "f3bcd17deec8aeab81f38a457d7a516b69fed4ce6e09cc46b24a1a87edb93877",
+      "src/splendor/actor_critic.py": "fd01a9bf62c0026ca27d98f7479ddbaa4941614f2ba4d0a9d315ff9542d16523",
+      "src/splendor/alphazero_analysis.py": "6871474aec17c9964685810b3831590b6843db816e7a1853e65165d4f7175163",
+      "src/splendor/alphazero_checkpoint.py": "3a4499e0a313b3049fb29fc6930fa0c59963f9866e6e357c78210f6a702de4b0",
+      "src/splendor/alphazero_diagnostics.py": "11530ca440ebbb1c48887f31438e063a21fa9f4f7699b1adc8ed846b48654f1b",
+      "src/splendor/alphazero_loop.py": "e1216dc4fb0c9346892a8efc9abfc2d293f21a71f894bf1179755c9897a09609",
+      "src/splendor/alphazero_recording.py": "53a3dcfc67145ee8ea104f832b208f5625bab09c92f1c64cdf997a6a80e4036f",
+      "src/splendor/alphazero_replay.py": "6174ca36560a557736168e6b18ba5e164e652c8af9145cd3be107fd808f373e1",
+      "src/splendor/alphazero_train.py": "88f05c927d39f221df1c7eb6802586c633f25a975682d5bf4de4488a28e41b1e",
+      "src/splendor/analyze_5c.py": "637dc6d19d1f9ce46f4ebe091abe7e79f02635e7b6e91fc075fef097cb6bd564",
+      "src/splendor/batched_search.py": "54e0f43103418d1e1639ff49d30c4962fde6b8b822c021f7b37c9e98fe2a8eaa",
+      "src/splendor/benchmark_5b.py": "3bc8f4d8639708adc7ede8b92f1d44f313eeee992d5ccc775e60018273facc4c",
+      "src/splendor/benchmark_5c_multiprocess.py": "18117739fa0d3c90b54cfbfd516ddbdfa7d2c045d72e8b56b961f3fa1a33776c",
+      "src/splendor/benchmark_search.py": "c2d8b4134728cfb04ff9b33d3abf8b9367e62b89b2a64fd2fe8f6f9a834445ea",
+      "src/splendor/catalog.py": "9fc9f80057f292b3099851355a8cd99d2d9ec2ff0a9cf4a986926916ed42fadf",
+      "src/splendor/compact_trace.py": "74a287c8eb4df9ee9046ea44a3610baa4bcccca2d8b0f684fdb0cc76066b7172",
+      "src/splendor/contracts.py": "f613f0b814cf5b3ee01dfa63236346b4c43de307e2ea3220c950e77d06d254f4",
+      "src/splendor/engine.py": "f82b5a04a2f4ac900d63576909de170b9406e1f6a07fea7b4a6406e2efb364a8",
+      "src/splendor/entity_attention.py": "9e5c32f50bf656d6c0188cb01c6a5795b14c6dbadeea8fddfdf4926f72a1e7e4",
+      "src/splendor/evaluate.py": "4f44453a7aec9e88bc27b322505d2b8f39d3b98b911bacf1012da23389a1bcd8",
+      "src/splendor/evaluate_5c.py": "233123827903a617bd24dcf17100c6bf25a9af523574750db2da090610c280ef",
+      "src/splendor/evaluate_search.py": "967ab9257262752362ef46d133a03052f7e7efd2816ad007238d18de0da5e746",
+      "src/splendor/evaluate_stage4_ci.py": "02830720f7c7f629faf46fa35144eb7cd3d0f73b85f2036582579ae740ca5399",
+      "src/splendor/evaluation.py": "0b329387a1b20b44f6d030daac5a49799c5cf1dca970fd7679efa92bce3124dd",
+      "src/splendor/evaluation_batch.py": "669c0c17c85291c0570b8cb3c51fb4be16629dcb39d629bbaa2b4dce5a9fab37",
+      "src/splendor/features.py": "f829fb06dc4c92184f3120fdad052cf50eec410b38e83fe20b88355153ac96e9",
+      "src/splendor/heuristic_policy.py": "02b6bfa4cdf43c5fff89c36f889bdeb7c9fceb288c3fefb4f268d1dbee454057",
+      "src/splendor/hybrid_train.py": "f2ee1d521792ea29c001c103beea86e45f91a5643f4c0d395b947b9630bc4350",
+      "src/splendor/invariants.py": "f94acb6b96504f160357add33d23d7736cca505e72ef10beed7cfa6cd6c513fb",
+      "src/splendor/ladder_search.py": "6eda6b030d6952dd45fa0e1d17edf32f401c762bf86a22947fc400b6651aae0c",
+      "src/splendor/match_stepper.py": "629789491417a6946e7ab6089f74379a930a40b6adf970331cc93953c996e39b",
+      "src/splendor/mcts_policy.py": "6eeaae45f4dfc26b1aa5e5c050f63e3f693d4c9a2abba7295748e9b8e7a0727f",
+      "src/splendor/model.py": "c90efb5c1e0716a7a044a88f9097f617d4218ae95ec2f59c8c19fe97fe006443",
+      "src/splendor/multiprocess_collector.py": "de693e9198de185870e236a568ba9a92f63d8fada10345df493188a13320b852",
+      "src/splendor/multiworker_gpu.py": "9b6aa394ceeee029ae6dccce1cdc158b746c4739b60e0903c117885b775ef57f",
+      "src/splendor/native_match_stepper.py": "c1ac9d2531a9dfa4920f150f769f1541869df71cf6958aa111da38d3b7c7b329",
+      "src/splendor/native_policy.py": "7a4167faf706e6343d35b813fbeb985240b82faaae696647e59427f271089b86",
+      "src/splendor/neural_policy.py": "dee37a2891726c677d192f0000cd418015bfccaf202d7ff82b5a632e2a0b0751",
+      "src/splendor/observation.py": "866348f21a62e66d73e5c0bf93a571d65d7a9f8bff1f6336e5c4ccd86d9b1c30",
+      "src/splendor/offline_train.py": "bf4e5d035ee9f50c121a31d53823e55244d1148d9c9e2b59a5a0d011d950106a",
+      "src/splendor/opponent_pool.py": "01714a7699c723d4ff155d6e6d5242773c5874c9b58b9536c7b20feceb29c01f",
+      "src/splendor/paired_statistics.py": "3ce2c653c268065cbc61c4184fb0060fd0aac6850e361a5472ea1ddaa1f11980",
+      "src/splendor/ppo.py": "342595e599a8988592a9dcbba80323345b243b8a7a159e394bc540018beeb1d0",
+      "src/splendor/random_policy.py": "d10a21bd77b70ae8d0e544c56b589dccf4cb595d1b49138a76c4c801610173f7",
+      "src/splendor/replay.py": "0087bf78b852a59885c207f5b81d47aed1fb842330a4b072a6e17f90040df4da",
+      "src/splendor/reproduce_failure.py": "ee58726606a3281e0c424ba82ee1f3de9973a95a1c9822d51d419fde7a040431",
+      "src/splendor/result.py": "338782d0f3b4c38a853777b7abe474bfdeac016c7299e104734b83d567403c28",
+      "src/splendor/rng.py": "9aee501ea01f6b002c90d80743e38efac6a6190fe4e7e1156d1b11aff3fd340b",
+      "src/splendor/rules.py": "b88d3ccb9aba619dedc4f30aece51426805e192d0ef5983736f2a6b18e677ab3",
+      "src/splendor/runner.py": "3bb839f704aa6e177e5d457c9eedf37a6e9ef6d66c7bcb009898eee29d46a7bf",
+      "src/splendor/search_inference.py": "088da23d26d31182e908d6d227f63af1d814a534d3ec11c80e9b7b155dfedf4b",
+      "src/splendor/search_policy.py": "c39e84ea3a4fbe96d5cb2bf6d20ab420ff21c012608bba84ae9ffed3d030c629",
+      "src/splendor/selfplay.py": "dd5bd2a9ae9036c4e63d93868467a842dae16c6f5a8cc7bcbd707701dddc3b85",
+      "src/splendor/selfplay_data.py": "a65ca777e60553645bb36311b70c60a7e016db6a863652b4bb61b54e3ccbc98f",
+      "src/splendor/selfplay_fast.py": "a62a84b85b876eb8fd636c5b013f98a7e9612e8b6571102241425b7ddb78327c",
+      "src/splendor/state_machine.py": "623cfb6ce76fcebc5c483ddd95be60861faa21161dd7aadf2f6f652ef586a0d3",
+      "src/splendor/train_5a.py": "c3ca46eea544b51f5dfb4fe04956aaa3f77e7775d9dedadbddcea21b6367dacd",
+      "src/splendor/train_5b.py": "0683b19d6e412ee1aaf5da027a53e8d175ecbdeb65a7ec9ab4424f6489ced3c1",
+      "src/splendor/train_5b_stage4.py": "13e1eccb84bb5c9cfbf528f8693733e48e65b975c1c0c98f863c4bd15137d807",
+      "src/splendor/train_5c.py": "86eea275cab30b7908a04c047e216f6457853b08c7cf1973dd50170481d478fe",
+      "src/splendor/training_env.py": "ec489d864df79a898dd912acb61171867426880aea03b67ae949c2d5971cc874",
+      "src/splendor/validation.py": "2e0ddb69d298c678ecf76c12755e5e5711469bc5ae7496f3973fbe443bfa6dbc",
+      "src/splendor/web_app.py": "36223609a44b478377208ec07a5a052d955399ae57d13f2b4e551b9d3cc55fae"
+    },
+    "source_sha256": "bfed51c8c20fd30686652244fdd3cad1ecc044fc2addbc16dfc4b0e94170a5b3"
+  },
+  "source_run_config": {
+    "bytes": 5276,
+    "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/config.json",
+    "sha256": "c3c1491af2f2227534eae77c6e81b72d968f0d9673c20386f974cb3e3db21320"
+  },
+  "start": {
+    "bytes": 6492243,
+    "model_state_sha256": "60efc5f29fcd5f98ddf31c45a1edd91133e048d2765006c83f26169a784bc909",
+    "optimizer_state_sha256": "331d2e40b90b8d1269a199ee5da21bcb240f9749bd1056d2e42fbabeac843955",
+    "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "round_index": 79,
+    "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4",
+    "total_train_step": 16500
+  },
+  "status": "prepared"
+}

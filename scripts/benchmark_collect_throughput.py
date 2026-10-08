@@ -405,9 +405,11 @@ def main() -> None:
     parser.add_argument("--candidate-buckets", default=None,
                         help="comma separated candidate width buckets, for example 16,32,48")
     parser.add_argument("--compile-mode", default=None)
+    parser.add_argument("--batch-buckets", default=None,
+                        help="comma separated static batch sizes; requires compiled mode")
     parser.add_argument("--compile-failure-policy", default=None, choices=("fallback", "fail_fast"))
     parser.add_argument("--native-transport", default=None, choices=("reused", "packed"))
-    parser.add_argument("--slots", type=int, default=None, help="legacy native pipeline slots")
+    parser.add_argument("--slots", type=int, default=None, help="native GPU owner pipeline slots (1 or 2)")
     parser.add_argument("--search-workers", type=int, default=None)
     parser.add_argument("--total-active", type=int, default=None)
     parser.add_argument("--local-microbatch", type=int, default=None)
@@ -441,6 +443,8 @@ def main() -> None:
         execution["actor_projection"] = args.actor_projection == "on"
     if args.candidate_buckets is not None:
         execution["candidate_buckets"] = [int(part) for part in args.candidate_buckets.split(",")]
+    if args.batch_buckets is not None:
+        execution["batch_buckets"] = [int(part) for part in args.batch_buckets.split(",")]
     pooled = execution.get("backend") == "native_cuda_pool"
     workers = execution.get("search_workers", 1) if pooled else execution.get("workers", 1)
     active = execution.get("total_active_games", 1) if pooled else execution.get("active_games_per_worker", 1)

@@ -1,0 +1,125 @@
+{
+  "command": [
+    "conda",
+    "run",
+    "--no-capture-output",
+    "-n",
+    "splendor",
+    "env",
+    "PYTHONPATH=src",
+    "python",
+    "-u",
+    "-m",
+    "splendor.hybrid_train",
+    "--config",
+    "configs/entity_attention_v1/hybrid_fork_s1024_n1.json",
+    "--output",
+    "/home/lc/下载/splendor/runtime/entity_attention_graph200_validation_20261006/resume_old_config",
+    "--resume",
+    "--online-rounds",
+    "0"
+  ],
+  "exit_code": 0,
+  "original_validation_root": "/home/lc/下载/splendor/runtime/entity_attention_hybrid_s1024_n1_validation_20261006/initialize_only_replay3000",
+  "validation_root": "/home/lc/下载/splendor/runtime/entity_attention_graph200_validation_20261006/resume_old_config",
+  "copied_frozen_old_config_sha256": "2c3338d56eb6207dd76738eb99286ca28e981e5fc644af5071d8c5050e6c0f63",
+  "state": {
+    "anchor_checkpoint": {
+      "path": "/home/lc/下载/splendor/runtime/entity_attention_graph200_validation_20261006/resume_old_config/checkpoints/theta_5000.pt",
+      "sha256": "6fec2039cfe5fa7e8775ec5b5692a5defadfa3ab21bdb398e400696be17b08db",
+      "total_train_step": 5000
+    },
+    "completed_rounds": [],
+    "fork_manifest_sha256": "123826c3165b8cd3c1035e6cae01882ec8e9c9ebb0d0a4700b3e6987adbc6d9d",
+    "latest_checkpoint": {
+      "path": "/home/lc/下载/splendor/runtime/entity_attention_graph200_validation_20261006/resume_old_config/checkpoints/fork_initial.pt",
+      "sha256": "af3b2b64007705cc9adcbb3e8a6ad68239f4dc967c31c515e857b1240479e44a",
+      "total_train_step": 9500
+    },
+    "online_round_offset": 9,
+    "protocol": "az-continuous-hybrid-v1"
+  },
+  "before_sha256": {
+    "config.json": "2c3338d56eb6207dd76738eb99286ca28e981e5fc644af5071d8c5050e6c0f63",
+    "hybrid_state.json": "aeb094d300acad24213f4e995009f5e9839959af5e15a39e87892ad4037b74af",
+    "fork_manifest.json": "123826c3165b8cd3c1035e6cae01882ec8e9c9ebb0d0a4700b3e6987adbc6d9d",
+    "checkpoints/fork_initial.pt": "af3b2b64007705cc9adcbb3e8a6ad68239f4dc967c31c515e857b1240479e44a",
+    "checkpoints/theta_5000.pt": "6fec2039cfe5fa7e8775ec5b5692a5defadfa3ab21bdb398e400696be17b08db"
+  },
+  "after_sha256": {
+    "config.json": "2c3338d56eb6207dd76738eb99286ca28e981e5fc644af5071d8c5050e6c0f63",
+    "hybrid_state.json": "aeb094d300acad24213f4e995009f5e9839959af5e15a39e87892ad4037b74af",
+    "fork_manifest.json": "123826c3165b8cd3c1035e6cae01882ec8e9c9ebb0d0a4700b3e6987adbc6d9d",
+    "checkpoints/fork_initial.pt": "af3b2b64007705cc9adcbb3e8a6ad68239f4dc967c31c515e857b1240479e44a",
+    "checkpoints/theta_5000.pt": "6fec2039cfe5fa7e8775ec5b5692a5defadfa3ab21bdb398e400696be17b08db"
+  },
+  "preserved_files_equal": true,
+  "requested_collection_execution": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      200
+    ],
+    "batch_interface": "native",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "compile_mode": "native-cudagraph",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 64,
+    "max_batch_size": 200,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "pipeline_slots": 1,
+    "precision": "float32",
+    "search_workers": 8,
+    "shared_candidate_width": 256,
+    "shared_slots": 2,
+    "torch_threads": 1,
+    "total_active_games": 1000,
+    "workers": 1
+  },
+  "existing_root_frozen_batch_buckets": [
+    64,
+    256,
+    500
+  ],
+  "no_collection_or_updates": true,
+  "config_graph200_sha256": "543060ba3f38b23f6acaae7e6ccb86238f16a77931fa4cc8269d90586a325708",
+  "user_process_changed": false,
+  "formal_run_state_observed": {
+    "anchor_checkpoint": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_s1024_n1_from_round9_seed1/checkpoints/theta_5000.pt",
+      "sha256": "6fec2039cfe5fa7e8775ec5b5692a5defadfa3ab21bdb398e400696be17b08db",
+      "total_train_step": 5000
+    },
+    "completed_rounds": [
+      0,
+      1
+    ],
+    "fork_manifest_sha256": "123826c3165b8cd3c1035e6cae01882ec8e9c9ebb0d0a4700b3e6987adbc6d9d",
+    "latest_checkpoint": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_s1024_n1_from_round9_seed1/rounds/round-001/checkpoints/final.pt",
+      "sha256": "98dfdfaffc74aac0081110c247ded7fc62c833fe8891e17ce1024b423cdf916a",
+      "total_train_step": 9700
+    },
+    "online_round_offset": 9,
+    "protocol": "az-continuous-hybrid-v1"
+  },
+  "git_revision": "0a176b1a269a9850f51e7350e475a6c801f82644",
+  "source_sha256": {
+    "src/splendor/hybrid_train.py": "6f44f3b713ff3eb38031f8044dc19e6c9f020a189cb8724ba19f53b1613941c9",
+    "tests/test_hybrid_training.py": "c985449de11c6a35dc173e73854931eb4f18d99fc20b295108ecef8cbcce80d7",
+    "tests/test_inference_modes.py": "801ee00199e5293dfeaaa89aecc5ba56ece61efb5e71cbe7c37f3b4c4732b2c5"
+  }
+}

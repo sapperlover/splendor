@@ -1,0 +1,383 @@
+{
+  "a_first": {
+    "draws": 0,
+    "games": 1,
+    "losses": 1,
+    "valid_games": 1,
+    "win_rate_score": 0.0,
+    "wins": 0
+  },
+  "a_losses": 1,
+  "a_second": {
+    "draws": 0,
+    "games": 1,
+    "losses": 0,
+    "valid_games": 1,
+    "win_rate_score": 1.0,
+    "wins": 1
+  },
+  "a_wins": 1,
+  "checkpoint_identity": {
+    "policy_a": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+    },
+    "policy_b": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+    }
+  },
+  "completed_games": 2,
+  "completed_pairs": 1,
+  "config": {
+    "adjudicate_deterministic_policy_cycles": true,
+    "bootstrap_resamples": 0,
+    "bootstrap_seed": 0,
+    "device": "cuda",
+    "execution": {
+      "active_games": 2,
+      "actor_projection": false,
+      "backend": "native_batched",
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "inference_mode": "eager",
+      "max_batch_size": 16,
+      "max_batch_wait_ms": 0
+    },
+    "game_seeds": [
+      16750000
+    ],
+    "max_completed_turns": 400,
+    "metadata": {},
+    "policy_a": {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "kind": "mcts_checkpoint",
+      "name": "chance_smoke",
+      "search_backend": "native_chance",
+      "search_config": {
+        "determinizations": 1,
+        "root_noise_fraction": 0,
+        "seed": 16740000,
+        "simulations": 8
+      }
+    },
+    "policy_b": {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "kind": "mcts_checkpoint",
+      "name": "old_smoke",
+      "search_backend": "native",
+      "search_config": {
+        "determinizations": 1,
+        "root_noise_fraction": 0,
+        "seed": 16740000,
+        "simulations": 8
+      }
+    },
+    "policy_seed_base": 16760000,
+    "workers": 1
+  },
+  "draws": 0,
+  "elapsed_seconds_this_invocation": 1.4157641860001604,
+  "engineering_truncations": 0,
+  "exceptions": 0,
+  "execution_stats": {
+    "checked_rule_seconds": 0.07545088102051523,
+    "games": [
+      {
+        "pair_id": 0,
+        "seat": 0,
+        "wall_seconds": 1.2324694279959658
+      },
+      {
+        "pair_id": 0,
+        "seat": 1,
+        "wall_seconds": 1.2329801359956036
+      }
+    ],
+    "model_creation_seconds": 0.13175496899930295,
+    "models": {
+      "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4:0": {
+        "actual_candidate_positions": 23442,
+        "batch_non_inference_seconds": 0.07693384985759621,
+        "batch_wall_seconds": 1.1009136549764662,
+        "decision_latency": {
+          "50": 0.015162489500653464,
+          "90": 0.016237426103907635,
+          "99": 0.07600396815047097
+        },
+        "inference": {
+          "batch_size_histogram": {
+            "2": 604
+          },
+          "compile": {},
+          "d2h_seconds": 0.021251526042760815,
+          "feature_seconds": 0.0,
+          "forward_seconds": 0.9781202460144414,
+          "h2d_seconds": 0.018624457079567946,
+          "inference": {
+            "actor_projection": false,
+            "candidate_buckets": [
+              16,
+              32,
+              48,
+              64
+            ],
+            "compile_failure_policy": "fail_fast",
+            "compile_mode": null,
+            "mode": "eager",
+            "native_transport": "reused"
+          },
+          "logical_model_positions": 1208,
+          "mean_batch_size": 2.0,
+          "physical_model_batches": 604,
+          "wait_seconds": 0.005983575982099865
+        },
+        "native_consume_seconds": 0.0340557309682481,
+        "native_fill_seconds": 0.006103897940192837,
+        "physical_candidate_positions": 36160,
+        "policy_rows": 1208,
+        "root_rows": 136,
+        "root_start_seconds": 0.03968986800464336,
+        "value_rows": 0,
+        "width_batches": {
+          "16": 92,
+          "32": 498,
+          "48": 14
+        },
+        "width_rows": {
+          "16": 184,
+          "32": 996,
+          "48": 28
+        }
+      }
+    },
+    "scope": "this invocation; mutually exclusive owner host intervals",
+    "sidecar_seconds": 0.006190149004396517
+  },
+  "forced_skips": 0,
+  "game_log_root": "/home/lc/下载/splendor/runtime/entity_attention_chance_search_20261007/evaluation_smoke.json.games",
+  "illegal_actions": 0,
+  "invariant_failures": 0,
+  "mean_completed_player_turns": 56.0,
+  "mean_decisions": 80.0,
+  "median_completed_player_turns": 56.0,
+  "output": "/home/lc/下载/splendor/runtime/entity_attention_chance_search_20261007/evaluation_smoke.json",
+  "paired_bootstrap": null,
+  "paired_bootstrap_unit": "one_paired_seed",
+  "pairs": [
+    {
+      "game_seed": 16750000,
+      "games": [
+        {
+          "completed_player_turns": 56,
+          "completed_turns": [
+            28,
+            28
+          ],
+          "decision_count": 80,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "252a4c03c68dc7b071c03eaf60540dd031f39d0f0d571509b77949a730f0dafd",
+          "first_player": 0,
+          "forced_skips": 0,
+          "game_in_pair": 0,
+          "game_seed": 16750000,
+          "normal_end": true,
+          "outcome_for_a": "a_loss",
+          "pair_id": 0,
+          "policy_a_stats": {
+            "changed_action_count": 0,
+            "decisions": 41,
+            "determinizations": 36,
+            "expanded_nodes": 288,
+            "feature_seconds": 0.0,
+            "folded_actions": 47,
+            "inference_seconds": 0.0,
+            "model_batches": 0,
+            "model_positions": 324,
+            "searchable_decisions": 36,
+            "simulations": 288,
+            "single_candidate_decisions": 5,
+            "state_transitions": 395,
+            "terminal_hits": 0,
+            "total_seconds": 0.6795509100047639,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 348
+          },
+          "policy_b_stats": {
+            "changed_action_count": 0,
+            "decisions": 39,
+            "determinizations": 32,
+            "expanded_nodes": 248,
+            "feature_seconds": 0.0,
+            "folded_actions": 51,
+            "inference_seconds": 0.0,
+            "model_batches": 0,
+            "model_positions": 280,
+            "searchable_decisions": 32,
+            "simulations": 256,
+            "single_candidate_decisions": 7,
+            "state_transitions": 300,
+            "terminal_hits": 8,
+            "total_seconds": 0.49881557702610735,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 486
+          },
+          "policy_names": [
+            "chance_smoke",
+            "old_smoke"
+          ],
+          "policy_seeds": [
+            16760000,
+            16760001
+          ],
+          "purchased_card_counts": [
+            12,
+            10
+          ],
+          "scores": [
+            8,
+            16
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 1
+        },
+        {
+          "completed_player_turns": 56,
+          "completed_turns": [
+            28,
+            28
+          ],
+          "decision_count": 80,
+          "draw": false,
+          "error_detail": null,
+          "error_type": null,
+          "failure_scene": null,
+          "final_state_digest": "843054724bdbfcce25209e0bb0420fba56d25fd4f7b0edfaf80d0e1e775600d5",
+          "first_player": 1,
+          "forced_skips": 0,
+          "game_in_pair": 1,
+          "game_seed": 16750000,
+          "normal_end": true,
+          "outcome_for_a": "a_win",
+          "pair_id": 0,
+          "policy_a_stats": {
+            "changed_action_count": 0,
+            "decisions": 39,
+            "determinizations": 32,
+            "expanded_nodes": 248,
+            "feature_seconds": 0.0,
+            "folded_actions": 66,
+            "inference_seconds": 0.0,
+            "model_batches": 0,
+            "model_positions": 280,
+            "searchable_decisions": 32,
+            "simulations": 256,
+            "single_candidate_decisions": 7,
+            "state_transitions": 378,
+            "terminal_hits": 8,
+            "total_seconds": 0.4752483959819074,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 312
+          },
+          "policy_b_stats": {
+            "changed_action_count": 0,
+            "decisions": 41,
+            "determinizations": 36,
+            "expanded_nodes": 288,
+            "feature_seconds": 0.0,
+            "folded_actions": 32,
+            "inference_seconds": 0.0,
+            "model_batches": 0,
+            "model_positions": 324,
+            "searchable_decisions": 36,
+            "simulations": 288,
+            "single_candidate_decisions": 5,
+            "state_transitions": 320,
+            "terminal_hits": 0,
+            "total_seconds": 0.6537956200045301,
+            "transition_cap_hits": 0,
+            "tree_depth_sum": 463
+          },
+          "policy_names": [
+            "chance_smoke",
+            "old_smoke"
+          ],
+          "policy_seeds": [
+            16760000,
+            16760001
+          ],
+          "purchased_card_counts": [
+            10,
+            12
+          ],
+          "scores": [
+            16,
+            8
+          ],
+          "status": "natural_terminal",
+          "terminal_reason": "final_round",
+          "winner_id": 0
+        }
+      ],
+      "pair_id": 0
+    }
+  ],
+  "passed": true,
+  "policy_a_stats": {
+    "changed_action_count": 0,
+    "decisions": 80,
+    "determinizations": 68,
+    "expanded_nodes": 536,
+    "feature_seconds": 0.0,
+    "folded_actions": 113,
+    "inference_seconds": 0.0,
+    "model_batches": 0,
+    "model_positions": 604,
+    "searchable_decisions": 68,
+    "simulations": 544,
+    "single_candidate_decisions": 12,
+    "state_transitions": 773,
+    "terminal_hits": 8,
+    "total_seconds": 1.1547993059866712,
+    "transition_cap_hits": 0,
+    "tree_depth_sum": 660
+  },
+  "policy_b_stats": {
+    "changed_action_count": 0,
+    "decisions": 80,
+    "determinizations": 68,
+    "expanded_nodes": 536,
+    "feature_seconds": 0.0,
+    "folded_actions": 83,
+    "inference_seconds": 0.0,
+    "model_batches": 0,
+    "model_positions": 604,
+    "searchable_decisions": 68,
+    "simulations": 544,
+    "single_candidate_decisions": 12,
+    "state_transitions": 620,
+    "terminal_hits": 8,
+    "total_seconds": 1.1526111970306374,
+    "transition_cap_hits": 0,
+    "tree_depth_sum": 949
+  },
+  "policy_cycle_draws": 0,
+  "protocol": "fixed-paired-evaluation-v1",
+  "runtime": {
+    "device": "cuda",
+    "workers": 1
+  },
+  "total_games": 2,
+  "total_pairs": 1,
+  "updated_at": "2026-10-07T00:48:54+0800",
+  "valid_games": 2,
+  "win_rate_score": 0.5
+}

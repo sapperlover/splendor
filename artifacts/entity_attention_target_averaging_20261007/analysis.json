@@ -1,0 +1,208 @@
+{
+  "control_reproduction": {
+    "100": {
+      "identical": true,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0
+    },
+    "300": {
+      "identical": true,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0
+    },
+    "500": {
+      "identical": true,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0
+    }
+  },
+  "fit": {
+    "avg100": {
+      "mean_kl_to_mean8": 0.26652994078842,
+      "mean_kl_to_single": 0.4269635431590718,
+      "top1_match_rate": 0.655
+    },
+    "avg300": {
+      "mean_kl_to_mean8": 0.27004026622628857,
+      "mean_kl_to_single": 0.4393372559376826,
+      "top1_match_rate": 0.65
+    },
+    "avg500": {
+      "mean_kl_to_mean8": 0.27290787270842737,
+      "mean_kl_to_single": 0.43351577427629423,
+      "top1_match_rate": 0.635
+    },
+    "initial": {
+      "mean_kl_to_mean8": 0.2698709766834403,
+      "mean_kl_to_single": 0.4376360843147972,
+      "top1_match_rate": 0.65
+    },
+    "native100": {
+      "mean_kl_to_mean8": 0.28537581558894926,
+      "mean_kl_to_single": 0.4481025289171346,
+      "top1_match_rate": 0.655
+    },
+    "native300": {
+      "mean_kl_to_mean8": 0.29041935279595166,
+      "mean_kl_to_single": 0.4559897211681524,
+      "top1_match_rate": 0.63
+    },
+    "native500": {
+      "mean_kl_to_mean8": 0.2904666402265688,
+      "mean_kl_to_single": 0.44690143284330675,
+      "top1_match_rate": 0.635
+    }
+  },
+  "fit_deltas": {
+    "100": {
+      "lower": -0.03433280692263728,
+      "mean_kl_delta_avg_minus_native": -0.018845874800529253,
+      "roots": 200,
+      "upper": -0.004059639705654494
+    },
+    "300": {
+      "lower": -0.0317739179128135,
+      "mean_kl_delta_avg_minus_native": -0.02037908656966307,
+      "roots": 200,
+      "upper": -0.009583764736243753
+    },
+    "500": {
+      "lower": -0.03601890881047281,
+      "mean_kl_delta_avg_minus_native": -0.01755876751814153,
+      "roots": 200,
+      "upper": -0.0012838454568996271
+    }
+  },
+  "labels": {
+    "decisions": 13243,
+    "labels": {
+      "bytes": 1867717,
+      "path": "/home/lc/下载/splendor/runtime/entity_attention_target_averaging_20261007/labels.npz",
+      "sha256": "b9ad4f73921c865ca53529e38c9b8d4fe527121881334f69be5499874eb9d99f"
+    },
+    "mean_fresh_top1_agreement": 0.6770872662286994,
+    "mean_pairwise_fresh_js": 0.07874089198789136,
+    "mean_stored_top1_agreement": 0.6792456392056181,
+    "mean_stored_vs_fresh_js": 0.07837514164402254,
+    "mean_two_half_average_js": 0.049374871416140206,
+    "mean_two_half_average_top1_agreement": 0.7434871252737295,
+    "noise_base": 16950000,
+    "repeats": 4,
+    "simulations": 1024,
+    "split_train": {
+      "decisions": 11709,
+      "mean_pairwise_fresh_js": 0.07950028795424428,
+      "mean_stored_vs_fresh_js": 0.07916511257953632,
+      "mean_two_half_average_js": 0.04986413113680161,
+      "mean_two_half_average_top1_agreement": 0.7404560594414553
+    },
+    "split_validation": {
+      "decisions": 1534,
+      "mean_pairwise_fresh_js": 0.07294443346766559,
+      "mean_stored_vs_fresh_js": 0.07234530482268553,
+      "mean_two_half_average_js": 0.04564035898509432,
+      "mean_two_half_average_top1_agreement": 0.7666232073011734
+    },
+    "splits": {
+      "train": 11709,
+      "validation": 1534
+    },
+    "world_base": 16940000
+  },
+  "limitations": [
+    "Single start/collection seed; DEV and pilot panels.",
+    "Four-search averaging estimates the belief-mean target; it does not change value labels.",
+    "The direct averaged-vs-native panel uses a fresh 100-pair seed domain."
+  ],
+  "panel_differences": {
+    "avg_100_greedy_minus_native_100_greedy": {
+      "difference": 0.0,
+      "lower": -0.14,
+      "pairs": 50,
+      "upper": 0.14
+    },
+    "avg_100_native_minus_native_100_native": {
+      "difference": 0.02,
+      "lower": -0.12,
+      "pairs": 50,
+      "upper": 0.155
+    },
+    "avg_300_native_minus_native_500_native": {
+      "difference": 0.04,
+      "lower": -0.085,
+      "pairs": 50,
+      "upper": 0.16
+    }
+  },
+  "panels": {
+    "avg_100_greedy": {
+      "a_losses": 51,
+      "a_wins": 49,
+      "draws": 0,
+      "elapsed_seconds_this_invocation": 23.14221386600002,
+      "paired_bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.49,
+        "lower": 0.39,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 16860000,
+        "upper": 0.59
+      },
+      "valid_games": 100,
+      "win_rate_score": 0.49
+    },
+    "avg_100_native": {
+      "a_losses": 52,
+      "a_wins": 46,
+      "draws": 2,
+      "elapsed_seconds_this_invocation": 353.266759716,
+      "paired_bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.47,
+        "lower": 0.37,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 16860000,
+        "upper": 0.565
+      },
+      "valid_games": 100,
+      "win_rate_score": 0.47
+    },
+    "avg_100_vs_native100": {
+      "a_losses": 77,
+      "a_wins": 119,
+      "draws": 4,
+      "elapsed_seconds_this_invocation": 518.835047847,
+      "paired_bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.605,
+        "lower": 0.5425,
+        "pair_count": 100,
+        "resamples": 10000,
+        "seed": 16980000,
+        "upper": 0.6675
+      },
+      "valid_games": 200,
+      "win_rate_score": 0.605
+    },
+    "avg_300_native": {
+      "a_losses": 54,
+      "a_wins": 46,
+      "draws": 0,
+      "elapsed_seconds_this_invocation": 343.995999536,
+      "paired_bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.46,
+        "lower": 0.36,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 16860000,
+        "upper": 0.55
+      },
+      "valid_games": 100,
+      "win_rate_score": 0.46
+    }
+  },
+  "protocol": "target-averaging-probe-analysis-v1"
+}

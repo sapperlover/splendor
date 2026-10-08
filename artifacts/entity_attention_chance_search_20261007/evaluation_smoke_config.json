@@ -1,0 +1,51 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 0,
+  "bootstrap_seed": 0,
+  "device": "cuda",
+  "execution": {
+    "active_games": 2,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "eager",
+    "max_batch_size": 16,
+    "max_batch_wait_ms": 0
+  },
+  "game_seeds": [
+    16750000
+  ],
+  "max_completed_turns": 400,
+  "metadata": {},
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "kind": "mcts_checkpoint",
+    "name": "chance_smoke",
+    "search_backend": "native_chance",
+    "search_config": {
+      "determinizations": 1,
+      "root_noise_fraction": 0,
+      "seed": 16740000,
+      "simulations": 8
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "kind": "mcts_checkpoint",
+    "name": "old_smoke",
+    "search_backend": "native",
+    "search_config": {
+      "determinizations": 1,
+      "root_noise_fraction": 0,
+      "seed": 16740000,
+      "simulations": 8
+    }
+  },
+  "policy_seed_base": 16760000,
+  "workers": 1
+}

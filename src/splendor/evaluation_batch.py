@@ -15,9 +15,10 @@ from pathlib import Path
 
 import torch
 
-from .native_policy import NativeBatchRunner, NativePUCTSearchPolicy, _default_catalog
+from .native_policy import NativeBatchRunner, NativePUCTSearchPolicy, NativeChancePUCTSearchPolicy, ChanceWideningConfig, _default_catalog
 from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .mcts_policy import MCTSConfig
+from .neural_policy import GreedyActorCriticPolicy
 from .runner import _game_coroutine, _match_from_run
 from .search_inference import FrozenSearchInference, InferenceConfig
 
@@ -75,6 +76,8 @@ def evaluate_batched(config, pair_ids, log_root: Path, failure_root: Path, on_pa
                    for key in evaluators}
     game_records = []
     rule_seconds = sidecar_seconds = 0.
+    greedy_seconds = 0.
+    greedy_decisions = 0
 
     def finish(session, run):
         nonlocal sidecar_seconds
@@ -98,21 +101,34 @@ def evaluate_batched(config, pair_ids, log_root: Path, failure_root: Path, on_pa
             on_pair(ParallelPairResult(tuple(item[0] for item in games), *totals))
 
     def advance(session, action=None, error=None, initial=False):
-        nonlocal rule_seconds
-        started = time.perf_counter()
-        try:
-            if initial:
-                actor, request = next(session['game'])
-            elif error is not None:
-                actor, request = session['game'].throw(error)
-            else:
-                actor, request = session['game'].send(action)
-        except StopIteration as completed:
+        nonlocal rule_seconds, greedy_seconds, greedy_decisions
+        while True:
+            started = time.perf_counter()
+            try:
+                if initial:
+                    actor, request = next(session['game'])
+                elif error is not None:
+                    actor, request = session['game'].throw(error)
+                else:
+                    actor, request = session['game'].send(action)
+            except StopIteration as completed:
+                rule_seconds += time.perf_counter() - started
+                finish(session, completed.value)
+                return False
             rule_seconds += time.perf_counter() - started
-            finish(session, completed.value)
-            return False
-        rule_seconds += time.perf_counter() - started
-        policy = session['policies'][actor]
+            policy = session['policies'][actor]
+            if isinstance(policy, GreedyActorCriticPolicy):
+                before = time.perf_counter()
+                try:
+                    action = policy.choose(request)
+                    error = None
+                except Exception as caught:
+                    action, error = None, caught
+                greedy_seconds += time.perf_counter() - before
+                greedy_decisions += 1
+                initial = False
+                continue
+            break
         key = model_keys[actor]
         before = time.perf_counter()
         try:
@@ -131,11 +147,17 @@ def evaluate_batched(config, pair_ids, log_root: Path, failure_root: Path, on_pa
         seeds = (config.policy_seed_base + pair_id * 2, config.policy_seed_base + pair_id * 2 + 1)
         policies = []
         for i, spec in enumerate((config.policy_a, config.policy_b)):
+            evaluator = evaluators[model_keys[i]]
+            if spec.kind == 'greedy_checkpoint':
+                policies.append(GreedyActorCriticPolicy(evaluator.model, device=config.device))
+                continue
             values = dict(spec.search_config)
             values['seed'] = int(values.get('seed', 0)) ^ seeds[i]
-            evaluator = evaluators[model_keys[i]]
-            policies.append(NativePUCTSearchPolicy(evaluator.model, config=MCTSConfig(**values),
-                device=config.device, catalog=catalog, evaluator=evaluator, model_version=model_keys[i][0]))
+            policy_cls = NativeChancePUCTSearchPolicy if spec.search_backend == 'native_chance' else NativePUCTSearchPolicy
+            kwargs = ({} if spec.chance_widening is None else
+                      {'chance_widening': ChanceWideningConfig(**spec.chance_widening)})
+            policies.append(policy_cls(evaluator.model, config=MCTSConfig(**values),
+                device=config.device, catalog=catalog, evaluator=evaluator, model_version=model_keys[i][0], **kwargs))
         game = _game_coroutine(task.game_seed, first_player=seat, policies=policies, policy_seeds=seeds,
             max_completed_turns=config.max_completed_turns, catalog=catalog,
             failure_dir=failure_root / f'pair-{pair_id:06d}-game-{seat}',
@@ -187,6 +209,8 @@ def evaluate_batched(config, pair_ids, log_root: Path, failure_root: Path, on_pa
     result = {'scope': 'this invocation; mutually exclusive owner host intervals',
               'model_creation_seconds': creation_seconds, 'checked_rule_seconds': rule_seconds,
               'sidecar_seconds': sidecar_seconds, 'games': game_records, 'models': {}}
+    if any(spec.kind == 'greedy_checkpoint' for spec in (config.policy_a, config.policy_b)):
+        result.update(greedy_seconds=greedy_seconds, greedy_decisions=greedy_decisions)
     for key, evaluator in evaluators.items():
         costs = model_costs[key]
         runner = runners[key]

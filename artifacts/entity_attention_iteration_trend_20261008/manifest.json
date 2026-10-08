@@ -1,0 +1,1147 @@
+{
+  "configs": {
+    "seed1_fresh50": {
+      "evaluation": null,
+      "evaluation_every_rounds": 0,
+      "mix_schedule": [],
+      "new_games_per_round": 200,
+      "offline": {
+        "full_validation_at_end": false,
+        "games_per_round": null,
+        "initialization_seed": 13100000,
+        "learner": {
+          "batch_size": 256,
+          "checkpoint_every_steps": 100,
+          "device": "cuda",
+          "history_batch_size": 128,
+          "learning_rate": 0.0001,
+          "max_grad_norm": 1.0,
+          "max_steps_per_round": null,
+          "policy_loss_weight": 1.0,
+          "steps_per_new_position": 4.0,
+          "validation_batch_size": 256,
+          "value_loss_weight": 1.0,
+          "weight_decay": 0.0001
+        },
+        "max_steps": 5000,
+        "model_config": {
+          "architecture": "entity_attention_v1"
+        },
+        "replay_cache_bytes": 17179869184,
+        "rounds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "sampling_seed": 13110000,
+        "source_artifacts": "artifacts/az_theta5_10x1000_seed1",
+        "source_run": "runs/az_theta5_10x1000_seed1",
+        "validation_positions": 4096,
+        "validation_seed": 13120000
+      },
+      "online_validation_positions": 2048,
+      "online_validation_seed": 14640000,
+      "protocol": "az-continuous-hybrid-v1",
+      "replay_max_games": 3000,
+      "run_id": "entity_attention_iteration_trend_20261008_seed1_fresh50",
+      "seeds": {
+        "collection": 18000000,
+        "sampling": 13110000,
+        "split": 18100000
+      },
+      "selfplay": {
+        "add_root_noise": true,
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            200
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 64,
+          "max_batch_size": 200,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 1,
+          "precision": "float32",
+          "search_workers": 8,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 200,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "protocol": "mcts-selfplay-v2",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 18200000,
+          "simulations": 1024
+        },
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "split_training": {
+        "policy_max_grad_norm": 1.0,
+        "policy_recent_rounds": 1,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "updates_per_round": 50
+    },
+    "seed1_lr_low": {
+      "evaluation": null,
+      "evaluation_every_rounds": 0,
+      "learning_rate_override": 2.5e-05,
+      "mix_schedule": [],
+      "new_games_per_round": 200,
+      "offline": {
+        "full_validation_at_end": false,
+        "games_per_round": null,
+        "initialization_seed": 13100000,
+        "learner": {
+          "batch_size": 256,
+          "checkpoint_every_steps": 100,
+          "device": "cuda",
+          "history_batch_size": 128,
+          "learning_rate": 0.0001,
+          "max_grad_norm": 1.0,
+          "max_steps_per_round": null,
+          "policy_loss_weight": 1.0,
+          "steps_per_new_position": 4.0,
+          "validation_batch_size": 256,
+          "value_loss_weight": 1.0,
+          "weight_decay": 0.0001
+        },
+        "max_steps": 5000,
+        "model_config": {
+          "architecture": "entity_attention_v1"
+        },
+        "replay_cache_bytes": 17179869184,
+        "rounds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "sampling_seed": 13110000,
+        "source_artifacts": "artifacts/az_theta5_10x1000_seed1",
+        "source_run": "runs/az_theta5_10x1000_seed1",
+        "validation_positions": 4096,
+        "validation_seed": 13120000
+      },
+      "online_validation_positions": 2048,
+      "online_validation_seed": 14640000,
+      "protocol": "az-continuous-hybrid-v1",
+      "replay_max_games": 3000,
+      "run_id": "entity_attention_iteration_trend_20261008_seed1_lr_low",
+      "seeds": {
+        "collection": 18000000,
+        "sampling": 13110000,
+        "split": 18100000
+      },
+      "selfplay": {
+        "add_root_noise": true,
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            200
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 64,
+          "max_batch_size": 200,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 1,
+          "precision": "float32",
+          "search_workers": 8,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 200,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "protocol": "mcts-selfplay-v2",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 18200000,
+          "simulations": 1024
+        },
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "split_training": {
+        "policy_max_grad_norm": 1.0,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "updates_per_round": 100
+    },
+    "seed1_steps50": {
+      "evaluation": null,
+      "evaluation_every_rounds": 0,
+      "mix_schedule": [],
+      "new_games_per_round": 200,
+      "offline": {
+        "full_validation_at_end": false,
+        "games_per_round": null,
+        "initialization_seed": 13100000,
+        "learner": {
+          "batch_size": 256,
+          "checkpoint_every_steps": 100,
+          "device": "cuda",
+          "history_batch_size": 128,
+          "learning_rate": 0.0001,
+          "max_grad_norm": 1.0,
+          "max_steps_per_round": null,
+          "policy_loss_weight": 1.0,
+          "steps_per_new_position": 4.0,
+          "validation_batch_size": 256,
+          "value_loss_weight": 1.0,
+          "weight_decay": 0.0001
+        },
+        "max_steps": 5000,
+        "model_config": {
+          "architecture": "entity_attention_v1"
+        },
+        "replay_cache_bytes": 17179869184,
+        "rounds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "sampling_seed": 13110000,
+        "source_artifacts": "artifacts/az_theta5_10x1000_seed1",
+        "source_run": "runs/az_theta5_10x1000_seed1",
+        "validation_positions": 4096,
+        "validation_seed": 13120000
+      },
+      "online_validation_positions": 2048,
+      "online_validation_seed": 14640000,
+      "protocol": "az-continuous-hybrid-v1",
+      "replay_max_games": 3000,
+      "run_id": "entity_attention_iteration_trend_20261008_seed1_steps50",
+      "seeds": {
+        "collection": 18000000,
+        "sampling": 13110000,
+        "split": 18100000
+      },
+      "selfplay": {
+        "add_root_noise": true,
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            200
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 64,
+          "max_batch_size": 200,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 1,
+          "precision": "float32",
+          "search_workers": 8,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 200,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "protocol": "mcts-selfplay-v2",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 18200000,
+          "simulations": 1024
+        },
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "split_training": {
+        "policy_max_grad_norm": 1.0,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "updates_per_round": 50
+    },
+    "seed2_fresh50": {
+      "evaluation": null,
+      "evaluation_every_rounds": 0,
+      "mix_schedule": [],
+      "new_games_per_round": 200,
+      "offline": {
+        "full_validation_at_end": false,
+        "games_per_round": null,
+        "initialization_seed": 13100000,
+        "learner": {
+          "batch_size": 256,
+          "checkpoint_every_steps": 100,
+          "device": "cuda",
+          "history_batch_size": 128,
+          "learning_rate": 0.0001,
+          "max_grad_norm": 1.0,
+          "max_steps_per_round": null,
+          "policy_loss_weight": 1.0,
+          "steps_per_new_position": 4.0,
+          "validation_batch_size": 256,
+          "value_loss_weight": 1.0,
+          "weight_decay": 0.0001
+        },
+        "max_steps": 5000,
+        "model_config": {
+          "architecture": "entity_attention_v1"
+        },
+        "replay_cache_bytes": 17179869184,
+        "rounds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "sampling_seed": 13110000,
+        "source_artifacts": "artifacts/az_theta5_10x1000_seed1",
+        "source_run": "runs/az_theta5_10x1000_seed1",
+        "validation_positions": 4096,
+        "validation_seed": 13120000
+      },
+      "online_validation_positions": 2048,
+      "online_validation_seed": 14640000,
+      "protocol": "az-continuous-hybrid-v1",
+      "replay_max_games": 3000,
+      "run_id": "entity_attention_iteration_trend_20261008_seed2_fresh50",
+      "seeds": {
+        "collection": 20000000,
+        "sampling": 13110000,
+        "split": 20100000
+      },
+      "selfplay": {
+        "add_root_noise": true,
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            200
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 64,
+          "max_batch_size": 200,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 1,
+          "precision": "float32",
+          "search_workers": 8,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 200,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "protocol": "mcts-selfplay-v2",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 20200000,
+          "simulations": 1024
+        },
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "split_training": {
+        "policy_max_grad_norm": 1.0,
+        "policy_recent_rounds": 1,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "updates_per_round": 50
+    },
+    "seed2_lr_low": {
+      "evaluation": null,
+      "evaluation_every_rounds": 0,
+      "learning_rate_override": 2.5e-05,
+      "mix_schedule": [],
+      "new_games_per_round": 200,
+      "offline": {
+        "full_validation_at_end": false,
+        "games_per_round": null,
+        "initialization_seed": 13100000,
+        "learner": {
+          "batch_size": 256,
+          "checkpoint_every_steps": 100,
+          "device": "cuda",
+          "history_batch_size": 128,
+          "learning_rate": 0.0001,
+          "max_grad_norm": 1.0,
+          "max_steps_per_round": null,
+          "policy_loss_weight": 1.0,
+          "steps_per_new_position": 4.0,
+          "validation_batch_size": 256,
+          "value_loss_weight": 1.0,
+          "weight_decay": 0.0001
+        },
+        "max_steps": 5000,
+        "model_config": {
+          "architecture": "entity_attention_v1"
+        },
+        "replay_cache_bytes": 17179869184,
+        "rounds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "sampling_seed": 13110000,
+        "source_artifacts": "artifacts/az_theta5_10x1000_seed1",
+        "source_run": "runs/az_theta5_10x1000_seed1",
+        "validation_positions": 4096,
+        "validation_seed": 13120000
+      },
+      "online_validation_positions": 2048,
+      "online_validation_seed": 14640000,
+      "protocol": "az-continuous-hybrid-v1",
+      "replay_max_games": 3000,
+      "run_id": "entity_attention_iteration_trend_20261008_seed2_lr_low",
+      "seeds": {
+        "collection": 20000000,
+        "sampling": 13110000,
+        "split": 20100000
+      },
+      "selfplay": {
+        "add_root_noise": true,
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            200
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 64,
+          "max_batch_size": 200,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 1,
+          "precision": "float32",
+          "search_workers": 8,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 200,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "protocol": "mcts-selfplay-v2",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 20200000,
+          "simulations": 1024
+        },
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "split_training": {
+        "policy_max_grad_norm": 1.0,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "updates_per_round": 100
+    },
+    "seed2_steps50": {
+      "evaluation": null,
+      "evaluation_every_rounds": 0,
+      "mix_schedule": [],
+      "new_games_per_round": 200,
+      "offline": {
+        "full_validation_at_end": false,
+        "games_per_round": null,
+        "initialization_seed": 13100000,
+        "learner": {
+          "batch_size": 256,
+          "checkpoint_every_steps": 100,
+          "device": "cuda",
+          "history_batch_size": 128,
+          "learning_rate": 0.0001,
+          "max_grad_norm": 1.0,
+          "max_steps_per_round": null,
+          "policy_loss_weight": 1.0,
+          "steps_per_new_position": 4.0,
+          "validation_batch_size": 256,
+          "value_loss_weight": 1.0,
+          "weight_decay": 0.0001
+        },
+        "max_steps": 5000,
+        "model_config": {
+          "architecture": "entity_attention_v1"
+        },
+        "replay_cache_bytes": 17179869184,
+        "rounds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "sampling_seed": 13110000,
+        "source_artifacts": "artifacts/az_theta5_10x1000_seed1",
+        "source_run": "runs/az_theta5_10x1000_seed1",
+        "validation_positions": 4096,
+        "validation_seed": 13120000
+      },
+      "online_validation_positions": 2048,
+      "online_validation_seed": 14640000,
+      "protocol": "az-continuous-hybrid-v1",
+      "replay_max_games": 3000,
+      "run_id": "entity_attention_iteration_trend_20261008_seed2_steps50",
+      "seeds": {
+        "collection": 20000000,
+        "sampling": 13110000,
+        "split": 20100000
+      },
+      "selfplay": {
+        "add_root_noise": true,
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            200
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 64,
+          "max_batch_size": 200,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 1,
+          "precision": "float32",
+          "search_workers": 8,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 200,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "protocol": "mcts-selfplay-v2",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 20200000,
+          "simulations": 1024
+        },
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "split_training": {
+        "policy_max_grad_norm": 1.0,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "updates_per_round": 50
+    }
+  },
+  "evaluation_template": {
+    "adjudicate_deterministic_policy_cycles": true,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 13530000,
+    "device": "cuda",
+    "execution": {
+      "active_games": 64,
+      "actor_projection": true,
+      "backend": "native_batched",
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "inference_mode": "eager",
+      "max_batch_size": 64,
+      "max_batch_wait_ms": 0.0
+    },
+    "max_completed_turns": 400,
+    "metadata": {},
+    "pairs": 100,
+    "policy_a": {
+      "checkpoint": "generated-at-runtime",
+      "inference": {
+        "actor_projection": false,
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "compile_failure_policy": "fail_fast",
+        "mode": "eager",
+        "native_transport": "reused"
+      },
+      "kind": "mcts_checkpoint",
+      "name": "hybrid_split_latest",
+      "search_backend": "native",
+      "search_config": {
+        "c_puct": 1.5,
+        "determinizations": 1,
+        "dirichlet_alpha": 0.3,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "seed": 13520000,
+        "simulations": 1024
+      }
+    },
+    "policy_b": {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+      "inference": {
+        "actor_projection": false,
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "compile_failure_policy": "fail_fast",
+        "mode": "eager",
+        "native_transport": "reused"
+      },
+      "kind": "mcts_checkpoint",
+      "name": "frozen_start",
+      "search_backend": "native",
+      "search_config": {
+        "c_puct": 1.5,
+        "determinizations": 1,
+        "dirichlet_alpha": 0.3,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "seed": 13520000,
+        "simulations": 1024
+      }
+    },
+    "policy_seed_base": 13510000,
+    "seed_start": 13500000,
+    "workers": 1
+  },
+  "jobs": [
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_steps50/rounds/round-001/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed1_steps50_r002",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 2
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_steps50/rounds/round-003/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed1_steps50_r004",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 4
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_steps50/rounds/round-007/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed1_steps50_r008",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 8
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_steps50/rounds/round-011/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed1_steps50_r012",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 12
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_steps50/rounds/round-015/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed1_steps50_r016",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 16
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_steps50/rounds/round-001/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed2_steps50_r002",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 2
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_steps50/rounds/round-003/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed2_steps50_r004",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 4
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_steps50/rounds/round-007/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed2_steps50_r008",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 8
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_steps50/rounds/round-011/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed2_steps50_r012",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 12
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_steps50/rounds/round-015/checkpoints/final.pt",
+      "arm": "steps50",
+      "id": "seed2_steps50_r016",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 16
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_lr_low/rounds/round-001/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed1_lr_low_r002",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 2
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_lr_low/rounds/round-003/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed1_lr_low_r004",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 4
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_lr_low/rounds/round-007/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed1_lr_low_r008",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 8
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_lr_low/rounds/round-011/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed1_lr_low_r012",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 12
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_lr_low/rounds/round-015/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed1_lr_low_r016",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 16
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_lr_low/rounds/round-001/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed2_lr_low_r002",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 2
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_lr_low/rounds/round-003/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed2_lr_low_r004",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 4
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_lr_low/rounds/round-007/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed2_lr_low_r008",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 8
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_lr_low/rounds/round-011/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed2_lr_low_r012",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 12
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_lr_low/rounds/round-015/checkpoints/final.pt",
+      "arm": "lr_low",
+      "id": "seed2_lr_low_r016",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 16
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_fresh50/rounds/round-001/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed1_fresh50_r002",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 2
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_fresh50/rounds/round-003/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed1_fresh50_r004",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 4
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_fresh50/rounds/round-007/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed1_fresh50_r008",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 8
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_fresh50/rounds/round-011/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed1_fresh50_r012",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 12
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed1_fresh50/rounds/round-015/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed1_fresh50_r016",
+      "pairs": 100,
+      "replicate": "seed1",
+      "round": 16
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_fresh50/rounds/round-001/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed2_fresh50_r002",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 2
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_fresh50/rounds/round-003/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed2_fresh50_r004",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 4
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_fresh50/rounds/round-007/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed2_fresh50_r008",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 8
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_fresh50/rounds/round-011/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed2_fresh50_r012",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 12
+    },
+    {
+      "a": "/home/lc/下载/splendor/runs/entity_attention_iteration_trend_20261008/seed2_fresh50/rounds/round-015/checkpoints/final.pt",
+      "arm": "fresh50",
+      "id": "seed2_fresh50_r016",
+      "pairs": 100,
+      "replicate": "seed2",
+      "round": 16
+    }
+  ],
+  "plan": {
+    "analysis_seed": 21200000,
+    "arms": [
+      {
+        "id": "steps50",
+        "updates_per_round": 50
+      },
+      {
+        "id": "lr_low",
+        "learning_rate_override": 2.5e-05,
+        "updates_per_round": 100
+      },
+      {
+        "id": "fresh50",
+        "policy_recent_rounds": 1,
+        "updates_per_round": 50
+      }
+    ],
+    "artifact_root": "artifacts/entity_attention_iteration_trend_20261008",
+    "base_config": "configs/entity_attention_v1/hybrid_split_policy_value.json",
+    "collection_execution": {
+      "batch_buckets": [
+        16,
+        32,
+        64,
+        128,
+        200
+      ],
+      "local_microbatch": 64,
+      "max_batch_size": 200,
+      "pipeline_slots": 1,
+      "precision": "float32",
+      "search_workers": 8,
+      "shared_slots": 2,
+      "total_active_games": 200
+    },
+    "evaluation": {
+      "bootstrap_resamples": 10000,
+      "pairs": 100,
+      "rounds": [
+        2,
+        4,
+        8,
+        12,
+        16
+      ]
+    },
+    "evaluation_execution": {
+      "active_games": 64,
+      "backend": "native_batched",
+      "inference_mode": "eager",
+      "max_batch_size": 64,
+      "max_batch_wait_ms": 0.0
+    },
+    "fork_round": 20,
+    "parent_run": "runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1",
+    "protocol": "entity-attention-iteration-trend-v1",
+    "replay_cache_mib": 4096,
+    "replicates": [
+      {
+        "collection_seed": 18000000,
+        "eval_bootstrap_seed": 19000000,
+        "eval_game_seed": 18400000,
+        "eval_policy_seed": 18600000,
+        "eval_search_seed": 18800000,
+        "id": "seed1",
+        "search_seed": 18200000,
+        "split_seed": 18100000
+      },
+      {
+        "collection_seed": 20000000,
+        "eval_bootstrap_seed": 21000000,
+        "eval_game_seed": 20400000,
+        "eval_policy_seed": 20600000,
+        "eval_search_seed": 20800000,
+        "id": "seed2",
+        "search_seed": 20200000,
+        "split_seed": 20100000
+      }
+    ],
+    "resources": {
+      "memory_high_gib": 14,
+      "memory_max_gib": 16,
+      "min_available_gib": 3,
+      "min_gpu_free_mib": 3500,
+      "poll_seconds": 1
+    },
+    "rounds": 16,
+    "run_root": "runs/entity_attention_iteration_trend_20261008",
+    "runtime_root": "runtime/entity_attention_iteration_trend_20261008",
+    "start_checkpoint": "runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "start_sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4",
+    "suite_id": "entity_attention_iteration_trend_20261008"
+  },
+  "protocol": "entity-attention-iteration-trend-v1"
+}

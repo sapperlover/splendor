@@ -31,6 +31,12 @@ class _FixedHandle:
         self.state_only = state_only
         self.width = width
 
+    def done(self):
+        return False  # keep it in flight until the other bank is prepared
+
+    def discard(self):
+        pass
+
     def finish(self):
         rows = self.sink.row_count()
         if self.state_only:
@@ -144,10 +150,13 @@ def test_shared_layout_multiple_real_rows_and_padding():
         slot.unlink()
 
 
-def test_spawned_pool_matches_single_worker_fixed_evaluator(tmp_path):
+@pytest.mark.parametrize("pipeline_slots", [1, 2])
+def test_spawned_pool_matches_single_worker_fixed_evaluator(tmp_path, pipeline_slots):
+    from dataclasses import replace
     checkpoint = _checkpoint(tmp_path / "weights.pt")
     pool = _config(checkpoint, games=3, workers=3, active=2, batch=2,
                    micro=2, slots=2, simulations=3, determinizations=2)
+    pool = replace(pool, execution=replace(pool.execution, pipeline_slots=pipeline_slots))
     reference = _config(checkpoint, backend="native_cpu", games=3, workers=1, active=2,
                         batch=2, simulations=3, determinizations=2)
     pooled_root = tmp_path / "pooled"
@@ -168,6 +177,48 @@ def test_spawned_pool_matches_single_worker_fixed_evaluator(tmp_path):
         for name in ("root_visit_counts", "simulation_budgets", "policy_target",
                      "chosen_candidate_index", "per_world_root_visit_counts"):
             np.testing.assert_array_equal(actual[name], expected[name], err_msg=name)
+
+
+@pytest.mark.parametrize("widening", [None, {"k": 0.25, "alpha": 0.5}])
+def test_chance_selfplay_pool_matches_reference_and_records_diagnostics(tmp_path, widening):
+    from dataclasses import replace
+    checkpoint = _checkpoint(tmp_path / "weights.pt")
+    pool = replace(_config(checkpoint, games=2, workers=2, active=2, simulations=5, determinizations=1),
+                   search_backend="native_chance", chance_widening=widening, record_search_diagnostics=True)
+    reference = replace(pool, execution=replace(pool.execution, backend="native_cpu"))
+    collect(pool, tmp_path / "pool", (0, 1), "chance", _sha256(checkpoint), evaluator=_FixedOwner())
+    _collect_group(reference, tmp_path / "reference", (0, 1), "chance", _sha256(checkpoint),
+                   evaluator=FixedValueSearchInference())
+    for gid in (0, 1):
+        actual, meta = load_game(game_path(tmp_path / "pool", gid))
+        expected, expected_meta = load_game(game_path(tmp_path / "reference", gid))
+        assert meta["trace"] == expected_meta["trace"]
+        for name in ("root_visit_counts", "policy_target", "chosen_candidate_index"):
+            np.testing.assert_array_equal(actual[name], expected[name])
+        assert len(meta["search_diagnostics"]) == meta["decision_count"]
+        for row, reference_row in zip(meta["search_diagnostics"], expected_meta["search_diagnostics"]):
+            for key in ("simulations", "tree_depth_sum", "terminal_hits"):
+                assert row["stats"][key] == reference_row["stats"][key]
+            assert row["chance"]["root_hidden_samples"] == row["stats"]["simulations"]
+
+
+def test_chance_selfplay_config_identity_and_invalid_combinations(tmp_path):
+    from dataclasses import replace
+    from splendor.selfplay_fast import build_manifest
+    base = _config(_checkpoint(tmp_path / "weights.pt"), determinizations=1)
+    raw = base.to_dict()
+    assert not ({"search_backend", "chance_widening", "record_search_diagnostics"} & raw.keys())
+    assert FastSelfPlayConfig.from_dict(raw) == base
+    chance = replace(base, search_backend="native_chance", chance_widening={"k": .25, "alpha": .5})
+    assert FastSelfPlayConfig.from_dict(chance.to_dict()) == chance
+    assert build_manifest(base)["semantic_fingerprint"] != build_manifest(chance)["semantic_fingerprint"]
+    assert build_manifest(chance)["versions"]["search"] == "sampled-chance-pw-puct-native-v1"
+    with pytest.raises(ValueError, match="determinizations=1"):
+        replace(chance, search_config=MCTSConfig(simulations=5, determinizations=2))
+    with pytest.raises(ValueError, match="requires native_chance"):
+        replace(base, chance_widening={"k": .25, "alpha": .5})
+    with pytest.raises(ValueError, match="native execution"):
+        replace(chance, execution=ExecutionConfig())
 
 
 @pytest.mark.parametrize("workers,active,games,batch", [
@@ -243,13 +294,15 @@ class _NaNOwner(_FixedOwner):
         return _NaNTransfer(self, capacity, width, float_stride, mask_stride)
 
 
-def test_owner_failure_cleans_processes_and_shared_segments(tmp_path):
+@pytest.mark.parametrize("pipeline_slots", [1, 2])
+def test_owner_failure_cleans_processes_and_shared_segments(tmp_path, pipeline_slots):
     import multiprocessing as mp
     from dataclasses import replace
     import glob
     checkpoint = _checkpoint(tmp_path / "weights.pt")
     config = _config(checkpoint, games=2, workers=2, active=2,
                      simulations=1, determinizations=1)
+    config = replace(config, execution=replace(config.execution, pipeline_slots=pipeline_slots))
     from splendor.selfplay_fast import _atomic_json, build_manifest, validate_run
     root = tmp_path / "games"
     _atomic_json(root / "manifest.json", build_manifest(config))
@@ -272,7 +325,135 @@ def test_owner_failure_cleans_processes_and_shared_segments(tmp_path):
     assert not any(child.name.startswith("native-search-") for child in mp.active_children())
 
 
-def test_worker_failure_preserves_original_error_and_cleans_up(tmp_path):
+@pytest.mark.parametrize("phase", ["startup", "queue_put", "reply_wait", "feeder_join"])
+def test_killed_owner_does_not_leave_workers_or_shared_segments(tmp_path, phase):
+    """SIGKILL bypasses the owner's finally; its children must still exit."""
+    import json
+    import os
+    import select
+    import signal
+    import subprocess
+    import sys
+    import time
+    from multiprocessing.shared_memory import SharedMemory
+
+    checkpoint = _checkpoint(tmp_path / "weights.pt")
+    settings = tmp_path / "config.json"
+    settings.write_text(json.dumps(_config(checkpoint, games=1, workers=1, active=1,
+                                          batch=1, micro=1, slots=1,
+                                          simulations=1, determinizations=1).to_dict()))
+    program = tmp_path / "owner.py"
+    program.write_text('''
+import json
+import multiprocessing as mp
+import os
+import sys
+import time
+from pathlib import Path
+from splendor.multiworker_gpu import SlotNames, _Slot, _worker, _watch_owner
+from splendor.native_policy import _default_catalog, _extension, _native_catalog
+from splendor.selfplay_fast import FastSelfPlayConfig, _sha256
+
+class NotifyingQueue:
+    def __init__(self, queue, marker, phase):
+        self.queue, self.marker, self.phase = queue, marker, phase
+
+    def put(self, event, *args, **kwargs):
+        trigger = 'hello' if self.phase == 'queue_put' else 'blocked'
+        if event[0] == trigger:
+            self.marker.write_text(event[0])
+        return self.queue.put(event, *args, **kwargs)
+
+def blocked_feeder(ready, marker, parent_pid):
+    _watch_owner(parent_pid)
+    ready.put(b'x' * 1_000_000)
+    marker.write_text('feeder_join')
+    # Returning waits for the feeder, whose reader is deliberately idle.
+
+def main():
+    config = FastSelfPlayConfig.from_dict(json.loads(Path(sys.argv[1]).read_text()))
+    root, tag, phase = Path(sys.argv[2]), sys.argv[3], sys.argv[4]
+    root.mkdir()
+    marker = root / 'phase'
+    catalog = _native_catalog(_default_catalog())
+    probe = _extension().NativeBatch(catalog, False, 1, 128)
+    names = SlotNames(tag + '_f', tag + '_m', tag + '_r',
+                      probe.float_stride(), probe.mask_stride(), 129)
+    slot = _Slot(names, create=True)
+    ctx = mp.get_context('spawn')
+    tasks, replies = ctx.Queue(), ctx.Queue()
+    ready = ctx.Queue(maxsize=1 if phase == 'queue_put' else 64)
+    if phase == 'queue_put':
+        ready.put(('occupied',))
+    tasks.put(0)
+    tasks.put(None)
+    if phase == 'feeder_join':
+        child = ctx.Process(target=blocked_feeder, args=(ready, marker, os.getpid()))
+    else:
+        child = ctx.Process(target=_worker, args=(
+            config, root, 0, 1, (names,), tasks,
+            NotifyingQueue(ready, marker, phase), replies,
+            'controlled', _sha256(Path(config.checkpoint)), os.getpid()))
+    child.start()
+    if phase != 'startup':
+        deadline = time.monotonic() + 15
+        while not marker.exists():
+            if not child.is_alive() or time.monotonic() > deadline:
+                raise RuntimeError('worker did not reach the requested phase')
+            time.sleep(.01)
+        time.sleep(.05)
+    print(json.dumps({'pid': child.pid, 'segments': [names.floats, names.masks, names.results]}),
+          flush=True)
+    while True:
+        time.sleep(1)
+
+if __name__ == '__main__':
+    main()
+''')
+    owner = subprocess.Popen(
+        [sys.executable, str(program), str(settings), str(tmp_path / "collection"),
+         f"spgpu_exit_{uuid.uuid4().hex}", phase],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True,
+    )
+    segments = []
+    try:
+        assert select.select([owner.stdout], [], [], 20)[0], "owner startup timed out"
+        line = owner.stdout.readline()
+        assert line, owner.stderr.read()
+        details = json.loads(line)
+        segments = details["segments"]
+        owner.kill()
+        assert owner.wait(timeout=5) == -signal.SIGKILL
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            stat = Path(f"/proc/{details['pid']}/stat")
+            if not stat.exists() or stat.read_text().rsplit(")", 1)[1].split()[0] == "Z":
+                break
+            time.sleep(.02)
+        else:
+            pytest.fail(f"worker survived its killed owner in phase {phase}")
+        while any(Path("/dev/shm", name).exists() for name in segments):
+            assert time.monotonic() < deadline, "shared tracker did not unlink the segments"
+            time.sleep(.02)
+        owner.communicate(timeout=5)
+    finally:
+        # The test owns this isolated group; clean it even when the regression fails.
+        try:
+            os.killpg(owner.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        owner.wait(timeout=5)
+        for name in segments:
+            try:
+                segment = SharedMemory(name)
+            except FileNotFoundError:
+                continue
+            segment.close()
+            segment.unlink()
+
+
+@pytest.mark.parametrize("pipeline_slots", [1, 2])
+def test_worker_failure_preserves_original_error_and_cleans_up(tmp_path, pipeline_slots):
     import multiprocessing as mp
     from dataclasses import replace
     import glob
@@ -280,6 +461,7 @@ def test_worker_failure_preserves_original_error_and_cleans_up(tmp_path):
     config = replace(_config(checkpoint, games=2, workers=2, active=2,
                              simulations=1, determinizations=1),
                      max_completed_turns=1)
+    config = replace(config, execution=replace(config.execution, pipeline_slots=pipeline_slots))
     before = set(glob.glob("/dev/shm/spgpu_*"))
     with pytest.raises(RuntimeError, match="engineering turn limit"):
         collect(config, tmp_path / "games", (0, 1), "controlled", _sha256(checkpoint),
@@ -382,19 +564,45 @@ def test_slot_generation_rejects_stale_and_duplicate_replies():
         _checked_result(outstanding, 4, 0, 2)
 
 
-def test_microbatch_split_across_owner_batches_preserves_search(tmp_path):
+@pytest.mark.parametrize("pipeline_slots", [1, 2])
+def test_microbatch_split_across_owner_batches_preserves_search(tmp_path, pipeline_slots):
+    from dataclasses import replace
     checkpoint = _checkpoint(tmp_path / "weights.pt")
     pool = _config(checkpoint, games=2, workers=1, active=2, batch=1,
                    micro=4, slots=2, simulations=3, determinizations=3)
+    pool = replace(pool, execution=replace(pool.execution, pipeline_slots=pipeline_slots))
+    class CheckedTransfer(_FixedTransfer):
+        def begin_policy_value(self, sink):
+            return self.checked(super().begin_policy_value(sink))
+
+        def begin_value_only(self, sink):
+            return self.checked(super().begin_value_only(sink))
+
+        def checked(self, handle):
+            floats, masks = self.float_staging.copy(), self.mask_staging.copy()
+            original_finish = handle.finish
+            def finish():
+                np.testing.assert_array_equal(self.float_staging, floats)
+                np.testing.assert_array_equal(self.mask_staging, masks)
+                original_finish()
+            handle.finish = finish
+            return handle
+
+    class CheckedOwner(_FixedOwner):
+        def new_native_transfer(self, **kwargs):
+            kwargs.pop("state_only")
+            return CheckedTransfer(self, **kwargs)
     reference = _config(checkpoint, backend="native_cpu", games=2, workers=1,
                         active=2, batch=1, simulations=3, determinizations=3)
     pooled_root = tmp_path / "pooled"
     reference_root = tmp_path / "reference"
     results, owner = collect(pool, pooled_root, (0, 1), "controlled", _sha256(checkpoint),
-                             evaluator=_FixedOwner())
+                             evaluator=CheckedOwner())
     _collect_group(reference, reference_root, (0, 1), "controlled", _sha256(checkpoint),
                    evaluator=FixedValueSearchInference())
     assert owner["inference"]["physical_model_batches"] > results[0]["counters"]["native_batch_batches"]
+    if pipeline_slots == 2:
+        assert owner["batches_prepared_while_inflight"] > 0
     for game_id in range(2):
         actual, _ = load_game(game_path(pooled_root, game_id))
         expected, _ = load_game(game_path(reference_root, game_id))

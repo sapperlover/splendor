@@ -1,0 +1,98 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 16790000,
+  "device": "cuda",
+  "execution": {
+    "active_games": 4,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "max_batch_size": 4,
+    "max_batch_wait_ms": 0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "purpose": "Four checked games verify actual compiled CUDA Graph evaluation entry with chance widening; not strength evidence."
+  },
+  "pairs": 2,
+  "policy_a": {
+    "chance_widening": {
+      "alpha": 0.5,
+      "k": 1.0
+    },
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "inference": {
+      "actor_projection": false,
+      "batch_buckets": [
+        4
+      ],
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "compile_mode": "native-cudagraph",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "chance_pw_smoke",
+    "search_backend": "native_chance",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 16740000,
+      "simulations": 16
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "inference": {
+      "actor_projection": false,
+      "batch_buckets": [
+        4
+      ],
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "compile_mode": "native-cudagraph",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "native_smoke",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 16740000,
+      "simulations": 16
+    }
+  },
+  "policy_seed_base": 16780000,
+  "progress_every": 1,
+  "seed_start": 16770000,
+  "summary_every": 1,
+  "workers": 1
+}

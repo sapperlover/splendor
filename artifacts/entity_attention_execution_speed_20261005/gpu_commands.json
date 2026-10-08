@@ -1,0 +1,28 @@
+[
+  {
+    "command": [
+      "/home/lc/anaconda3/envs/splendor/bin/python",
+      "artifacts/entity_attention_execution_speed_20261005/verify_gpu.py",
+      "--variant",
+      "baseline",
+      "--output",
+      "artifacts/entity_attention_execution_speed_20261005/gpu_baseline.json"
+    ],
+    "returncode": 0,
+    "stdout": "{\"variant\": \"baseline\", \"checkpoint\": \"runs/entity_attention_offline/checkpoints/final.pt\", \"config\": {\"mode\": \"compiled\", \"actor_projection\": false, \"candidate_buckets\": [16, 32, 48, 64], \"compile_mode\": null, \"compile_failure_policy\": \"fail_fast\", \"native_transport\": \"reused\"}, \"seed\": 919, \"numeric_checks\": \"passed\", \"warmup_seconds\": 2.9831975540000712, \"batches\": [{\"rows\": 128, \"milliseconds_per_batch\": 1.86038759998155, \"max_value_error\": 3.8743019104003906e-07}, {\"rows\": 388, \"milliseconds_per_batch\": 5.214861924969227, \"max_value_error\": 1.8030405044555664e-06}, {\"rows\": 500, \"milliseconds_per_batch\": 6.746831849977752, \"max_value_error\": 1.8253922462463379e-06}, {\"rows\": 3, \"milliseconds_per_batch\": 0.8688568249908712, \"max_value_error\": 1.3709068298339844e-06}, {\"rows\": 128, \"milliseconds_per_batch\": 1.68669099998624, \"max_value_error\": 3.8743019104003906e-07}], \"cuda_runtime_counts_for_10_batches\": {\"cudaStreamIsCapturing\": 70, \"cudaMemcpyAsync\": 30, \"cudaLaunchKernel\": 440, \"cudaLaunchKernelExC\": 30, \"cudaMemsetAsync\": 120, \"cudaOccupancyMaxActiveBlocksPerMultiprocessor\": 210, \"cudaEventRecordWithFlags\": 10, \"cudaEventSynchronize\": 10, \"cudaDeviceSynchronize\": 1}, \"value_only\": [{\"rows\": 388, \"max_error\": 3.21120023727417e-06}, {\"rows\": 3, \"max_error\": 1.6316771507263184e-06}, {\"rows\": 500, \"max_error\": 2.7865171432495117e-06}], \"trace\": \"runtime/entity_attention_execution_speed_20261005/baseline-trace.json\"}\n",
+    "stderr": "W1005 14:24:13.822000 127763 site-packages/torch/_inductor/utils.py:1806] [0/1] Not enough SMs to use max_autotune_gemm mode\nUSDT:2026-10-05 14:24:17 127763:127763 SyncActivityProfilerHandler.cpp:39] profiler_start\nUSDT:2026-10-05 14:24:17 127763:127763 SyncActivityProfilerHandler.cpp:46] profiler_stop\n"
+  },
+  {
+    "command": [
+      "/home/lc/anaconda3/envs/splendor/bin/python",
+      "artifacts/entity_attention_execution_speed_20261005/verify_gpu.py",
+      "--variant",
+      "static",
+      "--output",
+      "artifacts/entity_attention_execution_speed_20261005/gpu_static.json"
+    ],
+    "returncode": 0,
+    "stdout": "{\"variant\": \"static\", \"checkpoint\": \"runs/entity_attention_offline/checkpoints/final.pt\", \"config\": {\"mode\": \"compiled\", \"actor_projection\": false, \"candidate_buckets\": [16, 32, 48, 64], \"compile_mode\": \"reduce-overhead\", \"compile_failure_policy\": \"fail_fast\", \"native_transport\": \"reused\", \"batch_buckets\": [256, 512]}, \"seed\": 919, \"numeric_checks\": \"passed\", \"warmup_seconds\": 2.4413760520001233, \"batches\": [{\"rows\": 128, \"milliseconds_per_batch\": 3.6965045499982807, \"max_value_error\": 1.6093254089355469e-06}, {\"rows\": 388, \"milliseconds_per_batch\": 7.331804249997731, \"max_value_error\": 2.6598572731018066e-06}, {\"rows\": 500, \"milliseconds_per_batch\": 7.161077549972106, \"max_value_error\": 2.6598572731018066e-06}, {\"rows\": 3, \"milliseconds_per_batch\": 3.689602275017023, \"max_value_error\": 1.6093254089355469e-06}, {\"rows\": 128, \"milliseconds_per_batch\": 3.523395950014674, \"max_value_error\": 1.6093254089355469e-06}], \"cuda_runtime_counts_for_10_batches\": {\"cudaStreamIsCapturing\": 40, \"cudaMemcpyAsync\": 200, \"cudaGraphLaunch\": 10, \"cudaLaunchKernel\": 20, \"cudaEventRecordWithFlags\": 10, \"cudaEventSynchronize\": 10, \"cudaDeviceSynchronize\": 1}, \"value_only\": [{\"rows\": 388, \"max_error\": 2.6598572731018066e-06}, {\"rows\": 3, \"max_error\": 1.6093254089355469e-06}, {\"rows\": 500, \"max_error\": 2.6598572731018066e-06}], \"trace\": \"runtime/entity_attention_execution_speed_20261005/static-trace.json\"}\n",
+    "stderr": "W1005 14:24:26.334000 128012 site-packages/torch/_inductor/utils.py:1806] [0/2] Not enough SMs to use max_autotune_gemm mode\nUSDT:2026-10-05 14:24:29 128012:128012 SyncActivityProfilerHandler.cpp:39] profiler_start\nUSDT:2026-10-05 14:24:29 128012:128012 SyncActivityProfilerHandler.cpp:46] profiler_stop\n"
+  }
+]

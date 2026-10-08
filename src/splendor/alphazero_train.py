@@ -200,6 +200,10 @@ class DrawnBatch:
     references: tuple[ReplayReference, ...]
     current_positions: int
     history_positions: int
+    source_positions: Mapping[str, int] | None = None
+    # Split fitting stores policy samples here and value samples separately;
+    # references concatenate policy first, then value, for the source ledgers.
+    value_samples: tuple[SelfPlaySample, ...] | None = None
 
 
 def draw_training_batch(
@@ -471,6 +475,86 @@ class AlphazeroLearner:
         record.update({key: ratios[key] for key in ("target_entropy", "policy_kl", "value_zero_mse")})
         return record
 
+    def train_split_step(
+        self, policy_batch: SelfPlayBatch, value_batch: SelfPlayBatch, *,
+        references: Sequence[ReplayReference], policy_max_grad_norm: float,
+        value_max_grad_norm: float,
+    ) -> dict[str, Any]:
+        """Fit attention policy/trunk and detached value head on separate batches.
+
+        Keep the existing AdamW parameter order and moments. The two disjoint
+        parameter sets are clipped independently before the single update.
+        """
+        if self.model.config.architecture != "entity_attention_v1":
+            raise ValueError("split fitting requires entity_attention_v1")
+        for norm in (policy_max_grad_norm, value_max_grad_norm):
+            if not math.isfinite(norm) or norm <= 0:
+                raise ValueError("split gradient limits must be finite and positive")
+        p = _torch_batch(policy_batch, self.device)
+        v = _torch_batch(value_batch, self.device)
+        self.model.train()
+        prepared = self.model._prepare(policy_batch.decisions)
+        logits = self.model._actor_logits(prepared, self.model.encode_state(prepared))
+        # No trunk graph is needed for the value-only batch. Detach is explicit
+        # at the value head boundary; inference forward remains unchanged.
+        with torch.no_grad():
+            state = self.model.encode_state(self.model._prepare(value_batch.decisions))
+        values = self.model.critic((state[0].detach(), state[1])).squeeze(-1)
+        policy_terms = alphazero_loss_sums(
+            logits, torch.zeros_like(p["value_targets"]),
+            candidate_mask=p["candidate_mask"], policy_targets=p["policy_targets"],
+            value_targets=p["value_targets"], policy_weights=p["policy_weights"],
+            value_weights=torch.zeros_like(p["value_weights"]),
+        )
+        terms = AlphazeroLossSums(
+            policy_terms.policy_ce_sum, policy_terms.policy_weight_sum,
+            ((values - v["value_targets"]) ** 2 * v["value_weights"]).sum(),
+            v["value_weights"].sum(), policy_terms.entropy_sum,
+        )
+        total = terms.total(self.config)
+        self.optimizer.zero_grad(set_to_none=True)
+        details = {"round_index": self.round_index, "round_train_step": self.round_train_step,
+                   "references": [ref.to_dict() for ref in references]}
+        if not bool(torch.isfinite(logits).all() and torch.isfinite(values).all()
+                    and torch.isfinite(total)):
+            raise NonFiniteTrainingError("nonfinite split learner output", details=details)
+        total.backward()
+        value_parameters = list(self.model.critic.parameters())
+        value_ids = {id(param) for param in value_parameters}
+        policy_parameters = [param for param in self.model.parameters() if id(param) not in value_ids]
+        policy_norm = float(clip_grad_norm_(policy_parameters, policy_max_grad_norm))
+        value_norm = float(clip_grad_norm_(value_parameters, value_max_grad_norm))
+        if not math.isfinite(policy_norm) or not math.isfinite(value_norm):
+            raise NonFiniteTrainingError("nonfinite split gradient norm", details=details | {
+                "policy_grad_norm": policy_norm, "value_grad_norm": value_norm})
+        self.optimizer.step()
+        self.round_train_step += 1
+        self.total_train_step += 1
+        names = ("policy_loss", "value_loss", "total_loss", "policy_entropy", "policy_weight_sum",
+                 "value_weight_sum", "policy_ce_sum", "value_sq_sum", "entropy_sum")
+        scalars = torch.stack((terms.policy_loss, terms.value_loss, total, terms.entropy,
+                               terms.policy_weight_sum, terms.value_weight_sum, terms.policy_ce_sum,
+                               terms.value_sq_sum, terms.entropy_sum)).detach().cpu().tolist()
+        labels = label_statistics(policy_batch)
+        labels.update({key: value for key, value in label_statistics(value_batch).items()
+                       if key.startswith("value_")})
+        record = dict(zip(names, scalars)) | labels | {
+            "event": "train_step", "training_mode": "split_policy_detached_value",
+            "round_index": self.round_index, "round_train_step": self.round_train_step,
+            "total_train_step": self.total_train_step,
+            "policy_grad_norm": policy_norm, "value_grad_norm": value_norm,
+            "policy_grad_clipped": policy_norm > policy_max_grad_norm,
+            "value_grad_clipped": value_norm > value_max_grad_norm,
+            "policy_max_grad_norm": policy_max_grad_norm, "value_max_grad_norm": value_max_grad_norm,
+            "learning_rate": float(self.optimizer.param_groups[0]["lr"]),
+            "policy_batch_size": len(policy_batch.value_targets),
+            "value_batch_size": len(value_batch.value_targets),
+            "batch_size": len(policy_batch.value_targets) + len(value_batch.value_targets),
+        }
+        ratios = metric_ratios(record)
+        record.update({key: ratios[key] for key in ("target_entropy", "policy_kl", "value_zero_mse")})
+        return record
+
     def evaluate_samples(self, samples: Sequence[SelfPlaySample]) -> dict[str, Any]:
         """Validation loss over whole games, never mixed into training pools."""
 
@@ -580,6 +664,8 @@ def run_training_round(
     reference_writer: Any = None,
     checkpoint_callback: Callable[[AlphazeroLearner, Path], None] | None = None,
     max_steps_this_session: int | None = None,
+    batch_drawer: Callable[[DeterministicRng], DrawnBatch] | None = None,
+    split_grad_norms: tuple[float, float] | None = None,
 ) -> dict[str, Any]:
     """Drive one round of optimizer steps and checkpoint every N updates."""
 
@@ -609,19 +695,29 @@ def run_training_round(
     while learner.round_train_step < session_target:
         cache_before = current_pool.cache_stats()
         tick = time.perf_counter()
-        drawn = draw_training_batch(current_pool, history_pool, learner.sampling_rng, learner.config)
+        drawn = (batch_drawer(learner.sampling_rng) if batch_drawer is not None else
+                 draw_training_batch(current_pool, history_pool, learner.sampling_rng, learner.config))
         draw_seconds = time.perf_counter() - tick
         tick = time.perf_counter()
         batch = collate_training_samples(drawn.samples)
+        value_batch = (collate_training_samples(drawn.value_samples)
+                       if drawn.value_samples is not None else None)
         collate_seconds = time.perf_counter() - tick
         tick = time.perf_counter()
-        record = learner.train_step(batch, references=drawn.references)
+        if (value_batch is None) != (split_grad_norms is None):
+            raise ValueError("split batches and independent gradient limits must be supplied together")
+        record = (learner.train_step(batch, references=drawn.references) if value_batch is None else
+                  learner.train_split_step(batch, value_batch, references=drawn.references,
+                                           policy_max_grad_norm=split_grad_norms[0],
+                                           value_max_grad_norm=split_grad_norms[1]))
         update_seconds = time.perf_counter() - tick
         record["seconds"] = {"draw_load": draw_seconds, "collate": collate_seconds, "update_host": update_seconds}
         for key, value in record["seconds"].items():
             timings[key] += value
         record["current_positions"] = drawn.current_positions
         record["history_positions"] = drawn.history_positions
+        if drawn.source_positions is not None:
+            record["source_positions"] = dict(drawn.source_positions)
         record["replay_cache"] = current_pool.cache_stats()
         record["cache_delta"] = {key: record["replay_cache"][key] - cache_before[key]
                                  for key in ("hits", "misses", "decode_count", "decoded_bytes", "load_seconds")}
@@ -673,5 +769,5 @@ def run_training_round(
         "training_seconds": elapsed,
         "phase_seconds_this_session": timings,
         "steps_per_second_this_session": len(step_records) / elapsed,
-        "positions_per_second_this_session": len(step_records) * learner.config.batch_size / elapsed,
+        "positions_per_second_this_session": sum(record["batch_size"] for record in step_records) / elapsed,
     }

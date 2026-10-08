@@ -2,6 +2,16 @@
 
 `native_search.cpp` 是 C++17/pybind11 后端，包含规则、数值编码、PUCT 树和状态推进。Python checked 引擎与 `features.py` 是差分参照。真实 native 采集由 `NativeMatchStepper` 推进；固定对战 runner 的真实对局仍为 Python，搜索世界可选择 native。搜索公开入口只使用 `DecisionRequest`，不读取真实暗牌。
 
+2026-10-07新增`NativeChancePUCTSearchPolicy`及评测`search_backend="native_chance"`，在simulation内按概率抽牌，按双方各自的信息历史共享决策Q/N。要求N=1作为共享统计池，已有`native`仍是独立确定化；模式、随机数与数据字段含义见[搜索指南](search_zh-CN.md#采样随机节点与信息历史-puctnative_chance)，冻结模型复测见[实验记录](../../artifacts/entity_attention_chance_search_20261007/README.md)。真实游戏牌堆语义不变。
+
+同日新增可选`ChanceWideningConfig`与策略JSON的`chance_widening`字段，限制真实抽牌事件的结果数随访问量增长。仅在`native_chance`启用，省略保持原行为，正式训练配置未切换。API、近似边界及短验证见[CPW说明](search_zh-CN.md#chance-progressive-widening可选)和[实验记录](../../artifacts/entity_attention_chance_pw_20261007/README.md)。
+
+后续[k0.25/α0.5稳定性复测](../../artifacts/entity_attention_chance_pw_noise_20261007/README.md)及[同模型100 pair棋力](../../artifacts/entity_attention_chance_pw_strength_20261007/README.md)已完成：CPW增加深度、保留部分相对旧确定化的JS收益，但对旧native得分37.0%（95%区间30.75%–43.25%），仍明显较弱；相对不扩宽的提升未确认，未切换正式教师。
+
+新增[CPW对同权重greedy的100 pair](../../artifacts/entity_attention_chance_pw_greedy_20261007/README.md)：CPW得分72.75%（区间66.5%–78.5%），明显强于当前16500步模型裸网。混合native_batched／greedy评测已支持，greedy零模拟、单请求eager argmax，使用同一冻结模型；详见[评测指南](evaluation_zh-CN.md)。C++搜索和二进制未改，35项相关回归、四局GPU smoke和200局正式checked对打通过。
+
+独立`selfplay_fast`现在接受`search_backend="native_chance"`及可选`chance_widening`，要求native执行与N=1；多worker共享槽路径已接通。`record_search_diagnostics=true`只增加每根metadata，默认关闭，默认配置序列化及旧fingerprint保持兼容。三组200局冻结采集＋detach/分组clip短训的原始数据与有限结论见[实验报告](../../artifacts/entity_attention_chance_training_probe_20261007/README.md)；现有hybrid长训配置仍为旧教师。
+
 ## 构建
 
 从仓库根目录、Conda `splendor` 环境执行：
@@ -31,9 +41,13 @@ native 要求 `engine_mode=fast`、FP32。CUDA 单 owner 的 `workers=1`；pool 
 | `inference_mode` | `eager` 或 `compiled` |
 | `actor_projection` | 复用 actor 首层状态投影 |
 | `candidate_buckets` | 编译候选宽度档位，常见 `[16,32,48]`；宽度超档按已实现策略走 eager 并计数 |
+| `batch_buckets` | 可选静态batch档位，要求compiled且覆盖B上限；补齐行不进入搜索或逻辑位置统计，省略时仍动态B |
+| `compile_mode` | PyTorch模式或项目native专用`native-cudagraph`（default编译后捕获固定设备输入，要求静态B/reused）；[实际GPU对照](../reports/entity_attention_execution_speed_zh-CN.md) |
 | `compile_failure_policy` | `fallback` 或 `fail_fast`；必须检查实际 worker_compile，不能仅由配置声称全程 compiled |
 | `native_transport` | `reused` 复用缓冲，或 `packed` 参照传输 |
-| `pipeline_slots` | 单 owner 支持 1/2；pool 保持 1 |
+| `pipeline_slots` | native CUDA单进程与pool均支持1/2；pool的2是独立owner输入/输出缓冲，与worker `shared_slots`独立 |
+
+编译图按模型、policy/value入口、candidate宽度和可选静态batch档位隔离Dynamo code object缓存。2026-10-05修复了此前 `functools.partial` 共用PyTorch包装函数缓存、采集后首次评测触发重编译上限的问题；不再用扩大共享 `recompile_limit` 代替隔离，`fail_fast` 仍会明确报告单个图的真实编译失败。事故与恢复命令见[混合训练指南](entity_attention_hybrid_zh-CN.md)。
 
 ## 整批内存与兼容
 

@@ -1,0 +1,203 @@
+{
+  "config": {
+    "changed_top_level_fields": [
+      "run_id",
+      "new_games_per_round",
+      "updates_per_round",
+      "mix_schedule",
+      "evaluation_every_rounds"
+    ],
+    "path": "configs/entity_attention_v1/hybrid_fork_s1024_n1.json",
+    "sha256": "574e2edaf62d594d2457bd3b9738f8c1808ad594db65a6853a016f838480cafc"
+  },
+  "historical_n2_evaluation_evidence": [
+    {
+      "branch_round": 10,
+      "evaluation": {
+        "path": "runs/entity_attention_hybrid_s512_n2_from_round9_seed1/rounds/round-009/evaluation/mcts_vs_theta5000.json",
+        "sha256": "416ecae05ed870db6e4a06ce27b2c807c1fcb3f7af6db4e9227b1aced898f78e"
+      },
+      "paired_bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.68,
+        "lower": 0.59,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 14720000,
+        "upper": 0.77
+      },
+      "replacement": {
+        "actual_draws": {
+          "branch_online": 9503,
+          "inherited_online": 9697
+        },
+        "branch_games": 1000,
+        "branch_online_position_fraction": 0.4979863501213395,
+        "branch_train_positions": 76541,
+        "inherited_games": 1000,
+        "inherited_train_positions": 77160
+      },
+      "score": 0.68,
+      "usage": {
+        "path": "runs/entity_attention_hybrid_s512_n2_from_round9_seed1/rounds/round-009/source_usage.json",
+        "sha256": "76aaa42db4a832898940aa532d7b8caf67fa95cbe1fcb0d058d500729189bece"
+      },
+      "valid_games": 100
+    },
+    {
+      "branch_round": 20,
+      "evaluation": {
+        "path": "runs/entity_attention_hybrid_s512_n2_from_round9_seed1/rounds/round-019/evaluation/mcts_vs_theta5000.json",
+        "sha256": "19f1afb772cedb72f36efc4a93e8fd933e889bad893ab99e9afefddd15495580"
+      },
+      "paired_bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.635,
+        "lower": 0.53,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 14720000,
+        "upper": 0.735
+      },
+      "replacement": {
+        "actual_draws": {
+          "branch_online": 22400,
+          "inherited_online": 0
+        },
+        "branch_games": 2000,
+        "branch_online_position_fraction": 1.0,
+        "branch_train_positions": 152609,
+        "inherited_games": 0,
+        "inherited_train_positions": 0
+      },
+      "score": 0.635,
+      "usage": {
+        "path": "runs/entity_attention_hybrid_s512_n2_from_round9_seed1/rounds/round-019/source_usage.json",
+        "sha256": "bf149e7d5676e4f008678f6aa150a150ffd77b1b4be7b4c27cd7d8322bd6944d"
+      },
+      "valid_games": 100
+    },
+    {
+      "branch_round": 30,
+      "evaluation": {
+        "path": "runs/entity_attention_hybrid_s512_n2_from_round9_seed1/rounds/round-029/evaluation/mcts_vs_theta5000.json",
+        "sha256": "7bd2726e2edf23ba2d0552c53e26859bcbe20aee6b6f3ee6846ec6b48c2b77bf"
+      },
+      "paired_bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.625,
+        "lower": 0.54,
+        "pair_count": 50,
+        "resamples": 10000,
+        "seed": 14720000,
+        "upper": 0.705
+      },
+      "replacement": {
+        "actual_draws": {
+          "branch_online": 22400,
+          "inherited_online": 0
+        },
+        "branch_games": 2000,
+        "branch_online_position_fraction": 1.0,
+        "branch_train_positions": 151773,
+        "inherited_games": 0,
+        "inherited_train_positions": 0
+      },
+      "score": 0.625,
+      "usage": {
+        "path": "runs/entity_attention_hybrid_s512_n2_from_round9_seed1/rounds/round-029/source_usage.json",
+        "sha256": "f2d5c9061f55139688e616719177ae5bd252a4efafdd8a3042ece6f7e20183df"
+      },
+      "valid_games": 100
+    }
+  ],
+  "initialization": {
+    "by_round": {
+      "3": 1000,
+      "4": 1000,
+      "5": 1000,
+      "6": 1000,
+      "7": 1000,
+      "8": 1000
+    },
+    "by_split": {
+      "train": 5400,
+      "validation": 600
+    },
+    "checkpoint_sha256": "af3b2b64007705cc9adcbb3e8a6ad68239f4dc967c31c515e857b1240479e44a",
+    "fixed_datasets_and_anchor_identical": true,
+    "global_step": 9500,
+    "inherited_games": 6000,
+    "no_collection_or_updates": true,
+    "optimizer_parameter_states": 69,
+    "optimizer_steps": {
+      "9500": 69
+    },
+    "output": "runtime/entity_attention_hybrid_s1024_n1_validation_20261006/initialize_only",
+    "parent_inputs_unchanged": true,
+    "train_positions": 461221
+  },
+  "initialization_command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python -u -m splendor.hybrid_train --config configs/entity_attention_v1/hybrid_fork_s1024_n1.json --fork-from runs/entity_attention_hybrid_static_graph_seed1 --fork-round 9 --output runtime/entity_attention_hybrid_s1024_n1_validation_20261006/initialize_only --online-rounds 0",
+  "initialization_identity_path": "artifacts/entity_attention_hybrid_s1024_n1_20261006/initialization_identity.json",
+  "parent_checkpoint": {
+    "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/checkpoints/final.pt",
+    "sha256": "af3b2b64007705cc9adcbb3e8a6ad68239f4dc967c31c515e857b1240479e44a",
+    "total_train_step": 9500
+  },
+  "regression": {
+    "errors": "0",
+    "failures": "0",
+    "hostname": "lcW",
+    "name": "pytest",
+    "skipped": "0",
+    "tests": "9",
+    "time": "21.482",
+    "timestamp": "2026-10-06T00:55:16.822604+08:00"
+  },
+  "regression_command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python -m pytest -q tests/test_hybrid_training.py --tb=short --junitxml=artifacts/entity_attention_hybrid_s1024_n1_20261006/regression_tests.xml",
+  "reproducibility": "Full code snapshot and inherited archive manifest are in the ignored initialization output; JSON source identity is preserved here.",
+  "schedule_boundaries": [
+    {
+      "new_games": 200,
+      "quotas": [
+        64,
+        192
+      ],
+      "round": 1
+    },
+    {
+      "new_games": 1000,
+      "quotas": [
+        64,
+        192
+      ],
+      "round": 5
+    },
+    {
+      "new_games": 1200,
+      "quotas": [
+        32,
+        224
+      ],
+      "round": 6
+    },
+    {
+      "new_games": 6000,
+      "quotas": [
+        32,
+        224
+      ],
+      "round": 30
+    },
+    {
+      "new_games": 6200,
+      "quotas": [
+        0,
+        256
+      ],
+      "round": 31
+    }
+  ],
+  "scope": "configuration and commands, existing CPU regressions, real checkpoint initialization only; no new selfplay, updates, or strength evaluation",
+  "verified_at": "2026-10-06T00:58:27.582469+08:00"
+}

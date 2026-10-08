@@ -1,0 +1,8 @@
+{
+  "stage": "static native warmup",
+  "error_type": "FailOnRecompileLimitHit",
+  "default_recompile_limit": 8,
+  "reason": "2 B x (4 policy C + value-only) = 10 native shapes share the Dynamo partial wrapper",
+  "resolution": "local bound len(B) * (2 * len(C) + 1), fail-fast retained",
+  "correctness": "no measured window or archived game from this failed attempt"
+}

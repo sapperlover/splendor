@@ -1,0 +1,54 @@
+{
+  "add_root_noise": true,
+  "execution": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_interface": "native",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 64,
+    "max_batch_size": 500,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "precision": "float32",
+    "search_workers": 8,
+    "shared_candidate_width": 256,
+    "shared_slots": 2,
+    "torch_threads": 1,
+    "total_active_games": 1000,
+    "workers": 1,
+    "pipeline_slots": 2
+  },
+  "max_completed_turns": 400,
+  "protocol": "mcts-selfplay-v2",
+  "search_config": {
+    "c_puct": 1.5,
+    "determinizations": 1,
+    "dirichlet_alpha": 0.3,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512,
+    "root_noise_fraction": 0.25,
+    "seed": 13630000,
+    "simulations": 1024
+  },
+  "temperature_schedule": {
+    "late_temperature": 0.0,
+    "opening_completed_turns": 10,
+    "opening_temperature": 1.0
+  },
+  "validation_fraction": 0.1,
+  "run_id": "attention-speed-double-shared2",
+  "round_index": 0,
+  "num_games": 1000,
+  "checkpoint": "runs/entity_attention_offline/checkpoints/final.pt",
+  "seed": 13600000,
+  "split_seed": 13610000
+}

@@ -1,0 +1,578 @@
+{
+  "age_bound_under_fixed_plan": {
+    "basis": "FIFO, 200 games per teacher, 100 updates per new round, inherited teacher steps 8000/8500/9000; mathematical projections, not training results",
+    "steady_gap_after_update_steps": 1500,
+    "steady_gap_before_update_steps": 1400,
+    "steady_teacher_count": 15,
+    "transition_max_gap_after_update_steps": 1900
+  },
+  "config": {
+    "changed_top_level_fields_vs_original_run": [
+      "run_id",
+      "new_games_per_round",
+      "updates_per_round",
+      "replay_max_games",
+      "mix_schedule",
+      "evaluation_every_rounds"
+    ],
+    "path": "configs/entity_attention_v1/hybrid_fork_s1024_n1.json",
+    "sha256": "2c3338d56eb6207dd76738eb99286ca28e981e5fc644af5071d8c5050e6c0f63",
+    "snapshot": "artifacts/entity_attention_hybrid_s1024_n1_20261006/config_replay3000.json"
+  },
+  "inherited_teacher_provenance": [
+    {
+      "by_split": {
+        "train": 905,
+        "validation": 95
+      },
+      "games": 1000,
+      "parent_collection_round": 7,
+      "search": {
+        "determinizations": 1,
+        "simulations": 1024
+      },
+      "sources": [
+        {
+          "path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-006/replay_snapshot.json",
+          "sha256": "91f347c982cdb9571bf99a805c0d646333ebb64f7ba1f4bc019009ebc2c8b624"
+        },
+        {
+          "path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-006/selfplay/manifest.json",
+          "sha256": "50bef8da62ba1f2e915831b097a01cc83598862e11902d4ef03c7c0e5e64fd64"
+        }
+      ],
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/rounds/round-005/checkpoints/final.pt",
+        "sha256": "909c5007beb9d5018f3e3e9f20c5c1f3edca34d4f3dabbd48b4d03ed33b4d68c",
+        "total_train_step": 8000
+      },
+      "train_positions": 76335
+    },
+    {
+      "by_split": {
+        "train": 903,
+        "validation": 97
+      },
+      "games": 1000,
+      "parent_collection_round": 8,
+      "search": {
+        "determinizations": 1,
+        "simulations": 1024
+      },
+      "sources": [
+        {
+          "path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-007/replay_snapshot.json",
+          "sha256": "590d397001622bb131dadd3993faa8ff79312031a1cd7328f6319cc6f85be2d6"
+        },
+        {
+          "path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-007/selfplay/manifest.json",
+          "sha256": "35e449a15df5a991148afb58b16d060fff1fcf77fd29bb4a649c1ef4c1c2ad41"
+        }
+      ],
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/rounds/round-006/checkpoints/final.pt",
+        "sha256": "5710c9ca7aeb7ab478d1ee36f423fc2cd4c0db7ed9b0f71a8f94a5401c67c88c",
+        "total_train_step": 8500
+      },
+      "train_positions": 77084
+    },
+    {
+      "by_split": {
+        "train": 900,
+        "validation": 100
+      },
+      "games": 1000,
+      "parent_collection_round": 9,
+      "search": {
+        "determinizations": 1,
+        "simulations": 1024
+      },
+      "sources": [
+        {
+          "path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/replay_snapshot.json",
+          "sha256": "e3a4b8fd7fb5f0e77f34c7e2c5df00602ec95da7bf568d8ad52f75ea13244aa3"
+        },
+        {
+          "path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/selfplay/manifest.json",
+          "sha256": "8fc0130c2b4beab1a0c0a2c3aa07e60a9cd7ff23f852bc0847a1e47f808a7340"
+        }
+      ],
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/rounds/round-007/checkpoints/final.pt",
+        "sha256": "e2cd2b2f0c73eb117a15eac500c20dd976b42746cbe4b15b6439f48ec244a9d2",
+        "total_train_step": 9000
+      },
+      "train_positions": 77160
+    }
+  ],
+  "initialization": {
+    "by_round": {
+      "6": 1000,
+      "7": 1000,
+      "8": 1000
+    },
+    "by_split": {
+      "train": 2708,
+      "validation": 292
+    },
+    "checkpoint_sha256": "af3b2b64007705cc9adcbb3e8a6ad68239f4dc967c31c515e857b1240479e44a",
+    "fixed_datasets_and_anchor_identical": true,
+    "global_step": 9500,
+    "inherited_games": 3000,
+    "no_collection_or_updates": true,
+    "optimizer_parameter_states": 69,
+    "optimizer_steps": {
+      "9500": 69
+    },
+    "output": "runtime/entity_attention_hybrid_s1024_n1_validation_20261006/initialize_only_replay3000",
+    "parent_inputs_unchanged": true,
+    "train_positions": 230579
+  },
+  "initialization_command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python -u -m splendor.hybrid_train --config configs/entity_attention_v1/hybrid_fork_s1024_n1.json --fork-from runs/entity_attention_hybrid_static_graph_seed1 --fork-round 9 --output runtime/entity_attention_hybrid_s1024_n1_validation_20261006/initialize_only_replay3000 --online-rounds 0",
+  "initialization_identity_path": "artifacts/entity_attention_hybrid_s1024_n1_20261006/initialization_replay3000_identity.json",
+  "offline_source": {
+    "first_checkpoint_architecture": "deep_sets_v1",
+    "games": 10000,
+    "included_in_online_3000_limit": false,
+    "kept_by_explicit_user_choice": true,
+    "offline_batch_quotas": [
+      {
+        "quota": 64,
+        "through_branch_round": 5
+      },
+      {
+        "quota": 32,
+        "through_branch_round": 30
+      }
+    ],
+    "pure_online_from_branch_round": 31,
+    "source_run": "runs/az_theta5_10x1000_seed1",
+    "teacher_count": 10,
+    "teacher_provenance": [
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+          "sha256": "e0cba7733de4977cd0a606d35d2f328f47f285a0be81a1bd3895633dd105f97b"
+        },
+        "collection_round": 1,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-000/selfplay/manifest.json",
+          "sha256": "ada4ed37dac6d7431180f817342b906ef7d4e81305670098c2e2874848bf7763"
+        }
+      },
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_theta5_10x1000_seed1/rounds/round-000/checkpoints/final.pt",
+          "sha256": "95d09618e6629109bc6cfebc13a0b1b1c031928c767dc554c0eeb4b3c2a1e627"
+        },
+        "collection_round": 2,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-001/selfplay/manifest.json",
+          "sha256": "2f08437232e716a7b580136ffb38062a34f79cc078cf81688bb5fc37d2a2871e"
+        }
+      },
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_theta5_10x1000_seed1/rounds/round-001/checkpoints/final.pt",
+          "sha256": "f2690c2ce0d459f89acfe473144cea0af425fae7f3ca814388176ddb8c4f0e01"
+        },
+        "collection_round": 3,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-002/selfplay/manifest.json",
+          "sha256": "00ad79c866816cada15dbd6a03bf50d5930b358d64ec5e76dc1cd22d3ee2d228"
+        }
+      },
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_theta5_10x1000_seed1/rounds/round-002/checkpoints/final.pt",
+          "sha256": "45dee0ae9a34645defb14bdd0f2d40c039fbe57316a1bc72617e5a1a7722961a"
+        },
+        "collection_round": 4,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-003/selfplay/manifest.json",
+          "sha256": "66af8d23055444edca16c98db2328ed48814a3f5efb14fa58450491301716fd8"
+        }
+      },
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_theta5_10x1000_seed1/rounds/round-003/checkpoints/final.pt",
+          "sha256": "585b13bd11841767c233fa48e5292f39c66815c7f8a45da677585d6211e9acc6"
+        },
+        "collection_round": 5,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-004/selfplay/manifest.json",
+          "sha256": "ab43de7a524b6b0d507fbcfdf789941e6292ce7d2343ddfea43cf9465e39273a"
+        }
+      },
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_theta5_10x1000_seed1/rounds/round-004/checkpoints/final.pt",
+          "sha256": "9fd450e5ead5b8549f079b77d78052190f3f3cb704bb6791ca70c523b35194e4"
+        },
+        "collection_round": 6,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-005/selfplay/manifest.json",
+          "sha256": "19dab188fb50faeb895fc13fea5ca332f1189e89373a8ab0b8c7507922e1cbe5"
+        }
+      },
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_theta5_10x1000_seed1/rounds/round-005/checkpoints/final.pt",
+          "sha256": "2ed41f2d593a789f45533e89883431438496949f415a7c9de3a0fea36dd1f1b9"
+        },
+        "collection_round": 7,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-006/selfplay/manifest.json",
+          "sha256": "cdd29f166f999475312d5c0cb96255878492bc898990c563f78b94a611812fa7"
+        }
+      },
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_theta5_10x1000_seed1/rounds/round-006/checkpoints/final.pt",
+          "sha256": "0f44244d09725190bfde7905ea7504fee2465e97640c83f183062c1db8fcf26b"
+        },
+        "collection_round": 8,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-007/selfplay/manifest.json",
+          "sha256": "dbe226d8c834b913efcb852d5764c6bfffcf228ad59b4600d565148a9c9c8412"
+        }
+      },
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_theta5_10x1000_seed1/rounds/round-007/checkpoints/final.pt",
+          "sha256": "848156c77f540239aa8b52527e0f5001be612c1c4e10bb7928c3ebac8637e6f3"
+        },
+        "collection_round": 9,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-008/selfplay/manifest.json",
+          "sha256": "a750124899fa3c6fa2884330fbc4a48a9ee2a61be832509b0719225abe46686d"
+        }
+      },
+      {
+        "checkpoint_identity": {
+          "path": "/home/lc/下载/splendor/runs/az_theta5_10x1000_seed1/rounds/round-008/checkpoints/final.pt",
+          "sha256": "d2216bf2ae7b97a490343e0f4fa417a8840a24e9a3db667a480419ac9a1d3a64"
+        },
+        "collection_round": 10,
+        "manifest": {
+          "path": "runs/az_theta5_10x1000_seed1/rounds/round-009/selfplay/manifest.json",
+          "sha256": "2ab53878d37a6b383d0a0545acdefe749a871b837e3a4e32a3abae7988e27860"
+        }
+      }
+    ]
+  },
+  "planned_window_composition": [
+    {
+      "after_update_step": 9600,
+      "batch_quotas": [
+        64,
+        192
+      ],
+      "branch_round": 1,
+      "by_source_games": {
+        "branch": 200,
+        "inherited": 2800
+      },
+      "by_teacher_games": {
+        "8000": 800,
+        "8500": 1000,
+        "9000": 1000,
+        "9500": 200
+      },
+      "current_collection_teacher_step": 9500,
+      "oldest_teacher_step": 8000,
+      "teacher_count": 4,
+      "teacher_step_gap_after_update": 1600,
+      "teacher_step_gap_before_update": 1500
+    },
+    {
+      "after_update_step": 9900,
+      "batch_quotas": [
+        64,
+        192
+      ],
+      "branch_round": 4,
+      "by_source_games": {
+        "branch": 800,
+        "inherited": 2200
+      },
+      "by_teacher_games": {
+        "8000": 200,
+        "8500": 1000,
+        "9000": 1000,
+        "9500": 200,
+        "9600": 200,
+        "9700": 200,
+        "9800": 200
+      },
+      "current_collection_teacher_step": 9800,
+      "oldest_teacher_step": 8000,
+      "teacher_count": 7,
+      "teacher_step_gap_after_update": 1900,
+      "teacher_step_gap_before_update": 1800
+    },
+    {
+      "after_update_step": 10000,
+      "batch_quotas": [
+        64,
+        192
+      ],
+      "branch_round": 5,
+      "by_source_games": {
+        "branch": 1000,
+        "inherited": 2000
+      },
+      "by_teacher_games": {
+        "8500": 1000,
+        "9000": 1000,
+        "9500": 200,
+        "9600": 200,
+        "9700": 200,
+        "9800": 200,
+        "9900": 200
+      },
+      "current_collection_teacher_step": 9900,
+      "oldest_teacher_step": 8500,
+      "teacher_count": 7,
+      "teacher_step_gap_after_update": 1500,
+      "teacher_step_gap_before_update": 1400
+    },
+    {
+      "after_update_step": 10400,
+      "batch_quotas": [
+        32,
+        224
+      ],
+      "branch_round": 9,
+      "by_source_games": {
+        "branch": 1800,
+        "inherited": 1200
+      },
+      "by_teacher_games": {
+        "8500": 200,
+        "9000": 1000,
+        "9500": 200,
+        "9600": 200,
+        "9700": 200,
+        "9800": 200,
+        "9900": 200,
+        "10000": 200,
+        "10100": 200,
+        "10200": 200,
+        "10300": 200
+      },
+      "current_collection_teacher_step": 10300,
+      "oldest_teacher_step": 8500,
+      "teacher_count": 11,
+      "teacher_step_gap_after_update": 1900,
+      "teacher_step_gap_before_update": 1800
+    },
+    {
+      "after_update_step": 10500,
+      "batch_quotas": [
+        32,
+        224
+      ],
+      "branch_round": 10,
+      "by_source_games": {
+        "branch": 2000,
+        "inherited": 1000
+      },
+      "by_teacher_games": {
+        "9000": 1000,
+        "9500": 200,
+        "9600": 200,
+        "9700": 200,
+        "9800": 200,
+        "9900": 200,
+        "10000": 200,
+        "10100": 200,
+        "10200": 200,
+        "10300": 200,
+        "10400": 200
+      },
+      "current_collection_teacher_step": 10400,
+      "oldest_teacher_step": 9000,
+      "teacher_count": 11,
+      "teacher_step_gap_after_update": 1500,
+      "teacher_step_gap_before_update": 1400
+    },
+    {
+      "after_update_step": 10900,
+      "batch_quotas": [
+        32,
+        224
+      ],
+      "branch_round": 14,
+      "by_source_games": {
+        "branch": 2800,
+        "inherited": 200
+      },
+      "by_teacher_games": {
+        "9000": 200,
+        "9500": 200,
+        "9600": 200,
+        "9700": 200,
+        "9800": 200,
+        "9900": 200,
+        "10000": 200,
+        "10100": 200,
+        "10200": 200,
+        "10300": 200,
+        "10400": 200,
+        "10500": 200,
+        "10600": 200,
+        "10700": 200,
+        "10800": 200
+      },
+      "current_collection_teacher_step": 10800,
+      "oldest_teacher_step": 9000,
+      "teacher_count": 15,
+      "teacher_step_gap_after_update": 1900,
+      "teacher_step_gap_before_update": 1800
+    },
+    {
+      "after_update_step": 11000,
+      "batch_quotas": [
+        32,
+        224
+      ],
+      "branch_round": 15,
+      "by_source_games": {
+        "branch": 3000
+      },
+      "by_teacher_games": {
+        "9500": 200,
+        "9600": 200,
+        "9700": 200,
+        "9800": 200,
+        "9900": 200,
+        "10000": 200,
+        "10100": 200,
+        "10200": 200,
+        "10300": 200,
+        "10400": 200,
+        "10500": 200,
+        "10600": 200,
+        "10700": 200,
+        "10800": 200,
+        "10900": 200
+      },
+      "current_collection_teacher_step": 10900,
+      "oldest_teacher_step": 9500,
+      "teacher_count": 15,
+      "teacher_step_gap_after_update": 1500,
+      "teacher_step_gap_before_update": 1400
+    },
+    {
+      "after_update_step": 11100,
+      "batch_quotas": [
+        32,
+        224
+      ],
+      "branch_round": 16,
+      "by_source_games": {
+        "branch": 3000
+      },
+      "by_teacher_games": {
+        "9600": 200,
+        "9700": 200,
+        "9800": 200,
+        "9900": 200,
+        "10000": 200,
+        "10100": 200,
+        "10200": 200,
+        "10300": 200,
+        "10400": 200,
+        "10500": 200,
+        "10600": 200,
+        "10700": 200,
+        "10800": 200,
+        "10900": 200,
+        "11000": 200
+      },
+      "current_collection_teacher_step": 11000,
+      "oldest_teacher_step": 9600,
+      "teacher_count": 15,
+      "teacher_step_gap_after_update": 1500,
+      "teacher_step_gap_before_update": 1400
+    },
+    {
+      "after_update_step": 12500,
+      "batch_quotas": [
+        32,
+        224
+      ],
+      "branch_round": 30,
+      "by_source_games": {
+        "branch": 3000
+      },
+      "by_teacher_games": {
+        "11000": 200,
+        "11100": 200,
+        "11200": 200,
+        "11300": 200,
+        "11400": 200,
+        "11500": 200,
+        "11600": 200,
+        "11700": 200,
+        "11800": 200,
+        "11900": 200,
+        "12000": 200,
+        "12100": 200,
+        "12200": 200,
+        "12300": 200,
+        "12400": 200
+      },
+      "current_collection_teacher_step": 12400,
+      "oldest_teacher_step": 11000,
+      "teacher_count": 15,
+      "teacher_step_gap_after_update": 1500,
+      "teacher_step_gap_before_update": 1400
+    },
+    {
+      "after_update_step": 12600,
+      "batch_quotas": [
+        0,
+        256
+      ],
+      "branch_round": 31,
+      "by_source_games": {
+        "branch": 3000
+      },
+      "by_teacher_games": {
+        "11100": 200,
+        "11200": 200,
+        "11300": 200,
+        "11400": 200,
+        "11500": 200,
+        "11600": 200,
+        "11700": 200,
+        "11800": 200,
+        "11900": 200,
+        "12000": 200,
+        "12100": 200,
+        "12200": 200,
+        "12300": 200,
+        "12400": 200,
+        "12500": 200
+      },
+      "current_collection_teacher_step": 12500,
+      "oldest_teacher_step": 11100,
+      "teacher_count": 15,
+      "teacher_step_gap_after_update": 1500,
+      "teacher_step_gap_before_update": 1400
+    }
+  ],
+  "prior_6000_preparation_preserved": {
+    "config_snapshot": "artifacts/entity_attention_hybrid_s1024_n1_20261006/config_replay6000.json",
+    "verification": "artifacts/entity_attention_hybrid_s1024_n1_20261006/verification.json"
+  },
+  "regression_evidence": {
+    "note": "Existing nine CPU regressions passed in prior preparation on unchanged training source; not rerun for this configuration-only revision.",
+    "path": "artifacts/entity_attention_hybrid_s1024_n1_20261006/regression_tests.xml",
+    "tests": 9
+  },
+  "scope": "3000-game window revision, real initialize-only CLI validation, archive teacher identity checks and arithmetic projections; no new selfplay, learner updates, or strength evaluation",
+  "verified_at": "2026-10-06T01:11:18.416301+08:00"
+}

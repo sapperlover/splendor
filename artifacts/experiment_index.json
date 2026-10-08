@@ -1,180 +1,174 @@
 {
-  "protocol": "experiment-index-v1",
-  "reviewed_on": "2026-10-01",
   "entries": [
     {
-      "id": "python-engine-rules-v2",
-      "status": "historical_valid",
-      "report": "docs/reports/engine_validation_zh-CN.md",
       "evidence": [
         "artifacts/work_package_2d/stress-10000-rules-v2.json"
       ],
-      "scope": "Python checked engine; not latest regression or native coverage",
       "evidence_hashes": {
         "artifacts/work_package_2d/stress-10000-rules-v2.json": "6a59a8e36d86db6ff275cfae840b7ba83c96e7324a00f707aaa830dbf7bbb7fa"
-      }
+      },
+      "id": "python-engine-rules-v2",
+      "report": "docs/reports/engine_validation_zh-CN.md",
+      "scope": "Python checked engine; not latest regression or native coverage",
+      "status": "historical_valid"
     },
     {
-      "id": "ppo-5m-seed1",
-      "status": "historical_valid",
-      "report": "docs/reports/ppo_5m_zh-CN.md",
       "evidence": [
         "artifacts/work_package_5c/run_snapshot/summary.json",
         "artifacts/work_package_5c/formal_candidates.csv"
       ],
-      "scope": "single_process frozen run; DEV best, no reserved FINAL claim",
       "evidence_hashes": {
-        "artifacts/work_package_5c/run_snapshot/summary.json": "fac844d017f838465ac75b55fbee8b6258031209223d9a9b8972254ca2d11816",
-        "artifacts/work_package_5c/formal_candidates.csv": "ede0405a61ed0d2010def2cd53bd5155d15e5b16fc7cfc954c8a747327a4cb10"
-      }
+        "artifacts/work_package_5c/formal_candidates.csv": "ede0405a61ed0d2010def2cd53bd5155d15e5b16fc7cfc954c8a747327a4cb10",
+        "artifacts/work_package_5c/run_snapshot/summary.json": "fac844d017f838465ac75b55fbee8b6258031209223d9a9b8972254ca2d11816"
+      },
+      "id": "ppo-5m-seed1",
+      "report": "docs/reports/ppo_5m_zh-CN.md",
+      "scope": "single_process frozen run; DEV best, no reserved FINAL claim",
+      "status": "historical_valid"
     },
     {
-      "id": "az-loop-seed1",
-      "status": "valid",
-      "report": "docs/reports/alphazero_seed1_zh-CN.md",
       "evidence": [
         "artifacts/az_loop_seed1/training_summary.json",
         "artifacts/az_loop_seed1/generation_scores.json"
       ],
-      "scope": "Python batched_cpu 5x500; single training seed",
       "evidence_hashes": {
-        "artifacts/az_loop_seed1/training_summary.json": "715e6abb2035de0b48d9562a214f0197cef154786c2f5b765d390120f871f170",
-        "artifacts/az_loop_seed1/generation_scores.json": "baa385307869cc4752b5cb99ceac8f2f4842f9ba51e84ba99ef2f9e1a001987f"
-      }
+        "artifacts/az_loop_seed1/generation_scores.json": "baa385307869cc4752b5cb99ceac8f2f4842f9ba51e84ba99ef2f9e1a001987f",
+        "artifacts/az_loop_seed1/training_summary.json": "715e6abb2035de0b48d9562a214f0197cef154786c2f5b765d390120f871f170"
+      },
+      "id": "az-loop-seed1",
+      "report": "docs/reports/alphazero_seed1_zh-CN.md",
+      "scope": "Python batched_cpu 5x500; single training seed",
+      "status": "valid"
     },
     {
-      "id": "native-inference-08",
-      "status": "valid",
-      "report": "docs/reports/inference_throughput_zh-CN.md",
       "evidence": [
         "artifacts/inference_throughput/08/summary_08_2026-09-29.json",
         "artifacts/inference_throughput/08/round500_compare.json"
       ],
-      "scope": "correct-row-stride single-owner windows and one full round per shape",
       "evidence_hashes": {
-        "artifacts/inference_throughput/08/summary_08_2026-09-29.json": "a95875df1a9d520248ced5afbc74767b041c30e8da84ee7b88f37dfdef9930a6",
-        "artifacts/inference_throughput/08/round500_compare.json": "6d28ef0bdb02ee025a11282263677e2e2c6415cf4d994c978aef20ceeb333dc8"
-      }
+        "artifacts/inference_throughput/08/round500_compare.json": "6d28ef0bdb02ee025a11282263677e2e2c6415cf4d994c978aef20ceeb333dc8",
+        "artifacts/inference_throughput/08/summary_08_2026-09-29.json": "a95875df1a9d520248ced5afbc74767b041c30e8da84ee7b88f37dfdef9930a6"
+      },
+      "id": "native-inference-08",
+      "report": "docs/reports/inference_throughput_zh-CN.md",
+      "scope": "correct-row-stride single-owner windows and one full round per shape",
+      "status": "valid"
     },
     {
-      "id": "transfer-profile-09",
-      "status": "valid",
-      "report": "docs/reports/inference_throughput_zh-CN.md",
       "evidence": [
         "artifacts/inference_throughput/09/profile_cuda500_transfer_2026-09-30.json"
       ],
-      "scope": "replay microbenchmark; historical provenance incomplete",
       "evidence_hashes": {
         "artifacts/inference_throughput/09/profile_cuda500_transfer_2026-09-30.json": "3d977dfce4693ded9b95925142721cf2cfe3eec96e3feca6d8982073eb858a03"
-      }
+      },
+      "id": "transfer-profile-09",
+      "report": "docs/reports/inference_throughput_zh-CN.md",
+      "scope": "replay microbenchmark; historical provenance incomplete",
+      "status": "valid"
     },
     {
-      "id": "gpu-pool-09",
-      "status": "valid",
-      "report": "docs/reports/multiworker_gpu_zh-CN.md",
       "evidence": [
         "artifacts/inference_throughput/multiworker_gpu/comparison_summary.json"
       ],
-      "scope": "windows plus one full 500-game run per backend; no repeated production gain claim",
       "evidence_hashes": {
         "artifacts/inference_throughput/multiworker_gpu/comparison_summary.json": "5ad56e28ca77eb86502126462da53062c6f512ec4b8465d07a7d490257296137"
-      }
+      },
+      "id": "gpu-pool-09",
+      "report": "docs/reports/multiworker_gpu_zh-CN.md",
+      "scope": "windows plus one full 500-game run per backend; no repeated production gain claim",
+      "status": "valid"
     },
     {
-      "id": "native-early-panel",
-      "status": "historical_valid",
-      "report": "docs/reports/inference_throughput_zh-CN.md",
       "evidence": [
         "artifacts/native_search/performance_2026-09-29.json"
       ],
-      "scope": "early 8-game/batch1 implementation",
       "evidence_hashes": {
         "artifacts/native_search/performance_2026-09-29.json": "7ec2c08ad5f0179e4d2860236d54c3fbb0999d05eb7691d71c411b4e80359789"
-      }
+      },
+      "id": "native-early-panel",
+      "report": "docs/reports/inference_throughput_zh-CN.md",
+      "scope": "early 8-game/batch1 implementation",
+      "status": "historical_valid"
     },
     {
-      "id": "inference-06-07",
-      "status": "invalid_or_superseded",
-      "report": "docs/reports/inference_throughput_zh-CN.md",
       "evidence": [
         "artifacts/inference_throughput/invalid_records.json"
       ],
-      "scope": "raw records local only; no current baseline claims",
       "evidence_hashes": {
         "artifacts/inference_throughput/invalid_records.json": "8840fe7ae6d578ed244cc3ab02793bcf2c0ed1d7265599c1a32e148bcf674762"
-      }
+      },
+      "id": "inference-06-07",
+      "report": "docs/reports/inference_throughput_zh-CN.md",
+      "scope": "raw records local only; no current baseline claims",
+      "status": "invalid_or_superseded"
     },
     {
-      "id": "mcts-sweep",
-      "status": "incomplete",
-      "report": "docs/reports/mcts_sweep_zh-CN.md",
       "evidence": [
         "artifacts/mcts_50pair_sweep/status_index.json"
       ],
-      "scope": "01,02,05 complete; 03 incomplete, 04 not found",
       "evidence_hashes": {
         "artifacts/mcts_50pair_sweep/status_index.json": "b9a6c31a6876a157e03749c1a70457ec5572688b1fddaeb8b18edd99e5ae933f"
-      }
+      },
+      "id": "mcts-sweep",
+      "report": "docs/reports/mcts_sweep_zh-CN.md",
+      "scope": "01,02,05 complete; 03 incomplete, 04 not found",
+      "status": "incomplete"
     },
     {
-      "id": "native-multi-round-training",
-      "status": "unverified",
-      "report": "docs/guides/alphazero_zh-CN.md",
       "evidence": [],
+      "evidence_hashes": {},
+      "id": "native-multi-round-training",
+      "report": "docs/guides/alphazero_zh-CN.md",
       "scope": "native smoke and standalone collection do not establish multi-round training performance",
-      "evidence_hashes": {}
+      "status": "unverified"
     },
     {
-      "id": "pipeline-profile-2026-10-02",
-      "recorded_on": "2026-10-03",
-      "status": "valid",
-      "report": "docs/reports/pipeline_profile_zh-CN.md",
       "evidence": [
         "artifacts/speed_profile_2026-10-02/summary.json",
         "artifacts/speed_profile_2026-10-02/manifest.json"
       ],
-      "scope": "bounded statistics only: old full-run phases, 24 learner steps per case, one native CPU pair, 35s opening and 16 full games; no production optimization or speed acceptance",
       "evidence_hashes": {
-        "artifacts/speed_profile_2026-10-02/summary.json": "e1801bb470d9353b29408668258aed2bd0d639ded73291ed50b946b626726524",
-        "artifacts/speed_profile_2026-10-02/manifest.json": "3c5bb6c669ac7213dd04dae2494621cb3e60a72ad99a8f1e4e20ef40ac34e69a"
-      }
+        "artifacts/speed_profile_2026-10-02/manifest.json": "3c5bb6c669ac7213dd04dae2494621cb3e60a72ad99a8f1e4e20ef40ac34e69a",
+        "artifacts/speed_profile_2026-10-02/summary.json": "e1801bb470d9353b29408668258aed2bd0d639ded73291ed50b946b626726524"
+      },
+      "id": "pipeline-profile-2026-10-02",
+      "recorded_on": "2026-10-03",
+      "report": "docs/reports/pipeline_profile_zh-CN.md",
+      "scope": "bounded statistics only: old full-run phases, 24 learner steps per case, one native CPU pair, 35s opening and 16 full games; no production optimization or speed acceptance",
+      "status": "valid"
     },
     {
-      "id": "end-to-end-speed-2026-10-03",
-      "recorded_on": "2026-10-03",
-      "status": "valid",
-      "report": "docs/reports/end_to_end_speed_optimization_zh-CN.md",
       "evidence": [
         "artifacts/end_to_end_speed_2026-10-03/summary.json",
         "artifacts/end_to_end_speed_2026-10-03/manifest.json",
         "artifacts/end_to_end_speed_2026-10-03/learner_equivalence.json",
         "artifacts/end_to_end_speed_2026-10-03/tests_final.json"
       ],
-      "scope": "single-host one full run per case: baseline/optimized each 1000 production games + checked replay, each 50 pairs fixed theta5/theta4; independent fifth-replay learner 8 warmup + 128 measured steps with 256 MiB/2 GiB; no new strength or multi-round training claim",
       "evidence_hashes": {
-        "artifacts/end_to_end_speed_2026-10-03/summary.json": "41388287fe6aec1c01f15cefb53410eee09c9b88eafe6b84cc8fce9a7695a90d",
-        "artifacts/end_to_end_speed_2026-10-03/manifest.json": "9f2c422f1284e0b3f75f299ab6e73934d665b1a245e843acc496a09d02ff7d2e",
         "artifacts/end_to_end_speed_2026-10-03/learner_equivalence.json": "e5d537fb3bd71c6caac92e88924fcbd1893bd6afd11b82c1e6784dc530dfd182",
+        "artifacts/end_to_end_speed_2026-10-03/manifest.json": "9f2c422f1284e0b3f75f299ab6e73934d665b1a245e843acc496a09d02ff7d2e",
+        "artifacts/end_to_end_speed_2026-10-03/summary.json": "41388287fe6aec1c01f15cefb53410eee09c9b88eafe6b84cc8fce9a7695a90d",
         "artifacts/end_to_end_speed_2026-10-03/tests_final.json": "f38698a11e0751dcfd9b6cf8cc932f2cec5aea7aa74c4c5229c48ce2e568af93"
-      }
+      },
+      "id": "end-to-end-speed-2026-10-03",
+      "recorded_on": "2026-10-03",
+      "report": "docs/reports/end_to_end_speed_optimization_zh-CN.md",
+      "scope": "single-host one full run per case: baseline/optimized each 1000 production games + checked replay, each 50 pairs fixed theta5/theta4; independent fifth-replay learner 8 warmup + 128 measured steps with 256 MiB/2 GiB; no new strength or multi-round training claim",
+      "status": "valid"
     },
     {
-      "id": "az-theta5-10x1000-seed1-preparation",
-      "status": "unverified",
-      "prepared_on": "2026-10-04",
-      "report": "docs/guides/next_az_training_zh-CN.md",
       "evidence": [
         "artifacts/az_theta5_10x1000_seed1/preparation_manifest.json",
         "artifacts/az_theta5_10x1000_seed1/seeds.json",
         "artifacts/az_theta5_10x1000_seed1/validation.json"
       ],
-      "scope": "Frozen 10x1000 configuration and opt-in recording prepared; finite CPU regression only; formal run, standalone native CUDA smoke, stage/final strength and 4/8 comparison not executed."
+      "id": "az-theta5-10x1000-seed1-preparation",
+      "prepared_on": "2026-10-04",
+      "report": "docs/guides/next_az_training_zh-CN.md",
+      "scope": "Frozen 10x1000 configuration and opt-in recording prepared; finite CPU regression only; formal run, standalone native CUDA smoke, stage/final strength and 4/8 comparison not executed.",
+      "status": "unverified"
     },
     {
-      "id": "entity-attention-v1-2026-10-04",
-      "recorded_on": "2026-10-04",
-      "status": "valid",
-      "report": "docs/guides/entity_attention_offline_zh-CN.md",
       "evidence": [
         "artifacts/entity_attention_v1_20261004/verification.json",
         "artifacts/entity_attention_v1_20261004/integration.json",
@@ -184,25 +178,25 @@
         "artifacts/entity_attention_v1_20261004/source_identity.json",
         "artifacts/entity_attention_v1_20261004/delivery_source_identity.json"
       ],
-      "scope": "fixed architecture implementation; one relevant CPU regression group, 8-update resumed GPU integration with 2 collection games and 1 mixed pair; only two FP32 compiled shapes; metadata-only original 10000-game dataset selection; 1 CPU recording check; no formal fitting or strength claim"
+      "id": "entity-attention-v1-2026-10-04",
+      "recorded_on": "2026-10-04",
+      "report": "docs/guides/entity_attention_offline_zh-CN.md",
+      "scope": "fixed architecture implementation; one relevant CPU regression group, 8-update resumed GPU integration with 2 collection games and 1 mixed pair; only two FP32 compiled shapes; metadata-only original 10000-game dataset selection; 1 CPU recording check; no formal fitting or strength claim",
+      "status": "valid"
     },
     {
-      "id": "offline-training-cache-speed-2026-10-04",
-      "recorded_on": "2026-10-04",
-      "status": "valid",
-      "report": "artifacts/offline_training_speed_20261004/README.md",
       "evidence": [
         "artifacts/offline_training_speed_20261004/profile.json",
         "artifacts/offline_training_speed_20261004/validation.json",
         "artifacts/offline_training_speed_20261004/source_identity.json"
       ],
-      "scope": "read-only live 4 GiB training snapshot at step10105; metadata-only decoded working-set bound; execution-only LRU override, CPU 4 vs 2+2 resumed equality, small 24-game draw comparison; no measured full 8 GiB GPU training speedup or new formal run"
+      "id": "offline-training-cache-speed-2026-10-04",
+      "recorded_on": "2026-10-04",
+      "report": "artifacts/offline_training_speed_20261004/README.md",
+      "scope": "read-only live 4 GiB training snapshot at step10105; metadata-only decoded working-set bound; execution-only LRU override, CPU 4 vs 2+2 resumed equality, small 24-game draw comparison; no measured full 8 GiB GPU training speedup or new formal run",
+      "status": "valid"
     },
     {
-      "id": "entity-attention-self-iteration-preparation-2026-10-04",
-      "recorded_on": "2026-10-04",
-      "status": "valid",
-      "report": "docs/guides/entity_attention_self_iteration_zh-CN.md",
       "evidence": [
         "configs/entity_attention_v1/online_10x1000.json",
         "configs/entity_attention_v1/online_smoke.json",
@@ -215,8 +209,1001 @@
         "artifacts/entity_attention_10x1000_seed1/round-001/mcts_vs_initial.json",
         "artifacts/entity_attention_10x1000_seed1/round-001/greedy_vs_initial.json"
       ],
-      "scope": "11 CPU loop cases, 1000-game admission with eight native workers in a short fixed-owner window, legacy frozen config check; real GPU two-round chain of 8 collection games, 4 learner updates and four 1-pair fixed-initial panels; no formal run, strength or full-scale speedup claim"
+      "id": "entity-attention-self-iteration-preparation-2026-10-04",
+      "recorded_on": "2026-10-04",
+      "report": "docs/guides/entity_attention_self_iteration_zh-CN.md",
+      "scope": "11 CPU loop cases, 1000-game admission with eight native workers in a short fixed-owner window, legacy frozen config check; real GPU two-round chain of 8 collection games, 4 learner updates and four 1-pair fixed-initial panels; no formal run, strength or full-scale speedup claim",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_execution_speed_20261005/summary.json",
+        "artifacts/entity_attention_execution_speed_20261005/cpu_tests.xml",
+        "artifacts/entity_attention_execution_speed_20261005/gpu_direct.json",
+        "artifacts/entity_attention_execution_speed_20261005/gpu_complete_smoke_direct.json",
+        "artifacts/entity_attention_execution_speed_20261005/final_source_identity.json",
+        "configs/entity_attention_v1/collection_static_graph.json"
+      ],
+      "id": "entity-attention-execution-speed-2026-10-05",
+      "report": "docs/reports/entity_attention_execution_speed_zh-CN.md",
+      "scope": "Final-source 15 s opening windows, FP32 numeric/launch checks and 2 x 4-game S8/N2 smoke; shared2 gives most gain, native graph adds ~2%, independent double buffering not stable; no optimized 1000-game or training claim",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_search_screen_20261005/manifest.json",
+        "artifacts/entity_attention_search_screen_20261005/screening_summary.json",
+        "artifacts/entity_attention_search_screen_20261005/cost_comparison.json",
+        "artifacts/entity_attention_search_screen_20261005/verification.json"
+      ],
+      "id": "entity-attention-search-screen-2026-10-05",
+      "report": "artifacts/entity_attention_search_screen_20261005/README.md",
+      "scope": "Frozen theta_9500: four 100-game fixed-opponent panels (S1024/N1 reused), 576 fixed-root CPU searches and eight 35-second production windows; S512/N2 and S1024/N2 selected for training trials, no learning or full-round speedup claim",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_hybrid_fork_20261005/verification.json",
+        "artifacts/entity_attention_hybrid_fork_20261005/cpu_tests.xml",
+        "configs/entity_attention_v1/hybrid_fork_s512_n2.json",
+        "configs/entity_attention_v1/hybrid_fork_s1024_n2.json"
+      ],
+      "id": "entity-attention-hybrid-fork-2026-10-05",
+      "report": "docs/guides/entity_attention_hybrid_fork_zh-CN.md",
+      "scope": "37 CPU regressions plus two real theta_9500 initialize-only CLI calls; model/AdamW/RNG continuation, frozen inherited replay and gradual replacement; no formal branch training or new GPU strength claim",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_worker_cleanup_20261005/oom_kernel.txt",
+        "artifacts/entity_attention_worker_cleanup_20261005/cleanup.json",
+        "artifacts/entity_attention_worker_cleanup_20261005/cleanup_verification.json",
+        "artifacts/entity_attention_worker_cleanup_20261005/owner_death_tests.xml",
+        "artifacts/entity_attention_worker_cleanup_20261005/regression_tests.xml",
+        "artifacts/entity_attention_worker_cleanup_20261005/verification.json"
+      ],
+      "id": "entity-attention-worker-cleanup-2026-10-05",
+      "report": "artifacts/entity_attention_worker_cleanup_20261005/README.md",
+      "scope": "Confirmed RAM OOM at branch round 19 collection startup; 16 verified orphan processes terminated, no remaining repo orphans; four real SIGKILL lifetime cases and 35 related regressions passed, two CUDA cases skipped; checkpoint 11300 and frozen configuration preserved, no new training or cache-budget change",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_hybrid_s1024_n1_20261006/config_replay6000.json",
+        "artifacts/entity_attention_hybrid_s1024_n1_20261006/verification.json",
+        "artifacts/entity_attention_hybrid_s1024_n1_20261006/initialization_identity.json",
+        "artifacts/entity_attention_hybrid_s1024_n1_20261006/regression_tests.xml"
+      ],
+      "id": "entity-attention-hybrid-s1024-n1-2026-10-06",
+      "report": "artifacts/entity_attention_hybrid_s1024_n1_20261006/README.md",
+      "scope": "Preparation only: S1024/N1 from original theta_9500, 200 games/100 updates retaining original updates/game and 6000-game replay; nine existing CPU regressions and real initialize-only CLI validation; no formal branch training or new strength claim",
+      "status": "historical_valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_hybrid_s1024_n1_20261006/config_replay3000.json",
+        "artifacts/entity_attention_hybrid_s1024_n1_20261006/verification_replay3000.json",
+        "artifacts/entity_attention_hybrid_s1024_n1_20261006/initialization_replay3000_identity.json"
+      ],
+      "id": "entity-attention-hybrid-s1024-n1-replay3000-2026-10-06",
+      "report": "artifacts/entity_attention_hybrid_s1024_n1_20261006/README.md",
+      "scope": "Configuration revision only: online replay capped at 3000 games, original theta_9500 and 200 games/100 updates, offline exit retained by user choice; real initialize-only CLI and inherited teacher identity checks; steady 15-teacher/1400-step pre-update age is an arithmetic projection; no new training or strength claim; original B[64,256,500]/max500 snapshot, execution preset superseded by graph200 revision",
+      "status": "historical_valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_graph200_20261006/verification.json",
+        "artifacts/entity_attention_graph200_20261006/regression_tests.xml",
+        "artifacts/entity_attention_graph200_20261006/resume_verification.json",
+        "artifacts/entity_attention_graph200_20261006/resume_source_identity.json",
+        "artifacts/entity_attention_graph200_20261006/config_graph200.json",
+        "artifacts/entity_attention_graph200_20261006/padding_projection.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_graph200_20261006/config_graph200.json": "543060ba3f38b23f6acaae7e6ccb86238f16a77931fa4cc8269d90586a325708",
+        "artifacts/entity_attention_graph200_20261006/padding_projection.json": "55a76bce08c98074061be5abf9a4d3481ffd309318289e6108464483ac2cb99e",
+        "artifacts/entity_attention_graph200_20261006/regression_tests.xml": "c1d3b6b14b87783a4d187025fc3c343e8d886a22b92da3ade9d3cebee896158e",
+        "artifacts/entity_attention_graph200_20261006/resume_source_identity.json": "0215f13e6327b1394efe3973f357db4a1ff853a1f2957f08e1f1edcdf23606b2",
+        "artifacts/entity_attention_graph200_20261006/resume_verification.json": "a975f25f928f1fba95c10bf6fe1f6689574167ec61cf99c553dbbcb2d5e74d33",
+        "artifacts/entity_attention_graph200_20261006/verification.json": "57c518f13d5bb4d70be1c344445eb43c6aea3f7bdcef6170908f126533c7a6d4"
+      },
+      "id": "entity-attention-hybrid-graph200-2026-10-06",
+      "report": "artifacts/entity_attention_graph200_20261006/README.md",
+      "scope": "Only collection batch buckets and max batch changed: B[16,32,64,128,200]/max200; 26 CPU regressions and real theta_9500 zero-update resume of cloned old configuration; immutable old data and per-session execution identity. Padding histogram arithmetic projection only; no CUDA capture, speed or strength claim, user process not restarted.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_memory_window_20261006/oom_evidence.json",
+        "artifacts/entity_attention_memory_window_20261006/cache_working_set.json",
+        "artifacts/entity_attention_memory_window_20261006/regression_tests.xml",
+        "artifacts/entity_attention_memory_window_20261006/gpu_smoke_config.json",
+        "artifacts/entity_attention_memory_window_20261006/gpu_smoke_result.json",
+        "artifacts/entity_attention_memory_window_20261006/resume_verification.json",
+        "artifacts/entity_attention_memory_window_20261006/analysis.json",
+        "artifacts/entity_attention_memory_window_20261006/manifest.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_memory_window_20261006/analysis.json": "48e1b24490c2611120b33957062a171879c9165fef295e7d5c291b1ba3d9eee2",
+        "artifacts/entity_attention_memory_window_20261006/cache_working_set.json": "649a9eefc6624d0867804852bd76f5ccbc3f1429327fd20cfe6c6f6631255f71",
+        "artifacts/entity_attention_memory_window_20261006/gpu_smoke_config.json": "0d86044ef89ae30e7b6c9b9adb9fff0990de7e8fca413e2e329b51b5653f88a7",
+        "artifacts/entity_attention_memory_window_20261006/gpu_smoke_result.json": "f97473f54ec55ba74301c97d2d7e76197d4fc45cbf2565f9cabec46320f24c36",
+        "artifacts/entity_attention_memory_window_20261006/manifest.json": "2d667165a7f3ab20201a7003bba43c28b92272b8d4ca4d100bb10bafa3a25ad9",
+        "artifacts/entity_attention_memory_window_20261006/oom_evidence.json": "8d391a14aa8afa5ae90482db995d79ad8f766eced9bed15d9a4d1261bcf37442",
+        "artifacts/entity_attention_memory_window_20261006/regression_tests.xml": "2eeafefffddc9e45b6b89ddd82bd0d4f2facb034d75fcdff7cb7c3da5a4561ac",
+        "artifacts/entity_attention_memory_window_20261006/resume_verification.json": "7c430914d2eaf322d3c716cea65aff98fc010cf001cddd829bf6a47bdeb8c8ed"
+      },
+      "id": "entity-attention-memory-window-2026-10-06",
+      "report": "artifacts/entity_attention_memory_window_20261006/README.md",
+      "scope": "Confirmed global RAM OOM at S1024/N1 branch round 31 startup after committed round 30/theta12500. Active-window cache pruning, offline train-cache retirement and execution-only budget override implemented; 21 related CPU regressions, four tiny GPU rounds and real zero-update formal resume verified. Existing 30-round ledgers and bounded frozen CPU cohort probes only; no formal round 31, window/sampling ablation or new strength claim.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_strong_anchor_20261006/specification.json",
+        "artifacts/entity_attention_strong_anchor_20261006/evaluations/round9_vs_ppo.json",
+        "artifacts/entity_attention_strong_anchor_20261006/evaluations/round50_vs_ppo.json",
+        "artifacts/entity_attention_strong_anchor_20261006/analysis.json",
+        "artifacts/entity_attention_strong_anchor_20261006/anchor_identity.json",
+        "artifacts/entity_attention_strong_anchor_20261006/verification.json",
+        "artifacts/entity_attention_strong_anchor_20261006/training_plan.json",
+        "artifacts/entity_attention_strong_anchor_20261006/recording/round9-1791277087102515043.json",
+        "artifacts/entity_attention_strong_anchor_20261006/recording/round50-1791277800387981067.json",
+        "docs/guides/entity_attention_fresh_share_zh-CN.md"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_strong_anchor_20261006/analysis.json": "fb59c8980c63966479cdde4c2c9c2c7fb1f8ccc4180e8f5a93bcdf56c7dd302d",
+        "artifacts/entity_attention_strong_anchor_20261006/anchor_identity.json": "51559773b4cc8595c2040cd84d8eb0a0c834d3e3a80d4c81224137a72b4ae29e",
+        "artifacts/entity_attention_strong_anchor_20261006/evaluations/round50_vs_ppo.json": "23690e5ad279c6d9ff578130ebb3e47d3aa8dc72872f89547b0177e8b1233b70",
+        "artifacts/entity_attention_strong_anchor_20261006/evaluations/round9_vs_ppo.json": "ccea168d52e723f040af6b83315e0323b341c5d9432b5d2ed115b533871c130c",
+        "artifacts/entity_attention_strong_anchor_20261006/recording/round50-1791277800387981067.json": "5742ba802d6e00b05dd4f33542d1472b28015db0fd16c16d059d1bcf2dce27fd",
+        "artifacts/entity_attention_strong_anchor_20261006/recording/round9-1791277087102515043.json": "179a8fe487c050ed17c6a5fc37ddf1fd6de2b61e5fdd544494aa7b0e7203f2d6",
+        "artifacts/entity_attention_strong_anchor_20261006/specification.json": "37f5f9027e4a5512bf7957515900b2a9f9c12847445e22976fa1a4c05665250a",
+        "artifacts/entity_attention_strong_anchor_20261006/training_plan.json": "177562d4103743c3e0e0d702eb69ab393e75761f9b1d6fe98e61572bd060ccf7",
+        "artifacts/entity_attention_strong_anchor_20261006/verification.json": "9c5449921489b1628fe71c26599cab17f24ede3f4915ae4d14ec9da7b95a94bb",
+        "docs/guides/entity_attention_fresh_share_zh-CN.md": "d78a6a1706bdaed07e1fdf0a37f47e423ce543ce6dfa08dafc3440e85d371405"
+      },
+      "id": "entity-attention-strong-anchor-2026-10-06",
+      "report": "artifacts/entity_attention_strong_anchor_20261006/README.md",
+      "scope": "Two authorized 100-pair/200-game S1024/N1 PPO-latest panels: original hybrid round9 score0.6375 and N1 small-update branch round50 score0.6175, all400 valid. Paired difference -0.02, 95%CI[-0.1175,0.075]; repeated DEV, single training seed, no confirmed later improvement or regression. Existing offline references and50-round ledgers inspected; current theta5000 model tensors verified identical to historical offline5000. Fresh12.5/18.75/25% disjoint-pool continuation designed only: no sampler implementation, static replay, new collection or training.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_policy_value_ablation_20261006/README.md",
+        "artifacts/entity_attention_policy_value_ablation_20261006/specification.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/fitting.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/analysis.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/training_recording.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/holdout_uncertainty.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/value_profile.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/capacity_probe.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/policy_only_longer.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/smoke.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/compiled_composition_verification.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/verification.json",
+        "artifacts/entity_attention_policy_value_ablation_20261006/core.py",
+        "artifacts/entity_attention_policy_value_ablation_20261006/train.py",
+        "artifacts/entity_attention_policy_value_ablation_20261006/evaluate.py",
+        "artifacts/entity_attention_policy_value_ablation_20261006/policy_longer.py"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_policy_value_ablation_20261006/README.md": "b02f6becb63e03f1ae776d3df6625857aa51c4c6efc841f1ac9fcbc2301faffb",
+        "artifacts/entity_attention_policy_value_ablation_20261006/analysis.json": "73f6d864994986be36d98aa1971dda4a3bbb027cece4ee5cf0bf4232ffd57085",
+        "artifacts/entity_attention_policy_value_ablation_20261006/capacity_probe.json": "514b511ea92e8ffe6f261815d197d34f4d8c9bae1d2c1fc5076bcc6e4622c5d2",
+        "artifacts/entity_attention_policy_value_ablation_20261006/compiled_composition_verification.json": "af93309fa9d15eaae4e2313b9614c35b79e16397457ff7f0b143eaba20e3b644",
+        "artifacts/entity_attention_policy_value_ablation_20261006/core.py": "dd9a863a3f945ef19e03eb7578122eb6ab6c75c692b83c7e6065f6288a70550b",
+        "artifacts/entity_attention_policy_value_ablation_20261006/evaluate.py": "a9988f9c20f0ab26f69bd8f538b8bcf20a94ab4f7d1a18d2b34cded669d7a7d4",
+        "artifacts/entity_attention_policy_value_ablation_20261006/fitting.json": "47306bf2ccfa88ace2aafe08b696954aa35a2b4ce21041caac91916d41c5972e",
+        "artifacts/entity_attention_policy_value_ablation_20261006/holdout_uncertainty.json": "e3becdbb0e70a48013a43129cc453b3b75653fecf72bc4dd36ead62f824d7e85",
+        "artifacts/entity_attention_policy_value_ablation_20261006/policy_longer.py": "ce38e8802ab5e0e2d90cf301da3f9779d7138ba79737bc658844841fdd01dd23",
+        "artifacts/entity_attention_policy_value_ablation_20261006/policy_only_longer.json": "675b6db1d9b54c8ca8cea854167603d722b1b325380898a91d4bbf9b74532d67",
+        "artifacts/entity_attention_policy_value_ablation_20261006/smoke.json": "2511e432a9dbb04e53e015b9c6b69a3bf864829a2d67b67e44701bcc09dc2390",
+        "artifacts/entity_attention_policy_value_ablation_20261006/specification.json": "b36c2e989db8a712b2392696b186a557ae389ecc1a36536c5be50130ed37d90c",
+        "artifacts/entity_attention_policy_value_ablation_20261006/train.py": "9e7703ab72f248b6dc70c3ac0b2da971dbd0ade3f80e1c9181019df5466cd00c",
+        "artifacts/entity_attention_policy_value_ablation_20261006/training_recording.json": "6e9778057748571d1bd0b231cab603c3147ec5eb2b35b54d1d2915caacc76e87",
+        "artifacts/entity_attention_policy_value_ablation_20261006/value_profile.json": "36652d790d0fb9a9b4dfcf6d0f74d4c7602f3080db31c68f00ff5d5bfc472b30",
+        "artifacts/entity_attention_policy_value_ablation_20261006/verification.json": "b9599f9f9f9e6c17d5afc122213ee3a343c385547f5d5a10f3cb025ae32f8f8a"
+      },
+      "id": "entity-attention-policy-value-ablation-2026-10-06",
+      "report": "artifacts/entity_attention_policy_value_ablation_20261006/README.md",
+      "scope": "Fixed latest-only175 training/25 heldout games, one14400-step checkpoint and common sampling sequence; three500-step main arms and17 greedy/S1024-N1/fixed-complete-value DEV panels, all2700 games valid. Joint500 MCTS0.3775 vs initial0.625, paired delta-0.2475 CI[-0.34,-0.155]; preserving joint policy and restoring initial full value recovers0.43 to0.65 on common50 pairs, delta0.22 CI[0.11,0.33]. Policy-only/detached avoid this large decline without confirmed gains over initial. Extra256-position/1000-step memorization and full-pool policy-only continuation500 to2000 diagnose fitting only, not new strength candidates. Compiled composition and frozen inputs verified; twoS8 smoke games excluded. No collection, formal resume, production learner modification or proof of optimal history window/long-run split sampling.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_split_training_20261006/README.md",
+        "artifacts/entity_attention_split_training_20261006/verification.json",
+        "artifacts/entity_attention_split_training_20261006/tests.json",
+        "artifacts/entity_attention_split_training_20261006/verify.py",
+        "configs/entity_attention_v1/hybrid_split_policy_value.json",
+        "docs/guides/entity_attention_split_training_zh-CN.md"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_split_training_20261006/README.md": "1403be5b601bf70224007bb927321d8f3f6f5af6d44968a8971bbb8c4187a783",
+        "artifacts/entity_attention_split_training_20261006/tests.json": "855503d89cbf7c8885b67d25f94aa9fdc2520aec7d92b8318f732318c49f36f4",
+        "artifacts/entity_attention_split_training_20261006/verification.json": "a57758b68905435be1d4f88e80baa2fcbc056581d60e0567398969b80c4f1e5c",
+        "artifacts/entity_attention_split_training_20261006/verify.py": "7ad6d6273de1887b2ce863702e4f23214705c5bf288fe4c9b5561a268a86aa01",
+        "configs/entity_attention_v1/hybrid_split_policy_value.json": "c3c1491af2f2227534eae77c6e81b72d968f0d9673c20386f974cb3e3db21320",
+        "docs/guides/entity_attention_split_training_zh-CN.md": "832e512c3d4ba275c980c84a1de26d5f246a59514063cfa55067ee5434a6a6b2"
+      },
+      "guide_at_implementation_delivery": {
+        "path": "runtime/entity_attention_target_noise_20261007/historical_split_guide_20261006.md",
+        "sha256": "e5b24aa2f7261bb0c27a072bfaccc06924d9a76380bc38cf2e028cb7b0d6fc2c"
+      },
+      "id": "entity-attention-split-training-2026-10-06",
+      "report": "artifacts/entity_attention_split_training_20261006/README.md",
+      "scope": "Production hybrid fork from N1 parent round50/14500 steps: recent4 collection rounds for policy,3000 archived games FIFO for detached value head with disjoint128 recent+128 older quotas, each head batch256, independently clipped at1.0 with inherited single AdamW;200 new games/100 updates,S1024-N1, fixed PPO5.5M 100-pair evaluation every5 rounds.40 relevant tests pass. Real3000-game read-only fork and four GPU updates equal2+2 resumed updates exactly for model/optimizer/all RNG;two S8 smoke games valid, excluded from strength conclusions. Formal training had not started at the 2026-10-06 implementation verification; the maintained guide now links the subsequent user run and frozen-model noise diagnostic; no proof of long-run gains or optimal history window. Supersedes prior fresh-share staircase design as next training choice without rewriting historical experiment evidence.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_target_noise_20261007/README.md",
+        "artifacts/entity_attention_target_noise_20261007/manifest.json",
+        "artifacts/entity_attention_target_noise_20261007/root_bank.json",
+        "artifacts/entity_attention_target_noise_20261007/raw_targets.npz",
+        "artifacts/entity_attention_target_noise_20261007/per_root.json",
+        "artifacts/entity_attention_target_noise_20261007/summary.json",
+        "artifacts/entity_attention_target_noise_20261007/verification.json",
+        "artifacts/entity_attention_target_noise_20261007/smoke.json",
+        "artifacts/entity_attention_target_noise_20261007/probe.py"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_target_noise_20261007/README.md": "824293fa2622bcb0658cdc6c135cb6f05ff376d25c4e8706d8a3f3e0657fb229",
+        "artifacts/entity_attention_target_noise_20261007/manifest.json": "dfa2ececac3de93dc80b3520cd700de565350002aafd9c1a4d9affcf763cb611",
+        "artifacts/entity_attention_target_noise_20261007/per_root.json": "7a8fe1133ded611c4254e814c0f1e493ad2ee96a537fceacd053b345d37d77bd",
+        "artifacts/entity_attention_target_noise_20261007/probe.py": "c78861ab837e6623dfceaa296db702b3a79159fc2f15ac67947634314936240c",
+        "artifacts/entity_attention_target_noise_20261007/raw_targets.npz": "dbaa3146e37bd49b11fccfbf84ceda94864f9a8e0dea950deac7d70eb34229d2",
+        "artifacts/entity_attention_target_noise_20261007/root_bank.json": "7642e6264e4178d3ba6de7a461341f6ab0779ee3da7857be63e27d115dc5aa88",
+        "artifacts/entity_attention_target_noise_20261007/smoke.json": "ccc3e588aa84949253b4557c35eb89b0154ae054a5e38ea30ef7ce10b5696f94",
+        "artifacts/entity_attention_target_noise_20261007/summary.json": "7dc916e4f4b6d5c756abdea0932ec92bf31804d63c0f4e934b17dcdae209a08e",
+        "artifacts/entity_attention_target_noise_20261007/verification.json": "a4a588469dc7298413b2d4174c9519380d377366dfc5b5032baefa64b7d13300"
+      },
+      "id": "entity-attention-target-noise-2026-10-07",
+      "report": "artifacts/entity_attention_target_noise_20261007/README.md",
+      "scope": "One frozen16500-step attention checkpoint,200 recent-four heldout main-action roots from77 games,4 controls x8 repeats xS1024/N1:6400 searches and6553600 simulations. A bitwise repeatable; C world variation pairwiseJS0.05866 versus B root-noise0.02889, paired game-cluster CI for difference[0.02004,0.03958]; D JS0.08477/top1 agreement0.67054 and finite-eight dispersion0.17165 of averageKL0.44152(38.88%). Single-GPU FP32 eager native batch diagnostic only. No policy update, collection, strength panel, budget-adequacy proof, random-node implementation or causal long-run training conclusion.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_chance_search_20261007/README.md",
+        "artifacts/entity_attention_chance_search_20261007/audit.py",
+        "artifacts/entity_attention_chance_search_20261007/baseline_equivalence.json",
+        "artifacts/entity_attention_chance_search_20261007/compare.py",
+        "artifacts/entity_attention_chance_search_20261007/comparison.json",
+        "artifacts/entity_attention_chance_search_20261007/delivery_verification.json",
+        "artifacts/entity_attention_chance_search_20261007/evaluation_smoke.json",
+        "artifacts/entity_attention_chance_search_20261007/evaluation_smoke_config.json",
+        "artifacts/entity_attention_chance_search_20261007/manifest.json",
+        "artifacts/entity_attention_chance_search_20261007/per_root.json",
+        "artifacts/entity_attention_chance_search_20261007/raw_targets.npz",
+        "artifacts/entity_attention_chance_search_20261007/root_bank.json",
+        "artifacts/entity_attention_chance_search_20261007/search_profile.json",
+        "artifacts/entity_attention_chance_search_20261007/smoke.json",
+        "artifacts/entity_attention_chance_search_20261007/summary.json",
+        "artifacts/entity_attention_chance_search_20261007/tests.json",
+        "artifacts/entity_attention_chance_search_20261007/verification.json",
+        "docs/guides/search_zh-CN.md",
+        "docs/guides/native_search_zh-CN.md"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_chance_search_20261007/README.md": "cc3ca1e0dad9e9cd86174e93c42afe029c5c99f39efc61006d02e34a923250b6",
+        "artifacts/entity_attention_chance_search_20261007/audit.py": "0eb55e45e467e0f9a2dfd648c98ef3a3cc697c02e76b57ab73eef692d6a2dbfb",
+        "artifacts/entity_attention_chance_search_20261007/baseline_equivalence.json": "5415ed5e9c48f87d8b7adc8f8fc02e95f70eb0e4f10e83ff10ec31e051bb25bb",
+        "artifacts/entity_attention_chance_search_20261007/compare.py": "607617118427daf69bbfd1d2b1741f52357d89f4e2cbb75a3ea1466a2464b38f",
+        "artifacts/entity_attention_chance_search_20261007/comparison.json": "ec4920917a1420d642e669a150114db87d1243224578c023bc7fdf34fc5388db",
+        "artifacts/entity_attention_chance_search_20261007/delivery_verification.json": "b495901e587ac2756745c671c87b7a1b44beae160b52d94067c3d0e83fb26dc9",
+        "artifacts/entity_attention_chance_search_20261007/evaluation_smoke.json": "bf8aacd2da5b5c57e4a71af309d5040135c579b5ac19cb43aad789c69139d34a",
+        "artifacts/entity_attention_chance_search_20261007/evaluation_smoke_config.json": "17ef4a373dd2c06a0c1ec2969f03db4f67aa2a5fde23e4e7932a3c9d1f022c77",
+        "artifacts/entity_attention_chance_search_20261007/manifest.json": "d979836e4923f7dc6917c3b949c7404b9bac0cac994c308219520eef54f213c0",
+        "artifacts/entity_attention_chance_search_20261007/per_root.json": "b6367c0b0aaa21fbaf3272f44c465f453e75cac82fd4418ed87a29cc038f593c",
+        "artifacts/entity_attention_chance_search_20261007/raw_targets.npz": "759efefc7e6a89b7e69b1eaa136a72bdd143575710cb78f3a82092fbf041aad3",
+        "artifacts/entity_attention_chance_search_20261007/root_bank.json": "7642e6264e4178d3ba6de7a461341f6ab0779ee3da7857be63e27d115dc5aa88",
+        "artifacts/entity_attention_chance_search_20261007/search_profile.json": "4670d30e622d3f2876ffdd001f8974f444dbd0940cc46a540f3dd22f77a2e5a0",
+        "artifacts/entity_attention_chance_search_20261007/smoke.json": "dfb9c939211566c4ac4f441d475e62f69205d5e66c0be8fc913ca03398d86a83",
+        "artifacts/entity_attention_chance_search_20261007/summary.json": "9d4f19ece2dd5a9354d76da4915381bed5e08618e1e89c65a06b5f816a42412b",
+        "artifacts/entity_attention_chance_search_20261007/tests.json": "e5003efe95d24a16a717879941b51b8e0d7afa2cac39c37a4d42a49960d1778f",
+        "artifacts/entity_attention_chance_search_20261007/verification.json": "42322c155eb7d856eee7086a035f6140e001607206872d3ee9d084bbac79ee63",
+        "docs/guides/native_search_zh-CN.md": "576a244ebbbf12d12503e2fa3ab57d5c8925e87b085d80362a4847d3d60cc67a",
+        "docs/guides/search_zh-CN.md": "b8d0427588d9ef30f9f97173f5c0ac3a5edf7b5e1915c605aa3f06548d56ab00"
+      },
+      "id": "entity-attention-chance-search-2026-10-07",
+      "report": "artifacts/entity_attention_chance_search_20261007/README.md",
+      "scope": "Optional native_chance sampled without-replacement draws and per-simulation root blind-card resampling, with decision N/W shared by acting-player private/public observation-action history; direct policy API and serial/native_batched evaluation implemented. Same frozen16500-step attention checkpoint,200 heldout roots,8 repeats,S1024 total per root:6400 searches/6553600 simulations. C JS0.05866 to0.00538(-90.83%), D JS0.08477 to0.03072(-63.76%), top1 agreement0.67054 to0.85196, finite-eight dispersion fraction38.88% to16.91%; B root-noise JS not improved. All old/new priors and used priors bitwise equal;400 legacy searches reproduce baseline bitwise,39 related tests pass/3 existing sandbox CUDA skips, short GPU checked2-game evaluation and root smoke pass. Diagnostic wall time211.10 to320.52 seconds(1.518x), D logical depth4.854 to2.560 and terminal fraction0.007890 to0.00005005. Stable targets are not strength proof; no formal training-teacher/config switch, strength panel, CUDA Graph/multiworker long-collection verification or lazy-chance failure-replay compatibility claim. Frozen source/build/inputs/raw results and bootstrap comparisons audited.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_chance_strength_20261007/README.md",
+        "artifacts/entity_attention_chance_strength_20261007/analysis.json",
+        "artifacts/entity_attention_chance_strength_20261007/analyze.py",
+        "artifacts/entity_attention_chance_strength_20261007/environment.json",
+        "artifacts/entity_attention_chance_strength_20261007/evaluation.json",
+        "artifacts/entity_attention_chance_strength_20261007/evaluation_config.json",
+        "artifacts/entity_attention_chance_strength_20261007/manifest.json",
+        "artifacts/entity_attention_chance_strength_20261007/run.py"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_chance_strength_20261007/README.md": "2826ad514f21e0708a743457f58a3bc6ad59511644fbf4af176a01efea40c679",
+        "artifacts/entity_attention_chance_strength_20261007/analysis.json": "68020d4e1a39b6923bc359c204379f33372b7f50a28b83827b51d9f4d7755e0a",
+        "artifacts/entity_attention_chance_strength_20261007/analyze.py": "eff62a32a2f67c26920f478d94849777b65069c7b82146c8b842db4b9937ca70",
+        "artifacts/entity_attention_chance_strength_20261007/environment.json": "768af74f55bc91b05c846a08766b2f4eb6ea5a0ae689f666dabc6f62a8aa66b0",
+        "artifacts/entity_attention_chance_strength_20261007/evaluation.json": "6f630aa69bd862529a403c2d45eb763f6f574d804d2a89216d04adccd61005b0",
+        "artifacts/entity_attention_chance_strength_20261007/evaluation_config.json": "771fa4add25a46ced2714df7fea299b0ee65bb027726cbd199c778596ea2827e",
+        "artifacts/entity_attention_chance_strength_20261007/manifest.json": "b98af15f6a58b77564e94f532e722dea738ca2e446003bff1f057d52d7eab679",
+        "artifacts/entity_attention_chance_strength_20261007/run.py": "5643e04e6dd3c79fe3a2e3a0e8296a52d01c3aabc3429781972235cf79618891"
+      },
+      "id": "entity-attention-chance-strength-2026-10-07",
+      "report": "artifacts/entity_attention_chance_strength_20261007/README.md",
+      "scope": "One frozen16500-step attention checkpoint SHA dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4; native_chance versus prior native determinized PUCT, same per-search S1024/N1,c1.5,noise off,T0.100 paired new game seeds/200 checked natural-terminal games, all valid and zero exceptions, illegal actions, invariant failures, engineering truncations, cycle adjudications or transition caps. Chance62 wins/1 draw/137 losses, score0.3125, pair-bootstrap95% interval[0.245,0.385],10000 resamples; first-seat0.255/second-seat0.37. GPU FP32 eager single native-batch owner,200 active games, total wall551.37 seconds. Source/model/run config and native extension frozen, per-game logs/seed/seat/budget/aggregate/bootstrap/source snapshots independently audited. This S1024 implementation is weaker on this frozen-model panel despite prior target stability gains; no training-teacher switch, code change, equal-wall-time panel or universal rejection of stochastic search.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_chance_depth_20261007/README.md",
+        "artifacts/entity_attention_chance_depth_20261007/__pycache__/probe.cpython-312.pyc",
+        "artifacts/entity_attention_chance_depth_20261007/cases/native_chance_s1024_pilot_b12.json",
+        "artifacts/entity_attention_chance_depth_20261007/cases/native_chance_s16384_pilot_b12.json",
+        "artifacts/entity_attention_chance_depth_20261007/cases/native_chance_s4096_pilot_b12.json",
+        "artifacts/entity_attention_chance_depth_20261007/cases/native_s1024_pilot_b12.json",
+        "artifacts/entity_attention_chance_depth_20261007/collect_probe.py",
+        "artifacts/entity_attention_chance_depth_20261007/collection/chance_s131072_a8.json",
+        "artifacts/entity_attention_chance_depth_20261007/collection/chance_smoke_s8_a2.json",
+        "artifacts/entity_attention_chance_depth_20261007/collection/old_s1024_a200.json",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_chance_s1024_pilot_b12.json",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_chance_s131072_pilot_b6.json",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_chance_s16384_pilot_b12.json",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_chance_s65536_pilot_b12.json",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_s1024_pilot_b12.json",
+        "artifacts/entity_attention_chance_depth_20261007/graph/manifest.json",
+        "artifacts/entity_attention_chance_depth_20261007/graph/selection.json",
+        "artifacts/entity_attention_chance_depth_20261007/graph_probe.py",
+        "artifacts/entity_attention_chance_depth_20261007/manifest.json",
+        "artifacts/entity_attention_chance_depth_20261007/probe.py",
+        "artifacts/entity_attention_chance_depth_20261007/selection.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_chance_depth_20261007/README.md": "ace9567fb204fff24057ed6c79ac81733f393bdad72a2db7326896e7c8a79396",
+        "artifacts/entity_attention_chance_depth_20261007/__pycache__/probe.cpython-312.pyc": "434fb3a2c4696ce9fb5d5b29a282d3c8c5695c338e83dcbc3a6472f7412e5921",
+        "artifacts/entity_attention_chance_depth_20261007/cases/native_chance_s1024_pilot_b12.json": "7254aedc98b5dc00c5291bccff06dcb87461f063afd25c03b151b70d8f430223",
+        "artifacts/entity_attention_chance_depth_20261007/cases/native_chance_s16384_pilot_b12.json": "4aada762b7dcc5dbd50a59dd94e2880e029de6e0c363268a72e5b31fd6c983a0",
+        "artifacts/entity_attention_chance_depth_20261007/cases/native_chance_s4096_pilot_b12.json": "6012d2473cf0a330ca87e027caacccd747eba6f23e4860d540e5be8bcb62370f",
+        "artifacts/entity_attention_chance_depth_20261007/cases/native_s1024_pilot_b12.json": "421d97438ee869810dc8445acdfc9b9edd3ca16077129f1e914da3e710d114e3",
+        "artifacts/entity_attention_chance_depth_20261007/collect_probe.py": "07b4c194f5f473d82cdf29efd805c82b7a15aefc1d5c0479d29178f1f257e32e",
+        "artifacts/entity_attention_chance_depth_20261007/collection/chance_s131072_a8.json": "659c74d3e86b5601b28a475ba64a452ccf58413f1797959abf8f519ac3474119",
+        "artifacts/entity_attention_chance_depth_20261007/collection/chance_smoke_s8_a2.json": "f2b05cd0359b7997940ce60167770a63343d60e576a7a5fb9d2413e61273ec78",
+        "artifacts/entity_attention_chance_depth_20261007/collection/old_s1024_a200.json": "b1cac3f4b6bf16e00d3d7515b284d8b9ecc7b1519a379b553c7fcaafc36129ca",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_chance_s1024_pilot_b12.json": "e00195684ef6c4efce9f4d0ace84293361f7138b9e2f93dc342c9eddd5159879",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_chance_s131072_pilot_b6.json": "e524f343afb038ba197da42f968dd52a53e2a19fd2daa994c01b532e5accee20",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_chance_s16384_pilot_b12.json": "5d5b7c358bf8632a2bd787d5b4cb4be9fe1a0ef0bb9e5f1b6426b0738779992a",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_chance_s65536_pilot_b12.json": "af9f3f7dfa4187ff5ddd640b60fe4cdaeb383a38caf34a5bd011802c4590a4e1",
+        "artifacts/entity_attention_chance_depth_20261007/graph/cases/native_s1024_pilot_b12.json": "09524deb27fe7be2bcf2f118ec3e57ba1f0d159d6a8c96eed20f576f291be29b",
+        "artifacts/entity_attention_chance_depth_20261007/graph/manifest.json": "31d655f7db495cca07da81e2755e18037887840dd040f99f9b97259ad34a76ae",
+        "artifacts/entity_attention_chance_depth_20261007/graph/selection.json": "7c98a06be3bdbf184376a1e5fa92308387e52f3d9b282b6b74fb892bee4c6da6",
+        "artifacts/entity_attention_chance_depth_20261007/graph_probe.py": "c402d38ad082898364ffc5960d560bc227edfa1be4451ce5bcb31e830c1f2c74",
+        "artifacts/entity_attention_chance_depth_20261007/manifest.json": "443950205397bca1a156c761ff7b80325518a43b96df43e2f2894ecc98e30725",
+        "artifacts/entity_attention_chance_depth_20261007/probe.py": "77c689b6e1bdca5f6dd8c4af131873f527f832b1a8986b58b848bc5228a83650",
+        "artifacts/entity_attention_chance_depth_20261007/selection.json": "7c98a06be3bdbf184376a1e5fa92308387e52f3d9b282b6b74fb892bee4c6da6"
+      },
+      "id": "entity-attention-chance-depth-2026-10-07",
+      "report": "artifacts/entity_attention_chance_depth_20261007/README.md",
+      "scope": "User-cancelled after12-root budget pilot: eager chanceS1024/4096/16384 depth2.399/2.886/3.501 versus old4.630; graphS65536/131072 depth4.194/4.514. Graph roundoff can change targets; no200-root matched-depth confirmation, strength or large-budget collection measurement. Raw completed pilot results retained; user switched to chance progressive widening.",
+      "status": "incomplete"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_chance_pw_20261007/README.md",
+        "artifacts/entity_attention_chance_pw_20261007/__pycache__/analyze.cpython-312.pyc",
+        "artifacts/entity_attention_chance_pw_20261007/analysis.json",
+        "artifacts/entity_attention_chance_pw_20261007/analyze.py",
+        "artifacts/entity_attention_chance_pw_20261007/audit.py",
+        "artifacts/entity_attention_chance_pw_20261007/build.json",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k0.25_a0.5_confirmation_b200.json",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k0.25_a0.5_pilot_b12.json",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k0_a0.5_confirmation_b200.json",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k1_a0.5_confirmation_b200.json",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k1_a0.5_pilot_b12.json",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_s1024_k0_a0.5_confirmation_b200.json",
+        "artifacts/entity_attention_chance_pw_20261007/collect_probe.py",
+        "artifacts/entity_attention_chance_pw_20261007/collection/old_config.json",
+        "artifacts/entity_attention_chance_pw_20261007/collection/old_window.json",
+        "artifacts/entity_attention_chance_pw_20261007/collection/old_window.manifest.json",
+        "artifacts/entity_attention_chance_pw_20261007/collection/pw_config.json",
+        "artifacts/entity_attention_chance_pw_20261007/collection/pw_window.json",
+        "artifacts/entity_attention_chance_pw_20261007/collection/pw_window.manifest.json",
+        "artifacts/entity_attention_chance_pw_20261007/evaluation_serial_smoke.json",
+        "artifacts/entity_attention_chance_pw_20261007/evaluation_serial_smoke_config.json",
+        "artifacts/entity_attention_chance_pw_20261007/evaluation_smoke.json",
+        "artifacts/entity_attention_chance_pw_20261007/evaluation_smoke_config.json",
+        "artifacts/entity_attention_chance_pw_20261007/manifest.json",
+        "artifacts/entity_attention_chance_pw_20261007/probe.py",
+        "artifacts/entity_attention_chance_pw_20261007/run.py",
+        "artifacts/entity_attention_chance_pw_20261007/selection.json",
+        "artifacts/entity_attention_chance_pw_20261007/tests.json",
+        "artifacts/entity_attention_chance_pw_20261007/verification.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_chance_pw_20261007/README.md": "7bd656d403c5de0e5ab4183dba1b1a346be87b21b1eeee53c0b3b16ac23ac425",
+        "artifacts/entity_attention_chance_pw_20261007/__pycache__/analyze.cpython-312.pyc": "4d95bcd460e88236c5a2db7acef10b440e34fdff86812db0782507e5a3666d93",
+        "artifacts/entity_attention_chance_pw_20261007/analysis.json": "b815552865cf66f6cd859acad6daaa3da1e0da8deb4c3aef89d0af72c3351983",
+        "artifacts/entity_attention_chance_pw_20261007/analyze.py": "ed79b3a29ca6c3f958575c44830377a60de204e00e9a2a059902d83e9a101b3d",
+        "artifacts/entity_attention_chance_pw_20261007/audit.py": "97f03b0b1c36cea7bb764cd6b5e5fbe573340309c1dfd3f892328a4c1dd0a449",
+        "artifacts/entity_attention_chance_pw_20261007/build.json": "02f7edbe0e4e80f9b43fbddc6c1b79c4ea7992c3b5eebc3df8df5f5bd6910dd3",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k0.25_a0.5_confirmation_b200.json": "8e23bef2ae3069b73021200b2d6e256d02030922b5fd1114e484c4a3154488fa",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k0.25_a0.5_pilot_b12.json": "1bb2209f2b13529a3322818458cd146080b1524d96791e4c9004124d546f3d5e",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k0_a0.5_confirmation_b200.json": "b7fee01d0131ae3c0c63a3bfede6c46d87a274f783553216f4abb01c7d545596",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k1_a0.5_confirmation_b200.json": "dcf26421c63a9e394ff993f6545f92f5a431daa03c1683ac6242e1afcf4f2abf",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_chance_s1024_k1_a0.5_pilot_b12.json": "a131b53868ff5caff2a7f1b2449f7b242e51eb606275f034d16c23b36698412c",
+        "artifacts/entity_attention_chance_pw_20261007/cases/native_s1024_k0_a0.5_confirmation_b200.json": "ef1436fa16a0be7a06db1572224044032f4b56fe3fe76f0f6cdad06034dad71e",
+        "artifacts/entity_attention_chance_pw_20261007/collect_probe.py": "79eac4e392b801b807968ec09f4aab617146e3c9646ee9be362856e527091562",
+        "artifacts/entity_attention_chance_pw_20261007/collection/old_config.json": "70c0ba24a4bba01f7ec2230d5fbd24e1a585e2847a8af365b652649f08bf2b88",
+        "artifacts/entity_attention_chance_pw_20261007/collection/old_window.json": "27b0cafbfe03efd5f78fba3977382dc9d9f2eb9c8e0eed5d428c3c914d991fce",
+        "artifacts/entity_attention_chance_pw_20261007/collection/old_window.manifest.json": "941cb5d84970430bfba136fe23bccee26c20778cb6440522d7cf67ea3135c4eb",
+        "artifacts/entity_attention_chance_pw_20261007/collection/pw_config.json": "e862c9d92a5bb439ca4b185ef52b8359f08cd3a9fb7116ffa15b7dc701f9601c",
+        "artifacts/entity_attention_chance_pw_20261007/collection/pw_window.json": "a9e6417723d16b0edca0d5abeb4e6ca62f042b3d52e9365544ab8cd909e9df25",
+        "artifacts/entity_attention_chance_pw_20261007/collection/pw_window.manifest.json": "42931e35445de69fb1d806e17af0271348a3b4f67d644d797f2c0f9c8d053ea6",
+        "artifacts/entity_attention_chance_pw_20261007/evaluation_serial_smoke.json": "038f10863f9163af393e6cff641b9da95a47e156325e265f78f6e6b98fc38a4d",
+        "artifacts/entity_attention_chance_pw_20261007/evaluation_serial_smoke_config.json": "a601b00b2c0b1d7603ceeb27a025a2e031c94897e89a904ec78df58cba4459a5",
+        "artifacts/entity_attention_chance_pw_20261007/evaluation_smoke.json": "cd13ee0261c03f237de37c401ac02259a759c34e8b7e1ad052bcf0bcd0451a30",
+        "artifacts/entity_attention_chance_pw_20261007/evaluation_smoke_config.json": "ef6e3a957202defff7f290190d4f543a01ee7f45c5d4f0c010b6436887491181",
+        "artifacts/entity_attention_chance_pw_20261007/manifest.json": "3e305544665735c706329e6b1174e0c883504d9e5754aba1cb7834272b7d3ec8",
+        "artifacts/entity_attention_chance_pw_20261007/probe.py": "4f7000f64f9486fbdecd644f0ddae618320f348702fccf34c35391895fc20119",
+        "artifacts/entity_attention_chance_pw_20261007/run.py": "5643e04e6dd3c79fe3a2e3a0e8296a52d01c3aabc3429781972235cf79618891",
+        "artifacts/entity_attention_chance_pw_20261007/selection.json": "7c98a06be3bdbf184376a1e5fa92308387e52f3d9b282b6b74fb892bee4c6da6",
+        "artifacts/entity_attention_chance_pw_20261007/tests.json": "b64194f7a469bfe8e5bfc14acbf6f6058d7dfd6de7f81537f3cb2feabcc58411",
+        "artifacts/entity_attention_chance_pw_20261007/verification.json": "b2f9b5be9295bfb20cae21aea8dac305136dc8b8056309cd9ccc4f660747d02c"
+      },
+      "id": "entity-attention-chance-pw-2026-10-07",
+      "report": "artifacts/entity_attention_chance_pw_20261007/README.md",
+      "scope": "Optional physical-card-draw chance progressive widening per action edge and exact remaining-pool context, ceil(k*N**alpha) admitted support, equal-card-probability reuse and expected N/W backup; per-simulation root hidden resampling retained. Policy API and serial/native_batched evaluation wired;45 related tests pass/3 existing sandbox CUDA skips;400 old and unrestricted-chance fixed searches exactly reproduce frozen A0 targets/priors/counts/choices. Same16500-step checkpoint/200 fixed roots/S1024/noise-off: depths old4.9118,unlimited2.6233,k1-alpha0.5=2.8931,k0.25-alpha0.5=3.4610(+31.9%); tighter CPW fixed-root wall+16.7%. Eight-worker200-active/shared2/owner1 CUDA Graph60-second real collection windows:39.483k versus29.369k sim/s, equal simulation work cost1.344x; zero completed games in windows,200-game337s/453s are estimates at65 searched roots/game excluding startup/tail. FourS16 GPU Graph and twoS8 CPU serial checked smoke games all natural terminal, no engineering failures; not strength proof. Complete raw/config/source/native/build/command/hash/smoke-log audit; no CPW strength, target-noise or formal-training/teacher-switch claim.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_chance_pw_noise_20261007/README.md",
+        "artifacts/entity_attention_chance_pw_noise_20261007/audit.py",
+        "artifacts/entity_attention_chance_pw_noise_20261007/baseline_equivalence.json",
+        "artifacts/entity_attention_chance_pw_noise_20261007/compare.py",
+        "artifacts/entity_attention_chance_pw_noise_20261007/comparison.json",
+        "artifacts/entity_attention_chance_pw_noise_20261007/delivery_verification.json",
+        "artifacts/entity_attention_chance_pw_noise_20261007/manifest.json",
+        "artifacts/entity_attention_chance_pw_noise_20261007/per_root.json",
+        "artifacts/entity_attention_chance_pw_noise_20261007/raw_targets.npz",
+        "artifacts/entity_attention_chance_pw_noise_20261007/root_bank.json",
+        "artifacts/entity_attention_chance_pw_noise_20261007/search_profile.json",
+        "artifacts/entity_attention_chance_pw_noise_20261007/smoke.json",
+        "artifacts/entity_attention_chance_pw_noise_20261007/summary.json",
+        "artifacts/entity_attention_chance_pw_noise_20261007/verification.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_chance_pw_noise_20261007/README.md": "ffb29f719bdea87da778cec4e3300948e79213743324e75211e9769ecc1401fa",
+        "artifacts/entity_attention_chance_pw_noise_20261007/audit.py": "3ab2444957e9e43f9478fd36a6a1b37ce7e57ee2016f050d5e44ca35b04eac3b",
+        "artifacts/entity_attention_chance_pw_noise_20261007/baseline_equivalence.json": "030dd45d123dc62629aa70c6381ee87c3790004b99b0b8ea0e2f99334a129cf2",
+        "artifacts/entity_attention_chance_pw_noise_20261007/compare.py": "bdef165da8b12a42975f88d6f6f7bfcedbbb55dbfdb43405c7eb46e9ab997b24",
+        "artifacts/entity_attention_chance_pw_noise_20261007/comparison.json": "ce0d250e27a9078555e9e949a08b45469c0ab2ac7f4b0acf23c45ecefbde23ec",
+        "artifacts/entity_attention_chance_pw_noise_20261007/delivery_verification.json": "b3c35454638e7dadd7e146c1000936392bdf194f954316a4b697e4bbbb4045b6",
+        "artifacts/entity_attention_chance_pw_noise_20261007/manifest.json": "00b8dbb149d3570c492eaa5223c0cd196507299d1f6288d56e8fbc709dae4aa6",
+        "artifacts/entity_attention_chance_pw_noise_20261007/per_root.json": "7c22cd0fd7a322b17558f4ddb4472a930fbe79712ac417151f56bc21ee374209",
+        "artifacts/entity_attention_chance_pw_noise_20261007/raw_targets.npz": "92863baddd408413fea80e5dc6f5601aae2f5f3d3a59f9906ea0f2abac5ec48e",
+        "artifacts/entity_attention_chance_pw_noise_20261007/root_bank.json": "7642e6264e4178d3ba6de7a461341f6ab0779ee3da7857be63e27d115dc5aa88",
+        "artifacts/entity_attention_chance_pw_noise_20261007/search_profile.json": "c6c96f5a500d392efb1e9928adba3d2f338d62480cb6f423e138caf6319376c6",
+        "artifacts/entity_attention_chance_pw_noise_20261007/smoke.json": "c1b63a8445d2e73d63b5d3a9355cdca1f7ad68cb3a0ecf5d3f56dc3791304c84",
+        "artifacts/entity_attention_chance_pw_noise_20261007/summary.json": "65dd3efdb1e400235cbff79c2bacb741632fef93336b00011d541f21b60b5bb4",
+        "artifacts/entity_attention_chance_pw_noise_20261007/verification.json": "42322c155eb7d856eee7086a035f6140e001607206872d3ee9d084bbac79ee63"
+      },
+      "id": "entity-attention-chance-pw-noise-2026-10-07",
+      "report": "artifacts/entity_attention_chance_pw_noise_20261007/README.md",
+      "scope": "One frozen16500-step checkpoint; CPW k0.25/alpha0.5 physical-draw support with root blind resampling retained; original200 heldout roots from77 games,4 arms x8 repeats xS1024/N1=6400 searches/6553600 simulations. Versus original determinized: C JS0.05866 to0.02664(-54.6%),D0.08477 to0.04835(-43.0%),D top1 agreement0.67054 to0.76429. Versus unrestricted chance: C JS4.95x,D JS+57.4%,D top1 agreement0.85196 to0.76429; all three noisy arms significantly less stable by paired77-game-cluster bootstrap. D depth2.560 to3.401 versus old4.854; eager diagnostic wall211.10/320.52/353.72 seconds. A bitwise repeatable; priors/used priors identical to both references for6400 searches;400 old-native A/B searches reproduce original bitwise,8-root S64 repeat smoke passes; metrics/bootstrap/source/build/raw hashes audited, no production-code change from45-test CPW version. Stability/depth diagnostics only: no weights update, collection or training-teacher switch; strength separately reported.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_chance_pw_strength_20261007/README.md",
+        "artifacts/entity_attention_chance_pw_strength_20261007/analysis.json",
+        "artifacts/entity_attention_chance_pw_strength_20261007/analyze.py",
+        "artifacts/entity_attention_chance_pw_strength_20261007/environment.json",
+        "artifacts/entity_attention_chance_pw_strength_20261007/evaluation.json",
+        "artifacts/entity_attention_chance_pw_strength_20261007/evaluation_config.json",
+        "artifacts/entity_attention_chance_pw_strength_20261007/manifest.json",
+        "artifacts/entity_attention_chance_pw_strength_20261007/run.py"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_chance_pw_strength_20261007/README.md": "0c064c2d0e41160f8eea65c5eac46df33ec8a8ef96d4e43fabead008b7da6590",
+        "artifacts/entity_attention_chance_pw_strength_20261007/analysis.json": "6a6f7384ffd8b64d4219f6c45bba574d76586f219a8ea6ffe3fadb9b73d812ec",
+        "artifacts/entity_attention_chance_pw_strength_20261007/analyze.py": "d526057a16ff7259c82ddfecbf695a73241ac24725d12515a15eaaf92c807496",
+        "artifacts/entity_attention_chance_pw_strength_20261007/environment.json": "9107b55fa0475a45eff8c885755733d6a1600c485fe4a37688b35cbced9b4caf",
+        "artifacts/entity_attention_chance_pw_strength_20261007/evaluation.json": "ec095f1f3d7fb87a109ac3616ed12a833dba922fa7663a70741b6b53d6437496",
+        "artifacts/entity_attention_chance_pw_strength_20261007/evaluation_config.json": "eed436d4e5699e3e86c5b6eb934f22b10b326f69c6160eddd48eedd8c6f55581",
+        "artifacts/entity_attention_chance_pw_strength_20261007/manifest.json": "a5abe4fce9e0bb071157952c51e7a685c3618b4961b263f77a605c1fb6b586ef",
+        "artifacts/entity_attention_chance_pw_strength_20261007/run.py": "24d7a38558e52e39df79e041d00937e5f6a0a5f4a0de8ee965082ca239e89cda"
+      },
+      "id": "entity-attention-chance-pw-strength-2026-10-07",
+      "report": "artifacts/entity_attention_chance_pw_strength_20261007/README.md",
+      "scope": "Frozen16500-step checkpoint SHA dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4; physical-draw CPW k0.25/alpha0.5 vs old native determinized PUCT, bothS1024/N1/c1.5/noise0/T0. Same100 paired game seeds as unrestricted-chance strength panel,200 checked natural-terminal games, zero exceptions/illegal actions/invariant failures/truncations/cycle adjudications/transition caps. CPW73wins/2draws/125losses, score0.37,pair-bootstrap95%[0.3075,0.4325], first0.305/second0.435. Compared to prior unrestricted chance score0.3125, matched100-pair score delta0.0575 CI[-0.0375,0.15],41 improved/31 unchanged/28 worsened; improvement not confirmed and CPW clearly below old-native parity on this frozen panel. Full-game depths3.139/4.805, terminal fractions3.695%/6.908%; state distributions differ. Single native-batch GPU owner/eagerFP32/active200,599.06 seconds versus prior mixed panel551.37 seconds, not isolated collection throughput or equal-wall-time strength. Model/source/native/config hashes and full200 game records/seed/seat/budget/canonical aggregate/bootstrap/source snapshots audited; no source change, weight update, formal training-teacher switch or long-run training claim.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_chance_pw_greedy_20261007/README.md",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/analysis.json",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/analyze.py",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/environment.json",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/evaluation.json",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/evaluation_config.json",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/manifest.json",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/prepare.py",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/run.py",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/smoke.json",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/smoke_config.json",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/tests.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_chance_pw_greedy_20261007/README.md": "b82023d82dd9b1a738c4fc9f116918fc758a33c79266365aafbd3b956c694fa9",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/analysis.json": "a82c6a6ab281e7d0b4b3e035f3759821d2a4a6d58190e42fc2574eb4c1ac9037",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/analyze.py": "078956e353dc2889146e90c228e6006309a6c45f9a45cbdff20e3985efc6acf7",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/environment.json": "9194ca01f45475a5602bd83730166ee304838f94f18a59dbaef356184c38f43c",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/evaluation.json": "6f503bc8fef5642e6cfb65419a1054871dfde609b142c5dba7e948d886cb98e8",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/evaluation_config.json": "4a533a1a349f09b95f40e916dd9c85f6ee71b8aeaf801e050b3d20659630c6f1",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/manifest.json": "cd9fa5a8753d4638200fe8f5c973d58bd0e85abc9e9804a3e323814ae7f8472f",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/prepare.py": "67c9c823458283f1071f5e5b693c7b1c277cfb6fd4b3fafcf35b477d70976333",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/run.py": "24d7a38558e52e39df79e041d00937e5f6a0a5f4a0de8ee965082ca239e89cda",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/smoke.json": "c34dea73db0dacb0fcb29350348542015c7895e3f92b5e4c87c92b0e875ef44e",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/smoke_config.json": "3a73e59c20dde50671f470a9dca1e8e829d2e2623789154486669e02a83d6177",
+        "artifacts/entity_attention_chance_pw_greedy_20261007/tests.json": "56346553410929c86a00879d3812220bb23f44e3c69eafebbb2bb7dbb0b5b601"
+      },
+      "id": "entity-attention-chance-pw-greedy-2026-10-07",
+      "report": "artifacts/entity_attention_chance_pw_greedy_20261007/README.md",
+      "scope": "One frozen16500-step attention checkpoint SHA dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4; CPW k0.25/alpha0.5 S1024/N1/c1.5/noise0/T0 versus same-weight existing greedy logits argmax with zero search.100 paired game seeds/200 checked natural-terminal games, all valid, zero exceptions/illegal actions/invariant failures/truncations/cycle adjudications/transition caps. CPW145wins/1draw/54losses, pure-win0.725, half-draw score0.7275,pair-bootstrap95%[0.665,0.785], first0.75/second0.705; clear frozen-panel search gain versus raw greedy. Mixed native_batched/greedy evaluation wired through existing greedy adapter, shared frozen model,35 related regression tests including4 backend/side serial-vs-batch complete-game parity and1 greedy error attribution, fourS16 CUDA smoke games all natural terminal excluded from strength. Native CPP/binary unchanged from prior CPW delivery; python evaluator/source/test snapshot and model/native/config hashes, full200 records/seed/seat/S1024 budget/empty greedy search stats/canonical summary/bootstrap audited. Single-GPU FP32 eager owner,active200/B200,406.17s, greedy8098 forwards/25.57s separately recorded. New opponent relative to prior CPW-vs-old-native37% panel: not direct old-native-vs-greedy strength, no training, formal teacher switch, equal-wall-time panel or universal/generalization claim.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_chance_training_probe_20261007/README.md",
+        "artifacts/entity_attention_chance_training_probe_20261007/specification.json",
+        "artifacts/entity_attention_chance_training_probe_20261007/analysis.json",
+        "artifacts/entity_attention_chance_training_probe_20261007/strength_statistics.json",
+        "artifacts/entity_attention_chance_training_probe_20261007/sampling_analysis.json",
+        "artifacts/entity_attention_chance_training_probe_20261007/confirmation.json",
+        "artifacts/entity_attention_chance_training_probe_20261007/holdout_diagnostics.json",
+        "artifacts/entity_attention_chance_training_probe_20261007/value_drift.json",
+        "artifacts/entity_attention_chance_training_probe_20261007/tests.json",
+        "artifacts/entity_attention_chance_training_probe_20261007/verification.json",
+        "artifacts/entity_attention_chance_training_probe_20261007/run_suite.py",
+        "artifacts/entity_attention_chance_training_probe_20261007/experiment.py",
+        "artifacts/entity_attention_chance_training_probe_20261007/confirm.py",
+        "artifacts/entity_attention_chance_training_probe_20261007/verify.py",
+        "docs/reports/entity_attention_search_teachers_zh-CN.md",
+        "docs/guides/search_zh-CN.md",
+        "docs/guides/entity_attention_split_training_zh-CN.md"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_chance_training_probe_20261007/README.md": "54ba675ef1516a9804a55b182ea753bf1da5dc116961545559fd892d888a4b43",
+        "artifacts/entity_attention_chance_training_probe_20261007/analysis.json": "c396a60f931ff6783848945c21d25557af67633ba308eef79e5bba616524e0cf",
+        "artifacts/entity_attention_chance_training_probe_20261007/confirm.py": "9072aab1d0a61e6610a2ab23af3ca2ef0a9ed342738ca7f941b81aadd23e9906",
+        "artifacts/entity_attention_chance_training_probe_20261007/confirmation.json": "a1e7e805b9cbeea6b907dedc5456ec172027ee80787d88954b915a013b8eb60a",
+        "artifacts/entity_attention_chance_training_probe_20261007/experiment.py": "fa2c392961697ac31285f33da2ba64126c6ddf2751b30da7d1c82251aec131bf",
+        "artifacts/entity_attention_chance_training_probe_20261007/holdout_diagnostics.json": "1c687b8cce766c22526716f42cb435bfb05e3e3415ed5cd22d3e94670d73669b",
+        "artifacts/entity_attention_chance_training_probe_20261007/run_suite.py": "0fad1b350ecfbbcab6e61174039ab71f9e7159582c33109753573d81ee7a3c3b",
+        "artifacts/entity_attention_chance_training_probe_20261007/sampling_analysis.json": "ec51e01bed7b6c66c14f4ee88cfd839b982db75cba2542cdb9953c7c4eec76b5",
+        "artifacts/entity_attention_chance_training_probe_20261007/specification.json": "582f5434242e6555f5b56b0504d0be54cd70e0f0fe5ee199a4e8c6aced2dceeb",
+        "artifacts/entity_attention_chance_training_probe_20261007/strength_statistics.json": "e65f92bafdf2660704e238b61559dfd0339545a26ddb9bc161fe8c67bcda460c",
+        "artifacts/entity_attention_chance_training_probe_20261007/tests.json": "d329547d6a9fb34925561b7b8511cb6fdf6851d7b1e7a69893b01bec0cba5723",
+        "artifacts/entity_attention_chance_training_probe_20261007/value_drift.json": "8515745d4e63d51073f6919dbf23806c20921b18f4817c272b393858887450c5",
+        "artifacts/entity_attention_chance_training_probe_20261007/verification.json": "bf172042c08380472c96c762db166beb28a109f41442db74e9642e84bc4a6f36",
+        "artifacts/entity_attention_chance_training_probe_20261007/verify.py": "c18e2864520180022e7f21c14c7f6d721ec40e997f6d3e22afef2138a8034b71",
+        "docs/guides/entity_attention_split_training_zh-CN.md": "832e512c3d4ba275c980c84a1de26d5f246a59514063cfa55067ee5434a6a6b2",
+        "docs/guides/search_zh-CN.md": "b8d0427588d9ef30f9f97173f5c0ac3a5edf7b5e1915c605aa3f06548d56ab00",
+        "docs/reports/entity_attention_search_teachers_zh-CN.md": "e943edb6a4b643ed5dfc930f56635b0079cbfb76ec0485db6627abf2fdb69a86"
+      },
+      "id": "entity-attention-chance-training-probe-2026-10-07",
+      "report": "docs/reports/entity_attention_search_teachers_zh-CN.md",
+      "scope": "Frozen one-start teacher/data short-training probe: same16500-step checkpoint, native/chance/CPW each200 games complete checked replay and0/100/300/500-step training on100% that arm's new177 train/23 heldout games; policy updates trunk with value detached, two batch256 paths, independent clip1;16 main100-game panels plus2 independent100-pair confirmation panels,2000 valid games, zero engineering failures. 100-step common-old-search45%/46%/51%,500-step42%/41.5%/41.5% versus frozen-start self-control52%, all paired differences versus start cross0; CPW100 DEV+6pp not replicated(49.75% vs50%, paired delta-0.25pp CI[-10,+9.75]); all100-vs-500 paired deltas within[-21.5,+17.5]pp and cross0. Fitting: train KL falls, native holdout KL rises(100/500+0.01355/+0.01277, intervals>0), chance300 holdout KL-0.01508 CI[-0.02814,-0.00302]; common-bank value MSE rises after500(native0.7363->0.8077,chance->0.7916,CPW->0.7678); chance500 KL to its teacher mean0.29575->0.26681,CPW0.27574->0.25274 without strength gain. Real policy sampling coverage100 steps82.5-82.9%/1.75 visits,500 steps99.9%/8.7-8.8; collection wall6:52/8:11/9:11, relative1.00/1.19/1.34, logical depth4.805/2.442/3.354, terminal6.405%/3.090%/4.170%. Single checkpoint/start, one training seed per arm, fixed single-batch data(not formal800/3000 history mix or continuous self-iteration), no equal-wall-clock, multi-seed, long-run or absolute-strength claim; formal teacher unchanged. Consolidated2026-10-07 series report distinguishes observations from unisolated mechanism hypotheses for100-vs-500 differences and links the separate averaged-label follow-up.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_target_averaging_20261007/README.md",
+        "artifacts/entity_attention_target_averaging_20261007/specification.json",
+        "artifacts/entity_attention_target_averaging_20261007/labels_summary.json",
+        "artifacts/entity_attention_target_averaging_20261007/fit.json",
+        "artifacts/entity_attention_target_averaging_20261007/control_reproduction.json",
+        "artifacts/entity_attention_target_averaging_20261007/analysis.json",
+        "artifacts/entity_attention_target_averaging_20261007/verification.json",
+        "artifacts/entity_attention_target_averaging_20261007/experiment.py",
+        "docs/reports/entity_attention_search_teachers_zh-CN.md",
+        "artifacts/entity_attention_target_averaging_20261007/review_statistics.py",
+        "artifacts/entity_attention_target_averaging_20261007/review_statistics.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_target_averaging_20261007/README.md": "57b8138fbbac15ee1dadaf2b441ef650e05dc791e09a3dddc9b4434e12393a9a",
+        "artifacts/entity_attention_target_averaging_20261007/analysis.json": "23df914ef19bfe282e83d7283b360ac0530a3e303c43ab38ed503b8a89b8131c",
+        "artifacts/entity_attention_target_averaging_20261007/control_reproduction.json": "955d013ee8ae97657b1c70d04af46c92301281ea8457c135d8ebb34177b6ca78",
+        "artifacts/entity_attention_target_averaging_20261007/experiment.py": "6eb6f415c7d67c76595fadbdffe7bb8598cae7fe024b52c591c14c84475a2391",
+        "artifacts/entity_attention_target_averaging_20261007/fit.json": "a2a5437fe1e3253a881444b3f1d745ce6eab3582ce1372ba7b4e72489af5e53e",
+        "artifacts/entity_attention_target_averaging_20261007/labels_summary.json": "ab48e889033f955931558dc2790ffde00ad89429a740b82d90ddc9d579b596db",
+        "artifacts/entity_attention_target_averaging_20261007/review_statistics.json": "f22925fbb81b8d609075feb7c4366c66731db48bbc0b8735c6eb9f25c2c8ce8a",
+        "artifacts/entity_attention_target_averaging_20261007/review_statistics.py": "1ff133269e282c0ec34cb372a8551c3bd6f8b79c11669437c6f34eff291153b8",
+        "artifacts/entity_attention_target_averaging_20261007/specification.json": "2202c62df768733c059b9c2b9b238d312510507008ae0deceea48f3d1fd2b598",
+        "artifacts/entity_attention_target_averaging_20261007/verification.json": "1b5179f4fd639899a4b9de2658193349dc81cbe4a02bccad272d8d8ca5a8098b",
+        "docs/reports/entity_attention_search_teachers_zh-CN.md": "e943edb6a4b643ed5dfc930f56635b0079cbfb76ec0485db6627abf2fdb69a86"
+      },
+      "id": "entity-attention-target-averaging-2026-10-07",
+      "report": "docs/reports/entity_attention_search_teachers_zh-CN.md",
+      "scope": "Frozen16500-step teacher,200 archived native games,13243 searchable roots; four additional independent full-S1024/N1 searches per root, world/noise varying, averaged policy labels. Same batches/value inputs/optimizer initialization and settings; subsequent optimizer trajectory/critic/value function differ. Control model and AdamW states exactly reproduce native at100/300/500. Label JS0.07874 single-vs-single to0.04937 two-average-vs-two-average (not M4-vs-M4). Original root bootstrap preserved; report revision uses77-game cluster bootstrap: avg-minus-native KL at100/300/500 -0.01885[-0.03413,-0.00465],-0.02038[-0.03078,-0.01029],-0.01756[-0.03413,-0.00314]. Avg-minus-initial KL intervals all cross0. Direct different-weight,same-search matchup avg4-100 vs native100 60.5%(119W4D77L,100pairs,CI54.25-66.75); vs initial47%(CI37-56.5),greedy49%; no confirmed net improvement over initial or long-run gain. Avg100 common archived-outcome value MSE0.74721 vs native0.72227,delta+0.02493 CI[0.00509,0.04434],not current-policy counterfactual returns. Extra relabel54.24M simulations plus original13.56M =67.80M,total5x single; integrated reuse to achieveMx is untested. Production source/native frozen; pre-execution experiment-script snapshot missing,current post-run version audited and explicitly identified. Revision also describes formal split20-round holdout deltas(current policyKL rises20/20) and proposed15-round M4-label observation segment; proposal not implemented,formal teacher unchanged,no fresh-M1 comparison or new training.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_step_dose_20261007/README.md",
+        "artifacts/entity_attention_step_dose_20261007/specification.json",
+        "artifacts/entity_attention_step_dose_20261007/fit.json",
+        "artifacts/entity_attention_step_dose_20261007/analysis.json",
+        "artifacts/entity_attention_step_dose_20261007/verification.json",
+        "artifacts/entity_attention_step_dose_20261007/single_control_reproduction.json",
+        "artifacts/entity_attention_step_dose_20261007/train_avg4_detach.json",
+        "artifacts/entity_attention_step_dose_20261007/train_single_detach.json",
+        "artifacts/entity_attention_step_dose_20261007/train_avg4_frozen.json",
+        "artifacts/entity_attention_step_dose_20261007/train_avg4_lr25e5.json",
+        "artifacts/entity_attention_step_dose_20261007/experiment.py",
+        "docs/reports/entity_attention_search_teachers_zh-CN.md"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_step_dose_20261007/README.md": "51b9c015aec5659d9a7841e895788741116e881ee2606ddd45c9b7fafedfde3a",
+        "artifacts/entity_attention_step_dose_20261007/analysis.json": "3dc50c827d42c595ceeb4871fbb167e2363472fdff38fda1448c1d8c3e157a1e",
+        "artifacts/entity_attention_step_dose_20261007/experiment.py": "fff2cdc1116b3c64e9d0ecb2f3732a4a48052bd929e6fa6d178629b1c1516700",
+        "artifacts/entity_attention_step_dose_20261007/fit.json": "57e91d7677690f152a73cc0d04e36ec89d9666ad2463074b1ff985d18b98f9a4",
+        "artifacts/entity_attention_step_dose_20261007/single_control_reproduction.json": "bf5d388ba79c4e9d4e71461081f10d73d55d8102e5aac182f5e53fef04a83476",
+        "artifacts/entity_attention_step_dose_20261007/specification.json": "2d56d570649a3c8eae472f7a031161864c4628091bde12f68c794a2b7ae7b0c6",
+        "artifacts/entity_attention_step_dose_20261007/train_avg4_detach.json": "f58e882fc0f01fb9405f048c2396be8daf72a86aaaebc77e889ea025f25b9703",
+        "artifacts/entity_attention_step_dose_20261007/train_avg4_frozen.json": "cab075fdb4813251484afac3e00eb8c645fc9fd6c959a0fbbb546fdfdb49865b",
+        "artifacts/entity_attention_step_dose_20261007/train_avg4_lr25e5.json": "1784d97accd408cd3c52ddf91b10de95b97418272f119b29ff27c23e4797e6f7",
+        "artifacts/entity_attention_step_dose_20261007/train_single_detach.json": "2877948163030d6739ebd63e8af27d2d3e3f1dcaa0bb574fbd2c810f614baccc",
+        "artifacts/entity_attention_step_dose_20261007/verification.json": "97d528dd6bd4bd694e18eb66ae85400ca8c6707d5cc2a09feb2da561d5122678",
+        "docs/reports/entity_attention_search_teachers_zh-CN.md": "e943edb6a4b643ed5dfc930f56635b0079cbfb76ec0485db6627abf2fdb69a86"
+      },
+      "id": "entity-attention-step-dose-2026-10-07",
+      "report": "artifacts/entity_attention_step_dose_20261007/README.md",
+      "scope": "Fixed-200-game step/learning-rate/value/label dose response on the same16500 checkpoint and exact native batch ledger; all step nodes are prefixes of one trajectory and the single-label arm reproduces existing native checkpoints bitwise(100/300/500 max_abs_diff0). 50-pair DEV panels versus the frozen start, 200-root fit to the8-repeat mean. Strength peak near step50: avg4 25/50/100/200/300=52.0/56.5/47.0/43.0/46.0%, single50/100/200/500=58.0/45.0/45.0/42.0%; avg4 50-100 paired delta+9.5pp[-3.5,+22.0]. LR: 2.5e-5@100=54.0% versus1e-4@100=47.0%(+7.0pp[-5.5,+20.0]); 2.5e-5@400=45.5%, fit better than1e-4 but strength not better. Frozen critic head@100=48.0% versus detach47.0%(+1.0pp[-12,+14]); policy trajectory and fit identical by construction. Fit optimum (avg4 100-200, low-LR flat) does not coincide with strength optimum(50). Interpretation: 200games/100steps/lr1e-4 sits in the worst region of this batch; reducing steps or LR costs no search and should precede4x label averaging; best single-round node only slightly above50%, so net-positive or self-iteration ignition remains unproven. Boundary: single start/collection/training seed, 200games, value detach, 50-pair DEV panels, no multi-round loop or multiplicity correction; frozen value freezes only the critic head, not the full value function.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_formal_lr_step_20261007/README.md",
+        "artifacts/entity_attention_formal_lr_step_20261007/specification.json",
+        "artifacts/entity_attention_formal_lr_step_20261007/specification_extension.json",
+        "artifacts/entity_attention_formal_lr_step_20261007/diagnostics.json",
+        "artifacts/entity_attention_formal_lr_step_20261007/analysis.json",
+        "artifacts/entity_attention_formal_lr_step_20261007/verification.json",
+        "artifacts/entity_attention_formal_lr_step_20261007/repro_round019.json",
+        "artifacts/entity_attention_formal_lr_step_20261007/ledger_summary.json",
+        "artifacts/entity_attention_formal_lr_step_20261007/experiment.py"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_formal_lr_step_20261007/README.md": "901a81429afc73280e1cddb515f9cf636eb8c26dfabf4a15b175713d66184f43",
+        "artifacts/entity_attention_formal_lr_step_20261007/analysis.json": "dcee8904619ba0439f070d97acd06fc524ca61df18319ce116136d295be6d3bb",
+        "artifacts/entity_attention_formal_lr_step_20261007/diagnostics.json": "461156668d4d48d5c6f71dc24c148f36589dce2bba87df9a252a1c43b0ff1b69",
+        "artifacts/entity_attention_formal_lr_step_20261007/experiment.py": "7a92680e342b3e7b2158b0ae6a57631afe7a7e1134af0a9ceb76cc62d5291d1f",
+        "artifacts/entity_attention_formal_lr_step_20261007/ledger_summary.json": "f25214b2866601557acce9bce56b768b7683e51df747f30b39c03a3ea1483796",
+        "artifacts/entity_attention_formal_lr_step_20261007/repro_round019.json": "c761efa314254202f63d19c30288e3d7bcc48be82d3f906e598107fcf7c0441d",
+        "artifacts/entity_attention_formal_lr_step_20261007/specification.json": "8c89660d02dd50d5178b727cb5e950f51e039984540f2ece0577dd45d496d53f",
+        "artifacts/entity_attention_formal_lr_step_20261007/specification_extension.json": "36dbde13217917cbe3d027ef046ea568f43094914634d05ee8b461a85851721c",
+        "artifacts/entity_attention_formal_lr_step_20261007/verification.json": "f0d25dc5733b40b8047b4fd5b23713094ca5722b043c6bce71ea87b9f5e06ff7"
+      },
+      "id": "entity-attention-formal-lr-step-2026-10-08",
+      "report": "artifacts/entity_attention_formal_lr_step_20261007/README.md",
+      "scope": "Formal split-training replay probe at the16500 checkpoint: three trajectories (lr2.5e-5/5e-5/1e-4) restore identical model/AdamW/RNG and replay the exact round-019 usage ledger (policy last4 rounds256/step, value3000-game FIFO128 recent+128 history/step), nodes25/50/100; boundary nodes extended125/150 with a second same-rule frozen ledger(seed17030000). Repro control from round-018 reproduces official round-019 bitwise(model and optimizer max_abs_diff0) and start diagnostics match validation_after(0.42109/0.42541) and the eight-search bank KL(0.26987). Low lr fits the recent holdout better and improves with steps(2.5e-5 recent KL0.41059/0.40882/0.40525 at25/100/150 versus start0.42109 and1e-4@1000.41977);1e-4@100 has near-zero net policy change(KL0.00071,top1 2.3%) while125/150 move again and bank KL degrades0.26565->0.27562/0.27758; policy gradients are clipped in99-100% of steps at every lr(pre-clip2.1-2.7 versus clip1.0). Strength:50-pair DEV panels versus frozen start lr1e-4@100=56.0%,1e-4@50=54.0%,5e-5@50=51.0%,2.5e-5@25=56.0%,2.5e-5@100=51.5%,2.5e-5@150=60.0%; no paired difference versus control is significant(-5.0..+4.0pp). Independent HEAD seeds do not replicate the DEV maximum:2.5e-5@150=41.5% versus control46.5%,paired -5.0pp[-20.0,+10.0]. Conclusion: no node is confirmed better than the current1e-4/100-step/200-game schedule; formal config unchanged; the multi-round self-iteration validation was not run and would need an execution-level lr override because fork/resume check learner_config. Single start, single ledger seed,50-pair panels, no multiplicity correction, no FINAL seeds. Follow-up 2026-10-08: a frozen algorithm-level learning_rate_override and continuous suite are now implemented and finite-validated; the long run remains unstarted. README annotations retract the unsupported clip-dominates-Adam update attribution and clarify that the probe changed critic LR too.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "configs/entity_attention_v1/iteration_suite_20261008.json",
+        "docs/guides/entity_attention_iteration_suite_zh-CN.md",
+        "artifacts/entity_attention_iteration_suite_20261008/README.md",
+        "artifacts/entity_attention_iteration_suite_20261008/manifest.json",
+        "artifacts/entity_attention_iteration_suite_20261008/preflight.json",
+        "artifacts/entity_attention_iteration_suite_20261008/verification.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_iteration_suite_20261008/README.md": "3713b70bbfb7185282d71b340618ab8d819b026c29ba0fa5a340879b6e7ccdcb",
+        "artifacts/entity_attention_iteration_suite_20261008/manifest.json": "c818b456bdcb8b7668a14dd7c58f7a8558a79f045a5b77310a644c99e07927a7",
+        "artifacts/entity_attention_iteration_suite_20261008/preflight.json": "3b809d6d3980b0855d3651c56c37796c61852071c0b93a3f883ea62e92efd9e1",
+        "artifacts/entity_attention_iteration_suite_20261008/verification.json": "6b34addb7669ddc45b61c68411b89303e781152d7b28a033a3076675dad584e3",
+        "configs/entity_attention_v1/iteration_suite_20261008.json": "c5c3c7d6eca06250950b1aa08832287689b11257bb4456e6adbce93830fffa6b",
+        "docs/guides/entity_attention_iteration_suite_zh-CN.md": "4fa9a8fae09ba7e5a9130fb82e5cb5f818c4d18899ccdb1e3172d3ddd5e256a2"
+      },
+      "id": "entity-attention-iteration-suite-2026-10-08",
+      "report": "artifacts/entity_attention_iteration_suite_20261008/README.md",
+      "scope": "Prepared and real-CUDA preflight verified, not a completed scientific result: four arms x two collection/split/search-seed trajectories x16 rounds from frozen16500 checkpoint and continuous Adam/RNG;200 new games per round, P4/V3000 baseline100 updates, P4/50, P4/100 lr2.5e-5, and P1/50 with unchanged value4/history pools. Prespecified16-round direct endpoints400pairs per trajectory for three contrasts,100pair frozen-start checks and200pair PPO checks,100pair midpoint observation.25600 new games and11200 evaluated games planned. Serial per-round subprocesses under verified16GiB cgroup max/no swap,4GiB replay cache, resource reserve checks, exact ledger audit and automatic resume. No formal long training launched; no parameter optimum or chess-strength claim. Superseded by the user-requested B-C-D trend-only plan on2026-10-08; original config/manifest/validation retained, old protocol no longer supported by the current runner.",
+      "status": "invalid_or_superseded"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_iteration_suite_validation_v2_20261008/README.md",
+        "artifacts/entity_attention_iteration_suite_validation_v2_20261008/manifest.json",
+        "artifacts/entity_attention_iteration_suite_validation_v2_20261008/analysis.json",
+        "artifacts/entity_attention_iteration_suite_20261008/verification.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_iteration_suite_20261008/verification.json": "6b34addb7669ddc45b61c68411b89303e781152d7b28a033a3076675dad584e3",
+        "artifacts/entity_attention_iteration_suite_validation_v2_20261008/README.md": "06cc64713c4d990c36c305651e969fcb396a427a8df1969dec17e4bf626de145",
+        "artifacts/entity_attention_iteration_suite_validation_v2_20261008/analysis.json": "17a91880250002bdc0494ad391c942e1dcfc062dba10a8e69de25f1162b35320",
+        "artifacts/entity_attention_iteration_suite_validation_v2_20261008/manifest.json": "edec6c3cef9f500f083c042bbb101cdbccef05bf8b8754567c5f87f47336e56e"
+      },
+      "id": "entity-attention-iteration-suite-validation-2026-10-08",
+      "report": "artifacts/entity_attention_iteration_suite_validation_v2_20261008/README.md",
+      "scope": "Engineering-only final-source CPU/CUDA validation:39 relevant regression cases; CPU partial-vs-continuous model/Adam/RNG equality, suite interruption between round commit and marker, policy/value window audit and parent-death cleanup; final GPU smoke16 new games/S2,8 updates,7 one-pair panels/14 valid evaluation games,all stages complete. Same command rerun added no train/evaluate stages. Final-source cgroup peak2.841GiB with warmed compile cache; earlier version3.565GiB.64MiB hard-limit probe allocating128MiB exited137 without affecting unrelated processes. No remaining suite scopes/CUDA compute jobs at inspection. Does not validate128-round runtime peak, high-budget strength or any best hyperparameter.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "configs/entity_attention_v1/iteration_trend_20261008.json",
+        "docs/guides/entity_attention_iteration_suite_zh-CN.md",
+        "artifacts/entity_attention_iteration_trend_20261008/README.md",
+        "artifacts/entity_attention_iteration_trend_20261008/manifest.json",
+        "artifacts/entity_attention_iteration_trend_20261008/preflight.json",
+        "artifacts/entity_attention_iteration_trend_20261008/verification.json",
+        "artifacts/entity_attention_iteration_trend_20261008/focused_tests.xml",
+        "artifacts/entity_attention_iteration_trend_20261008/code_version.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_iteration_trend_20261008/README.md": "a99df1e84dfee9bbb7069bab26774c9a78a42b066381feb00cf5df707a2350f6",
+        "artifacts/entity_attention_iteration_trend_20261008/code_version.json": "c2e2f003e515d9ff1d2d88e403df72f88249f6361f9139b9eb61d5c435ef4e30",
+        "artifacts/entity_attention_iteration_trend_20261008/focused_tests.xml": "1db2dc06e84579346ff027c577df9fc1384328f0544a311cf6a8dd285efe81db",
+        "artifacts/entity_attention_iteration_trend_20261008/manifest.json": "0f685465bdf5940f1338dd6684d4d4f1bec5c5ce8ca18f34f2951ad614a92236",
+        "artifacts/entity_attention_iteration_trend_20261008/preflight.json": "28741b94f6f0acd841f61c1cbfe060adb76578b0a080f2277e1b140ca7da99dd",
+        "artifacts/entity_attention_iteration_trend_20261008/verification.json": "8d16d24d135dd57c26aecb86a10b4cb401f8b0854116f6cc077d6253ec9d2074",
+        "configs/entity_attention_v1/iteration_trend_20261008.json": "58790e080f10f4337d2ac33538a5ce7357ed29bc62b52ce970d2e63dd376ecdd",
+        "docs/guides/entity_attention_iteration_suite_zh-CN.md": "4fa9a8fae09ba7e5a9130fb82e5cb5f818c4d18899ccdb1e3172d3ddd5e256a2"
+      },
+      "id": "entity-attention-iteration-trend-2026-10-08",
+      "report": "artifacts/entity_attention_iteration_trend_20261008/README.md",
+      "scope": "Prepared B-C-D trend-only suite, no formal long run: each arm two fixed-origin collection-seed trajectories x16 rounds; B200games/50steps/lr1e-4/P4, C200/100/lr2.5e-5/P4, D200/50/lr1e-4/P1, common value3000 FIFO recent4/history split. Finish each arm and its frozen-start panels before the next. Nodes2/4/8/12/16,100paired seeds each, common seeds per trajectory;19200 new games,6400 updates,6000 evaluation games. No A, PPO, round0 self-control, direct contrasts, winner significance rule, extra ledger/checkpoint/full-source integrity audits or disk guards/polling. Preserve16GiB cgroup cap,4GiB cache, process release and core resumable train/eval. Three focused CPU tests passed and CUDA prepare-only verified; no GPU training/strength or full-run peak claim. Actual execution settings not proven fastest. Superseded before formal training by the user-requested seed1-only plan; original two-replicate manifest and validation retained. Current config file now selects the single-replicate suite in new output directories.",
+      "status": "invalid_or_superseded"
+    },
+    {
+      "evidence": [
+        "configs/entity_attention_v1/iteration_trend_20261008.json",
+        "docs/guides/entity_attention_iteration_suite_zh-CN.md",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/README.md",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/configuration_snapshot.json",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/verification.json",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/config_test.xml",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/first_evaluation_review.json",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/evaluations/seed1_steps50_r002.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/README.md": "889a1b609acdcb7349ad42656223b9a50845c563532b0c7e536f3d88713ff2d6",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/config_test.xml": "b7b06cba820045d6b84b70e0251e703da95ac982c23515c3c8298331d7e4b58e",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/configuration_snapshot.json": "58790e080f10f4337d2ac33538a5ce7357ed29bc62b52ce970d2e63dd376ecdd",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/evaluations/seed1_steps50_r002.json": "bdc3e85511933361d8bde88fea574f29e592d768fab9104a993f28ebd2c1c10f",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/first_evaluation_review.json": "40ecb8d207163422db2fb9c5d9e04b6ec05b5d6fdd063232e257da5b8c0f8fe5",
+        "artifacts/entity_attention_iteration_trend_seed1_20261008/verification.json": "6cbd3c5671d40c4e690382138051008ec20ccd48dc19f58b470b66d5005d4ceb",
+        "configs/entity_attention_v1/iteration_trend_20261008.json": "58790e080f10f4337d2ac33538a5ce7357ed29bc62b52ce970d2e63dd376ecdd",
+        "docs/guides/entity_attention_iteration_suite_zh-CN.md": "4fa9a8fae09ba7e5a9130fb82e5cb5f818c4d18899ccdb1e3172d3ddd5e256a2"
+      },
+      "id": "entity-attention-iteration-trend-seed1-2026-10-08",
+      "report": "artifacts/entity_attention_iteration_trend_seed1_20261008/README.md",
+      "scope": "Single-seed B-C-D trend suite from16500 weights; B/steps50 first2 rounds completed,400new games/100updates/16600steps. First100pair frozen-start evaluation102wins/1draw/97losses,score51.25%,CI44.5%-58.0%,200natural terminal games; recomputed from100durable pair JSONL files. Current holdout policyKL and valueMSE increased within both rounds; no confirmed net strength gain or long-term failure. C/D not run; full48round/15panel plan incomplete. Existing B-C-D config, core train/eval,16GiB cap and resume unchanged.",
+      "status": "incomplete"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_stage_search_20261008/README.md",
+        "artifacts/entity_attention_stage_search_20261008/plan.json",
+        "artifacts/entity_attention_stage_search_20261008/plan_fast.json",
+        "artifacts/entity_attention_stage_search_20261008/run.py",
+        "artifacts/entity_attention_stage_search_20261008/manifest.json",
+        "artifacts/entity_attention_stage_search_20261008/configuration_snapshot.json",
+        "artifacts/entity_attention_stage_search_20261008/finite_tests.xml",
+        "artifacts/entity_attention_stage_search_20261008/benchmark.py",
+        "artifacts/entity_attention_stage_search_20261008/gpu_smoke.py",
+        "artifacts/entity_attention_stage_search_20261008/analyze_speed.py",
+        "artifacts/entity_attention_stage_search_20261008/fast/manifest.json",
+        "artifacts/entity_attention_stage_search_20261008/fast/configuration_snapshot.json",
+        "artifacts/entity_attention_stage_search_20261008/fast/configs/late_only.json",
+        "artifacts/entity_attention_stage_search_20261008/fast/configs/early_only.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/finite_tests.xml",
+        "artifacts/entity_attention_stage_search_20261008/speed/analysis.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/eager200.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/eager64.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_eager.command.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_eager.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_eager.memory.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_fast.command.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_fast.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_fast.memory.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/graph200.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_eager.command.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_eager.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_eager.memory.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_fast.command.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_fast.json",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_fast.memory.json",
+        "artifacts/entity_attention_stage_search_20261008/RESULTS.md",
+        "artifacts/entity_attention_stage_search_20261008/results_review.json",
+        "artifacts/entity_attention_stage_search_20261008/analyze_results.py",
+        "artifacts/entity_attention_stage_search_20261008/full_search.py",
+        "artifacts/entity_attention_stage_search_20261008/plan_full.json",
+        "artifacts/entity_attention_stage_search_20261008/fast/analysis.json",
+        "artifacts/entity_attention_stage_search_20261008/fast/evaluations/late_only.json",
+        "artifacts/entity_attention_stage_search_20261008/fast/evaluations/early_only.json",
+        "artifacts/entity_attention_stage_search_20261008/full/manifest.json",
+        "artifacts/entity_attention_stage_search_20261008/full/config.json",
+        "artifacts/entity_attention_stage_search_20261008/full/configuration_snapshot.json",
+        "artifacts/entity_attention_stage_search_20261008/full/finite_tests.xml",
+        "artifacts/entity_attention_stage_search_20261008/full/evaluation.json",
+        "artifacts/entity_attention_stage_search_20261008/full/invocations/1791433818408901357.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_stage_search_20261008/README.md": "46e4100b8d2eac66f9a0f4f2160a33d4db417285dcac7560e22d8b44105c2cb2",
+        "artifacts/entity_attention_stage_search_20261008/plan.json": "d9ed8fa22d7d87ab6d9ffd9069323866874e5cdd24f608646b2521f0a88f4a9d",
+        "artifacts/entity_attention_stage_search_20261008/plan_fast.json": "0f60ce89f2f9c1c3332b283f60ec36ec0b75388ac5e1aa84db8605bead1f4728",
+        "artifacts/entity_attention_stage_search_20261008/run.py": "7404acfda388b4645aa9a577f91f16562959526fb7405f85955cac76f04aa3f0",
+        "artifacts/entity_attention_stage_search_20261008/manifest.json": "00dbb36cd2aaf0516d6c5c020ea19d744a2ed8212f1840b3d9b73686c1b17163",
+        "artifacts/entity_attention_stage_search_20261008/configuration_snapshot.json": "25142467eb2a4d2866c106560ee6e5fca77fe43de0d17f7c2906efa4feb70958",
+        "artifacts/entity_attention_stage_search_20261008/finite_tests.xml": "33a9fbce8ed036e86bf419162e7ff52862bd945146e3ce3f268c14578d2e4403",
+        "artifacts/entity_attention_stage_search_20261008/benchmark.py": "5ce83f85a77c290009b173ae1b3f5124342ea1d5dfcfd764fd52774fbe926cb4",
+        "artifacts/entity_attention_stage_search_20261008/gpu_smoke.py": "13085ffed686dd7bc1a27c4c076fbb1160c39c00ab0023b60865cabd52bdfd45",
+        "artifacts/entity_attention_stage_search_20261008/analyze_speed.py": "f8f68df68ed4c1df1e97032fc0080bbfa35a1f61b105f7854cc243cafc6b8d38",
+        "artifacts/entity_attention_stage_search_20261008/fast/manifest.json": "7cfcdab5ee641727eb8c28864ee9cc5fa3b5c1492b34eb7cf1e548ca9d79beac",
+        "artifacts/entity_attention_stage_search_20261008/fast/configuration_snapshot.json": "24fbabc684383b5f45a797d85c75a5d05daec2c792734be6cd682bf536411d3b",
+        "artifacts/entity_attention_stage_search_20261008/fast/configs/late_only.json": "3dd31bad95d6fddeb90a26be4ecdd6a9566b3c3757ba444ce126b78b6d0c7233",
+        "artifacts/entity_attention_stage_search_20261008/fast/configs/early_only.json": "ace352a10d0ee57e510ced9a5b63b469ee824443615c822bd0ab15bd7de3e34b",
+        "artifacts/entity_attention_stage_search_20261008/speed/finite_tests.xml": "035b3a051555ea4bcaf027b5bb53280ac607b1ba3ae17e3bc96a2d93216e2eb1",
+        "artifacts/entity_attention_stage_search_20261008/speed/analysis.json": "1de4ab433f348d82d47b6641b037aab5af1d55a45c04bf251de0d385cf6463f3",
+        "artifacts/entity_attention_stage_search_20261008/speed/eager200.json": "61b96aed606dd07b37e32d78b9c28c03c44d668aab7c4f0286b3a49935a35890",
+        "artifacts/entity_attention_stage_search_20261008/speed/eager64.json": "52715759acafe9a0831ef7ff31b60e75b137b6029919901fbba04836fd45a183",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_eager.command.json": "0d42612b2279ece23769303cf5befcac6d771b08393424d7c7ffbe1ac6549832",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_eager.json": "42ba25b5d0aee8abfc18aa95dd1bb09b973c78a615ff2814ace9600502756467",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_eager.memory.json": "7d9e24bdb024ad10ff24aaa5942650eeaaa8ec2e32369ce27dcac0e8dcd7d907",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_fast.command.json": "424cae055788f152174367308df4bf3607321af2a70b19c6f234727f78af24f1",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_fast.json": "ea07905a1944dfa93e06b792665736b698d95fb9ecc1ad10fa04500b72853b98",
+        "artifacts/entity_attention_stage_search_20261008/speed/early_only_fast.memory.json": "efe68720f64eed3d8e6ad87636027181a548a68e45aa8f803af9f23831a5f8b7",
+        "artifacts/entity_attention_stage_search_20261008/speed/graph200.json": "44a0df0bfb2f45cb50d105b88f528cc3d15f79dd663301d9ce7215a8e3eeea34",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_eager.command.json": "a50bda6e1188d4df08f51ec8fd95b0a2890d1d178c8fc53d28b71092e57b9786",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_eager.json": "c9a7fef1c745262746ad5f68daebe792232b13d1b7af6ee2612ed0b81718d88a",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_eager.memory.json": "7f53722b2df41c7814b9038f3fa4dcf0958d6f866cc969b12e73eec8c38588ba",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_fast.command.json": "19cabf4afa413c9883e44c86b222d1c34a4c95c4ced971be96cea53c159b862d",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_fast.json": "c9198919c34afc431eb8f79846da148922f27a53cd3eeca57156a9d580d56238",
+        "artifacts/entity_attention_stage_search_20261008/speed/late_only_fast.memory.json": "ee3e71bb7fc4ead71030b417eb4716644dd2db8efa908401e6debddecb174f60",
+        "artifacts/entity_attention_stage_search_20261008/RESULTS.md": "70e6c348a6f4e168b7c95d097a75c498d0fbbd0c9beba444a1a65a063c590d2f",
+        "artifacts/entity_attention_stage_search_20261008/results_review.json": "4827d7b3908d804c1fb077c00975ee8a732738155eed8510f7c32bf5e1cd3528",
+        "artifacts/entity_attention_stage_search_20261008/analyze_results.py": "f2c8b69f5fbdee2f056e54ec5bbdbffcef4e62908b92c9149dd4cc1f28a6a231",
+        "artifacts/entity_attention_stage_search_20261008/full_search.py": "1dcf070d4bc42f15f767bd1c37bdde5e5406252cf95c90d9ad7e8fba6aca89dd",
+        "artifacts/entity_attention_stage_search_20261008/plan_full.json": "fc21b745ca647499b88ecce5a142a0b6ee6a5313f684dda25c8f938f4f3203ba",
+        "artifacts/entity_attention_stage_search_20261008/fast/analysis.json": "a1b969b197ba853897ef74aa13df737ccf6f204f980a0eb6c5469727600c996c",
+        "artifacts/entity_attention_stage_search_20261008/fast/evaluations/late_only.json": "4c206bff282838f0fed3188dd32703376a4080f24156bca35b5608eed71a5b2b",
+        "artifacts/entity_attention_stage_search_20261008/fast/evaluations/early_only.json": "a372d27102e8f71ebe61e8398d8d1a7e47bf264a8af5c1283241acb7d1b79e8f",
+        "artifacts/entity_attention_stage_search_20261008/full/manifest.json": "8294d83e5cf8f00f2fca82598d69a90ee244b07db87c433c6a4b8802ca372e51",
+        "artifacts/entity_attention_stage_search_20261008/full/config.json": "7e0797585248d9e0b11d3c8a5a2f4f558d821d38232ed1732ca0f231f2b7016c",
+        "artifacts/entity_attention_stage_search_20261008/full/configuration_snapshot.json": "78e2a1f5280bce334dbca957b8e558c7c733e6a8198845165c961a589467d1d4",
+        "artifacts/entity_attention_stage_search_20261008/full/finite_tests.xml": "93fe00302bd83f4a240b4d3f1b35ad069037ac5abf11c7e47ff030239f67f295",
+        "artifacts/entity_attention_stage_search_20261008/full/evaluation.json": "830313962da7502d98002c49b569b13f6614b368412576aae9f66add52eaec5e",
+        "artifacts/entity_attention_stage_search_20261008/full/invocations/1791433818408901357.json": "da19afbc64d267a364c1f3b891dbefd5d3cc08b4f366fb6d78ed73f7139157df"
+      },
+      "id": "entity-attention-stage-search-2026-10-08",
+      "report": "artifacts/entity_attention_stage_search_20261008/README.md",
+      "scope": "Completed frozen16500 nativeS1024/N1 stage/full search vs same-weight greedy;3panels each500pairs/1000games,3000natural terminals,shared seeds22000000-22000499,zero noise/T0,FP32/TF32off,active200/B200 compiled native CUDA Graph,no RAM cap. Late-only67.0%[64.7,69.25],early-only69.35%[66.35,72.25],early-minus-late+2.35pp[-1.3,+6.05],not distinguished. Full814wins/8draws/178losses,score81.8%[79.3,84.3],full-minus-late+14.8pp[11.5,18.05],full-minus-early+12.45pp[10.1,14.85]. Wall late364.73s,early1069.34s,full1124.35s;full only5.14% more time than early in this single-machine run. Early/late terminal hit fractions0.4719%/44.341%,early uses5.86x simulations/10.46x network positions/2.93x wall;411of1000alignedgames opposite win-loss results.449earlygames had zero terminal hits,309wins/3draws/137losses;post-selected subset,not causal proof. Full early phase/gate counters match early-only in all1000games;phase pooled hits differ1/depthsum19 (minor FP32 search variation),does not establish bit-identical action traces. Raw JSONL equality,integer sums,budgets,paired CI recomputed for all3.6finite CPU checks incl full-search/native parity in both phases and stage pair interruption/resume. Full RSS sampled25pairs2.144GB to500pairs2.163GB,final CUDA allocated32.285MB/reserved417.333MB;no abnormal growth observed,no arbitrary-long guarantee. Earlier capped eager64 preparation and speed measurements retained. Supports useful search in both stages and full strategy strength;does not isolate value quality,hidden sampling or exact-terminal causality,or change B-C-D training.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_critic_only_replay_20261008/README.md",
+        "artifacts/entity_attention_critic_only_replay_20261008/run.py",
+        "artifacts/entity_attention_critic_only_replay_20261008/specification.json",
+        "artifacts/entity_attention_critic_only_replay_20261008/baseline.json",
+        "artifacts/entity_attention_critic_only_replay_20261008/smoke.json",
+        "artifacts/entity_attention_critic_only_replay_20261008/training.json",
+        "artifacts/entity_attention_critic_only_replay_20261008/results.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_critic_only_replay_20261008/README.md": "8bb3304fb6c43c7669583fad1f3c935d318a5ed14cf7709811d4573f430d36a5",
+        "artifacts/entity_attention_critic_only_replay_20261008/baseline.json": "dc8aa0f534f12c797cc6d26fda9b0d52adf89148aac107695019e17bb02c5c47",
+        "artifacts/entity_attention_critic_only_replay_20261008/results.json": "dc5538dd8f0ce1be83d939a86d1eed230911e029d54aac043d60556d65db8d3c",
+        "artifacts/entity_attention_critic_only_replay_20261008/run.py": "0331e288851b34fad165a2eb58d75d5b85f8e5bf9f7280b06066ee1323fe0e44",
+        "artifacts/entity_attention_critic_only_replay_20261008/smoke.json": "67fd6eee820f691e9011684eff4de845353e40a2427d23fede266cf5f9801021",
+        "artifacts/entity_attention_critic_only_replay_20261008/specification.json": "052323d423bdb411e6773886e7f44a62ff056570b525e39fc65c31dbb41089d8",
+        "artifacts/entity_attention_critic_only_replay_20261008/training.json": "74039a8c164d91169f2107771f7be6101600e4c9cc6a64a2eefb2565753e51c0"
+      },
+      "id": "entity-attention-critic-only-replay-2026-10-08",
+      "report": "artifacts/entity_attention_critic_only_replay_20261008/README.md",
+      "scope": "Completed independent critic-only diagnostic from16550 with original AdamW state and exact B2 50 committed value batches,128recent+128history/lr1e-4/weight_decay1e-4/clip1. Complete encoder/policy and their optimizer states frozen; CPU FP32,first critic step matches existing split call exactly,first-batch loss differs from original CUDA by -2.98e-7. Full15teacher cohorts/3000games/2701train+299holdout,original whole-game splits,221955train+24568holdout positions; all30 cohort/split MSE point estimates decrease. All train .813065252->.798344620 versus formal16600 .817706587; all holdout .802914369->.789074993,paired stratified whole-game bootstrap10000 CI delta[-.017368671,-.010275819],formal16600 .808966606. Recent4 holdout .831523136->.823021765,CI[-.014673139,-.001976029]; newest B2 holdout12games .859223357->.856711080,CI[-.016188513,+.010978716],improvement over start unconfirmed. Policy CE unchanged on all3000games,critic parameters changed,max .007066347. Supports fixed-representation critic learnability and interference from policy-driven representation changes/adaptation in this update; no additive causal decomposition,no independent training-seed replication,no strength evaluation or formal model replacement. B-C-D schedule unchanged. Checkpoints0/25/50 and per-cohort eval shards resumable,completed --resume returns already_complete. Peak RSS2697576KiB. Subsequent critic catch-up diagnostic proposed only,not run.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_encoder_critic_refit_20261008/README.md",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/batches.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/dataset.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16500-step-000000.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16500-step-000050.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16500-step-000200.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16500-step-000500.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16600-step-000000.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16600-step-000050.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16600-step-000200.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16600-step-000500.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/features_16500.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/features_16600.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/results.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/run.py",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/specification.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/training_16500.json",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/training_16600.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_encoder_critic_refit_20261008/README.md": "30caa1ab3c6e3c516d9028590f7c105eb3d5b03f17794d6e12c0a4f25ef19152",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/batches.json": "98b63a78747badfa5f1d43ff2837179dce59694b341a9a5a5d0ee3da1fdaf90f",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/dataset.json": "daa0e1a2f4a007d01ee8ec9b4895f75b850ce5c69c0cb7b6e16d481c68e2f6bf",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16500-step-000000.json": "aa28e855abf04dd838277e2e969af78ea6c38a4cedc09f1f04ef4f676b54b175",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16500-step-000050.json": "02a2d43206155f8070e2f001a04e247934ff375f678da9f956a54de6086c2994",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16500-step-000200.json": "32b622594ec7087d1948b8351b50ea112020a0e473b875458f2333008453304a",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16500-step-000500.json": "69212be77ef4f3a6b166be36b68d517f8d7b190e7aaf3b0eabef76a99609e935",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16600-step-000000.json": "23c0aa92ae83b5264a757dc0caa9888f15ee44832f38b4ae7b99ef62890df76b",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16600-step-000050.json": "bf1405d086bcfb3b701432bc642dca9fbe671e8148de77d49468fbf293014dac",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16600-step-000200.json": "079d18bb3cc907d57090e9c967587e0650ea3935a0d2314eb79fb89988cf1c48",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/evaluations/encoder-16600-step-000500.json": "0d173e36f5fcdb39fc997a84b0fbef1cbb028f11eb96ef5249a1bada0b234c9f",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/features_16500.json": "a921ba4f801ff637076ce07b967a320ccee41887a4db313741d4e195cbd0a889",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/features_16600.json": "21b98def8157afc46028da8d63f785fa0a2fa0fec258c9e9ded0fe916045ee34",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/results.json": "2a0eaa853840e9e0dee46972152943a70048add62b83e1c04b04c2434c5ebf38",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/run.py": "f320c9b77ac68e0388edd15e1ce1efb330937375644e10f38d5b8f8b116bc71e",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/specification.json": "b419366ad87ab379ab03b9441b1d46ad4ae378e892a467776a12e031eb04399a",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/training_16500.json": "a5fe600d81df7e0c1d860cccac829f66512f0d54e17dbe79d7e7889fb4fc176e",
+        "artifacts/entity_attention_encoder_critic_refit_20261008/training_16600.json": "f524a146cbdfee8b941b082b5d267fc8d7bc8040cd7983696fa9379f55052978"
+      },
+      "id": "entity-attention-encoder-critic-refit-2026-10-08",
+      "report": "artifacts/entity_attention_encoder_critic_refit_20261008/README.md",
+      "scope": "Completed matched fresh-critic fitting on frozen16500/16600 encoders,identical random head seed2026100801,fresh empty AdamW moments,original head weights discarded. Same15cohorts/3000games/original whole-game split,2701train221955positions,299holdout24568positions. Same500batches of128recent+128history positions,seed2026100802,lr1e-4/weight_decay1e-4/betas(.9,.999)/eps1e-8/clip1,CPUFP32/1thread. All0/50/200/500 nodes evaluated fully. Train16500/16600:0=1.165351/1.149297,50=.848133/.853937,200=.808618/.807911,500=.803989/.803363. Holdout:0=1.171383/1.154242,50=.843890/.850625,200=.796251/.796193,500=.792473/.792415. Paired stratified whole-game10000 bootstrap at500 holdout new-minus-old=-.000057917,CI[-.001834822,+.001707064];50 difference+.006735417,CI[+.003546589,+.009904978]. Initially slower16600 fit catches up by200;no observed worse overall value fit at500 under this paired initialization,not proof of equivalence across seeds or permanent value-information preservation. Both200-to500 holdout changes about-.003778;128000draws cover92019distinct train positions,so absolute fitting ceiling/convergence unverified. Features global-token128 computed once;cached head and full value path exact parity,encoder/policy hashes unchanged;500batch hashes identical. Per-cohort and recent/history/new-B2 losses retained at each node. Single paired initialization/sampling trajectory;no collection,matches or formal model replacement. Checkpoints every50steps,per-cohort feature shards,completed --resume returns already_complete. RSSpeak1165776KiB.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/README.md",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle.py",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_configs/dev-200.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_configs/dev-50.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_configs/dev-500.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_manifest.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_plan.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse/step-000000.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse/step-000050.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse/step-000200.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse/step-000500.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/phase_labels.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/preparation_tests.xml",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/test_preparation.py",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/train.py",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/training.json",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/training_specification.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/README.md": "8a838833feff6bc2c66c3f84490d6ac7df6f1e547da91073e883f9a5be26d299",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle.py": "06902aed1358525d25d86e1b9331f73d6888f6ad9f6ae0460c851ae42e96b992",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_configs/dev-200.json": "c247f9552fec7725a2b200cfc4bd9af63c24a3a17d7efee902fdd7d573dd7ed3",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_configs/dev-50.json": "39dce4ccc653a43567652873ea9968987761eaefb5fcb521275f37a8e5beae7b",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_configs/dev-500.json": "853b50236442149707da5d4241c2587632064b18df0beeca1f44bdf266d55f2c",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_manifest.json": "0f6c2dd825f93fe053f015e397beaffd0258f7225b859d8b6e2a560406aec21b",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/battle_plan.json": "149b5d39e7d59af9e0c964044750dd40a65fb58234176da6857bf0580608e6bf",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse.json": "8f1375b0ddf775e059de58ccc3f54abb5133e8f01b0710156ceba753132c0c27",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse/step-000000.json": "7c76b0166d075e12650cea157895bdb9a305d177c6cabbb0ee004bc4e148a77c",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse/step-000050.json": "ce0f7fb3ad329a477eceb10e7b312fba2e8a390e2e31619a52ea24075e0b493b",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse/step-000200.json": "f05ac5737bce12e758597fa8747c17ccfed44422e0e907f5bb977dea13dd1cd1",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/mse/step-000500.json": "b23945c5b7205d7d6687005758a63a2bc2df1f08697da84fb47076446da83ae6",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/phase_labels.json": "8e6d42f33d463382ec7f11ba0afb8f9199073bf2c350f8e61fb025958bde05dd",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/preparation_tests.xml": "86ccbea86aad5d1ba2ba9bff54c8adf09fd154112cc089c8a1faecfa88d4f066",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/test_preparation.py": "ae802a35843c2bd5b3ae65c39f647281c2a38e7a7bf567c303612b7fcebb7f9f",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/train.py": "eaaf1f6ed0d954adc224f2501a20e6fbad0ef252ec65df7c3697c014c9401850",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/training.json": "4321cdb74c46b8116242897930a32ca00b09afa2f5ce79595b23e0fbd5b12f70",
+        "artifacts/entity_attention_critic_adaptation_strength_20261008/training_specification.json": "c311a8740e14278ff27f6d3531126aa3d0311ef37871c65ce87b29d0036ce84e"
+      },
+      "id": "entity-attention-critic-adaptation-strength-2026-10-08",
+      "report": "artifacts/entity_attention_critic_adaptation_strength_20261008/README.md",
+      "scope": "Original16600 critic adaptation training and all full-MSE nodes complete; search battle setup prepared only,explicit latest user instruction forbids launch now. One continuation trajectory retains original critic and fullAdamW state,freezes complete encoder/policy and their optimizer states; same prior500batches of128recent+128history train positions,lr/weight_decay1e-4/criticclip1/CPUFP32. Nodes extra0/50/200/500,trainMSE .817706587/.797381588/.795069159/.793022689;fullholdout .808966604/.789053288/.787500235/.786813661.15cohorts3000games,train2701/221955positions,holdout299/24568positions,original whole-game split. Public maxscore10 phase gate;earlyholdout .872798615/.851345420/.849277352/.849439359,lateholdout .453150546/.441820911/.443138681/.437721899;not all stage nodes monotone. Stage denominators early20831/late3737 holdout.0model equals original and reproduces priorMSE;noncritic model/AdamW unchanged at500,critic state retained.4full diagnostic checkpoints saved,50-step recovery,completed resume returns already_complete,RSSpeak912440KiB. Battle plan frozen:3DEV panels100pairs each,highestscore picks step,ties lower holdoutMSE then fewersteps,confirm regardless DEVscore;independent HEAD full2000pairs plus early/late critic root replacements1000pairs each sharing first1000HEAD seeds. All sides search nativeS1024/N1 everywhere,critic selection applies entire root tree;matched encoder/policy. DEVgame seeds23000000-23000099,HEAD23010000-23011999. Primary95%pair-bootstrap,5secondary stage hypotheses99%Bonferroni intervals alongside95%descriptive. One GPU owner active200/static native CUDA Graph/B200,no RAM cap,isolated subprocess per panel,pair resume/25pair monitoring.4no-search preparation tests passed:public gate,batch routing with fake runner,disjoint DEV/HEAD/shared stage seeds,explicit launch flag.3DEV FixedEvaluationConfigs validated;real native/CUDA stage routing and game interruption/resume untested. No matches,selection,search-strength results or strength claim;planned4300pairs8600games not executed.",
+      "status": "incomplete"
     }
   ],
-  "other_retained_results": "Existing baseline and search aggregates remain under their original paths; absence from this focused index is not an invalidity judgment."
+  "other_retained_results": "Existing baseline and search aggregates remain under their original paths; absence from this focused index is not an invalidity judgment.",
+  "protocol": "experiment-index-v1",
+  "reviewed_on": "2026-10-08"
 }

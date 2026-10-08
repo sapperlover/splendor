@@ -1,0 +1,52 @@
+{
+  "protocol": "entity-attention-full-search-v1",
+  "checkpoint": "runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+  "checkpoint_sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4",
+  "artifact_root": "artifacts/entity_attention_stage_search_20261008/full",
+  "runtime_root": "runtime/entity_attention_stage_search_20261008/full",
+  "arms": [
+    "full_search"
+  ],
+  "late_score_threshold": 10,
+  "pairs": 500,
+  "game_seed_start": 22000000,
+  "policy_seed_base": 22100000,
+  "search_seed": 22200000,
+  "bootstrap_seed": 22300000,
+  "bootstrap_resamples": 10000,
+  "device": "cuda",
+  "max_completed_turns": 400,
+  "search_config": {
+    "simulations": 1024,
+    "determinizations": 1,
+    "c_puct": 1.5,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512,
+    "root_noise_fraction": 0.0
+  },
+  "execution": {
+    "backend": "native_batched",
+    "active_games": 200,
+    "max_batch_size": 200,
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "actor_projection": false,
+    "max_batch_wait_ms": 0.0
+  },
+  "inference": {
+    "compile_mode": "native-cudagraph",
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      200
+    ]
+  },
+  "comparison_root": "artifacts/entity_attention_stage_search_20261008/fast"
+}

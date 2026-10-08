@@ -1,0 +1,142 @@
+{
+  "variant": "direct",
+  "checkpoint": "runs/entity_attention_offline/checkpoints/final.pt",
+  "config": {
+    "mode": "compiled",
+    "actor_projection": false,
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_mode": "native-cudagraph",
+    "compile_failure_policy": "fail_fast",
+    "native_transport": "reused",
+    "batch_buckets": [
+      64,
+      256,
+      500
+    ]
+  },
+  "seed": 919,
+  "numeric_checks": "passed",
+  "warmup_seconds": 2.430505524000182,
+  "batches": [
+    {
+      "rows": 128,
+      "milliseconds_per_batch": 3.436147299998993,
+      "max_value_error": 1.6093254089355469e-06
+    },
+    {
+      "rows": 388,
+      "milliseconds_per_batch": 6.666525600030582,
+      "max_value_error": 2.637505531311035e-06
+    },
+    {
+      "rows": 500,
+      "milliseconds_per_batch": 6.565078724997875,
+      "max_value_error": 2.637505531311035e-06
+    },
+    {
+      "rows": 3,
+      "milliseconds_per_batch": 0.8666049000112253,
+      "max_value_error": 2.689659595489502e-06
+    },
+    {
+      "rows": 128,
+      "milliseconds_per_batch": 3.2500841750334075,
+      "max_value_error": 1.6093254089355469e-06
+    }
+  ],
+  "cuda_runtime_counts_for_10_batches": {
+    "cudaStreamIsCapturing": 40,
+    "cudaMemcpyAsync": 30,
+    "cudaGraphLaunch": 10,
+    "cudaEventRecordWithFlags": 10,
+    "cudaEventSynchronize": 10,
+    "cudaDeviceSynchronize": 1
+  },
+  "value_only": [
+    {
+      "rows": 388,
+      "max_error": 1.6540288925170898e-06
+    },
+    {
+      "rows": 3,
+      "max_error": 2.689659595489502e-06
+    },
+    {
+      "rows": 500,
+      "max_error": 1.6540288925170898e-06
+    }
+  ],
+  "inference": {
+    "physical_model_batches": 227,
+    "logical_model_positions": 54846,
+    "feature_seconds": 0.0,
+    "forward_seconds": 3.581653594996169,
+    "h2d_seconds": 0.02655983100521553,
+    "d2h_seconds": 0.0022636760040768422,
+    "wait_seconds": 0.9315874059939233,
+    "batch_size_histogram": {
+      "3": 42,
+      "128": 85,
+      "388": 55,
+      "500": 45
+    },
+    "mean_batch_size": 241.6123348017621,
+    "inference": {
+      "mode": "compiled",
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_mode": "native-cudagraph",
+      "compile_failure_policy": "fail_fast",
+      "native_transport": "reused",
+      "batch_buckets": [
+        64,
+        256,
+        500
+      ]
+    },
+    "compile": {
+      "compile_seconds": {
+        "policy_value:32:b256": 1.1067539939995186,
+        "policy_value:32:b500": 0.6204670469996927,
+        "policy_value:32:b64": 0.4906840289986576,
+        "value_only:b500": 0.3511178779990587,
+        "value_only:b64": 0.33825485199849936
+      },
+      "compiled_calls": {
+        "policy_value:32:b256": 3,
+        "policy_value:32:b500": 3,
+        "policy_value:32:b64": 3,
+        "value_only:b500": 3,
+        "value_only:b64": 3
+      },
+      "eager_fallbacks": 0,
+      "compile_failure_fallbacks": 0,
+      "compile_failures": [],
+      "disabled_graphs": {},
+      "effective_mode": {
+        "policy_value:32:b256": "compiled",
+        "policy_value:32:b500": "compiled",
+        "policy_value:32:b64": "compiled",
+        "value_only:b500": "compiled",
+        "value_only:b64": "compiled"
+      },
+      "dynamo_delta": {
+        "calls_captured": 903,
+        "unique_graphs": 5
+      }
+    },
+    "native_graph_captures": 5,
+    "native_graph_replays": 227
+  },
+  "trace": "runtime/entity_attention_execution_speed_20261005/direct-trace.json"
+}

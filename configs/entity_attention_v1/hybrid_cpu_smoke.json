@@ -1,0 +1,93 @@
+{
+  "protocol": "az-continuous-hybrid-v1",
+  "run_id": "entity_attention_hybrid_cpu_smoke",
+  "offline": {
+    "source_run": "runs/az_theta5_10x1000_seed1",
+    "source_artifacts": "artifacts/az_theta5_10x1000_seed1",
+    "rounds": [
+      0
+    ],
+    "initialization_seed": 13100000,
+    "sampling_seed": 13110000,
+    "validation_seed": 13120000,
+    "validation_positions": 16,
+    "replay_cache_bytes": 67108864,
+    "max_steps": 4,
+    "full_validation_at_end": false,
+    "learner": {
+      "device": "cpu",
+      "batch_size": 8,
+      "history_batch_size": 4,
+      "learning_rate": 0.0001,
+      "weight_decay": 0.0001,
+      "policy_loss_weight": 1.0,
+      "value_loss_weight": 1.0,
+      "max_grad_norm": 1.0,
+      "steps_per_new_position": 4.0,
+      "checkpoint_every_steps": 2,
+      "validation_batch_size": 8,
+      "max_steps_per_round": null
+    },
+    "model_config": {
+      "architecture": "entity_attention_v1"
+    },
+    "games_per_round": 6
+  },
+  "selfplay": {
+    "protocol": "mcts-selfplay-v2",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "seed": 14630000,
+      "simulations": 2
+    },
+    "execution": {
+      "backend": "batched_cpu",
+      "engine_mode": "fast",
+      "workers": 1,
+      "active_games_per_worker": 1,
+      "max_batch_size": 1,
+      "torch_threads": 1,
+      "inference_mode": "eager",
+      "actor_projection": false
+    },
+    "add_root_noise": true,
+    "temperature_schedule": {
+      "late_temperature": 0.0,
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0
+    },
+    "validation_fraction": 0.0,
+    "max_completed_turns": 400
+  },
+  "seeds": {
+    "collection": 14600000,
+    "split": 14610000,
+    "sampling": 13110000
+  },
+  "new_games_per_round": 2,
+  "updates_per_round": 2,
+  "replay_max_games": 4,
+  "online_validation_positions": 0,
+  "online_validation_seed": 14640000,
+  "mix_schedule": [
+    [
+      1,
+      6
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      3,
+      2
+    ]
+  ],
+  "evaluation_every_rounds": 0,
+  "evaluation": null
+}

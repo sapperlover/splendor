@@ -1,0 +1,72 @@
+{
+  "checkpoints": {
+    "0": {
+      "bytes": 6478933,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_critic_adaptation_strength_20261008/checkpoints/step-000000.pt",
+      "sha256": "88ba1adb811ed4654fd3034489e313569d86890bdfd409918cd3195fc780666b"
+    },
+    "200": {
+      "bytes": 6478933,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_critic_adaptation_strength_20261008/checkpoints/step-000200.pt",
+      "sha256": "812393d33a2e3eaabb8fffb999a1fc589576695e80912ee26a836d70461c62e3"
+    },
+    "50": {
+      "bytes": 6478933,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_critic_adaptation_strength_20261008/checkpoints/step-000050.pt",
+      "sha256": "5e5c75878967e628d98c665220bb6cd48fc6e98d8227bc13e3dd1bd573a68ebe"
+    },
+    "500": {
+      "bytes": 6478933,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_critic_adaptation_strength_20261008/checkpoints/step-000500.pt",
+      "sha256": "d3c5d4afab074038130a5c832f75e9715f1b2bee31c93a6eb7ba22f980bd39bb"
+    }
+  },
+  "dev": {
+    "bootstrap_seed": 23300000,
+    "game_seed_start": 23000000,
+    "pairs": 100,
+    "policy_seed_base": 23100000,
+    "search_seed": 23200000
+  },
+  "execution": {
+    "active_games": 200,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "max_batch_size": 200,
+    "max_batch_wait_ms": 0.0
+  },
+  "head": {
+    "bootstrap_seed": 23310000,
+    "game_seed_start": 23010000,
+    "pairs": 2000,
+    "policy_seed_base": 23110000,
+    "search_seed": 23210000,
+    "stage_pairs": 1000
+  },
+  "memory": "No process RAM cap; one isolated child per panel, bounded active games/static CUDA Graph shapes,per25pair RSS/CUDA monitoring.",
+  "mse": {
+    "path": "/home/lc/下载/splendor/artifacts/entity_attention_critic_adaptation_strength_20261008/mse.json",
+    "sha256": "8f1375b0ddf775e059de58ccc3f54abb5133e8f01b0710156ceba753132c0c27"
+  },
+  "phase_rule": "Actual root max public score>=10 is late; selected critic stays fixed throughout that root search tree,including cross-boundary leaves.",
+  "primary": "Independent HEAD full vs critic0,2000paired seeds/4000games;95%pair-bootstrap interval compared with .5.",
+  "protocol": "16600-critic-adaptation-search-v1",
+  "search_config": {
+    "c_puct": 1.5,
+    "determinizations": 1,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512,
+    "root_noise_fraction": 0.0,
+    "simulations": 1024
+  },
+  "secondary": "Same first1000HEAD seeds: only early adapted critic and only late adapted critic,1000pairs each. Each is a full-search whole-game intervention. Report95%and99%intervals for5secondary hypotheses.",
+  "selection_rule": "Highest DEV full-search score; exact ties lower full-holdout MSE,then fewer steps. Confirm one selected step regardless of DEV score.",
+  "status": "prepared_not_started"
+}

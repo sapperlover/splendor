@@ -1,0 +1,81 @@
+{
+  "difference_cpw_minus_native": {
+    "confidence": 0.95,
+    "difference": -0.0025,
+    "lower": -0.1,
+    "pairs": 100,
+    "resamples": 10000,
+    "seed": 16890000,
+    "upper": 0.0975
+  },
+  "inputs": [
+    {
+      "bytes": 527662,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/confirm_native_100_native.json",
+      "sha256": "fad7fe6e916baa9f276469638f2a657d1750071a505487be0b1d8deac608ce9b"
+    },
+    {
+      "bytes": 527003,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/evaluations/confirm_cpw_100_native.json",
+      "sha256": "84a0b2491e342f8172053e4de459ab346da0a9e7e7c668f936cf29c114fac45a"
+    }
+  ],
+  "protocol": "chance-training-probe-confirmation-v1",
+  "results": {
+    "cpw": {
+      "a_losses": 99,
+      "a_wins": 98,
+      "draws": 3,
+      "elapsed_seconds_this_invocation": 509.9172910829984,
+      "paired_bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.4975,
+        "lower": 0.43,
+        "pair_count": 100,
+        "resamples": 10000,
+        "seed": 16890000,
+        "upper": 0.5675
+      },
+      "valid_games": 200,
+      "win_rate_score": 0.4975
+    },
+    "native": {
+      "a_losses": 98,
+      "a_wins": 98,
+      "draws": 4,
+      "elapsed_seconds_this_invocation": 515.4608475950008,
+      "paired_bootstrap": {
+        "confidence": 0.95,
+        "estimate": 0.5,
+        "lower": 0.4275,
+        "pair_count": 100,
+        "resamples": 10000,
+        "seed": 16890000,
+        "upper": 0.57
+      },
+      "valid_games": 200,
+      "win_rate_score": 0.5
+    }
+  },
+  "scope": "Independent evaluation game/policy seeds only; same frozen student weights and training seed. Neither new data nor model updates; compare relative learning effect, not replicated training or proof of absolute gain.",
+  "script": {
+    "bytes": 2265,
+    "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/confirm.py",
+    "sha256": "9072aab1d0a61e6610a2ab23af3ca2ef0a9ed342738ca7f941b81aadd23e9906"
+  },
+  "selection": {
+    "bootstrap_seed": 16890000,
+    "dev_difference": {
+      "difference": 0.06,
+      "lower": -0.07,
+      "pairs": 50,
+      "upper": 0.19
+    },
+    "independent_game_seed_start": 16870000,
+    "mode": "native",
+    "policy_seed_base": 16880000,
+    "reason": "Primary100-step DEV panel CPW51% vs matched old-data45%; preliminary relative benefit6pp, no absolute gain over initial-native52%. Test whether this relative difference survives independent game seeds;500 is diagnostic, not used to select primary.",
+    "selected_arm": "cpw",
+    "step": 100
+  }
+}

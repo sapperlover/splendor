@@ -17,6 +17,18 @@
 | `offline_step{1000,5000}_mcts_s1024n1_vs_ppo_5_5m_100pairs.json` | 相同离线节点与PPO双方S1024/N1，各100 pairs；与final面板复用相同game/policy/search/bootstrap seed |
 | `online_3x200.json` | 此前短阶段建议保留；当前正式自迭代以10×1000配置为准 |
 | `online_10x1000.json` | 本次正式自迭代：离线final起点，10轮×1000局、同时调度1000局、S1024/N1；每轮对固定起点搜索/greedy各50 pairs；[命令与验证](../../docs/guides/entity_attention_self_iteration_zh-CN.md) |
+| `collection_static_graph.json` | 可选采集预设：W8/A1000/B500、shared_slots=2、固定B64/256/500、native-cudagraph、owner单缓冲；只验证短窗口收益，[报告与命令](../../docs/reports/entity_attention_execution_speed_zh-CN.md) |
+| `hybrid_static_graph.json` | 从随机初始化离线5000步，逐渐混入自迭代；每轮1000局/500更新，第16轮起纯在线；共享槽2＋固定地址Graph、owner单缓冲；replay总上限16 GiB，混合时两池各8 GiB；[启动与恢复](../../docs/guides/entity_attention_hybrid_zh-CN.md) |
+| `hybrid_cpu_smoke.json` | 独立有限CPU链路验证：离线4步、每轮2局/2更新、batch8、S2/N1；不用于正式训练或棋力结论 |
+| `hybrid_fork_s512_n2.json` | 从第九轮9500步分支，继承AdamW/RNG；S512/N2、100局/100步、在线窗口2000局、active100/B128、共享槽2/固定地址Graph/owner单缓冲；[命令与数据替换](../../docs/guides/entity_attention_hybrid_fork_zh-CN.md) |
+| `hybrid_fork_s1024_n2.json` | 同上，仅采集总模拟改为1024，每世界512；其余训练/采样/评测参数相同 |
+| `hybrid_fork_s1024_n1.json` | 从原第九轮9500步恢复，S1024/N1、AdamW/RNG接续，200局/100步、3000局/15个教师；B200/Graph[16,32,64,128,200]，共享槽2/owner单缓冲，每5轮对theta_5000评测；已完成50新轮/14500步后停止。原resume仍全在线池均匀采样，不执行最新25%；[状态与命令](../../docs/guides/entity_attention_hybrid_s1024_n1_zh-CN.md) |
+| `hybrid_split_policy_value.json` | 从当前N1第50新轮/14500步fork；policy近4轮，detach value保留3000局/近4轮50%，各batch256、独立clip1；200局/100步，固定PPO双方S1024/N1每5轮200局；[启动与恢复](../../docs/guides/entity_attention_split_training_zh-CN.md) |
+| `iteration_trend_20261008.json` | 当前方案：共同16500步起点，按B→C→D完成三组各seed1×16轮；2/4/8/12/16轮对冻结起点100pair，4GiB缓存/16GiB内存上限，无磁盘门槛；[同一启动/恢复命令](../../docs/guides/entity_attention_iteration_suite_zh-CN.md) |
 | `online_smoke.json` | 本次两轮GPU短测：每轮4局、2步、S16/N1，搜索/greedy各1 pair；独立runtime输出 |
 
-配置交付时没有启动正式任务；随后用户已启动新结构离线拟合。棋力与在线结果尚未验收。两个离线配置保持原冻结4 GiB值，实际运行建议加 `--replay-cache-mib 8192`；resume同样可加此执行参数，无须修改配置。`history_batch_size` 在离线入口无作用；离线只有一个覆盖全选定 train positions 的池。新结构不支持 actor projection，混合评测通过每方 `inference` 明确区分。
+配置交付时没有启动正式任务；随后新结构离线已完成12045步及六个PPO搜索/greedy面板，原混合run完成9轮、小步N1分支完成50轮。本次[共同PPO补测配置与结果](../../artifacts/entity_attention_strong_anchor_20261006/README.md)独立归档，没有改写正式训练配置。旧[最新单轮份额](../../docs/guides/entity_attention_fresh_share_zh-CN.md)保留为历史设计，其JSON不能作为CLI配置；本次分头窗口/detach配置已实现并通过40项回归和短GPU验证，正式长训未启动。
+
+两个离线配置保持原冻结4 GiB值，实际运行建议加`--replay-cache-mib 8192`；resume同样可加此执行参数，无须修改配置。`history_batch_size`在离线入口无作用；离线只有一个覆盖全选定train positions的池。新结构不支持actor projection，混合评测通过每方`inference`明确区分。
+
+`iteration_suite_20261008.json` 是已被替代的四组方案历史快照，仅供复核旧准备记录；当前入口不再支持其协议。

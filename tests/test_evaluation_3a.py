@@ -28,6 +28,52 @@ from splendor.runner import (
 import splendor.runner as runner_module
 
 
+def test_fixed_evaluation_retries_only_unscored_pairs_and_preserves_failures(tmp_path, monkeypatch):
+    import splendor.evaluation as evaluation
+
+    config = evaluation.FixedEvaluationConfig(
+        policy_a=SerializablePolicySpec.baseline("score"),
+        policy_b=SerializablePolicySpec.baseline("random"), game_seeds=(17, 18))
+    path = tmp_path / "evaluation.json"
+    original = evaluation.run_match
+    calls = []
+
+    def injected_failure(*args, **kwargs):
+        calls.append(kwargs["pair_id"])
+        match = original(*args, **kwargs)
+        if kwargs["pair_id"] == 0:
+            return replace(match, status=RunStatus.ERROR, normal_end=False,
+                           outcome_for_a=None, error_type="FailOnRecompileLimitHit",
+                           error_detail="injected compiler failure")
+        return match
+
+    monkeypatch.setattr(evaluation, "run_match", injected_failure)
+    failed = evaluation.run_fixed_evaluation(config, path, require_scored_pairs=True)
+    assert not failed.summary["passed"] and failed.summary["exceptions"] == 2
+    root = Path(str(path) + ".games")
+    pair0 = (root / "pair-0000000.jsonl").read_bytes()
+    pair1 = (root / "pair-0000001.jsonl").read_bytes()
+    summary = path.read_bytes()
+    calls.clear()
+
+    def successful(*args, **kwargs):
+        calls.append(kwargs["pair_id"])
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(evaluation, "run_match", successful)
+    resumed = evaluation.run_fixed_evaluation(config, path, resume=True, require_scored_pairs=True)
+    assert resumed.summary["passed"] and resumed.summary["valid_games"] == 4
+    assert calls == [0, 0]
+    assert (root / "pair-0000001.jsonl").read_bytes() == pair1
+    archives = list((root / "retries").iterdir())
+    assert len(archives) == 1
+    assert (archives[0] / "pair-0000000.jsonl").read_bytes() == pair0
+    assert (archives[0] / "summary.json").read_bytes() == summary
+    calls.clear()
+    evaluation.run_fixed_evaluation(config, path, resume=True, require_scored_pairs=True)
+    assert calls == []
+
+
 def test_match_result_is_structured_reproducible_and_replayable(tmp_path: Path) -> None:
     arguments = {
         "game_seed": 17,

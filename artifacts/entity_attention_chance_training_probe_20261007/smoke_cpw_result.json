@@ -1,0 +1,284 @@
+{
+  "arm": "cpw",
+  "checked_validation": {
+    "batch_failure_game_ids": [],
+    "batch_failures": 0,
+    "compile_failure_policy": "fail_fast",
+    "completed_games": 2,
+    "cpu_peak_rss_kib": 1120372,
+    "data_bytes": 89039,
+    "decision_latency": {
+      "count": 175,
+      "max_ms": 1866.2632559990016,
+      "p50_ms": 16.085056000520126,
+      "p95_ms": 25.181330000123126
+    },
+    "draws": 0,
+    "engineering_truncations": 0,
+    "exceptions": 0,
+    "expected_games": 2,
+    "failed_games": 0,
+    "games_per_wall_second": 0.35688455245235357,
+    "gpu_peak_bytes": 19584512,
+    "inference": {
+      "batch_size_histogram": {
+        "1": 119,
+        "2": 996
+      },
+      "d2h_seconds": 0.03178920599202684,
+      "feature_seconds": 0.0,
+      "forward_seconds": 2.99997419000465,
+      "h2d_seconds": 0.0966299820374843,
+      "logical_model_positions": 2111,
+      "mean_batch_size": 1.8932735426008969,
+      "physical_model_batches": 1115,
+      "wait_seconds": 0.21378715697210282
+    },
+    "logical_model_positions": 2111,
+    "missing_games": 0,
+    "native_batch_batches": 2111,
+    "native_batch_rows": 2111,
+    "native_compute_seconds": 0.050237852,
+    "native_consume_seconds": 0.0,
+    "native_encoding_seconds": 0.0,
+    "native_fill_seconds": 0.02216785201562743,
+    "native_policy_rows": 2111,
+    "native_root_rows": 128,
+    "native_value_rows": 0,
+    "native_wide_batches": 0,
+    "p0_wins": 2,
+    "p1_wins": 0,
+    "peak_active_games": 2,
+    "peak_inflight_rows": 1,
+    "peak_pending_requests": 1,
+    "pipeline_slots": 1,
+    "policy_samples": 128,
+    "policy_samples_per_wall_second": 22.840611356950628,
+    "protocol": "mcts-selfplay-v2",
+    "queue_wait_seconds": 7.79517259403292,
+    "real_rule_seconds": 0.04879169899322733,
+    "root_encoding_seconds": 0.10384733800310642,
+    "samples": 175,
+    "search_rule_seconds": 0.024366738,
+    "search_seconds_sum": 8.146591726002953,
+    "semantic_fingerprint": "6927c48df3d58c7247c9dcd694f8e50c07397c6aa07cf3343ce512e1dd00ffb8",
+    "simulations": 2048,
+    "simulations_per_wall_second": 365.44978171121005,
+    "statistics_complete": true,
+    "statistics_game_ids": [
+      0,
+      1
+    ],
+    "statistics_missing_game_ids": [],
+    "statistics_scope": "collection_session",
+    "wall_seconds": 5.60405314899981,
+    "worker_collection_wall_seconds_max": 4.2589931359998445,
+    "worker_compile": [
+      {
+        "compile": {
+          "compile_failure_fallbacks": 0,
+          "compile_failures": [],
+          "compile_seconds": {
+            "policy_value:16:b2": 0.6156471260001126,
+            "policy_value:32:b2": 1.1536245930001314,
+            "policy_value:48:b2": 0.5056165040004998
+          },
+          "compiled_calls": {
+            "policy_value:16:b2": 3,
+            "policy_value:32:b2": 3,
+            "policy_value:48:b2": 3
+          },
+          "disabled_graphs": {},
+          "dynamo_delta": {
+            "calls_captured": 573,
+            "unique_graphs": 3
+          },
+          "eager_fallbacks": 0,
+          "effective_mode": {
+            "policy_value:16:b2": "compiled",
+            "policy_value:32:b2": "compiled",
+            "policy_value:48:b2": "compiled"
+          }
+        },
+        "inference": {
+          "actor_projection": false,
+          "batch_buckets": [
+            2,
+            4
+          ],
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "worker_id": "gpu_owner"
+      }
+    ],
+    "worker_initialization_seconds_sum": 0.003576826000426081,
+    "write_seconds": 0.046918904001358896
+  },
+  "config": {
+    "bytes": 1638,
+    "path": "/home/lc/下载/splendor/artifacts/entity_attention_chance_training_probe_20261007/configs/smoke_cpw.json",
+    "sha256": "3f640c60a248f2955834b014e76740ffea6cf4309fb16444ed86b471e775636c"
+  },
+  "environment": {
+    "compile_cache": {
+      "path": "/tmp/torchinductor_lc",
+      "warm_state": "unknown; compilation hit/miss counters in owner status are authoritative"
+    },
+    "cpu_count": 16,
+    "cpu_model": "13th Gen Intel(R) Core(TM) i5-13500H",
+    "cuda_available": true,
+    "executable": "/home/lc/anaconda3/envs/splendor/bin/python",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU, GPU-328e3c53-3afb-333f-7325-d411dd30f366, 580.178.04, 6141",
+    "meminfo": "MemTotal:       32597828 kB\nMemFree:        11658128 kB\nMemAvailable:   22720916 kB\nBuffers:          585540 kB\nCached:         10350168 kB\nSwapCached:            0 kB\nActive:         11464164 kB\nInactive:        7292104 kB\nActive(anon):    8000632 kB\nInactive(anon):        0 kB\nActive(file):    3463532 kB\nInactive(file):  7292104 kB\nUnevictable:       15508 kB\nMlocked:             176 kB\nSwapTotal:             0 kB\nSwapFree:              0 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:              1748 kB\nWriteback:            68 kB\nAnonPages:       7836172 kB\nMapped:          2452036 kB\nShmem:            180084 kB\nKReclaimable:     778936 kB\nSlab:            1107612 kB\nSReclaimable:     778936 kB\nSUnreclaim:       328676 kB\nKernelStack:       31232 kB\nPageTables:       128116 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    16298912 kB\nCommitted_AS:   51107792 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      234864 kB\nVmallocChunk:          0 kB\nPercpu:            18432 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:    10240 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:     1255680 kB\nDirectMap2M:    22595584 kB\nDirectMap1G:     9437184 kB\n",
+    "performance_environment": {
+      "CONDA_DEFAULT_ENV": "splendor",
+      "MKL_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "PYTHONPATH": "src"
+    },
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14 (main, Sep  2 2026, 23:27:36) [GCC 15.3.0]",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0",
+    "torch_threads": 1
+  },
+  "manifest": {
+    "bytes": 2785,
+    "path": "/home/lc/下载/splendor/runs/entity_attention_chance_training_probe_20261007/smoke-cpw/manifest.json",
+    "sha256": "a8eb37c724a95a09c6f1e3f393aab49bf4200d33671e2cab6015ed6e589946d1"
+  },
+  "smoke": true,
+  "summary": {
+    "batch_failure_game_ids": [],
+    "batch_failures": 0,
+    "compile_failure_policy": "fail_fast",
+    "completed_games": 2,
+    "cpu_peak_rss_kib": 1120372,
+    "data_bytes": 89039,
+    "decision_latency": {
+      "count": 175,
+      "max_ms": 1866.2632559990016,
+      "p50_ms": 16.085056000520126,
+      "p95_ms": 25.181330000123126
+    },
+    "draws": 0,
+    "engineering_truncations": 0,
+    "exceptions": 0,
+    "expected_games": 2,
+    "failed_games": 0,
+    "games_per_wall_second": 0.35688455245235357,
+    "gpu_peak_bytes": 19584512,
+    "inference": {
+      "batch_size_histogram": {
+        "1": 119,
+        "2": 996
+      },
+      "d2h_seconds": 0.03178920599202684,
+      "feature_seconds": 0.0,
+      "forward_seconds": 2.99997419000465,
+      "h2d_seconds": 0.0966299820374843,
+      "logical_model_positions": 2111,
+      "mean_batch_size": 1.8932735426008969,
+      "physical_model_batches": 1115,
+      "wait_seconds": 0.21378715697210282
+    },
+    "logical_model_positions": 2111,
+    "missing_games": 0,
+    "native_batch_batches": 2111,
+    "native_batch_rows": 2111,
+    "native_compute_seconds": 0.050237852,
+    "native_consume_seconds": 0.0,
+    "native_encoding_seconds": 0.0,
+    "native_fill_seconds": 0.02216785201562743,
+    "native_policy_rows": 2111,
+    "native_root_rows": 128,
+    "native_value_rows": 0,
+    "native_wide_batches": 0,
+    "p0_wins": 2,
+    "p1_wins": 0,
+    "peak_active_games": 2,
+    "peak_inflight_rows": 1,
+    "peak_pending_requests": 1,
+    "pipeline_slots": 1,
+    "policy_samples": 128,
+    "policy_samples_per_wall_second": 22.840611356950628,
+    "protocol": "mcts-selfplay-v2",
+    "queue_wait_seconds": 7.79517259403292,
+    "real_rule_seconds": 0.04879169899322733,
+    "root_encoding_seconds": 0.10384733800310642,
+    "samples": 175,
+    "search_rule_seconds": 0.024366738,
+    "search_seconds_sum": 8.146591726002953,
+    "semantic_fingerprint": "6927c48df3d58c7247c9dcd694f8e50c07397c6aa07cf3343ce512e1dd00ffb8",
+    "simulations": 2048,
+    "simulations_per_wall_second": 365.44978171121005,
+    "statistics_complete": true,
+    "statistics_game_ids": [
+      0,
+      1
+    ],
+    "statistics_missing_game_ids": [],
+    "statistics_scope": "collection_session",
+    "wall_seconds": 5.60405314899981,
+    "worker_collection_wall_seconds_max": 4.2589931359998445,
+    "worker_compile": [
+      {
+        "compile": {
+          "compile_failure_fallbacks": 0,
+          "compile_failures": [],
+          "compile_seconds": {
+            "policy_value:16:b2": 0.6156471260001126,
+            "policy_value:32:b2": 1.1536245930001314,
+            "policy_value:48:b2": 0.5056165040004998
+          },
+          "compiled_calls": {
+            "policy_value:16:b2": 3,
+            "policy_value:32:b2": 3,
+            "policy_value:48:b2": 3
+          },
+          "disabled_graphs": {},
+          "dynamo_delta": {
+            "calls_captured": 573,
+            "unique_graphs": 3
+          },
+          "eager_fallbacks": 0,
+          "effective_mode": {
+            "policy_value:16:b2": "compiled",
+            "policy_value:32:b2": "compiled",
+            "policy_value:48:b2": "compiled"
+          }
+        },
+        "inference": {
+          "actor_projection": false,
+          "batch_buckets": [
+            2,
+            4
+          ],
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "worker_id": "gpu_owner"
+      }
+    ],
+    "worker_initialization_seconds_sum": 0.003576826000426081,
+    "write_seconds": 0.046918904001358896
+  },
+  "wall_seconds_including_validation": 5.818422243999521
+}

@@ -63,6 +63,7 @@ class ExecutionConfig:
     local_microbatch: int = 8
     shared_slots: int = 2
     shared_candidate_width: int = 256
+    batch_buckets: tuple[int, ...] = ()
 
     def __post_init__(self) -> None:
         if self.backend not in ("serial_cpu", "batched_cpu", "batched_cuda", "native_cpu", "native_cuda", "native_cuda_pool"):
@@ -87,8 +88,16 @@ class ExecutionConfig:
             raise ValueError("native_transport must be reused or packed")
         if self.pipeline_slots not in (1, 2):
             raise ValueError("pipeline_slots must be 1 or 2")
-        if self.pipeline_slots > 1 and (self.backend != "native_cuda" or self.batch_interface != "native"):
-            raise ValueError("the two-slot native pipeline requires backend=native_cuda and batch_interface=native")
+        if self.pipeline_slots > 1 and (self.backend not in ("native_cuda", "native_cuda_pool") or self.batch_interface != "native"):
+            raise ValueError("the two-slot pipeline requires a native CUDA backend and native batch interface")
+        if self.batch_buckets or self.compile_mode == "native-cudagraph":
+            InferenceConfig(mode=self.inference_mode, batch_buckets=self.batch_buckets,
+                            compile_mode=self.compile_mode, native_transport=self.native_transport)
+            if self.max_batch_size > self.batch_buckets[-1]:
+                raise ValueError("batch_buckets must cover max_batch_size")
+        if self.compile_mode == "native-cudagraph" and (self.backend not in
+                ("native_cuda", "native_cuda_pool") or self.batch_interface != "native"):
+            raise ValueError("native-cudagraph requires a native CUDA backend and native batch interface")
         if self.backend.startswith("native_") and self.engine_mode != "fast":
             raise ValueError("native real-game engine requires engine_mode=fast")
         if any(type(getattr(self, name)) is not int or getattr(self, name) <= 0 for name in
@@ -128,6 +137,9 @@ class FastSelfPlayConfig:
     validation_fraction: float = 0.1
     split_seed: int = 0
     max_completed_turns: int = 400
+    search_backend: str = "native"
+    chance_widening: dict[str, float] | None = None
+    record_search_diagnostics: bool = False
 
     def __post_init__(self) -> None:
         if self.protocol != PROTOCOL or not self.run_id:
@@ -141,6 +153,20 @@ class FastSelfPlayConfig:
             raise ValueError("num_games and max_completed_turns must be positive")
         if type(self.add_root_noise) is not bool:
             raise ValueError("add_root_noise must be bool")
+        if self.search_backend not in ("native", "native_chance"):
+            raise ValueError("unknown self-play search backend")
+        if self.search_backend == "native_chance":
+            if not self.execution.backend.startswith("native_") or self.search_config.determinizations != 1:
+                raise ValueError("native_chance self-play requires a native execution backend and determinizations=1")
+        if self.chance_widening is not None:
+            from .native_policy import ChanceWideningConfig
+            if self.search_backend != "native_chance":
+                raise ValueError("chance widening requires native_chance")
+            ChanceWideningConfig(**self.chance_widening)
+        if type(self.record_search_diagnostics) is not bool:
+            raise ValueError("record_search_diagnostics must be bool")
+        if self.record_search_diagnostics and not self.execution.backend.startswith("native_"):
+            raise ValueError("search diagnostics require native execution")
         if not 0 <= self.validation_fraction < 1:
             raise ValueError("validation_fraction must be in [0,1)")
         if not Path(self.checkpoint).is_file():
@@ -159,10 +185,22 @@ class FastSelfPlayConfig:
             validation_fraction=float(raw.get("validation_fraction", 0.1)),
             split_seed=raw.get("split_seed", 0),
             max_completed_turns=raw.get("max_completed_turns", 400),
+            search_backend=raw.get("search_backend", "native"),
+            chance_widening=raw.get("chance_widening"),
+            record_search_diagnostics=raw.get("record_search_diagnostics", False),
         )
 
     def to_dict(self) -> dict[str, Any]:
         raw = asdict(self)
+        # Preserve existing frozen configs and resume identities at defaults.
+        if self.search_backend == "native":
+            raw.pop("search_backend")
+        if self.chance_widening is None:
+            raw.pop("chance_widening")
+        if not self.record_search_diagnostics:
+            raw.pop("record_search_diagnostics")
+        if not self.execution.batch_buckets:
+            raw["execution"].pop("batch_buckets")
         if self.execution.backend != "native_cuda_pool":
             for name in ("search_workers", "total_active_games", "local_microbatch",
                          "shared_slots", "shared_candidate_width"):
@@ -218,6 +256,10 @@ def build_manifest(config: FastSelfPlayConfig) -> dict[str, Any]:
                    and config.execution.native_transport == "reused" else {}),
                 "feature": FEATURE_SCHEMA_VERSION,
                 "seed": "splendor-selfplay-seed-v1"}
+    if config.search_backend == "native_chance":
+        versions["search"] = ("sampled-chance-pw-puct-native-v1" if config.chance_widening is not None
+                              else "sampled-chance-puct-native-v1")
+        versions["rng"] = "splitmix64-mt19937-sampled-chance-v1"
     frozen = {"config": config.to_dict(), "checkpoint_identity": checkpoint_identity, "versions": versions}
     fingerprint = hashlib.sha256(json.dumps(frozen, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     repository = Path(__file__).resolve().parents[2]
@@ -268,6 +310,7 @@ class _GameSession:
     game_id: int
     evaluator: FrozenSearchInference
     model_version: str = ""
+    search_diagnostics: list[dict[str, Any]] = field(default_factory=list)
     started: float = field(default_factory=time.perf_counter)
     stepper: MatchStepper = field(init=False)
     policies: tuple[PUCTSearchPolicy, PUCTSearchPolicy] = field(init=False)
@@ -292,15 +335,18 @@ class _GameSession:
         seeds = _search_seeds(self.config, self.game_id)
         policy_cls = PUCTSearchPolicy
         if self.config.execution.backend.startswith("native_"):
-            from .native_policy import NativePUCTSearchPolicy
-            policy_cls = NativePUCTSearchPolicy
+            from .native_policy import NativePUCTSearchPolicy, NativeChancePUCTSearchPolicy, ChanceWideningConfig
+            policy_cls = NativeChancePUCTSearchPolicy if self.config.search_backend == "native_chance" else NativePUCTSearchPolicy
+        policy_kwargs = {}
+        if self.config.chance_widening is not None:
+            policy_kwargs["chance_widening"] = ChanceWideningConfig(**self.config.chance_widening)
         self.policies = tuple(
             policy_cls(self.evaluator.model,
                              config=MCTSConfig(**(asdict(self.config.search_config) | {"seed": seeds[p]})),
                              device=self.evaluator.device,
                              **({"model_version": self.model_version} if self.config.execution.backend.startswith("native_") else
                                 {"engine_mode": self.config.execution.engine_mode}),
-                             evaluator=self.evaluator)
+                             evaluator=self.evaluator, **policy_kwargs)
             for p in (0, 1)
         )  # type: ignore[assignment]
 
@@ -331,6 +377,19 @@ class _GameSession:
         if self.job is None or not self.job.done:
             raise RuntimeError("search result is not ready")
         result = self.job.result
+        if self.config.record_search_diagnostics:
+            request = self.stepper.request
+            row = {"decision_index": self.stepper.decision_count,
+                   "phase": PHASE_ORDER.index(request.observation.phase),
+                   "completed_player_turns": request.observation.own_completed_turns + request.observation.opponent_completed_turns,
+                   "max_visible_score": max(request.observation.self_public.score, request.observation.opponent_public.score),
+                   "opponent_blind_reserved": sum(r.card is None for r in request.observation.opponent_public.reserved_cards),
+                   "stats": dict(self.job.core.stats())}
+            if self.config.search_backend == "native_chance":
+                chance = dict(self.job.core.chance_diagnostics())
+                row["chance"] = {k: v for k, v in chance.items() if k not in
+                                 ("root_value_sums", "root_outcome_visits", "root_chance_pools")}
+            self.search_diagnostics.append(row)
         self.decision_latencies_ms.append((time.perf_counter() - self.job_started) * 1000)
         record = _sample_record(self, result)
         rule_started = time.perf_counter()
@@ -365,6 +424,8 @@ class _GameSession:
             "trace": self.stepper.trace,
             "collection_seconds": time.perf_counter() - self.started,
         }
+        if self.config.record_search_diagnostics:
+            metadata["search_diagnostics"] = self.search_diagnostics
         write_started = time.perf_counter()
         arrays = pack_game(self.records, metadata, self.config.search_config.determinizations)
         validate_game_arrays({name: value for name, value in arrays.items() if name != "metadata_json"},
@@ -481,6 +542,7 @@ def _collect_group(
                 compile_mode=config.execution.compile_mode,
                 compile_failure_policy=config.execution.compile_failure_policy,
                 native_transport=config.execution.native_transport,
+                batch_buckets=config.execution.batch_buckets,
             ),
         )
     native = config.execution.backend.startswith("native_")
