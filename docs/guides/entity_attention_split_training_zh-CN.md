@@ -1,22 +1,24 @@
 # Policy近期窗口与detach value续训
 
-2026-10-08工程更新：[连续自迭代对照套件](entity_attention_iteration_suite_zh-CN.md)已新增冻结的`learning_rate_override`与可选`policy_recent_rounds`，实际AdamW lr与checkpoint配置同步，保留模型/moments/RNG并支持严格恢复。当前长实验精简为按B→C→D运行三组各seed1×16轮、仅测冻结起点趋势；B已完成前两轮／16600步及首次评测，C/D未运行。下文“lr覆盖未实现”描述的是旧探针完成时的状态；本文件的原正式配置与历史结果保持原适用范围。
+2026-10-09已接入可选[行为搜索复用M4标签的16轮分支](entity_attention_avg4_iteration_zh-CN.md)：保留本配置200局／100步／lr1e-4及分头窗口，行为1份＋追加3份完整S1024/N1，2/4/8/12/16轮各对冻结16500起点100pair。追加标签已改8个CPU worker＋单GPU owner，已完成12轮／17700步，前三个完整对战面板未确认稳定收益，第12轮对战未完成；固定历史采样与梯度诊断已完成，暂不改正式配额。下文“平均标签未接入”描述旧实验当时状态；本文件的原命令仍运行单次标签配置。
+
+2026-10-08工程更新：[连续自迭代对照套件](entity_attention_iteration_suite_zh-CN.md)已新增冻结的`learning_rate_override`与可选`policy_recent_rounds`，实际AdamW lr与checkpoint配置同步，保留模型/moments/RNG并支持严格恢复。当前长实验精简为按B→C→D运行三组各seed1×16轮、仅测冻结起点趋势；B已完成前两轮／16600步及首次评测，C/D未运行。lr覆盖已实现，低lr多轮组未运行；本文件的原正式配置与历史结果保持原适用范围。
 
 同日完成[冻结encoder、只练critic的B2账本回放](../../artifacts/entity_attention_critic_only_replay_20261008/README.md)：从16550保留AdamW状态重放B2原有50步value批次，整15代3000局评估；训练MSE 0.813065→0.798345，留出0.802914→0.789075（Δ=-0.013839，整局配对95%区间[-0.017369,-0.010276]），正式16600留出为0.808967。encoder/policy参数及其优化器状态均未改变。支持policy驱动的共享表征变化干扰value拟合，确认固定表征下critic可以学习；最新B2只有12局留出，单代改善仍未确认，未测棋力。本次是独立诊断，没有改动正式训练配置。
 
 随后完成[16500／16600 encoder的相同新critic拟合对照](../../artifacts/entity_attention_encoder_critic_refit_20261008/README.md)：critic相同随机初始化、AdamW动量清零、同一15代数据／500个batch，记录0/50/200/500步。500步训练MSE 0.803989／0.803363，留出0.792473／0.792415，留出差值95%区间[-0.001835,+0.001707]；200步后曲线基本重合，未发现16600整体value可拟合性明显下降。更符合critic未及时适应共享表征变化的解释，500步仍未证明拟合上限；未更换正式模型或评估棋力。
 
-最新完成[原16600 critic冻结主干适配](../../artifacts/entity_attention_critic_adaptation_strength_20261008/README.md)：保留原critic和AdamW状态，额外0/50/200/500步的完整留出MSE 0.808967／0.789053／0.787500／0.786814，policy/encoder及其优化器状态不变。四个诊断模型已保存；搜索对战脚本准备了三节点各100pair筛查、选定节点独立2000pair确认、前中期／后期替换各1000pair，**按用户最新要求尚未启动对战**。
+最新完成[原16600 critic冻结主干适配](../../artifacts/entity_attention_critic_adaptation_strength_20261008/README.md)：保留原critic和AdamW状态，额外0/50/200/500步的完整留出MSE 0.808967／0.789053／0.787500／0.786814，policy/encoder及其优化器状态不变。四个诊断模型已保存；搜索对战脚本准备了三节点各100pair筛查、选定节点独立2000pair确认、前中期／后期替换各1000pair，后续三个100pair DEV已完成，50／200／500额外步数得分51.75%／46.0%／45.75%，区间均跨50%；HEAD及阶段替换确认未完成。
 
 2026-10-06实现，2026-10-07更新运行状态。用户确定的新方案已接通正式`hybrid_train`训练、fork、断点恢复、来源账本及固定PPO评测。配置为`configs/entity_attention_v1/hybrid_split_policy_value.json`，从已停止的S1024/N1分支第50新轮、14500步创建独立分支。用户实跑已完成20新轮、16500步；第10/15/20新轮固定PPO得分70.75%/66.50%/64.00%，各200局有效，点估计尚不证明长期增益或退化。最新模型的[四组目标噪声实验](../../artifacts/entity_attention_target_noise_20261007/README.md)确认世界抽样影响大于根噪声，未改动此训练配置。
 
-此前[最新单轮份额12.5%→18.75%→25%的候选设计](entity_attention_fresh_share_zh-CN.md)保留为历史设计记录；本次采用下面的分头窗口，不执行旧阶梯，也不重启原离线数据日程。固定数据[policy/value消融](../../artifacts/entity_attention_policy_value_ablation_20261006/README.md)提供动机，本次有限验证确认实现与恢复，尚未证明长期棋力收益或最佳窗口。
+此前[最新单轮份额12.5%→18.75%→25%的候选设计](../archive/entity_attention_fresh_share_zh-CN.md)保留为历史设计记录；本次采用下面的分头窗口，不执行旧阶梯，也不重启原离线数据日程。固定数据[policy/value消融](../../artifacts/entity_attention_policy_value_ablation_20261006/README.md)提供动机，本次有限验证确认实现与恢复，尚未证明长期棋力收益或最佳窗口。
 
 2026-10-07新增[三种搜索教师的冻结采集与短训对照](../../artifacts/entity_attention_chance_training_probe_20261007/README.md)：同一16500步起点，各采200局并固定训练500步，沿用value detach和独立clip1。该诊断为100%本组新train数据，不混入正式800/3000局历史窗口，不修改本配置或自动恢复正式长训。
 
-2026-10-07报告复核新增[平均标签短训结果与自迭代分析](../reports/entity_attention_search_teachers_zh-CN.md#九如何改善当前自迭代先改变标签再判断剩余限制)：平均标签学生相对单次标签学生有拟合与直接对打优势，尚未确认超过起点。正式分头20轮的本轮留出policy KL每轮更新后均上升；描述性统计及输入哈希见[修订统计](../../artifacts/entity_attention_target_averaging_20261007/review_statistics.json)。推荐下一观察段先保留200局/100步、policy近4轮/value3000局及独立裁剪，只改变标签生成；平均标签尚未接入正式hybrid，以下命令仍是原单次标签配置。
+2026-10-07报告复核新增[平均标签短训结果与自迭代分析](../reports/entity_attention_search_teachers_zh-CN.md#九如何改善当前自迭代先改变标签再判断剩余限制)：平均标签学生相对单次标签学生有拟合与直接对打优势，尚未确认超过起点。正式分头20轮的本轮留出policy KL每轮更新后均上升；描述性统计及输入哈希见[修订统计](../../artifacts/entity_attention_target_averaging_20261007/review_statistics.json)。推荐下一观察段先保留200局/100步、policy近4轮/value3000局及独立裁剪，只改变标签生成；该分析时点尚未接入平均标签；后续行为复用M4已完成12轮，见[M4指南](entity_attention_avg4_iteration_zh-CN.md)。以下命令仍对应原单次标签配置。
 
-2026-10-08新增[正式回放学习率×步数探针](../../artifacts/entity_attention_formal_lr_step_20261007/README.md)：不动本配置的采样、detach、batch 与裁剪，从16500步起点逐条重放round-019已记录的正式账本，三条轨迹只把优化器lr改为2.5e-5/5e-5/1e-4并记录25/50/100步节点，边界节点用同口径第二固定账本延伸到125/150步。从round-018重放100步与正式round-019检查点逐张量一致（模型与AdamW max_diff全0），起点诊断与正式validation一致。2.5e-5的recent留出KL随步数继续下降到0.40525@150（起点0.42109、1e-4@100=0.41977），但三档lr的policy梯度99–100%步被裁剪，且50-pair面板全部区间跨0；DEV最高节点2.5e-5@150=60.0%在独立HEAD种子上41.5%（对照46.5%），未复现。因此**不据此改动本配置**；低学习率的长期效果需要执行级lr覆盖的多轮自迭代分支（现有fork/恢复会校验`learner_config`），本次未实现、未运行。
+2026-10-08新增[正式回放学习率×步数探针](../../artifacts/entity_attention_formal_lr_step_20261007/README.md)：不动本配置的采样、detach、batch 与裁剪，从16500步起点逐条重放round-019已记录的正式账本，三条轨迹只把优化器lr改为2.5e-5/5e-5/1e-4并记录25/50/100步节点，边界节点用同口径第二固定账本延伸到125/150步。从round-018重放100步与正式round-019检查点逐张量一致（模型与AdamW max_diff全0），起点诊断与正式validation一致。2.5e-5的recent留出KL随步数继续下降到0.40525@150（起点0.42109、1e-4@100=0.41977），但三档lr的policy梯度99–100%步被裁剪，且50-pair面板全部区间跨0；DEV最高节点2.5e-5@150=60.0%在独立HEAD种子上41.5%（对照46.5%），未复现。因此**不据此改动本配置**；冻结的算法级lr覆盖已随趋势套件实现；低lr的C组未运行，长期收益未验证。
 
 ## 训练与采样
 

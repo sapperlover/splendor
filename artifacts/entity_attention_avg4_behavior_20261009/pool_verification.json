@@ -1,0 +1,77 @@
+{
+  "status": "passed_finite_validation",
+  "recorded_at_utc": "2026-10-08T18:26:40.370530+00:00",
+  "scope": "multi-process fixed-root labeling; original collection stopped, no formal restart or training updates",
+  "tests": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest -q tests/test_policy_averaging.py tests/test_hybrid_training.py::test_behavior_plus3_real_hybrid_training_and_partial_resume tests/test_multiworker_gpu.py::test_spawned_pool_matches_single_worker_fixed_evaluator tests/test_multiworker_gpu.py::test_formal_collection_reports_each_committed_game tests/test_multiworker_gpu.py::test_owner_failure_cleans_processes_and_shared_segments tests/test_multiworker_gpu.py::test_pool_failure_reports_are_validated_once_per_game --junitxml=artifacts/entity_attention_avg4_behavior_20261009/pool_tests.xml",
+    "counts": {
+      "tests": 14,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "junit_sha256": "af9e5aaa7ee26323a090fc11acf522e6603bd868c240b116d7ce82954765f58c"
+  },
+  "cuda_smoke": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_avg4_behavior_20261009/pool_cuda_smoke.py --output runtime/entity_attention_avg4_behavior_20261009/pool_cuda_validation_final",
+    "script_sha256": "caf3ee0a3dcb85c543d4eca4a610e6029160e012e24f8848485fced931309a93",
+    "report_sha256": "696f055fdb19aa0579e687057dcd120affe7d80ab41d160ae8d5cc512269c15d",
+    "real_searchable_roots": 110,
+    "extra_searches": 330,
+    "extra_simulations": 337920,
+    "single_pool_max_target_difference": 0.0,
+    "interrupted_roots_reused": 85,
+    "worker_cuda_initialized": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "raw_output": "runtime/entity_attention_avg4_behavior_20261009/pool_cuda_validation_final"
+  },
+  "execution": {
+    "samples": 4,
+    "world_seed": 26300000,
+    "noise_seed": 26400000,
+    "active_roots": 256,
+    "games_per_block": 8,
+    "search_workers": 8,
+    "max_batch_size": 200,
+    "local_microbatch": 64,
+    "shared_slots": 2
+  },
+  "migration": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python artifacts/entity_attention_avg4_behavior_20261009/migrate_to_pool.py",
+    "receipt_sha256": "3cbf11e69e3f171edf07d45aae0b4e36183d5bbc705452e5a8c4b2a9e65ab801",
+    "preserved_games": 115,
+    "remaining_collection_games": 85,
+    "source_archives_and_state_sha_unchanged": true,
+    "training_steps_added": 0,
+    "formal_resume_started": false
+  },
+  "prepare_only": {
+    "status": "ready",
+    "preflight_sha256": "ee86e74f0fb8a782d272de117561be57b0d374919c92e1fb924b72da07f33c25",
+    "frozen_suite_manifest_matches_new_plan": true
+  },
+  "implementation_sha256": {
+    "src/splendor/policy_averaging.py": "23458b595aa52116613c21b0ae1014eea75f8e85f047ef1b4366f032226da95b",
+    "src/splendor/policy_averaging_pool.py": "103ff572195898f431f709d8a2acb31a5c488c849f580095b9651c287aceb61d",
+    "src/splendor/multiworker_gpu.py": "06616999fdaca4bd86dd6d02272aca3f0e4c95ea4ce78037008d5693965205e0",
+    "src/splendor/selfplay_fast.py": "2be7f54876625ad28f0d9ee37fc4c098a28b227a8922e6e84f4963259780fe76",
+    "src/splendor/hybrid_train.py": "1d571354c8aac340761959f50cff2deff8949c1be52ec4c0b6975d84d023a778",
+    "tests/test_policy_averaging.py": "384826f23462f1f5f05f35f19593eb7f49a5b05d628bcd313df032789aac73f9",
+    "tests/test_hybrid_training.py": "8e824fb9fb386d066bb5b7cefa02de06440e1cd4e5e64870865013eae635b332"
+  },
+  "configuration_sha256": "5bb8e4a48844f626fdfebdaacc14ea426b0e36ad6febacbeb2123358c6e4fd27",
+  "limitations": [
+    "Two-game smoke only; no complete 200-game multi-process relabeling round or full long run.",
+    "Tiny sample serial13.77s/pool16.00s showed no speedup; do not infer full-round performance or an optimal worker count.",
+    "No formal training updates or strength matches performed."
+  ],
+  "previous_validation": "Original single-process preparation report/manifest/config retained under runtime/entity_attention_avg4_behavior_20261009/before_pool_switch/; verification.json records that earlier implementation."
+}

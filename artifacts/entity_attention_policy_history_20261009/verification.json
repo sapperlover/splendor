@@ -1,0 +1,35 @@
+{
+  "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_policy_history_20261009/run.py",
+  "evidence_sha256": {
+    "artifacts/entity_attention_policy_history_20261009/analysis.json": "ae7d5597c2460448cfa67367273083e99a73b15123e0589bbc7ead9666730d8f",
+    "artifacts/entity_attention_policy_history_20261009/analyze.py": "bf6cb3a6a5666e0be92bc88891800ff2b4face871d31e6fdd8f407ccc385e9c6",
+    "artifacts/entity_attention_policy_history_20261009/environment.json": "a30a9e6c92d78ae8545abae7773a9490f05703697a7cbc3d056c7540a4b5b3e2",
+    "artifacts/entity_attention_policy_history_20261009/results.json": "9022cfbe115c0f29c27b2255b1d1f1f6c18300ae00336f4c42637a4e4a760705",
+    "artifacts/entity_attention_policy_history_20261009/run.py": "04e4112de4788fc628e45268575f61841952fd67e851fe4d753e7744e1768a53",
+    "artifacts/entity_attention_policy_history_20261009/specification.json": "2e090979766e2ba0a624b495d4bd427807047426aa7e0a95b4c9b2e8d9cf391d",
+    "artifacts/entity_attention_policy_history_20261009/test_run.py": "f5222b993861289568d64ebe592ad77b7dd41ea8c817140a867f2b014f5cec55",
+    "artifacts/entity_attention_policy_history_20261009/tests.xml": "e64250b0aef90d1a123eb83f986ab993e1906979e134202c7c1a20dec0a2c10d"
+  },
+  "formal_A100_model_and_AdamW": "bitwise_exact_all_three_cases",
+  "formal_run": "still interrupted at12 rounds/17700; latest checkpoint SHA unchanged",
+  "isolated_direction_diagnostic_updates": 9,
+  "latest_holdout_games": 63,
+  "limitations": [
+    "one batch seed per checkpoint case; cases are checkpoints on one trajectory",
+    "fixed4096 train positions per teacher, full holdout; not full train loss",
+    "exploratory repeated comparisons, CIs conditional on these fixed trained models; no strength matches"
+  ],
+  "nodes": 36,
+  "recent_four_holdout_games": 246,
+  "source_frozen_checks": "all three start/final/snapshot/config/label manifest/archive stat records unchanged",
+  "source_identity": "runtime/entity_attention_policy_history_20261009/source/identity.json",
+  "statistics_verification": "all54 per-case paired game-ratio point estimates exactly match node KL differences",
+  "status": "passed",
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 3
+  },
+  "training_steps": 4500
+}

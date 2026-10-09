@@ -1,0 +1,47 @@
+{
+  "protocol": "splendor-decision-probe-v1",
+  "bank": {
+    "protocol": "splendor-decision-probe-v1",
+    "bank_sha256": "b4937c360a2908e72bc320b3fe27b9df90d2567a8c4676812c114c06afd9e9ac",
+    "positions": 256,
+    "independent_games": 256,
+    "excluded_games": 1,
+    "source_games_played": 257,
+    "by_stage": {
+      "early_mid": 128,
+      "late": 128
+    },
+    "all_real_roots_replayed": true
+  },
+  "scores": {
+    "reference_16500_s1024_n1": {
+      "root_searches": 512,
+      "simulations": 524288,
+      "checkpoint_sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4",
+      "searches_sha256": "e33b87e24618c1ca302b704fbf683ba570848b848b2b08371ceca3eda31112d4",
+      "bank_sha256": "b4937c360a2908e72bc320b3fe27b9df90d2567a8c4676812c114c06afd9e9ac",
+      "budget_and_pairing_valid": true
+    },
+    "baseline_16600_s1024_n1": {
+      "root_searches": 512,
+      "simulations": 524288,
+      "checkpoint_sha256": "25247adec9a3e6be8e027f48e0036141657cfdfb7c33f57cab335c522a7139df",
+      "searches_sha256": "310974e29cf7bfb8042f2e731a79c33e75aab03c4edaf31325876e2a2ffd7bd8",
+      "bank_sha256": "b4937c360a2908e72bc320b3fe27b9df90d2567a8c4676812c114c06afd9e9ac",
+      "budget_and_pairing_valid": true
+    }
+  },
+  "comparison": {
+    "paired_searches": 512,
+    "action_changes": 83,
+    "cached_evaluate_and_compare_cli_completed": true,
+    "offline_and_cached_cli_reports_identical": true
+  },
+  "tests": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python -m pytest -q tests/test_decision_probe.py",
+    "passed": 6,
+    "failed": 0,
+    "test_source_sha256": "545f41a8306d78c502cb0315cb2b5611ab8bf8282b6c160fd7daef4d20003b2e"
+  },
+  "scope": "Fixed real-root diagnostics only; no training, match strength or strength calibration."
+}

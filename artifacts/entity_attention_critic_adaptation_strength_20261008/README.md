@@ -1,6 +1,6 @@
 # 16600原critic适配与后续搜索棋力检验
 
-已完成原critic额外0/50/200/500步；固定encoder和policy，保留16600模型与完整AdamW状态，沿用上次同一500批次（128近期＋128历史、lr/weight_decay1e-4、critic clip1），CPU FP32。这是同一轨迹的四个前缀，没有重新初始化critic。搜索对战尚未启动。
+已完成原critic额外0/50/200/500步；固定encoder和policy，保留16600模型与完整AdamW状态，沿用上次同一500批次（128近期＋128历史、lr/weight_decay1e-4、critic clip1），CPU FP32。这是同一轨迹的四个前缀，没有重新初始化critic。后续三个100pair DEV搜索面板已完成；HEAD和阶段替换确认未完成。
 
 | 额外步数 | 完整训练MSE | 完整留出MSE | 前中期留出MSE | 后期留出MSE |
 |---:|---:|---:|---:|---:|
@@ -23,11 +23,21 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 M
 
 ## 当前结论
 
-整体留出0→50步下降0.019913；0→500步下降0.022153，前50步占本次总降幅约90%。200／500步继续有较小的整体收益，但各阶段并非逐节点单调：后期200步略高于50步，前中期500步略高于200步。最新B2的12局留出MSE依次0.877072／0.858084／0.863213／0.859363，也不能据点估计判定最佳棋力节点。这里只确认冻结主干后的适配能恢复value精度，实际搜索收益尚未验证。
+整体留出0→50步下降0.019913；0→500步下降0.022153，前50步占本次总降幅约90%。200／500步继续有较小的整体收益，但各阶段并非逐节点单调：后期200步略高于50步，前中期500步略高于200步。最新B2的12局留出MSE依次0.877072／0.858084／0.863213／0.859363，也不能据点估计判定最佳棋力节点。这里只确认冻结主干后的适配降低该完整留出MSE；DEV未确认搜索收益，独立HEAD未完成。
 
 留出前中期20831个位置、后期3737个位置；完整数据的两阶段分别208039／38484个位置。训练峰值RSS约0.87 GiB，完成后恢复命令已核验返回`already_complete`。
 
-## 已准备的搜索对战流程，尚未启动
+## 已完成 DEV 结果（2026-10-09核验）
+
+| 额外critic步数 | W／D／L | 得分 | 95%配对区间 |
+| --- | --- | ---: | --- |
+| 50 | 103／1／96 | 51.75% | [44.75%,58.75%] |
+| 200 | 91／2／107 | 46.00% | [39.25%,52.75%] |
+| 500 | 91／1／108 | 45.75% | [39.25%,52.50%] |
+
+三组各100pair／200局，原件见[battle_analysis.json](battle_analysis.json)和[battles/](battles/)，三个summary均passed。按预定点估计规则50步是筛查候选，当前没有完整HEAD或分阶段确认结果。三个区间均跨50%，只能说未确认棋力提升；MSE继续下降不能据此预测搜索更强，也没有证明适配稳定退化。
+
+## 搜索对战计划与已完成筛查
 
 入口：[battle.py](battle.py)；冻结计划：[battle_plan.json](battle_plan.json)；模型与代码身份：[battle_manifest.json](battle_manifest.json)。默认必须明确选择`--prepare-only`、`--analyze-only`或`--run-search`，不会隐式启动对战。**本次只执行了prepare-only和无搜索的准备检查，没有生成任何对战结果。**
 
@@ -48,7 +58,7 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 M
 
 同一命令用于中断续跑：完整换座pair跳过，未完整pair按原种子重做；已完成DEV决定同一候选，HEAD不参与候选选择。每个面板用独立子进程，结束后释放模型、CUDA Graph及native树；一个GPU owner、最多200活动对局、批次≤200，不设置进程RAM硬上限。每25 pair输出RSS、CUDA allocated/reserved并保存汇总。共享原模型evaluator时分模型执行计时存在重叠，不能把该字段相加解释速度或阶段成本。
 
-对战汇总将保存至`battles/`及`battle_analysis.json`，逐局可恢复记录在忽略的相邻`*.games/`，失败现场与内存监控在runtime。分阶段critic路由由本入口安装，不能直接使用通用evaluation入口运行派生配置。
+已完成DEV汇总保存在`battles/`及`battle_analysis.json`；后续确认仍使用这些目录，逐局可恢复记录在忽略的相邻`*.games/`，失败现场与内存监控在runtime。分阶段critic路由由本入口安装，不能直接使用通用evaluation入口运行派生配置。
 
 仅准备或重新分析已有结果：
 
@@ -57,4 +67,4 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src python artifacts/en
 conda run --no-capture-output -n splendor env PYTHONPATH=src python artifacts/entity_attention_critic_adaptation_strength_20261008/battle.py --analyze-only
 ```
 
-准备验证：[4项无搜索检查](preparation_tests.xml)通过，覆盖公开分数边界、相同根整批路由到适配／原critic的调度接口（伪runner）、DEV/HEAD分离及阶段种子对齐、必须显式指定启动参数。三份DEV配置经现行FixedEvaluationConfig校验通过；训练checkpoint可由现行AZ加载器读取，policy/encoder哈希一致。**真实native/CUDA路由对战和对战中断恢复尚未实跑验证**，本次按用户要求不启动搜索。
+准备验证：[4项无搜索检查](preparation_tests.xml)通过，覆盖公开分数边界、相同根整批路由到适配／原critic的调度接口（伪runner）、DEV/HEAD分离及阶段种子对齐、必须显式指定启动参数。三份DEV配置经现行FixedEvaluationConfig校验通过；训练checkpoint可由现行AZ加载器读取，policy/encoder哈希一致。这是准备时的检查范围；后续三个全程DEV已实际运行并passed，分阶段critic路由和阶段对战恢复仍没有完成的实测证据。本次文档整理没有启动搜索。

@@ -37,6 +37,6 @@
 
 ## 证据与限制
 
-[训练摘要](../../artifacts/az_loop_seed1/training_summary.json)、[逐代汇总](../../artifacts/az_loop_seed1/generation_scores.json)、[原始评测副本](../../artifacts/az_loop_seed1/evaluations/) 和 [冻结 run 摘要](../../artifacts/az_loop_seed1/run_snapshot/) 随仓库保留；复制来源与 SHA 见 [保全清单](../../artifacts/retention_manifest_2026-10-01.json)。原 JSON 内的绝对路径/runtime 路径是测量时记录，没有为了整理而改写。
+[训练摘要](../../artifacts/az_loop_seed1/training_summary.json)、[逐代汇总](../../artifacts/az_loop_seed1/generation_scores.json)、[原始评测副本](../../artifacts/az_loop_seed1/evaluations) 和 [冻结 run 摘要](../../artifacts/az_loop_seed1/run_snapshot) 随仓库保留；复制来源与 SHA 见 [保全清单](../../artifacts/retention_manifest_2026-10-01.json)。原 JSON 内的绝对路径/runtime 路径是测量时记录，没有为了整理而改写。
 
 各轮采集 manifest 保存 `edcfb23…` / dirty 等测量时版本，具体值见原件；dirty 状态不能证明完整源码可恢复。checkpoint 和训练 NPZ 仍在忽略的 `runs/`，迁移需另行备份。没有 native 多轮长训、多训练 seed、扩容或超参 ablation 的验收结论。

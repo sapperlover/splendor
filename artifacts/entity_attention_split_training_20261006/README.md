@@ -1,6 +1,6 @@
 # 分头窗口与detach value实现验证
 
-2026-10-06。正式实现位于`src/splendor/alphazero_train.py`与`hybrid_train.py`，可执行配置为`configs/entity_attention_v1/hybrid_split_policy_value.json`。[完整参数、观察口径、启动和恢复](../../docs/guides/entity_attention_split_training_zh-CN.md)。本交付确认调用链正确，正式长训未启动，未声称棋力改善。
+2026-10-06。正式实现位于`src/splendor/alphazero_train.py`与`hybrid_train.py`，可执行配置为`configs/entity_attention_v1/hybrid_split_policy_value.json`。[完整参数、观察口径、启动和恢复](../../docs/guides/entity_attention_split_training_zh-CN.md)。该2026-10-06交付确认调用链，当时长训未启动；后续20新轮／16500步已完成，长期棋力收益未确认。
 
 Policy只在近4采集轮train局面上学习；value在3000归档局的近期/更早两个互斥桶各抽一半。各batch256，value在head边界detach；两组独立clip1.0，AdamW参数顺序、moments和RNG原样继承。每轮200局/100步，S1024/N1，保留共享槽2、固定地址Graph与owner单缓冲。每5轮对固定PPO5.5M、双方S1024/N1测100 pairs，用独立projection；原theta5000评测和旧joint配置的恢复保持原语义。
 

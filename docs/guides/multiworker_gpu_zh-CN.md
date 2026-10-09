@@ -1,6 +1,6 @@
 # 单 GPU owner 的多进程搜索供给
 
-下一阶段[10×1000准备配置](next_az_training_zh-CN.md)沿用已验收W8/A500/B500/micro64/slot1/wait5ms，正式默认关闭昂贵逐叶统计；该新run与4GiB/6000局长运行尚未执行。
+旧θ5的[10×1000准备配置](../archive/next_az_training_zh-CN.md)采用W8/A500/B500/micro64/slot1/wait5ms，源run后续轮0–9完成。此设置限定该历史负载，不能当作当前实体注意力／M4的最快配置；吞吐与资源范围依对应实际记录解释。
 
 native_cuda_pool 后端使用 spawn 搜索进程和主进程中的唯一冻结 CUDA 模型。搜索进程独占游戏、原生 PUCT 树、特征编码、逐局校验与归档；主进程只处理跨进程合批、推理与结果分发。现有 native_cuda、native_cpu、CPU eager 和旧采集格式继续走原路径。旧 alphazero_loop_cuda.json 未替换。
 

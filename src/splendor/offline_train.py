@@ -143,20 +143,21 @@ def freeze_validation(index: ReplayIndex, config: OfflineConfig) -> dict[str, An
             "composition_by_round": dict(Counter(str(ref["round_index"]) for ref in references)), "digest": _digest(references)}
 
 
-def evaluate_validation(learner: AlphazeroLearner, index: ReplayIndex, fixed=None):
+def evaluate_validation(learner: AlphazeroLearner, index: ReplayIndex, fixed=None, *, policy_transform=None):
     games = {g.key: g for g in index.split_games("validation")}
     if fixed is not None:
         samples = [index.cache.sample(games[(ref["round_index"], ref["game_id"])], ref["decision_index"])
                    for ref in fixed["references"]]
-        return learner.evaluate_samples(samples)
+        return learner.evaluate_samples([policy_transform(s) for s in samples] if policy_transform else samples)
     sums = Counter()
     # Stream full holdout; never retain every decoded game in a Python list.
     fields = ("policy_ce_sum", "policy_weight_sum", "value_sq_sum", "value_weight_sum", "entropy_sum", "positions",
               "target_entropy_sum", "policy_positions", "value_positions", "value_target_sum", "value_target_sq_sum")
     for game in games.values():
         for start in range(0, game.decision_count, learner.config.validation_batch_size):
-            metrics = learner.evaluate_samples([index.cache.sample(game, i) for i in range(start, min(
-                game.decision_count, start + learner.config.validation_batch_size))])
+            samples = [index.cache.sample(game, i) for i in range(start, min(
+                game.decision_count, start + learner.config.validation_batch_size))]
+            metrics = learner.evaluate_samples([policy_transform(s) for s in samples] if policy_transform else samples)
             sums.update({key: metrics[key] for key in fields})
     return {"available": bool(sums["positions"]), **sums, **metric_ratios(sums)}
 

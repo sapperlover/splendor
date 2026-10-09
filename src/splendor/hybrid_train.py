@@ -24,6 +24,7 @@ from .alphazero_train import AlphazeroLearner, DrawnBatch, run_training_round
 from .evaluation import FixedEvaluationConfig, run_fixed_evaluation
 from .offline_train import (OfflineConfig, _copy_checkpoint, _digest, evaluate_validation,
                             freeze_dataset, freeze_validation, make_index, run_offline)
+from .policy_averaging import (AveragedTargetStore, PolicyAveragingConfig, generate_labels, label_root)
 from .selfplay_fast import ExecutionConfig, FastSelfPlayConfig, generate
 
 PROTOCOL = "az-continuous-hybrid-v1"
@@ -80,10 +81,14 @@ class HybridConfig:
     # A frozen experimental treatment, applied once after restoring a fork.
     # Unlike execution cache sizing this changes the learning algorithm.
     learning_rate_override: float | None = None
+    policy_averaging: PolicyAveragingConfig | None = None
 
     def __post_init__(self):
         if not self.run_id:
             raise ValueError("run_id must be nonempty")
+        if self.policy_averaging is not None and (self.split_training is None
+                or self.selfplay.search_config["determinizations"] != 1):
+            raise ValueError("policy averaging requires split training and native N1 behavior")
         if self.learning_rate_override is not None and (isinstance(self.learning_rate_override, bool)
                 or not isinstance(self.learning_rate_override, (int, float))
                 or not math.isfinite(self.learning_rate_override) or self.learning_rate_override <= 0):
@@ -135,12 +140,14 @@ class HybridConfig:
         values["mix_schedule"] = tuple(tuple(row) for row in values.get("mix_schedule", DEFAULT_SCHEDULE))
         if values.get("split_training") is not None:
             values["split_training"] = SplitTrainingConfig(**values["split_training"])
+        if values.get("policy_averaging") is not None:
+            values["policy_averaging"] = PolicyAveragingConfig(**values["policy_averaging"])
         return cls(**values)
 
     def to_dict(self):
         values = {"protocol": PROTOCOL, **asdict(self)}
         # Preserve the frozen representation of existing joint runs.
-        for name in ("split_training", "evaluation_anchor", "learning_rate_override"):
+        for name in ("split_training", "evaluation_anchor", "learning_rate_override", "policy_averaging"):
             if values[name] is None:
                 del values[name]
         if self.split_training is not None:
@@ -381,6 +388,9 @@ def prepare_fork(config, parent, round_number=None):
     for game in games:
         path = Path(game["path"]).resolve()
         records.append({**game, "path": str(path), "archive_sha256": sha256(path)})
+        labels = label_root(path) / "manifest.json"
+        if labels.exists():
+            records[-1]["policy_labels_manifest"] = {"path": str(labels), "sha256": sha256(labels)}
         key = (game["round_index"], game["run_id"], str(path.parent.parent))
         runs[key] = {"round_index": key[0], "run_id": key[1], "root": key[2]}
     if config.split_training is not None:
@@ -448,6 +458,10 @@ def _load_fork(output, state, config):
     for game in manifest["games"][-remaining:] if remaining else ():
         if sha256(Path(game["path"])) != game["archive_sha256"]:
             raise ValueError("inherited replay archive changed")
+        if "policy_labels_manifest" in game:
+            label_manifest = game["policy_labels_manifest"]
+            if sha256(Path(label_manifest["path"])) != label_manifest["sha256"]:
+                raise ValueError("inherited policy labels changed")
     return manifest
 
 
@@ -619,6 +633,18 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                 _release_inference_memory()
         if summary["completed_games"] != config.new_games_per_round or summary["missing_games"]:
             raise RuntimeError("online collection is incomplete")
+        if config.policy_averaging is not None:
+            _emit("policy_averaging_start", round=r + 1, samples=4, behavior_search_reused=True, extra_searches=3)
+            with torch.random.fork_rng(devices=devices):
+                try:
+                    generate_labels(root, stage / "policy_labels", config.policy_averaging,
+                                    device=config.offline.learner.device,
+                                    progress_callback=lambda block, repeat, done, total:
+                                    _emit("policy_averaging_search" if block < 0 else "policy_averaging_chunk",
+                                          round=r + 1, block=block, repeat=repeat,
+                                          completed_roots=done, total_roots=total))
+                finally:
+                    _release_inference_memory()
         runs = _replay_runs(config, output, r, offset, fork)
         allowed_keys = (inherited_keys | {(run.round_index, gid) for run in runs if run.round_index >= offset
                                          for gid in range(config.new_games_per_round)} if fork else None)
@@ -641,6 +667,11 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             raise ValueError("online training pool is empty")
         snapshot = {"games": [g.to_dict() for g in index.games], "teacher": teacher,
                     "quotas": list(quotas), "round_index": data_round}
+        target_store = None
+        if config.policy_averaging is not None:
+            target_store = AveragedTargetStore(index.games, required_run_ids={run.run_id for run in runs
+                                              if run.round_index >= offset})
+            snapshot["policy_labels"] = target_store.manifests
         split_pools = None
         policy_pool = None
         if config.split_training is not None:
@@ -648,6 +679,12 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             split_pools = (recent_pool, history_pool)
             policy_pool = split_policy_pool(index, config, recent_pool)
             snapshot["split_training"] = split_replay_description(index, config, split_pools, recent_rounds)
+            if target_store is not None:
+                teachers = snapshot["split_training"]["teachers"]
+                for info in teachers:
+                    info["policy_target_samples"] = 4 if info["run_id"] in target_store.manifests else 1
+                snapshot["split_training"]["policy_expected_m4_fraction"] = sum(
+                    info["policy_expected_fraction"] for info in teachers if info["policy_target_samples"] == 4)
         if fork:
             inherited_games = [g for g in index.games if g.run_id in inherited_ids]
             inherited_positions = sum(g.decision_count for g in inherited_games if g.split == "train")
@@ -701,11 +738,14 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                                             if g.round_index in recent_rounds]}, index.cache.max_bytes)
             recent_validation.cache = index.cache
         before_path = stage / "validation_before.json"
+        validation_kwargs = {"policy_transform": target_store.transform} if target_store is not None else {}
         if not before_path.exists():
             before = {"total_train_step": learner.total_train_step,
-                      "current": evaluate_validation(learner, current)}
+                      "current": evaluate_validation(learner, current, **validation_kwargs)}
             if recent_validation is not None:
-                before["recent"] = evaluate_validation(learner, recent_validation)
+                before["recent"] = evaluate_validation(learner, recent_validation, **validation_kwargs)
+            if target_store is not None:
+                before["policy_target_scope"] = "current=M4; recent=mixed legacy single/M4 by teacher; value unchanged"
             write_json(before_path, before)
         split_grad_norms = None
         if split_pools is None:
@@ -720,6 +760,13 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             drawer = lambda rng: draw_split_batch(*split_pools, rng, config.offline.learner.batch_size,
                 split.value_recent_positions, inherited_run_ids=inherited_ids, policy_pool=policy_pool)
             split_grad_norms = (split.policy_max_grad_norm, split.value_max_grad_norm)
+        if target_store is not None:
+            original_drawer = drawer
+            def drawer(rng):
+                batch = original_drawer(rng)
+                sources = {**batch.source_positions, "policy_m4": sum(target_store.is_averaged(s) for s in batch.samples)}
+                return replace(batch, samples=tuple(target_store.transform(s) for s in batch.samples),
+                               source_positions=sources)
         start_step = learner.round_train_step
         _emit("train_start", round=r + 1, global_step=learner.total_train_step,
               offline_positions=quotas[0], online_positions=quotas[1], target=config.updates_per_round)
@@ -743,9 +790,11 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
         _copy_checkpoint(cps / f"step-{learner.round_train_step:09d}.pt", final)
         validation = {"total_train_step": learner.total_train_step,
                       "offline_fixed": evaluate_validation(learner, off_index, old_fixed),
-                      "current": evaluate_validation(learner, current)}
+                      "current": evaluate_validation(learner, current, **validation_kwargs)}
         if recent_validation is not None:
-            validation["recent"] = evaluate_validation(learner, recent_validation)
+            validation["recent"] = evaluate_validation(learner, recent_validation, **validation_kwargs)
+        if target_store is not None:
+            validation["policy_target_scope"] = "current=M4; recent=mixed legacy single/M4 by teacher; value unchanged"
         if fixed_online is not None:
             validation["online_fixed"] = evaluate_validation(learner, *fixed_online)
         write_json(stage / "validation_after.json", validation)
@@ -760,13 +809,21 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                      for name, pool in zip(("policy_recent", "value_recent", "value_history"),
                                            (policy_pool, split_pools[0], split_pools[1]))}
             by_round = {}
+            m4_draws = 0
             for line in (stage / "training_metrics.jsonl").read_text().splitlines():
                 record = json.loads(line)
                 if record["event"] == "train_step":
+                    if target_store is not None:
+                        m4_draws += record["source_positions"]["policy_m4"]
                     for key, count in record["source_positions"].items():
                         if "_round_" in key:
                             by_round[key] = by_round.get(key, 0) + count
             usage["split_training"] = {**snapshot["split_training"], "actual_draws_by_head_round": by_round}
+            if target_store is not None:
+                usage["policy_averaging"] = {"samples": 4, "behavior_search_reused": True,
+                    "policy_m4_draws": m4_draws, "policy_total_draws": config.updates_per_round * counts["policy_recent"],
+                    "actual_policy_m4_fraction": m4_draws / (config.updates_per_round * counts["policy_recent"]),
+                    "supervision_manifests": target_store.manifests}
         if fork:
             draws = {"inherited_online": 0, "branch_online": 0}
             for line in (stage / "training_metrics.jsonl").read_text().splitlines():

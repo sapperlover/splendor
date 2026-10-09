@@ -1,6 +1,6 @@
 # AlphaZero 式 policy/value 循环
 
-2026-10-04新增：[10×1000独立训练准备](next_az_training_zh-CN.md)，含旧θ5权重热启动、4GiB/6000局配置、目标熵/KL、样本覆盖、两套明确集合的验证与会话计时；正式实验尚未运行。[字段清单](next_az_record_fields_zh-CN.md)补充下文原基础指标口径；固定/训练前后诊断仅在配置启用`diagnostics`时执行。
+旧θ5的[10×1000准备说明](../archive/next_az_training_zh-CN.md)和[字段清单](../archive/next_az_record_fields_zh-CN.md)保留2026-10-04协议；源run后续轮0–9完成。固定／训练前后诊断仅在配置启用`diagnostics`时执行；历史准备状态不代表当前未运行。
 
 当前循环已完成一次 5 轮 × 500 局的 Python batched_cpu 采集运行；不是仅 smoke。本文维护训练/恢复语义与入口，[完成报告](../reports/alphazero_seed1_zh-CN.md) 保存实验结果。native CPU、单 owner CUDA 与 CUDA pool 是独立执行配置；不能把 Python run 的验收结果直接作为 native 多轮长训验收。
 

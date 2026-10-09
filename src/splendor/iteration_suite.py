@@ -92,13 +92,17 @@ def validate_plan(plan):
         if type(evaluation[key]) is not int or evaluation[key] <= 0:
             raise ValueError(f"{key} must be positive")
     limits = plan["resources"]
-    if not 0 < limits["memory_high_gib"] < limits["memory_max_gib"]:
-        raise ValueError("invalid cgroup memory bounds")
-    if plan["replay_cache_mib"] / 1024 >= limits["memory_high_gib"]:
-        raise ValueError("cache must leave memory for models and workers")
+    if limits["memory_max_gib"] is None:
+        if limits["memory_high_gib"] is not None:
+            raise ValueError("unbounded execution requires memory_high_gib=null")
+    else:
+        if not 0 < limits["memory_high_gib"] < limits["memory_max_gib"]:
+            raise ValueError("invalid cgroup memory bounds")
+        if plan["replay_cache_mib"] / 1024 >= limits["memory_high_gib"]:
+            raise ValueError("cache must leave memory for models and workers")
     for key in ("min_available_gib", "min_gpu_free_mib", "poll_seconds"):
-        if not math.isfinite(limits[key]) or limits[key] <= 0:
-            raise ValueError(f"{key} must be finite and positive")
+        if not math.isfinite(limits[key]) or limits[key] < 0 or (key == "poll_seconds" and limits[key] == 0):
+            raise ValueError(f"{key} must be finite and nonnegative, polling positive")
 
 
 def arm_configs(plan):
@@ -121,6 +125,8 @@ def arm_configs(plan):
                 raw["learning_rate_override"] = arm["learning_rate_override"]
             if arm.get("policy_recent_rounds") is not None:
                 raw["split_training"]["policy_recent_rounds"] = arm["policy_recent_rounds"]
+            if arm.get("policy_averaging") is not None:
+                raw["policy_averaging"] = arm["policy_averaging"]
             configs[name] = raw
     return configs
 
@@ -152,8 +158,9 @@ def stop_child(process, unit):
             pass
         process.wait(timeout=10)
     # A worker may outlive its leader. Stopping our scope also covers such descendants.
-    subprocess.run(["systemctl", "--user", "stop", unit], timeout=20,
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    if unit is not None:
+        subprocess.run(["systemctl", "--user", "stop", unit], timeout=20,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
 
 
 def run_stage(plan, task, key, *, round_number=None):
@@ -165,13 +172,18 @@ def run_stage(plan, task, key, *, round_number=None):
     log = runtime / "logs" / f"{task}-{key}-{token}.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     limits = plan["resources"]
-    expected_max = int(limits["memory_max_gib"] * GIB)
-    command = ["systemd-run", "--user", "--scope", "--quiet", "--collect", "--unit", unit,
-               "-p", f"MemoryMax={expected_max}", "-p", f"MemoryHigh={int(limits['memory_high_gib'] * GIB)}",
-               "-p", "MemorySwapMax=0", sys.executable, "-u", "-m", "splendor.iteration_suite",
+    expected_max = int(limits["memory_max_gib"] * GIB) if limits["memory_max_gib"] is not None else None
+    command = [sys.executable, "-u", "-m", "splendor.iteration_suite",
                "--worker", task, "--manifest", str(artifacts / "manifest.json"),
-               "--key", key, "--process-identity", str(identity), "--memory-max", str(expected_max),
+               "--key", key, "--process-identity", str(identity),
                "--parent-pid", str(os.getpid())]
+    if expected_max is not None:
+        command += ["--memory-max", str(expected_max)]
+        command = ["systemd-run", "--user", "--scope", "--quiet", "--collect", "--unit", unit,
+                   "-p", f"MemoryMax={expected_max}", "-p", f"MemoryHigh={int(limits['memory_high_gib'] * GIB)}",
+                   "-p", "MemorySwapMax=0", *command]
+    else:
+        unit = None
     if round_number is not None:
         command.extend(["--round", str(round_number)])
     if available_memory() < limits["min_available_gib"] * GIB:
@@ -197,13 +209,15 @@ def run_stage(plan, task, key, *, round_number=None):
                     sample = {"time": time.time(), "task": task, "key": key, "round": round_number,
                               "available_bytes": available}
                     if identity.exists():
-                        cg = Path(read(identity)["cgroup"])
-                        try:
-                            sample["cgroup_bytes"] = int((cg / "memory.current").read_text())
-                            peak = int((cg / "memory.peak").read_text())
-                            record["peak_cgroup_bytes"] = max(record["peak_cgroup_bytes"], peak)
-                        except FileNotFoundError:
-                            pass  # The scope disappears normally when its last process exits.
+                        group = read(identity)["cgroup"]
+                        if group is not None:
+                            cg = Path(group)
+                            try:
+                                sample["cgroup_bytes"] = int((cg / "memory.current").read_text())
+                                peak = int((cg / "memory.peak").read_text())
+                                record["peak_cgroup_bytes"] = max(record["peak_cgroup_bytes"], peak)
+                            except FileNotFoundError:
+                                pass  # Scope disappears normally when its last process exits.
                     record["min_available_bytes"] = min(record["min_available_bytes"], available)
                     samples.write(json.dumps(sample) + "\n")
                     samples.flush()
@@ -220,7 +234,7 @@ def run_stage(plan, task, key, *, round_number=None):
                 tail = log.read_bytes()[-6000:].decode("utf-8", errors="replace")
                 raise RuntimeError(f"stage exit={process.returncode}; log={log}\n{tail}")
         if not identity.exists():
-            raise RuntimeError("worker did not verify its cgroup hard limit")
+            raise RuntimeError("worker did not record its process identity")
         record["status"] = "complete"
     except BaseException as error:
         record["status"] = "interrupted" if isinstance(error, KeyboardInterrupt) else "failed"
@@ -272,6 +286,8 @@ def stage_schedule(plan, jobs):
         for n in range(1, plan["rounds"] + 1):
             for rep in plan["replicates"]:
                 yield "train", f"{rep['id']}_{arm['id']}", n
+                if plan.get("decision_probe") is not None:
+                    yield "probe", f"{rep['id']}_{arm['id']}", n
             if n in plan["evaluation"]["rounds"]:
                 for job in jobs:
                     if job["arm"] == arm["id"] and job["round"] == n:
@@ -360,10 +376,12 @@ def analyze(manifest):
 def worker(args):
     if getattr(args, "parent_pid", None) is not None:
         arm_parent_death(args.parent_pid)
-    cg = cgroup_path()
-    if int((cg / "memory.max").read_text()) != args.memory_max or int((cg / "memory.swap.max").read_text()) != 0:
+    cg = cgroup_path() if args.memory_max is not None else None
+    if cg is not None and (int((cg / "memory.max").read_text()) != args.memory_max
+                          or int((cg / "memory.swap.max").read_text()) != 0):
         raise RuntimeError("worker requires the exact cgroup RAM hard limit and zero swap")
-    identity = {"pid": os.getpid(), "cgroup": str(cg), "memory_max": args.memory_max, "swap_max": 0}
+    identity = {"pid": os.getpid(), "cgroup": str(cg) if cg is not None else None,
+                "memory_max": args.memory_max, "swap_max": 0 if cg is not None else None}
     write(args.process_identity, identity)
     manifest = read(args.manifest)
     plan = manifest["plan"]
@@ -412,13 +430,37 @@ def worker(args):
             if len(seeds) != job["pairs"]:
                 raise ValueError("evaluation does not contain exactly the required scored pairs")
             write(completion_path(plan, "evaluate", args.key), {"pairs": len(seeds), "summary": str(path)})
+        elif args.worker == "probe":
+            import torch
+            from .decision_probe import compare_scores, evaluate
+            torch.set_num_threads(1)
+            torch.backends.cuda.matmul.allow_tf32 = False
+            torch.backends.cudnn.allow_tf32 = False
+            protocol = plan["decision_probe"]
+            reference = ROOT / protocol["reference"]
+            ref = read(reference / "summary.json")
+            output = ROOT / plan["runtime_root"] / "decision_probe" / args.key / f"round-{args.round:03d}"
+            summary = evaluate(ROOT / protocol["bank"], checkpoint(plan, args.key, args.round), output,
+                               search=ref["search"], seeds=tuple(ref["repeat_seeds"]), device="cuda",
+                               active_roots=protocol["active_roots"],
+                               resume=(output / "work.games/manifest.json").exists())
+            comparison = compare_scores(reference, output, output / "comparison.json")
+            saved = ROOT / plan["artifact_root"] / "decision_diagnostics" / f"{args.key}_r{args.round:03d}.json"
+            write(saved, {"checkpoint": summary["checkpoint"], "bank_sha256": summary["bank_sha256"],
+                          "raw_output": str(output), "comparison_by_stage": comparison["by_stage"],
+                          "within_checkpoint_seed_variation": summary["within_checkpoint_seed_variation"],
+                          "absolute_by_stage": summary["by_stage"]})
+            write(completion_path(plan, "probe", args.key, args.round), {"summary": str(saved)})
         elif args.worker == "analyze":
             result = analyze(manifest)
             emit("analysis_complete", status=result["status"])
         else:
             raise ValueError("unknown worker task")
     finally:
-        identity["peak_cgroup_bytes"] = int((cg / "memory.peak").read_text())
+        if cg is not None:
+            identity["peak_cgroup_bytes"] = int((cg / "memory.peak").read_text())
+        import resource
+        identity["peak_rss_kib"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         write(args.process_identity, identity)
 
 
@@ -469,8 +511,9 @@ def run_suite(plan, *, prepare_only=False):
                     continue
                 marker = completion_path(plan, task, key, n)
                 if marker.exists():
-                    output = (checkpoint(plan, key, n) if task == "train"
-                              else artifacts / "evaluations" / f"{key}.json")
+                    output = (checkpoint(plan, key, n) if task == "train" else
+                              Path(read(marker)["summary"]) if task == "probe" else
+                              artifacts / "evaluations" / f"{key}.json")
                     if not output.exists():
                         raise ValueError(f"completed stage output is missing: {output}")
                     continue
@@ -490,7 +533,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path)
     parser.add_argument("--prepare-only", action="store_true")
-    parser.add_argument("--worker", choices=("prepare", "train", "evaluate", "analyze"))
+    parser.add_argument("--worker", choices=("prepare", "train", "evaluate", "analyze", "probe"))
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--key")
     parser.add_argument("--round", type=int)

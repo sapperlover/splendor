@@ -27,7 +27,7 @@
 
 下一步若要定位正式value退化，优先从16600的原critic做冻结主干的补训，观察能否保留新policy并恢复value精度，再比较补训前后同一policy的搜索棋力；若要回答严格的表示拟合上限，则需延长固定encoder训练至明确平台并做配对初始化重复。本次只执行用户指定的两条500步轨迹。
 
-后续已完成[原16600 critic适配](../entity_attention_critic_adaptation_strength_20261008/README.md)：保留原head与AdamW状态、固定policy/encoder，额外0/50/200/500步的完整留出MSE为0.808967／0.789053／0.787500／0.786814。收益主要在前50步；已准备独立HEAD及前中期／后期critic替换的搜索对战脚本，按用户指令尚未启动。
+后续已完成[原16600 critic适配](../entity_attention_critic_adaptation_strength_20261008/README.md)：保留原head与AdamW状态、固定policy/encoder，额外0/50/200/500步的完整留出MSE为0.808967／0.789053／0.787500／0.786814。收益主要在前50步；三个100pair DEV后续已完成（51.75%／46.0%／45.75%，区间均跨50%），独立HEAD与前中期／后期critic替换确认未完成。
 
 ## 启动与恢复
 

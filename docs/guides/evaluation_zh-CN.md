@@ -1,6 +1,8 @@
 # 固定配对评测与结果解释
 
-2026-10-04新增：[新AZ每轮/阶段/预留面板](next_az_training_zh-CN.md)，固定种子和paired bootstrap分开DEV/最终用途。`scripts/run_recorded_evaluation.py`复用本入口并补外部单面板会话/资源账本，不调度训练，也不自动暂停或选模；本次仅准备未运行。
+2026-10-09新增[固定256局面的checkpoint决策诊断](decision_probe_zh-CN.md)：独立真实对局、每局一个根节点、前中期／后期各128；每个checkpoint用固定搜索种子记录首选动作、访问分布JSD、高访问动作排序、根policy/value漂移与搜索波动。入口为`python -m splendor.decision_probe evaluate`，支持逐根恢复；用于快速观察变化，不产生胜率或棋力排名。
+
+旧θ5的[历史每轮／阶段评测计划](../archive/next_az_training_zh-CN.md)分开DEV与预留确认输入，源run后续已运行；各面板完成状态以原件为准。`scripts/run_recorded_evaluation.py`复用本入口并记录单面板会话／资源，不调度训练或自动选模。
 
 从仓库根目录执行，使用 Conda `splendor`、`PYTHONPATH=src`。基线评测入口为 `splendor.evaluate`，冻结 checkpoint/search 的统一入口为 `splendor.evaluation`。配置种类包括 `greedy_checkpoint`、`search_checkpoint`（固定深度）和 `mcts_checkpoint`（PUCT）；两侧模型可不同。
 
@@ -45,3 +47,16 @@ conda run -n splendor env PYTHONPATH=src python scripts/run_mcts_50pair_sweep.py
 每局各自保留 policy seed，按 checkpoint 内容身份和推理配置隔离 evaluator/批次；原 checked runner 以协程推进真实规则、循环裁决、异常和截断，greedy异常也经相同规则runner记录。所有就绪局已经提供当前可用叶请求，因此 `max_batch_wait_ms` 必须为 0，尾批立即执行。恢复仍以完整 pair 为单位，半个 pair 使用原种子重跑；执行配置参与 manifest 身份，不允许与旧 CPU 路径拼接。
 
 AZ 的 `evaluation.mcts_execution` 接通同一路径；需要 `mcts_backend=native`、`workers=1`，不影响旧配置的默认 CPU 多进程入口。两个配置应使用不同运行目录。
+
+## 本地人机网页
+
+```bash
+conda run -n splendor env PYTHONPATH=src python -m splendor.web_app
+# 使用本地已有PPO模型作为固定深度搜索对手
+conda run --no-capture-output -n splendor env PYTHONPATH=src python -u -m splendor.web_app \
+  --search-checkpoint runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt \
+  --search-depth 6 --search-top-k 8 --search-determinizations 1 \
+  --search-seed 9200000 --search-leaf-value-clip 1.0 --search-fold-forced-phases
+```
+
+打开 `http://127.0.0.1:8765`。模型在CPU运行，checkpoint需要本地提供；网页只接收当前玩家视图和合法动作，规则在服务端执行。

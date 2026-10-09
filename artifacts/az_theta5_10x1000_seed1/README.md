@@ -2,7 +2,7 @@
 
 状态：prepared_not_started，正式采集/训练/棋力面板/4vs8均未执行。49项有限CPU回归通过，native CUDA独立smoke未执行；不据此声称长训、4GiB扩容或棋力验收通过。
 
-`preparation_manifest.json`记录真实源码/dirty身份、配置SHA、机器信息和两个起点checkpoint身份；`seeds.json`包含全部10轮派生和面板输入，`smoke_seeds.json`为独立小验证。计划和统计分母见[训练指南](../../docs/guides/next_az_training_zh-CN.md)及[字段清单](../../docs/guides/next_az_record_fields_zh-CN.md)。
+`preparation_manifest.json`记录真实源码/dirty身份、配置SHA、机器信息和两个起点checkpoint身份；`seeds.json`包含全部10轮派生和面板输入，`smoke_seeds.json`为独立小验证。计划和统计分母见[训练指南](../../docs/archive/next_az_training_zh-CN.md)及[字段清单](../../docs/archive/next_az_record_fields_zh-CN.md)。
 
 正式运行后这里保存每轮dataset/current_before_after/fixed_curve/usage JSON、summary、训练和固定验证CSV；原NPZ、trace、checkpoint、二进制引用/计数、TensorBoard及恢复sidecar放忽略的runs，资源/源码实际副本也在runs。运行前准备清单不包含未生成的结果。
 

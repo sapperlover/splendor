@@ -1,0 +1,110 @@
+{
+  "analyze_keeps_all_completed_sets_and_reproduces_summary": true,
+  "commands": {
+    "experiment": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_avg4_delta_kl_20261009/run.py unseen --device cuda",
+    "smoke": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_avg4_delta_kl_20261009/run.py smoke --limit 2 --simulations 16",
+    "tests": "conda run -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest -q artifacts/entity_attention_avg4_delta_kl_20261009/test_run.py"
+  },
+  "cpu_spot": {
+    "fresh_and_stored_kl_reproduced": true,
+    "log": "runtime/entity_attention_avg4_delta_kl_20261009/unseen_cpu_spot.log",
+    "log_sha256": "67d84d13af6b1fdfa4f6b95c9bf1adc82618d3289ccb02ad563222b038b79c35",
+    "max_abs_error_by_round": {
+      "r004": 3.956145822048285e-07,
+      "r008": 8.558112357670566e-07,
+      "r012": 5.054132338755402e-07
+    },
+    "positions_per_round": 3,
+    "root_features_match_archives": true
+  },
+  "new_simulations": 3145728,
+  "protocol": "avg4-delta-kl-verification-v1",
+  "raw_evidence_hashes": {
+    "runtime/entity_attention_avg4_delta_kl_20261009/r004/fresh_targets.npz": "253faa104436805e3c0d6294b543c4a0b2756548f7ae7d21114017b6bf64ba86",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r004/fresh_targets_ledger.npz": "7ca64ed6f37fee602aa5ba3a24b11131c69529fc34f32c7878d764f2f468f9d9",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r004/fresh_targets_unseen.npz": "376b2c0b098d4010ed4fe3d6569bc6577ee188b5c0eb9eb4c9fa4e332371a37a",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r004/positions.jsonl": "ee67c85df45545fd5a41159f2fa8c847a2641414f280137f1792d00272610daf",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r004/positions_ledger.jsonl": "5d84860986620eab9e26e8c54899ea4c13c6499009f3952c88d55ba76f7b0bed",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r004/positions_unseen.jsonl": "3727f87099ed131ddcf1c57f6e8d008b8bad41fcca2740f46af195f1c384d745",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r008/fresh_targets.npz": "c592d910cf9eda989ec21588151c7a629ab9413a3aa90bc817c27221aba4df7e",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r008/fresh_targets_ledger.npz": "084d0f91892033c368218bd0ee8615776434ef5faa305b61b2316f138adb90d1",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r008/fresh_targets_unseen.npz": "22d0f38ceedd5facd92c34eba2e2c0e53c0b5005137484d84c8265fc1fd0054d",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r008/positions.jsonl": "af393002cc8cf8ab20a4e400123507578eecd27264aec4b470fb4bfe6da8bb82",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r008/positions_ledger.jsonl": "8cb2876e27adbe6ecd1512bae310ab935e6ca84ef6f8a52373baccfa74823d49",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r008/positions_unseen.jsonl": "234a05900c178741745ece1b863024359319299d9eef38e10e206bb95dc11070",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r012/fresh_targets.npz": "83cce0abdc138c6b958b57d519fd906b3e4250aea6fc7d84a038283707d47084",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r012/fresh_targets_ledger.npz": "63fcf15c7201e4b73a2ce20c2856510670032701fc8cc148942d5a6c3f256ee8",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r012/fresh_targets_unseen.npz": "98d7d76e935958f1e71416c0dd0e426c33645240c7d72115167cab6faba0af0c",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r012/positions.jsonl": "55b87a645364ccff7b8b721489e2d2b1e9978fa824d7349c553e9997104ecfa0",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r012/positions_ledger.jsonl": "3f2a54d8d654eceaf68cc117f9a29e7dbcb2a0a3620f81fcea31ab3ea736ecc5",
+    "runtime/entity_attention_avg4_delta_kl_20261009/r012/positions_unseen.jsonl": "06d2207e596f6d622fdb1081ba52ac13e45acf267a857d2ef3e7b810df0b1608"
+  },
+  "rounds": {
+    "r004": {
+      "checkpoint_hashes_unchanged": true,
+      "full_four_searches_per_root": true,
+      "new_games": 138,
+      "new_positions": 256,
+      "new_simulations": 1048576,
+      "not_in_policy_ledger": true,
+      "seed_pairs_correct": true,
+      "target_means_exact": true
+    },
+    "r008": {
+      "checkpoint_hashes_unchanged": true,
+      "full_four_searches_per_root": true,
+      "new_games": 139,
+      "new_positions": 256,
+      "new_simulations": 1048576,
+      "not_in_policy_ledger": true,
+      "seed_pairs_correct": true,
+      "target_means_exact": true
+    },
+    "r012": {
+      "checkpoint_hashes_unchanged": true,
+      "full_four_searches_per_root": true,
+      "new_games": 135,
+      "new_positions": 256,
+      "new_simulations": 1048576,
+      "not_in_policy_ledger": true,
+      "seed_pairs_correct": true,
+      "target_means_exact": true
+    }
+  },
+  "same_seed_overlap_differences": [
+    {
+      "decision_index": 40,
+      "game_id": 10,
+      "max_count_difference": 1,
+      "rep_l1_count_difference": [
+        0,
+        2,
+        0,
+        0
+      ],
+      "round": "r008",
+      "tag": "_unseen"
+    }
+  ],
+  "same_seed_overlapping_roots": 34,
+  "source": {
+    "git_head": "320d381ff47a8c53acdc113cdfc70c75275cc8c6",
+    "git_status_sha256": "8b493bcf26f0dba9c273e747108f2feeea0f115660a31ba4650183df647aacf4",
+    "script": {
+      "bytes": 35180,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_avg4_delta_kl_20261009/run.py",
+      "sha256": "a4f3e8cb4b37405f13d0e4d381233405decd73f212b24cf2e2c8e44b772cff64"
+    }
+  },
+  "source_implementation_hashes": {
+    "src/splendor/engine.py": "f82b5a04a2f4ac900d63576909de170b9406e1f6a07fea7b4a6406e2efb364a8",
+    "src/splendor/entity_attention.py": "9e5c32f50bf656d6c0188cb01c6a5795b14c6dbadeea8fddfdf4926f72a1e7e4",
+    "src/splendor/features.py": "f829fb06dc4c92184f3120fdad052cf50eec410b38e83fe20b88355153ac96e9",
+    "src/splendor/native_policy.py": "7a4167faf706e6343d35b813fbeb985240b82faaae696647e59427f271089b86",
+    "src/splendor/native_search.cpp": "654b08b2922e5fd19090a8734db6b5d6db84a3a322f4786adb9f8f181f4f7d1f",
+    "src/splendor/policy_averaging.py": "23458b595aa52116613c21b0ae1014eea75f8e85f047ef1b4366f032226da95b",
+    "src/splendor/search_inference.py": "088da23d26d31182e908d6d227f63af1d814a534d3ec11c80e9b7b155dfedf4b"
+  },
+  "status": "passed",
+  "tests": "4 finite regression tests passed; isolated CPU smoke 2 roots x 4 x S16 completed"
+}

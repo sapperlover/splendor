@@ -1,0 +1,157 @@
+{
+  "status": "passed",
+  "scope": "2 natural CUDA games, S8/N1 finite smoke only; no long training or strength matches",
+  "collection": {
+    "protocol": "mcts-selfplay-v2",
+    "expected_games": 2,
+    "completed_games": 2,
+    "missing_games": 0,
+    "p0_wins": 2,
+    "p1_wins": 0,
+    "draws": 0,
+    "samples": 170,
+    "policy_samples": 129,
+    "simulations": 1032,
+    "data_bytes": 83383,
+    "search_seconds_sum": 2.055257767007788,
+    "logical_model_positions": 1130,
+    "failed_games": 0,
+    "exceptions": 0,
+    "engineering_truncations": 0,
+    "batch_failures": 0,
+    "batch_failure_game_ids": [],
+    "semantic_fingerprint": "46bb01a7c024c86709e3b1182704e4903bb3619de272dc57a35c57d162ce3423",
+    "statistics_scope": "collection_session",
+    "statistics_complete": true,
+    "statistics_missing_game_ids": [],
+    "games_per_wall_second": 1.5802949245793347,
+    "policy_samples_per_wall_second": 101.92902263536709,
+    "simulations_per_wall_second": 815.4321810829367,
+    "wall_seconds": 1.2655865489996359,
+    "inference": {
+      "batch_size_histogram": {
+        "1": 10,
+        "2": 560
+      },
+      "d2h_seconds": 0.018920432972663548,
+      "feature_seconds": 0.0,
+      "forward_seconds": 0.8725316499967448,
+      "h2d_seconds": 0.01629528999364993,
+      "logical_model_positions": 1130,
+      "mean_batch_size": 1.9824561403508771,
+      "physical_model_batches": 570,
+      "wait_seconds": 0.0036625860066124005
+    },
+    "cpu_peak_rss_kib": 891188,
+    "gpu_peak_bytes": 11248640,
+    "peak_active_games": 2,
+    "peak_pending_requests": 2,
+    "decision_latency": {
+      "count": 170,
+      "max_ms": 127.88599600025918,
+      "p50_ms": 14.616395499615464,
+      "p95_ms": 15.66479699977208
+    },
+    "root_encoding_seconds": 0.04849503401055699,
+    "real_rule_seconds": 0.023336772992479382,
+    "search_rule_seconds": 0.001891343,
+    "native_encoding_seconds": 0.0,
+    "native_compute_seconds": 0.0039048839999999995,
+    "write_seconds": 0.03535696900144103,
+    "queue_wait_seconds": 0.0,
+    "worker_initialization_seconds_sum": 0.1264373699996213,
+    "worker_collection_wall_seconds_max": 1.1364990649999527,
+    "native_batch_rows": 1130,
+    "native_batch_batches": 570,
+    "native_root_rows": 129,
+    "native_policy_rows": 1130,
+    "native_value_rows": 0,
+    "native_wide_batches": 5,
+    "peak_inflight_rows": 2,
+    "native_fill_seconds": 0.00576857001578901,
+    "native_consume_seconds": 0.022449249006967875,
+    "pipeline_slots": 1,
+    "compile_failure_policy": "fallback",
+    "worker_compile": [
+      {
+        "compile": {},
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_failure_policy": "fallback",
+          "compile_mode": null,
+          "mode": "eager",
+          "native_transport": "reused"
+        },
+        "worker_id": 0
+      }
+    ],
+    "statistics_game_ids": [
+      0,
+      1
+    ]
+  },
+  "label_manifest": {
+    "protocol": "policy-target-behavior-plus3-v1",
+    "status": "complete",
+    "identity_sha256": "fff6e6d60fd2d3908dd2d58e4e0e300490194e28bc5ddac7d944cbda885c7e64",
+    "samples": 4,
+    "behavior_search_reused": true,
+    "extra_searches": 3,
+    "teacher_sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4",
+    "source_manifest_sha256": "380f6a256fe2bb925d4ca21f1adb7732d55c4030e68fa113f42945446c4c9779",
+    "games": [
+      {
+        "game_id": 0,
+        "run_id": "m4-cuda-smoke",
+        "split": "validation",
+        "file": "games/game-000000.npz",
+        "sha256": "487ad0b5afdd30f4e555c343849ccfe4239cd87da3c53e5650649f916fe3c46e",
+        "archive_sha256": "fb25cce5417c39bed5f96d67b7a08a43d92d9bdeebe74389ec6d8f696c4a9496",
+        "searchable_positions": 64
+      },
+      {
+        "game_id": 1,
+        "run_id": "m4-cuda-smoke",
+        "split": "validation",
+        "file": "games/game-000001.npz",
+        "sha256": "79fbd024d998436b2245d0cd78a7bb7f329b106d1a9183349e566df160260b02",
+        "archive_sha256": "ed1eaa04bf8a7ab48efcf7eb19d074c5ccdedf2bc78f60a3f0df3eaefd6bef82",
+        "searchable_positions": 65
+      }
+    ],
+    "extra_simulations": 3096,
+    "seconds_this_invocation": 1.8453013420003117,
+    "environment": {
+      "python": "3.12.14 (main, Sep  2 2026, 23:27:36) [GCC 15.3.0]",
+      "executable": "/home/lc/anaconda3/envs/splendor/bin/python",
+      "torch": "2.14.0+cu130",
+      "torch_cuda": "13.0",
+      "cuda_available": true,
+      "torch_threads": 1,
+      "cpu_count": 16,
+      "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+      "cpu_model": "13th Gen Intel(R) Core(TM) i5-13500H",
+      "meminfo": "MemTotal:       32597816 kB\nMemFree:        15298604 kB\nMemAvailable:   26356120 kB\nBuffers:          634632 kB\nCached:         10163528 kB\nSwapCached:            0 kB\nActive:          8507604 kB\nInactive:        6833276 kB\nActive(anon):    4618192 kB\nInactive(anon):        0 kB\nActive(file):    3889412 kB\nInactive(file):  6833276 kB\nUnevictable:       15428 kB\nMlocked:              96 kB\nSwapTotal:             0 kB\nSwapFree:              0 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:            179316 kB\nWriteback:             4 kB\nAnonPages:       4558420 kB\nMapped:          1942036 kB\nShmem:             75428 kB\nKReclaimable:     806612 kB\nSlab:            1121280 kB\nSReclaimable:     806612 kB\nSUnreclaim:       314668 kB\nKernelStack:       23520 kB\nPageTables:        61036 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    16298908 kB\nCommitted_AS:   18720604 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      225684 kB\nVmallocChunk:          0 kB\nPercpu:            18880 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:    10240 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:     1308928 kB\nDirectMap2M:    19396608 kB\nDirectMap1G:    12582912 kB\n",
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU, GPU-328e3c53-3afb-333f-7325-d411dd30f366, 580.178.04, 6141",
+      "performance_environment": {
+        "CONDA_DEFAULT_ENV": "splendor",
+        "PYTHONPATH": "src",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "compile_cache": {
+        "path": "default /tmp/torchinductor_<user>",
+        "warm_state": "unknown; compilation hit/miss counters in owner status are authoritative"
+      }
+    }
+  },
+  "raw_archives_unchanged": true,
+  "behavior_is_sample0": true,
+  "mean_of_four_verified": true,
+  "seconds": 3.3690171979997103
+}

@@ -83,19 +83,7 @@ class _RemoteEvaluator:
 def _worker_failure(root: Path, worker_id: int, error: BaseException,
                     active: dict[int, _GameSession], outstanding: dict[int, Any],
                     failed_game_id: int | None) -> None:
-    scenes = []
-    for session in active.values():
-        scenes.append({
-            "game_id": session.game_id,
-            "game_seed": session.stepper.trace["game_seed"],
-            "first_player": session.stepper.trace["first_player"],
-            "trace": session.stepper.trace,
-            "root_decision_index": session.stepper.decision_count,
-            "root_request": (None if session.stepper.terminal is not None else
-                             to_primitive(session.stepper.request)),
-            "search_context": (None if session.job is None else
-                               to_primitive(session.job.failure_context_for_world(None))),
-        })
+    scenes = [session.failure_scene() for session in active.values()]
     def slot_report(slot: int, item: Any) -> dict[str, Any]:
         ids = item[1].row_ids_array()
         rows = [
@@ -147,7 +135,8 @@ def _watch_owner(parent_pid: int) -> None:
 def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
             slots: tuple[SlotNames, ...], tasks: Any, ready: Any, replies: Any,
             fingerprint: str, checkpoint_sha: str, parent_pid: int,
-            start_event: Any = None, stop_event: Any = None) -> None:
+            start_event: Any = None, stop_event: Any = None,
+            session_factory: Callable = _GameSession) -> None:
     _watch_owner(parent_pid)
     initialization_started = time.perf_counter()
     torch.set_num_threads(1)
@@ -205,14 +194,14 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
             if game_id is None:
                 exhausted = True
                 break
-            active[game_id] = _GameSession(config, game_id, evaluator, checkpoint_sha)
+            active[game_id] = session_factory(config, game_id, evaluator, checkpoint_sha)
         peak_active = max(peak_active, len(active))
         for game_id, session in tuple(active.items()):
             current_game_id = game_id
             if session.job is not None and session.job.done:
                 session.take_result()
             session.ensure_job()
-            if session.stepper.terminal is not None:
+            if session.finished:
                 summary = session.commit(root, fingerprint, checkpoint_sha)
                 completed.append(summary)
                 decision_latencies.extend(session.decision_latencies_ms)
@@ -343,6 +332,7 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
             for job in used_jobs:
                 job.collect_if_done()
             del outstanding[slot_index]
+            del current, roots, used_jobs, job
     except BaseException as error:
         try:
             _worker_failure(root, worker_id, error, active, outstanding, current_game_id)
@@ -358,6 +348,7 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
     live_at_exit = snapshot()["simulations"]
     ready.put(("done", {
         "worker_id": worker_id, "completed": completed,
+        "pid": os.getpid(), "cuda_initialized": torch.cuda.is_initialized(),
         "live_simulations_at_exit": live_at_exit,
         "in_progress_simulations_at_exit": (
             live_at_exit - sum(item["simulations"] for item in completed)),
@@ -511,8 +502,13 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             progress_callback: Callable[[int, int], None] | None = None,
             completed_before: int = 0, evaluator: Any = None,
             benchmark_seconds: float | None = None,
-            warmup_seconds: float = 0.0) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Run one collection session.  Parent is the sole CUDA owner."""
+            warmup_seconds: float = 0.0,
+            session_factory: Callable = _GameSession) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Run bounded search sessions with one inference owner.
+
+    Defaults to real selfplay games; a fixed-root source supplies the same
+    job/completion interface without taking actions or loading a worker model.
+    """
     session_started = time.perf_counter()
     execution = config.execution
     if benchmark_seconds is not None and benchmark_seconds <= 0:
@@ -568,7 +564,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                     target=_worker,
                     args=(config, root, worker_id, quotas[worker_id], slot_names[worker_id],
                           tasks, ready, replies[worker_id], fingerprint, checkpoint_sha, os.getpid(),
-                          start_event, stop_event),
+                          start_event, stop_event, session_factory),
                     name=f"native-search-{worker_id}",
                 )
                 process.start()
@@ -949,6 +945,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             } if benchmark_seconds is not None else None),
             "workers": [
                 {"worker_id": item["worker_id"],
+                 "pid": item["pid"], "cuda_initialized": item["cuda_initialized"],
                  "game_ids": [game["game_id"] for game in item["completed"]],
                  "cpu_seconds": item["cpu_seconds"],
                  "completed_simulations": sum(game["simulations"] for game in item["completed"]),

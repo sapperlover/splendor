@@ -1,0 +1,90 @@
+{
+  "protocol": "entity-attention-iteration-trend-v1",
+  "suite_id": "entity_attention_avg4_behavior_20261009",
+  "base_config": "configs/entity_attention_v1/hybrid_split_policy_value.json",
+  "parent_run": "runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1",
+  "fork_round": 20,
+  "start_checkpoint": "runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+  "start_sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4",
+  "run_root": "runs/entity_attention_avg4_behavior_20261009",
+  "runtime_root": "runtime/entity_attention_avg4_behavior_20261009",
+  "artifact_root": "artifacts/entity_attention_avg4_behavior_20261009",
+  "rounds": 16,
+  "replay_cache_mib": 4096,
+  "arms": [
+    {
+      "id": "avg4",
+      "updates_per_round": 100,
+      "policy_averaging": {
+        "samples": 4,
+        "world_seed": 26300000,
+        "noise_seed": 26400000,
+        "active_roots": 256,
+        "games_per_block": 8,
+        "search_workers": 8,
+        "max_batch_size": 200,
+        "local_microbatch": 64,
+        "shared_slots": 2
+      }
+    }
+  ],
+  "replicates": [
+    {
+      "id": "seed1",
+      "collection_seed": 26000000,
+      "split_seed": 26100000,
+      "search_seed": 26200000,
+      "eval_game_seed": 26500000,
+      "eval_policy_seed": 26600000,
+      "eval_search_seed": 26700000,
+      "eval_bootstrap_seed": 26800000
+    }
+  ],
+  "collection_execution": {
+    "search_workers": 8,
+    "total_active_games": 200,
+    "local_microbatch": 64,
+    "max_batch_size": 200,
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      200
+    ],
+    "shared_slots": 2,
+    "pipeline_slots": 1,
+    "precision": "float32"
+  },
+  "evaluation_execution": {
+    "backend": "native_batched",
+    "active_games": 64,
+    "max_batch_size": 64,
+    "inference_mode": "eager",
+    "max_batch_wait_ms": 0.0
+  },
+  "evaluation": {
+    "rounds": [
+      2,
+      4,
+      8,
+      12,
+      16
+    ],
+    "pairs": 100,
+    "bootstrap_resamples": 10000
+  },
+  "analysis_seed": 26900000,
+  "resources": {
+    "memory_high_gib": null,
+    "memory_max_gib": null,
+    "min_available_gib": 0,
+    "min_gpu_free_mib": 0,
+    "poll_seconds": 1
+  },
+  "decision_probe": {
+    "bank": "artifacts/decision_probe_v1_20261009/bank.json",
+    "reference": "artifacts/decision_probe_v1_20261009/reference_16500_s1024_n1",
+    "active_roots": 64
+  }
+}

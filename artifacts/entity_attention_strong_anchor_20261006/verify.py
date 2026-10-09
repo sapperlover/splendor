@@ -103,7 +103,7 @@ def main() -> None:
     checks["design_starting_point_quotas_sources_and_budget"] = True
     checks["new_sampling_training_not_started"] = True
 
-    documents = [ART / "README.md", ROOT / "docs/guides/entity_attention_fresh_share_zh-CN.md",
+    documents = [ART / "README.md", ROOT / "docs/archive/entity_attention_fresh_share_zh-CN.md",
                  ROOT / "docs/guides/entity_attention_hybrid_s1024_n1_zh-CN.md",
                  ROOT / "docs/guides/entity_attention_offline_zh-CN.md", ROOT / "README.md",
                  ROOT / "docs/index.md", ROOT / "docs/current_project_state_zh-CN.md",

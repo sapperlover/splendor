@@ -1,0 +1,549 @@
+{
+  "bootstrap": {
+    "cluster": "source game",
+    "multiplicity": "retained",
+    "resamples": 10000,
+    "round_weights": "position counts fixed",
+    "seed": 20261010,
+    "strata": "round"
+  },
+  "client_date": "2026-10-09",
+  "fresh_label_internal_js": 0.08060361629649317,
+  "fresh_vs_stored_js": 0.030168788424237303,
+  "ledger_samples": {
+    "r004": {
+      "draws_current_round": 6391,
+      "dropped_non_searchable": 1005,
+      "sampled": 256,
+      "searchable_unique_current_round": 4199,
+      "unique_current_round": 5204
+    },
+    "r008": {
+      "draws_current_round": 6415,
+      "dropped_non_searchable": 1051,
+      "sampled": 256,
+      "searchable_unique_current_round": 4129,
+      "unique_current_round": 5180
+    },
+    "r012": {
+      "draws_current_round": 6284,
+      "dropped_non_searchable": 1002,
+      "sampled": 256,
+      "searchable_unique_current_round": 4100,
+      "unique_current_round": 5102
+    }
+  },
+  "pooled": {
+    "train": {
+      "estimate": 0.008595779349427379,
+      "fresh_minus_stored_delta": {
+        "estimate": 0.0008117823580603766,
+        "games": 411,
+        "lower": -0.002751393719170388,
+        "upper": 0.004459285435990241
+      },
+      "games": 411,
+      "improved_fraction": 0.46484375,
+      "lower": 0.0018944189145680573,
+      "positions": 768,
+      "stored_delta": {
+        "estimate": 0.007783996991367,
+        "games": 411,
+        "lower": 0.001044557250433087,
+        "upper": 0.014610864643235352
+      },
+      "upper": 0.015104568478706995
+    },
+    "train_ledger": {
+      "estimate": -0.0036746008560374632,
+      "fresh_minus_stored_delta": {
+        "estimate": 0.0016008655101718012,
+        "games": 405,
+        "lower": -0.0024508400321578173,
+        "upper": 0.005711496318665646
+      },
+      "games": 405,
+      "improved_fraction": 0.4856770833333333,
+      "lower": -0.01003351298025287,
+      "positions": 768,
+      "stored_delta": {
+        "estimate": -0.005275466366209264,
+        "games": 405,
+        "lower": -0.011819018405733303,
+        "upper": 0.001028137915782117
+      },
+      "upper": 0.0026378434641953856
+    },
+    "train_unseen": {
+      "estimate": 0.004148440089468914,
+      "fresh_minus_stored_delta": {
+        "estimate": 0.0006283563309335034,
+        "games": 412,
+        "lower": -0.0029868667280081407,
+        "upper": 0.004096690574127193
+      },
+      "games": 412,
+      "improved_fraction": 0.44140625,
+      "lower": -0.0015404743763213304,
+      "positions": 768,
+      "stored_delta": {
+        "estimate": 0.0035200837585354114,
+        "games": 412,
+        "lower": -0.0021693831024466037,
+        "upper": 0.009231212472274023
+      },
+      "upper": 0.00979672895606539
+    },
+    "validation": {
+      "estimate": 0.008129090484022003,
+      "fresh_minus_stored_delta": {
+        "estimate": 8.292818935670123e-05,
+        "games": 63,
+        "lower": -0.0031577003270695883,
+        "upper": 0.003339096322016443
+      },
+      "games": 63,
+      "improved_fraction": 0.4309895833333333,
+      "lower": 0.002455786685185958,
+      "positions": 768,
+      "stored_delta": {
+        "estimate": 0.008046162294665302,
+        "games": 63,
+        "lower": 0.0018732721967523861,
+        "upper": 0.014687494628472242
+      },
+      "upper": 0.014082364829606188
+    }
+  },
+  "protocol": "avg4-independent-m4-delta-kl-summary-v2",
+  "rounds": {
+    "r004": {
+      "train": {
+        "entropy": {
+          "fresh": 1.509958996237575,
+          "stored": 1.5097722119090513,
+          "student_after": 1.761611942611046,
+          "student_before": 1.7362336375844853
+        },
+        "kl_fresh": {
+          "estimate": 0.009036658667184982,
+          "games": 133,
+          "improved_fraction": 0.44921875,
+          "lower": -0.002277262700514605,
+          "mean_after": 0.27619965560418186,
+          "mean_before": 0.2671629969369969,
+          "median_delta": 0.003343350798448657,
+          "positions": 256,
+          "top1_after": 0.66015625,
+          "top1_before": 0.6484375,
+          "upper": 0.020189512819757092
+        },
+        "kl_stored": {
+          "estimate": 0.006493048373425287,
+          "games": 133,
+          "improved_fraction": 0.4375,
+          "lower": -0.0052564098355226095,
+          "mean_after": 0.2764859639847576,
+          "mean_before": 0.2699929156113323,
+          "median_delta": 0.0028285177204030957,
+          "positions": 256,
+          "top1_after": 0.671875,
+          "top1_before": 0.671875,
+          "upper": 0.018044919390975217
+        }
+      },
+      "train_ledger": {
+        "entropy": {
+          "fresh": 1.5003669034378104,
+          "stored": 1.4982645527042444,
+          "student_after": 1.756980838154882,
+          "student_before": 1.7100322766098144
+        },
+        "kl_fresh": {
+          "estimate": -0.005019989722371416,
+          "games": 134,
+          "improved_fraction": 0.45703125,
+          "lower": -0.015204553458353408,
+          "mean_after": 0.3008431602473163,
+          "mean_before": 0.3058631499696877,
+          "median_delta": 0.00426672165999234,
+          "positions": 256,
+          "top1_after": 0.671875,
+          "top1_before": 0.66015625,
+          "upper": 0.0048439385247663926
+        },
+        "kl_stored": {
+          "estimate": -0.006426111359325497,
+          "games": 134,
+          "improved_fraction": 0.4609375,
+          "lower": -0.016567521752848625,
+          "mean_after": 0.30178610479544943,
+          "mean_before": 0.30821221615477495,
+          "median_delta": 0.0014706701502899336,
+          "positions": 256,
+          "top1_after": 0.6640625,
+          "top1_before": 0.65234375,
+          "upper": 0.0038960703609941744
+        }
+      },
+      "train_unseen": {
+        "entropy": {
+          "fresh": 1.5228722928874188,
+          "stored": 1.528505807816711,
+          "student_after": 1.7555045101965145,
+          "student_before": 1.7227043332198408
+        },
+        "kl_fresh": {
+          "estimate": 0.007685583329787074,
+          "games": 138,
+          "improved_fraction": 0.41796875,
+          "lower": 6.185693945890653e-05,
+          "mean_after": 0.27789618127193266,
+          "mean_before": 0.2702105979421456,
+          "median_delta": 0.0038309231108629247,
+          "positions": 256,
+          "top1_after": 0.61328125,
+          "top1_before": 0.6484375,
+          "upper": 0.015387674629829479
+        },
+        "kl_stored": {
+          "estimate": 0.0032698217660631526,
+          "games": 138,
+          "improved_fraction": 0.48046875,
+          "lower": -0.00543522456920943,
+          "mean_after": 0.27286509753797494,
+          "mean_before": 0.2695952757719118,
+          "median_delta": 0.0005435573918604678,
+          "positions": 256,
+          "top1_after": 0.65234375,
+          "top1_before": 0.66796875,
+          "upper": 0.011982579111973247
+        }
+      },
+      "validation": {
+        "entropy": {
+          "fresh": 1.5208353957752347,
+          "stored": 1.5246223263908676,
+          "student_after": 1.7508393174449164,
+          "student_before": 1.7325015600182612
+        },
+        "kl_fresh": {
+          "estimate": 0.01478803632885627,
+          "games": 19,
+          "improved_fraction": 0.37890625,
+          "lower": 0.003586661016372341,
+          "mean_after": 0.24567448080671664,
+          "mean_before": 0.2308864444778604,
+          "median_delta": 0.008119488759146804,
+          "positions": 256,
+          "top1_after": 0.67578125,
+          "top1_before": 0.70703125,
+          "upper": 0.02535326690823987
+        },
+        "kl_stored": {
+          "estimate": 0.015327188756261934,
+          "games": 19,
+          "improved_fraction": 0.3828125,
+          "lower": 0.004377649601305923,
+          "mean_after": 0.24288089898091048,
+          "mean_before": 0.22755371022464851,
+          "median_delta": 0.006376849674166032,
+          "positions": 256,
+          "top1_after": 0.65625,
+          "top1_before": 0.66796875,
+          "upper": 0.02654054071910961
+        }
+      }
+    },
+    "r008": {
+      "train": {
+        "entropy": {
+          "fresh": 1.5054147162026044,
+          "stored": 1.5471410119349196,
+          "student_after": 1.7910264827820683,
+          "student_before": 1.7308854846484008
+        },
+        "kl_fresh": {
+          "estimate": 0.0002710949339730564,
+          "games": 137,
+          "improved_fraction": 0.4921875,
+          "lower": -0.008627555599242104,
+          "mean_after": 0.3060015979229459,
+          "mean_before": 0.3057305029889728,
+          "median_delta": 0.00013228320561138596,
+          "positions": 256,
+          "top1_after": 0.65625,
+          "top1_before": 0.65625,
+          "upper": 0.009381378207991864
+        },
+        "kl_stored": {
+          "estimate": 0.0007453741257774731,
+          "games": 137,
+          "improved_fraction": 0.46484375,
+          "lower": -0.008383632322744581,
+          "mean_after": 0.28490430744388046,
+          "mean_before": 0.28415893331810294,
+          "median_delta": 0.0010273296334402833,
+          "positions": 256,
+          "top1_after": 0.6640625,
+          "top1_before": 0.671875,
+          "upper": 0.00996213170689898
+        }
+      },
+      "train_ledger": {
+        "entropy": {
+          "fresh": 1.5525004043348132,
+          "stored": 1.5426979246834025,
+          "student_after": 1.8352801971995012,
+          "student_before": 1.7766420477740645
+        },
+        "kl_fresh": {
+          "estimate": -0.004727875911681153,
+          "games": 133,
+          "improved_fraction": 0.51171875,
+          "lower": -0.013702445885330818,
+          "mean_after": 0.2679350362416481,
+          "mean_before": 0.2726629121533293,
+          "median_delta": -0.00021896360368995943,
+          "positions": 256,
+          "top1_after": 0.68359375,
+          "top1_before": 0.69921875,
+          "upper": 0.00434850093115559
+        },
+        "kl_stored": {
+          "estimate": -0.008309788198045426,
+          "games": 133,
+          "improved_fraction": 0.51953125,
+          "lower": -0.018059288867177087,
+          "mean_after": 0.30341746758655985,
+          "mean_before": 0.3117272557846052,
+          "median_delta": -0.0007294465850506528,
+          "positions": 256,
+          "top1_after": 0.65625,
+          "top1_before": 0.640625,
+          "upper": 0.0008874778020765579
+        }
+      },
+      "train_unseen": {
+        "entropy": {
+          "fresh": 1.4927189026001302,
+          "stored": 1.5076466610205288,
+          "student_after": 1.8080829103656302,
+          "student_before": 1.7466053455192032
+        },
+        "kl_fresh": {
+          "estimate": 0.0061018125367037985,
+          "games": 139,
+          "improved_fraction": 0.41796875,
+          "lower": -0.0038533999167904686,
+          "mean_after": 0.33072993263286876,
+          "mean_before": 0.32462812009616493,
+          "median_delta": 0.0032470365387111677,
+          "positions": 256,
+          "top1_after": 0.65234375,
+          "top1_before": 0.671875,
+          "upper": 0.015543038301728937
+        },
+        "kl_stored": {
+          "estimate": 0.004705390138425938,
+          "games": 139,
+          "improved_fraction": 0.44921875,
+          "lower": -0.005120710554252913,
+          "mean_after": 0.3083358039139344,
+          "mean_before": 0.3036304137755084,
+          "median_delta": 0.0016556389578331644,
+          "positions": 256,
+          "top1_after": 0.69140625,
+          "top1_before": 0.703125,
+          "upper": 0.014750856041480352
+        }
+      },
+      "validation": {
+        "entropy": {
+          "fresh": 1.5336024195495706,
+          "stored": 1.5119893514779497,
+          "student_after": 1.8137892104905768,
+          "student_before": 1.7552912588215608
+        },
+        "kl_fresh": {
+          "estimate": 0.003208015276500873,
+          "games": 23,
+          "improved_fraction": 0.46875,
+          "lower": -0.003236216125310046,
+          "mean_after": 0.26751751115128,
+          "mean_before": 0.26430949587477914,
+          "median_delta": 0.0006992818480929808,
+          "positions": 256,
+          "top1_after": 0.61328125,
+          "top1_before": 0.62890625,
+          "upper": 0.009781758839993951
+        },
+        "kl_stored": {
+          "estimate": 0.006792444256907653,
+          "games": 23,
+          "improved_fraction": 0.41015625,
+          "lower": -0.0004976014969172526,
+          "mean_after": 0.27790059269176126,
+          "mean_before": 0.27110814843485354,
+          "median_delta": 0.004307495565696286,
+          "positions": 256,
+          "top1_after": 0.59375,
+          "top1_before": 0.609375,
+          "upper": 0.014317287160670161
+        }
+      }
+    },
+    "r012": {
+      "train": {
+        "entropy": {
+          "fresh": 1.5463180236341862,
+          "stored": 1.5526120861861212,
+          "student_after": 1.8863943312980915,
+          "student_before": 1.8618368237158078
+        },
+        "kl_fresh": {
+          "estimate": 0.016479584447124097,
+          "games": 141,
+          "improved_fraction": 0.453125,
+          "lower": 0.003202657546422976,
+          "mean_after": 0.27264995002349834,
+          "mean_before": 0.2561703655763743,
+          "median_delta": 0.002476992919382158,
+          "positions": 256,
+          "top1_after": 0.69140625,
+          "top1_before": 0.671875,
+          "upper": 0.02987618637801996
+        },
+        "kl_stored": {
+          "estimate": 0.016113568474898247,
+          "games": 141,
+          "improved_fraction": 0.44921875,
+          "lower": 0.0025882560518533802,
+          "mean_after": 0.28646588565108433,
+          "mean_before": 0.27035231717618613,
+          "median_delta": 0.0018876947057379322,
+          "positions": 256,
+          "top1_after": 0.6953125,
+          "top1_before": 0.671875,
+          "upper": 0.030051140131132668
+        }
+      },
+      "train_ledger": {
+        "entropy": {
+          "fresh": 1.5270262124681433,
+          "stored": 1.5066970880417134,
+          "student_after": 1.8252269241387145,
+          "student_before": 1.8125302870068565
+        },
+        "kl_fresh": {
+          "estimate": -0.0012759369340598194,
+          "games": 138,
+          "improved_fraction": 0.48828125,
+          "lower": -0.015188433795489831,
+          "mean_after": 0.3052636482017378,
+          "mean_before": 0.3065395851357976,
+          "median_delta": 0.00012584680800633435,
+          "positions": 256,
+          "top1_after": 0.60546875,
+          "top1_before": 0.6171875,
+          "upper": 0.012019433247678468
+        },
+        "kl_stored": {
+          "estimate": -0.0010904995412568672,
+          "games": 138,
+          "improved_fraction": 0.484375,
+          "lower": -0.015540234568685527,
+          "mean_after": 0.30350401166824326,
+          "mean_before": 0.30459451120950015,
+          "median_delta": 0.0006987466717729689,
+          "positions": 256,
+          "top1_after": 0.61328125,
+          "top1_before": 0.6015625,
+          "upper": 0.011512829878528719
+        }
+      },
+      "train_unseen": {
+        "entropy": {
+          "fresh": 1.5137320743155247,
+          "stored": 1.5023702271151629,
+          "student_after": 1.8715937142365,
+          "student_before": 1.834146177418381
+        },
+        "kl_fresh": {
+          "estimate": -0.0013420755980841298,
+          "games": 135,
+          "improved_fraction": 0.48828125,
+          "lower": -0.013237970475546213,
+          "mean_after": 0.25972813889167334,
+          "mean_before": 0.2610702144897575,
+          "median_delta": 0.000720197914984377,
+          "positions": 256,
+          "top1_after": 0.73046875,
+          "top1_before": 0.75,
+          "upper": 0.010506987528808234
+        },
+        "kl_stored": {
+          "estimate": 0.002585039371117143,
+          "games": 135,
+          "improved_fraction": 0.4765625,
+          "lower": -0.008299808693372228,
+          "mean_after": 0.2515171834435309,
+          "mean_before": 0.24893214407241374,
+          "median_delta": 0.0011562715373668493,
+          "positions": 256,
+          "top1_after": 0.73046875,
+          "top1_before": 0.71875,
+          "upper": 0.013697882502210715
+        }
+      },
+      "validation": {
+        "entropy": {
+          "fresh": 1.5223228573222936,
+          "stored": 1.5092099141827606,
+          "student_after": 1.8505401091947504,
+          "student_before": 1.8231896671448253
+        },
+        "kl_fresh": {
+          "estimate": 0.006391219846708862,
+          "games": 21,
+          "improved_fraction": 0.4453125,
+          "lower": -0.004554057966332547,
+          "mean_after": 0.28242984722186837,
+          "mean_before": 0.2760386273751595,
+          "median_delta": 0.001575704349734355,
+          "positions": 256,
+          "top1_after": 0.70703125,
+          "top1_before": 0.6875,
+          "upper": 0.01915564991471951
+        },
+        "kl_stored": {
+          "estimate": 0.002018853870826314,
+          "games": 21,
+          "improved_fraction": 0.48828125,
+          "lower": -0.010664011858843638,
+          "mean_after": 0.27583178145801024,
+          "mean_before": 0.273812927587184,
+          "median_delta": 0.0007286753627313008,
+          "positions": 256,
+          "top1_after": 0.71484375,
+          "top1_before": 0.6796875,
+          "upper": 0.01668476732082107
+        }
+      }
+    }
+  },
+  "source": {
+    "git_head": "320d381ff47a8c53acdc113cdfc70c75275cc8c6",
+    "git_status_sha256": "8b493bcf26f0dba9c273e747108f2feeea0f115660a31ba4650183df647aacf4",
+    "script": {
+      "bytes": 35180,
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_avg4_delta_kl_20261009/run.py",
+      "sha256": "a4f3e8cb4b37405f13d0e4d381233405decd73f212b24cf2e2c8e44b772cff64"
+    }
+  },
+  "unseen_specification": {
+    "bytes": 125022,
+    "path": "/home/lc/下载/splendor/artifacts/entity_attention_avg4_delta_kl_20261009/unseen_specification.json",
+    "sha256": "d51c014a0e123ced7d79e674bac91a1e8d1e8b52547859a205d4901f833149cd"
+  }
+}

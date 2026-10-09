@@ -1,42 +1,37 @@
 # 当前项目状态
 
-2026-10-08更新[连续自迭代趋势套件](guides/entity_attention_iteration_suite_zh-CN.md)：当前只按B→C→D运行50步、100步低lr、50步policy最新1轮三组，各seed1×16轮；2/4/8/12/16轮对冻结起点测100pair。已取消A/PPO/0轮自测、额外账本审计及磁盘门槛，保留4GiB缓存、16GiB内存上限和断点恢复。已完成B前两轮/16600步及首次100pair评测51.25%（95%区间44.5%–58.0%），未确认净收益；C/D未运行。下方“lr覆盖未实现”为旧工程状态，历史棋力结论不变。
+核验日期：2026-10-09。本文是导航快照，详细事实以当前实现、冻结配置和可复核原始产物为准。完成模型训练、完成评测、确认收益是三个不同状态；历史日期和测试数量不代表当前工作树重新验收。
 
-同日准备[只搜后期／只搜前中期对greedy](../artifacts/entity_attention_stage_search_20261008/README.md)：同16500步冻结权重，公开最高分≥10切换，每组500pair、同种子换座，独立可恢复入口，active200＋CUDA Graph且不设RAM硬上限；两组500pair已完成：后期67.0%、前中期69.35%，差值区间跨0；新增全程搜索500pair为81.8% [79.3%,84.3%]，两项配对差值均大于0；本次耗时仅比前中期组多5.1%。
+## 当前研究结果
 
-既有条目证据核对：2026-10-01；2026-10-03 新增流程统计及完整性能验收导航。本文仅作导航；规则看标准规则与 data，契约看对应 specs，实现与实验状态优先核对当前代码/config 和可复核原始产物，再读对应版本报告。总览不凌驾于专题协议或报告。
+[M4 与固定数据诊断完整结论](reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md) 是近期研究的统一入口。学生可以降低固定训练目标的误差，但稳定泛化与持续棋力收益未确认；最新数据优先、删除历史、较小学习率都还没有成为经过独立确认的最佳日程。
 
-| 能力或实验 | 已确认状态 | 阅读入口 |
+| 实验／分支 | 已完成与限制 | 依据 |
 | --- | --- | --- |
-| 双人基础规则、Observation、特征与 PPO | 已实现；Python checked 为参照，native 另有 C++ 实现 | [契约](specs/engine_contract_zh-CN.md) |
-| PPO seed1 | 5M run-local decisions 完成；DEV best 为 lifetime 4,662,112，latest 5,512,112；未据此宣称独立 FINAL best | [报告](reports/ppo_5m_zh-CN.md) |
-| 固定深度 / PUCT 搜索 | Python 与 native 执行入口可用；不完全信息近似 | [搜索指南](guides/search_zh-CN.md) |
-| AZ seed1 | Python batched_cpu 5 轮 × 500 局、2,982 优化步完成；θ1–θ5 扩展面板已保存 | [报告](reports/alphazero_seed1_zh-CN.md) |
-| native 单 owner 推理 | 08 正确输入窗口、09 传输画像、500 局比较已保存；按负载区分推荐 | [报告](reports/inference_throughput_zh-CN.md) |
-| 多 worker GPU pool | 已实现，有窗口和每档一次完整 500 局；整轮收益尚无重复稳定性证据 | [报告](reports/multiworker_gpu_zh-CN.md) |
-| 流程时间统计 | 历史有限learner/评测/pool分项与口径修正保留；其“未实施优化”仅适用当时版本 | [分项报告](reports/pipeline_profile_zh-CN.md) |
-| 完整性能优化 | 两组各1000局及checked replay、各50 pairs、8+128步固定learner对照完成；采集1.239×、learner总成本8.082×、评测3.292×；每组一次 | [完整报告](reports/end_to_end_speed_optimization_zh-CN.md) |
-| 旧θ5起点10×1000 | 源run轮0–9已完成；保留的10000局原split可供离线学习，训练770870/留出80699局面；本次仅核对数据元信息，不重新验收旧run棋力 | [原配置/记录](guides/next_az_training_zh-CN.md)、[数据依据](../artifacts/entity_attention_v1_20261004/data_summary.json) |
-| Entity attention v1 | 532738参数，离线12045步完成；1000/5000/final的PPO搜索与greedy六个200局面板均有效，final搜索59.5%、greedy61.75%；重复DEV，不是独立FINAL验收 | [专题与命令](guides/entity_attention_offline_zh-CN.md)、[共同锚点核对](../artifacts/entity_attention_strong_anchor_20261006/README.md) |
-| 新模型10×1000自迭代 | 起点使用已生成的离线final；1000局同时调度，每轮对固定起点搜索/greedy各50 pairs；有限CPU/GPU验证通过，用户已运行；2026-10-05 loop_state中轮0–2完成 | [配置、命令与验证](guides/entity_attention_self_iteration_zh-CN.md) |
-| 新模型采集执行优化 | 固定地址CUDA Graph与owner双缓冲实现、有限FP32/短对局/窗口对照；未执行优化版完整1000局或长训 | [执行对照](reports/entity_attention_execution_speed_zh-CN.md) |
-| 连续混合自迭代 | 原run已完成9轮、9500步，第九轮S1024/N1对theta_5000得分69.5%（100局有效）；原冻结日程保留 | [配置、启动与恢复](guides/entity_attention_hybrid_zh-CN.md)、[有限S/N筛选](../artifacts/entity_attention_search_screen_20261005/README.md) |
-| 第九轮N2训练分支 | 新入口继承模型/AdamW/RNG；100局/100步，20新轮后在线池全N2、61新轮起纯在线；S512/N2曾在18新轮后RAM OOM，清理与退出修复已完成；2026-10-06本次检查至少完成33新轮/12800步，新轮30面板62.5%，未证明N2训练收益；S1024/N2尚未发现正式产物 | [配置、命令与验证](guides/entity_attention_hybrid_fork_zh-CN.md)、[退出清理记录](../artifacts/entity_attention_worker_cleanup_20261005/README.md) |
-| 回归原第九轮S1024/N1 | 2026-10-06用户完成50新轮/14500步后停止；31轮RAM OOM缓存修复已用于后续运行。原第9轮/第50轮对同一PPO补测63.75%/61.75%，各200局有效，50−9配对95%区间−11.75～+7.50个百分点；31–50轮最新数据占batch平均6.61%，窗口长短因果未隔离 | [方案与命令](guides/entity_attention_hybrid_s1024_n1_zh-CN.md)、[补测与原始证据](../artifacts/entity_attention_strong_anchor_20261006/README.md) |
-| 分头窗口与detach value | 第50轮/14500步fork，policy近4轮、value3000局且近4轮50%，各batch256、独立clip1；200局/100步、S1024/N1、固定PPO每5轮200局。正式调用链、恢复及记录已实现，40项回归、真实继承与短GPU逐张量恢复通过；2026-10-07已完成20新轮/16500步，最新固定PPO得分64.0%（200局），长期收益未确认。取代旧最新单轮份额阶梯设计 | [命令与口径](guides/entity_attention_split_training_zh-CN.md)、[有限验证](../artifacts/entity_attention_split_training_20261006/README.md) |
-| 冻结encoder、只练critic | 2026-10-08从16550保留AdamW状态重放B2原50步value批次；完整15代3000局，整体训练MSE 0.813065→0.798345、留出0.802914→0.789075，留出变化95%区间[-0.017369,-0.010276]；正式16600留出0.808967。encoder/policy及其AdamW状态不变，支持共享表征变化干扰value拟合。最新B2仅12局留出，改善尚未确认；未测棋力、未替换正式模型 | [诊断结果与恢复命令](../artifacts/entity_attention_critic_only_replay_20261008/README.md) |
-| 两版encoder的critic重新拟合 | 2026-10-08冻结16500／16600 encoder，同一新随机critic、空AdamW状态、相同15代数据与500个batch，完整记录0/50/200/500步。500步训练MSE 0.803989／0.803363、留出0.792473／0.792415；留出差值95%区间[-0.001835,+0.001707]。200步后曲线基本重合，未发现16600整体可拟合性明显下降；更符合critic适应表征变化不足的解释，尚未测出绝对拟合上限或棋力收益 | [报告、原始数据与恢复命令](../artifacts/entity_attention_encoder_critic_refit_20261008/README.md) |
-| 原16600 critic适配与棋力检验准备 | 四个0/50/200/500额外步数模型和完整15代MSE已完成；固定policy/encoder、保留原critic/AdamW，整体留出0.808967／0.789053／0.787500／0.786814。对战计划为三节点各100pair筛查、选定节点独立2000pair确认、前中期／后期critic替换各1000pair；可恢复脚本和4项无搜索准备检查已完成，按用户要求尚未启动对战，真实native/CUDA路由未实跑验证 | [结果、计划与启动命令](../artifacts/entity_attention_critic_adaptation_strength_20261008/README.md) |
-| 搜索目标噪声A/B/C/D | 冻结第20新轮/16500步模型、200个最近四轮留出主行动局面，各组8次重复；6400次搜索全部完成，A逐项一致。世界抽样C的JS0.05866，根噪声B为0.02889；两者同时变化D的经验目标分歧项占平均KL38.9%。未证明训练平台期因果或随机节点后端棋力 | [报告与原始产物](../artifacts/entity_attention_target_noise_20261007/README.md) |
-| 随机节点／信息历史PUCT | 可选API及串行/native_batched评测已实现，39项回归通过。固定局面C组JS下降90.8%、D下降63.8%，耗时1.52倍、搜索更浅。新增同权重S1024的100 pair：新搜索62胜1和137负、31.25%（95%区间24.5%–38.5%），200局自然终局，明显弱于旧确定化。目标稳定性不代表教师棋力；正式训练仍用旧native，长期训练影响未验证 | [搜索指南](guides/search_zh-CN.md)、[稳定性复测](../artifacts/entity_attention_chance_search_20261007/README.md)、[棋力对照](../artifacts/entity_attention_chance_strength_20261007/README.md) |
-| Chance progressive widening | 可选真实抽牌结果扩宽，保留每simulation暗牌重采样；45项回归、六局checked smoke通过。k0.25/α0.5后续6400次固定请求：D深度2.560→3.401、JS0.03072→0.04835，仍比旧确定化JS0.08477稳定。新增同权重S1024/100 pair：73胜2和125负、37.0%（95%区间30.75%–43.25%），明显弱于旧确定化；比不扩宽31.25%高5.75个百分点，配对差值区间跨0。200局自然终局，零工程失败；新增同权重CPW对greedy100 pair得分72.75%（66.5%–78.5%），明显强于裸网，混合批量评测及35项相关回归通过。当次棋力实验未训练，后续有限短训见下一行；正式教师未切换，大S后续取消 | [CPW对裸网](../artifacts/entity_attention_chance_pw_greedy_20261007/README.md)、[实现与采集短窗](../artifacts/entity_attention_chance_pw_20261007/README.md)、[稳定性复测](../artifacts/entity_attention_chance_pw_noise_20261007/README.md)、[棋力](../artifacts/entity_attention_chance_pw_strength_20261007/README.md)、[搜索说明](guides/search_zh-CN.md#chance-progressive-widening可选) |
-| 冻结教师采集与短训 | 2026-10-07同一16500步起点，native/chance/CPW各200局完整checked replay与500步固定新数据训练，value detach、每路batch256、独立clip1。16面板1600局有效、零工程失败；100步共同旧搜索45%/46%/51%，500步42%/41.5%/41.5%，均未确认超过起点。CPW100相对旧数据+6个百分点，区间[−7,+19]，独立100 pair复测CPW49.75%对native50%，差值−0.25个百分点、区间[−10,+9.75]，初筛优势未复现；18面板2000局通过完整审计。采集含验证6.87/8.18/9.18分钟；不是800/3000局历史混合或持续自迭代。100/500步差异的分层解释见整合报告 | [系列整合报告](reports/entity_attention_search_teachers_zh-CN.md)、[完整数据与报告](../artifacts/entity_attention_chance_training_probe_20261007/README.md) |
-| 多搜索平均标签对照 | 同一16500步起点、200局，额外四份完整S1024/N1平均；抽样账本/value输入/优化配置相同，后续梯度、critic及value函数不同。修订为77个来源对局聚类，avg4对独立八次均值KL优势仍成立（100/300/500步−0.01885/−0.02038/−0.01756，区间均低于0）；不同学生权重、相同旧搜索直接对打60.5%（119胜、4和、77负，区间54.25%–66.75%）。对起点47%区间跨50%、greedy49%，净提升与长期收益未确认。标签预算S4096，额外重标注加原采集总模拟量约5倍；正式平均标签入口未实现。正式分头20轮当前留出policy KL每轮更新后均升，支持先改标签再辨别value漂移的方向，但不单独证明原因 | [修订报告及候选方案](reports/entity_attention_search_teachers_zh-CN.md#九如何改善当前自迭代先改变标签再判断剩余限制)、[原数据与复核](../artifacts/entity_attention_target_averaging_20261007/README.md) |
-| 200局短训剂量对照 | 同一16500起点、200局、同一batch账本；节点为同一轨迹前缀（25/50/100/200/300/500步），单次标签臂与既有native检查点逐张量一致。50 pair对冻结起点：avg4 25/50/100/200/300=52.0/56.5/47.0/43.0/46.0%，single 50/100/200/500=58.0/45.0/45.0/42.0%；lr2.5e-5@100=54.0%（同100步lr1e-4为47.0%，Δ+7pp[−5.5,+20]），lr2.5e-5@400=45.5%；冻结critic head@100=48.0%对detach47.0%（Δ+1pp[−12,+14]）。拟合：avg4最优100–200步、single最优25步、低LR整体更好；拟合与棋力最优点不一致。**200局/100步/lr1e-4处于本批最差区间，降步数或学习率不增加搜索成本，应先于标签平均×4；单轮最好节点仅略高于50%，自迭代启动仍未证明**；单起点/单seed/50 pair、无多轮 | [完整数据与命令](../artifacts/entity_attention_step_dose_20261007/README.md) |
-| 正式回放学习率×步数探针 | 2026-10-08：同一16500起点逐条重放round-019正式账本（policy近4轮、value3000局近期半、detach、batch256+256、独立clip1均不变），三条轨迹只改lr 2.5e-5/5e-5/1e-4，节点25/50/100步；边界节点用同口径第二固定账本延伸到125/150步。从round-018重放100步与正式round-019逐张量一致（模型与AdamW max_diff全0），起点诊断与正式validation完全一致。2.5e-5的recent留出KL随步数降到0.40525@150（起点0.42109，1e-4@100=0.41977），但1e-4@100净策略变化近0（KL0.00071、top1 2.3%）、125/150又变大且bank KL变差；三档lr的policy梯度99–100%步被裁剪（预裁剪均值2.1–2.7对阈值1.0）。50-pair面板全部区间跨0；DEV最高节点2.5e-5@150=60.0%在独立HEAD种子复核为41.5%（对照46.5%，配对差−5.0pp[−20,+10]），未复现。**本轮未确认优于现行1e-4/100步/200局，正式配置未改**；多轮自迭代分支需执行级lr覆盖，未实现未运行 | [完整数据与命令](../artifacts/entity_attention_formal_lr_step_20261007/README.md) |
-| 固定数据 policy/value 消融 | 同一14400步起点、最新175训练/25留出局、同batch三分支各500步；17面板2700局有效。联合500搜索62.50%→37.75%，保留policy并换起点完整value后同种子43%→65%；policy-only和detach避免此次大退化，未确认超过起点。另有固定policy2000步/256局面探针；消融本身未正式续训；后续分离采样实现另见上一行 | [报告与复核命令](../artifacts/entity_attention_policy_value_ablation_20261006/README.md)、[完整统计](../artifacts/entity_attention_policy_value_ablation_20261006/analysis.json) |
-| MCTS sweep | 01/02/05 完整，03 不完整，04 无汇总；非全部完成 | [报告](reports/mcts_sweep_zh-CN.md) |
+| 行为复用 M4 | 12／16轮，2400新局、1200更新、17700步，当前停止；r2／4／8对冻结16500起点为48.5／56.25／53.0%，区间均跨50%；r12仅61完整pair | [运行记录](../artifacts/entity_attention_avg4_behavior_20261009/README.md)、[命令](guides/entity_attention_avg4_iteration_zh-CN.md) |
+| 固定历史 A／B／C | 三个起点、4500更新、36诊断节点；A@100精确复现正式模型／AdamW；C改善训练拟合，但最新代和近期留出没有稳定收益；B尚未确认优于A | [实验报告](../artifacts/entity_attention_policy_history_20261009/README.md) |
+| 独立重搜索 | 已修正 bootstrap 重复权重和遗漏补充集；未抽中 Train 的768根 fresh ΔKL +0.00415，95%区间[−0.00154,+0.00980]；未确认改善或稳定退化 | [修订与原始证据](../artifacts/entity_attention_avg4_delta_kl_20261009/README.md) |
+| 步数／lr／clip | 旧16500单起点固定账本提供较小更新候选；50步初筛点估计较高，最优步数／学习率未确定；高裁剪频率不能证明 AdamW 的学习率作用很弱 | [剂量](../artifacts/entity_attention_step_dose_20261007/README.md)、[lr](../artifacts/entity_attention_formal_lr_step_20261007/README.md)、[clip](../artifacts/entity_attention_clip_sweep_20261009/README.md) |
+| critic 适配 | 额外0／50／200／500步完整留出 MSE 0.808967／0.789053／0.787500／0.786814；已完成三个100pair DEV，51.75／46.0／45.75%，均未确认超50%；HEAD及阶段替换确认未完成 | [报告与对战记录](../artifacts/entity_attention_critic_adaptation_strength_20261008/README.md) |
+| 冻结 encoder 拟合 | critic-only留出下降；两版16500／16600 encoder新head重拟合500步留出约0.79247／0.79242，差值区间跨0；未测出绝对拟合上限 | [只练critic](../artifacts/entity_attention_critic_only_replay_20261008/README.md)、[重新拟合](../artifacts/entity_attention_encoder_critic_refit_20261008/README.md) |
+| 分阶段搜索 | 同16500权重，各500pair对greedy：只搜后期67.0%、只搜前中期69.35%、全程81.8%；阶段两组差值区间跨0，全程明确高于两组 | [报告](../artifacts/entity_attention_stage_search_20261008/README.md) |
+| 固定256根诊断 | 独立真实对局、每局单根，前中期／后期各128；动作变化、JSD和排序只衡量行为变化，没有正确动作标签，不能换算棋力 | [指南](guides/decision_probe_zh-CN.md) |
+| B→C→D趋势套件 | B仅完成2轮／16600步及100pair首测51.25% [44.5%,58.0%]；C／D未运行，整体未完成 | [流程](guides/entity_attention_iteration_suite_zh-CN.md)、[原件](../artifacts/entity_attention_iteration_trend_seed1_20261008/README.md) |
 
-不能从 smoke 推断棋力，从稳态窗口推断整轮收益，或从单 seed/多个被查看面板推断总体稳定提升。旧的“native 多轮未运行”说明不再适用于上述已完成十轮源 run；新架构已有上述正式训练与DEV结果，多训练seed和窗口/采样ablation收益仍未验证。固定最新小池的消融不能直接裁定3000局历史窗口长短；新的分头采样实现已确认调用链，长期棋力收益仍待训练观察。
+下一步候选见统一报告末节：先复用已有 fresh 标签评价固定 A／B／C 节点，再做当前 M4 同账本的 lr 对照。这里只记录建议，没有启动下一阶段实验。
 
-完整文档导航见 [index](index.md)，实验状态与证据见 [experiment_index](../artifacts/experiment_index.json)。旧工作包/实施计划已打包至忽略的 `runtime/document_archive/2026-10-01/docs_before_cleanup.tar.gz`；归档旁的 manifest 保存逐文件 SHA。这是本地历史资料，不是现行需求。
+## 实现与较早训练
+
+| 能力／历史阶段 | 证据范围 | 入口 |
+| --- | --- | --- |
+| 双人规则、Observation、数据与学习接口 | Python checked 规则参照；native 为另一个实现，依对应版本回归验证 | [标准规则](splendor_standard_rules_zh-CN.md)、[契约](specs/engine_contract_zh-CN.md)、[学习契约](specs/learning_contract_zh-CN.md) |
+| PPO seed1、AZ seed1 | PPO 5M本轮decisions；AZ5×500及θ1–θ5扩展面板完成，DEV best不等于独立FINAL best | [PPO](reports/ppo_5m_zh-CN.md)、[AZ](reports/alphazero_seed1_zh-CN.md) |
+| 旧θ5的10×1000源数据 | 轮0–9完成，10000局原split用于离线学习；770870训练／80699留出位置；准备说明已归档，不在本次重验棋力 | [数据统计](../artifacts/entity_attention_v1_20261004/data_summary.json)、[历史准备](archive/next_az_training_zh-CN.md) |
+| 实体注意力离线 | 532738参数、12045步及六个PPO面板完成；final搜索59.5%、greedy61.75%，重复DEV | [指南](guides/entity_attention_offline_zh-CN.md) |
+| 新模型10×1000、混合训练 | 10×1000曾运行，已有轮0–2完成记录；5000步起点混合run完成9轮／9500步；不同分支不能互称完成 | [自迭代](guides/entity_attention_self_iteration_zh-CN.md)、[混合](guides/entity_attention_hybrid_zh-CN.md) |
+| 第九轮N2与N1 fork | N2至少33新轮／12800步记录，曾OOM；N1完成50新轮／14500步后停止；原9／50轮共同PPO为63.75／61.75%，差值区间跨0 | [N2](guides/entity_attention_hybrid_fork_zh-CN.md)、[N1](guides/entity_attention_hybrid_s1024_n1_zh-CN.md)、[补测](../artifacts/entity_attention_strong_anchor_20261006/README.md) |
+| 分头窗口、value detach | 20新轮／16500步完成；policy近4轮、value3000局近期50%；长期净收益未确认 | [指南](guides/entity_attention_split_training_zh-CN.md) |
+| 搜索教师比较 | 目标稳定性不等于棋力；同S1024随机节点31.25%、CPW37%均弱于旧native；正式教师未切换 | [系列报告](reports/entity_attention_search_teachers_zh-CN.md) |
+| 性能与进程管理 | 多worker、CUDA Graph、缓存与退出修复有有限验证；各报告限定形状／机器／版本，未确定全局最快配置 | [性能验收](reports/end_to_end_speed_optimization_zh-CN.md)、[新模型执行](reports/entity_attention_execution_speed_zh-CN.md)、[OOM修复](../artifacts/entity_attention_worker_cleanup_20261005/README.md) |
+
+所有文档与配置见 [导航](index.md)。状态分类及原件身份见 [实验索引](../artifacts/experiment_index.json)；本次路径和结论维护见 [整理记录](../artifacts/repository_cleanup_20261009/README.md)。

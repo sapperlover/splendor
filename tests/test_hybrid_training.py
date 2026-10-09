@@ -606,6 +606,41 @@ def test_external_evaluation_preserves_opponent_inference_and_hash(tmp_path, mon
         hybrid_train._evaluation(config, tmp_path / 'candidate.pt', anchor, tmp_path)
 
 
+@pytest.mark.parametrize("label_workers", [1, 2])
+def test_behavior_plus3_real_hybrid_training_and_partial_resume(tmp_path, source, label_workers):
+    from splendor.policy_averaging import PolicyAveragingConfig
+    parent_cfg = replace(small_config(source), mix_schedule=(), replay_max_games=3, updates_per_round=1,
+        selfplay=replace(small_config(source).selfplay, search_config=asdict(MCTSConfig(simulations=5, determinizations=1))))
+    parent = tmp_path / 'm4-parent'
+    run_hybrid(parent_cfg, parent, online_rounds=3)
+    cfg = replace(parent_cfg, run_id='m4-child', updates_per_round=2,
+                  split_training=SplitTrainingConfig(recent_rounds=1, value_recent_positions=2),
+                  policy_averaging=PolicyAveragingConfig(active_roots=4, games_per_block=1,
+                      search_workers=label_workers, max_batch_size=4, local_microbatch=2))
+    continuous, segmented = tmp_path / 'm4-continuous', tmp_path / 'm4-segmented'
+    run_hybrid(cfg, continuous, fork_from=parent, fork_round=3, online_rounds=1)
+    run_hybrid(cfg, segmented, fork_from=parent, fork_round=3, online_rounds=1, max_steps_this_session=1)
+    labels = segmented / 'rounds/round-000/policy_labels/manifest.json'
+    label_hash = sha256(labels)
+    run_hybrid(cfg, segmented, resume=True, online_rounds=1)
+    assert sha256(labels) == label_hash
+    a = load_alphazero_checkpoint(continuous / 'rounds/round-000/checkpoints/final.pt')
+    b = load_alphazero_checkpoint(segmented / 'rounds/round-000/checkpoints/final.pt')
+    assert a.sampling_rng_state == b.sampling_rng_state
+    for key in a.model_state_dict:
+        torch.testing.assert_close(a.model_state_dict[key], b.model_state_dict[key], rtol=0, atol=0)
+    for key, params in a.optimizer_state_dict['state'].items():
+        for name in params:
+            torch.testing.assert_close(params[name], b.optimizer_state_dict['state'][key][name], rtol=0, atol=0)
+    usage = read_json(segmented / 'rounds/round-000/source_usage.json')
+    assert usage['policy_averaging']['actual_policy_m4_fraction'] == 1
+    assert usage['policy_recent']['draws'] == 8 and usage['value_history']['draws'] == 4
+    before = read_json(segmented / 'rounds/round-000/validation_before.json')
+    assert before['policy_target_scope'].startswith('current=M4')
+    state = run_hybrid(cfg, segmented, resume=True, online_rounds=1)
+    assert state['completed_rounds'] == [0]
+
+
 def test_policy_window_changes_only_policy_draws(source):
     formal = HybridConfig.from_dict(read_json(Path('configs/entity_attention_v1/hybrid_split_policy_value.json')))
     assert 'policy_recent_rounds' not in formal.to_dict()['split_training']

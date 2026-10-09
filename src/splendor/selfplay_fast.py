@@ -324,6 +324,20 @@ class _GameSession:
     root_encoding_seconds: float = 0.0
     real_rule_seconds: float = 0.0
 
+    @property
+    def finished(self) -> bool:
+        return self.stepper.terminal is not None
+
+    def failure_scene(self) -> dict[str, Any]:
+        return {
+            "game_id": self.game_id, "game_seed": self.stepper.trace["game_seed"],
+            "first_player": self.stepper.trace["first_player"], "trace": self.stepper.trace,
+            "root_decision_index": self.stepper.decision_count,
+            "root_request": None if self.finished else to_primitive(self.stepper.request),
+            "search_context": None if self.job is None else
+                              to_primitive(self.job.failure_context_for_world(None)),
+        }
+
     def __post_init__(self) -> None:
         game_seed = derive_seed(self.config.seed, self.config.round_index, self.game_id, "game")
         stepper_cls = MatchStepper

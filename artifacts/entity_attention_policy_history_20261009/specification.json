@@ -1,0 +1,278 @@
+{
+  "arms": {
+    "A": "original uniform positions in recent four rounds",
+    "B": "128 latest + 128 previous three, uniform positions within each bucket",
+    "C": "256 latest; value recent/history unchanged"
+  },
+  "code": {
+    "actor_critic.py": "fd01a9bf62c0026ca27d98f7479ddbaa4941614f2ba4d0a9d315ff9542d16523",
+    "alphazero_checkpoint.py": "3a4499e0a313b3049fb29fc6930fa0c59963f9866e6e357c78210f6a702de4b0",
+    "alphazero_replay.py": "6174ca36560a557736168e6b18ba5e164e652c8af9145cd3be107fd808f373e1",
+    "alphazero_train.py": "88f05c927d39f221df1c7eb6802586c633f25a975682d5bf4de4488a28e41b1e",
+    "entity_attention.py": "9e5c32f50bf656d6c0188cb01c6a5795b14c6dbadeea8fddfdf4926f72a1e7e4",
+    "offline_train.py": "f975d295a26f65d6d4431df8a27797f002db99eab1913ebdf89f96ac9f64a723",
+    "policy_averaging.py": "23458b595aa52116613c21b0ae1014eea75f8e85f047ef1b4366f032226da95b",
+    "rng.py": "9aee501ea01f6b002c90d80743e38efac6a6190fe4e7e1156d1b11aff3fd340b",
+    "run.py": "04e4112de4788fc628e45268575f61841952fd67e851fe4d753e7744e1768a53",
+    "selfplay_data.py": "a65ca777e60553645bb36311b70c60a7e016db6a863652b4bb61b54e3ccbc98f"
+  },
+  "fixed_train_positions_per_teacher": 4096,
+  "gradient_positions_per_repeat_per_bucket": 1024,
+  "gradient_repeats": 8,
+  "nodes": [
+    0,
+    50,
+    200,
+    500
+  ],
+  "protocol": "fixed-m4-policy-history-v1",
+  "rounds": [
+    4,
+    8,
+    12
+  ],
+  "source_config": {
+    "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/config.json",
+    "sha256": "bea9cbbddd4c47890dd58f989887962fabb5aef46625dadb4baace46658f38d5"
+  },
+  "steps": 500,
+  "subjects": {
+    "r004": {
+      "batch_plans": {
+        "path": "/home/lc/下载/splendor/runtime/entity_attention_policy_history_20261009/r004/batch_plans.npz",
+        "sha256": "b4b919962bda2a9581ff454e31008e706e03be197941f17b0c92a0822154dd83"
+      },
+      "dataset": {
+        "path": "/home/lc/下载/splendor/runtime/entity_attention_policy_history_20261009/r004/dataset.json",
+        "sha256": "fb2912077f5ba56a7183e3908ffbec1cbe5e139e061f9a3f91f8f37d16f77fa1"
+      },
+      "formal_final": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-003/checkpoints/final.pt",
+        "sha256": "f8dd779939d441f4e35648809cd306634e88383fdf31cb193ecb2f79015d9c0f"
+      },
+      "labels": {
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-000": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-000/policy_labels/manifest.json",
+          "sha256": "1d0c9154b723922411026c2cb0fab2ab250d2d7ac1681cb1830730932ddbac5a"
+        },
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-001": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-001/policy_labels/manifest.json",
+          "sha256": "aae8ea2858b1e5e05a8f9a90409da88f58e64d436a4e1dfa2a5bfe3d57b45aed"
+        },
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-002": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-002/policy_labels/manifest.json",
+          "sha256": "4c0f022f97466e8812e6f0dddb867347e16a113c2b5766d473e516c7c962a3ad"
+        },
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-003": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-003/policy_labels/manifest.json",
+          "sha256": "3e35a982d8e5bed131087e1ff2cee23969c8423e6c79886d0667d87bfdbc2087"
+        }
+      },
+      "pool_positions": {
+        "history": 162953,
+        "latest": 14774,
+        "previous": 44061,
+        "recent": 58835
+      },
+      "recent_rounds": [
+        79,
+        80,
+        81,
+        82
+      ],
+      "round": 4,
+      "sampling_seed_B_C": 6739098475495509346,
+      "snapshot": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-003/replay_snapshot.json",
+        "sha256": "9fc8144489f97a5efeefb98ff5771fe3a10d317293a063df5ec14ab02d0aa627"
+      },
+      "source_learner_config": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 100,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "split_training": {
+        "policy_max_grad_norm": 1.0,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "start": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-003/checkpoints/initial.pt",
+        "sha256": "360dc81323c8f7c7f1362041c7164c081fa90275b2ae52031e5e2b3b46b5bd73"
+      },
+      "start_step": 16800,
+      "validation_before": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-003/validation_before.json",
+        "sha256": "8b4ed3cb5d125fa74cd57b215c2bf08c4b76999189b901695291c361182dd8c0"
+      }
+    },
+    "r008": {
+      "batch_plans": {
+        "path": "/home/lc/下载/splendor/runtime/entity_attention_policy_history_20261009/r008/batch_plans.npz",
+        "sha256": "628afa6d96c4365c8afbc092917b505bc82f8cbd2ad6c789e62e64eb3a04e047"
+      },
+      "dataset": {
+        "path": "/home/lc/下载/splendor/runtime/entity_attention_policy_history_20261009/r008/dataset.json",
+        "sha256": "adaee508fa0e8c74ebcb9e30d4bf1922bf81cb8d52d6ceb1a584251f32f7d433"
+      },
+      "formal_final": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-007/checkpoints/final.pt",
+        "sha256": "0dc48a4a88c3f04f9dad33be4cd8fe89365401e02a0a5c59827a904d25889517"
+      },
+      "labels": {
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-004": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-004/policy_labels/manifest.json",
+          "sha256": "987d84ef5b80fa6ec0b27f96ea3868ebc2054a999059c3abc51dfcc42adc3f09"
+        },
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-005": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-005/policy_labels/manifest.json",
+          "sha256": "16e42bdb70560e28f8014b79da3e910e11aa97c1620271ebfe8663acdcb41c8a"
+        },
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-006": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-006/policy_labels/manifest.json",
+          "sha256": "526b24b66323c5f4c8fda25d46653a3bd97e9ef8632735961e9eb745acdf35bb"
+        },
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-007": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-007/policy_labels/manifest.json",
+          "sha256": "5217abe113f005642f17eda0ce751ed93b650d4fedff0168f7bd615391b365cf"
+        }
+      },
+      "pool_positions": {
+        "history": 162231,
+        "latest": 14359,
+        "previous": 44114,
+        "recent": 58473
+      },
+      "recent_rounds": [
+        83,
+        84,
+        85,
+        86
+      ],
+      "round": 8,
+      "sampling_seed_B_C": 12096671134594799899,
+      "snapshot": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-007/replay_snapshot.json",
+        "sha256": "2c1e030fd94f3b1e2905b8a83d455d51b49ebd2ecba3299d8c391ff36e63c925"
+      },
+      "source_learner_config": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 100,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "split_training": {
+        "policy_max_grad_norm": 1.0,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "start": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-007/checkpoints/initial.pt",
+        "sha256": "97e82048054df4f3d93c25ce55796591b3559e3c2c62b8eac10f2b4c04a89f3e"
+      },
+      "start_step": 17200,
+      "validation_before": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-007/validation_before.json",
+        "sha256": "476f0077c248e671be8db056743b8e8dc84e82461ac0be6cb3092a13eed10f85"
+      }
+    },
+    "r012": {
+      "batch_plans": {
+        "path": "/home/lc/下载/splendor/runtime/entity_attention_policy_history_20261009/r012/batch_plans.npz",
+        "sha256": "cfe67fd5e609b8ed5cb0abf230281664b91ca3f81345f95ebb74949fdfc7d746"
+      },
+      "dataset": {
+        "path": "/home/lc/下载/splendor/runtime/entity_attention_policy_history_20261009/r012/dataset.json",
+        "sha256": "c578febea7690f475f90ae10b4c4ac93238d6b0c1e5bc6a65238199fac69acb8"
+      },
+      "formal_final": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-011/checkpoints/final.pt",
+        "sha256": "47ecc62950f34122e524a10ab7b15d56754c6599e9f203e3532295ec01bddc8c"
+      },
+      "labels": {
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-008": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-008/policy_labels/manifest.json",
+          "sha256": "1d581efef53d4479dbc6e020bdb85487bdeee23fb3434a1287c4518fea1c65f7"
+        },
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-009": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-009/policy_labels/manifest.json",
+          "sha256": "cd37ffc6d2a871ad032d3882d62d74aa0c07d528843d071d467ae6eeaee4b830"
+        },
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-010": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-010/policy_labels/manifest.json",
+          "sha256": "234d1a8d8e92fc95d70016cbb87754d1cf3a60d6c8b264aba199a3704de4b59e"
+        },
+        "entity_attention_avg4_behavior_20261009_seed1_avg4-round-011": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-011/policy_labels/manifest.json",
+          "sha256": "0617a92e808b5470686b69ebbe026bce701d358a0efc046f78ba335ae1d22c92"
+        }
+      },
+      "pool_positions": {
+        "history": 161615,
+        "latest": 14624,
+        "previous": 44626,
+        "recent": 59250
+      },
+      "recent_rounds": [
+        87,
+        88,
+        89,
+        90
+      ],
+      "round": 12,
+      "sampling_seed_B_C": 5946263884304140952,
+      "snapshot": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-011/replay_snapshot.json",
+        "sha256": "37b76a1406bdc4b59c877aebe1361c600e315e2af7fd31ce7f5c2767940a9963"
+      },
+      "source_learner_config": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 100,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "split_training": {
+        "policy_max_grad_norm": 1.0,
+        "recent_rounds": 4,
+        "value_max_grad_norm": 1.0,
+        "value_recent_positions": 128
+      },
+      "start": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-011/checkpoints/initial.pt",
+        "sha256": "741c14e3fc42ce188610ed05e52504bd9280639542164b96d27378992e1716ad"
+      },
+      "start_step": 17600,
+      "validation_before": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-011/validation_before.json",
+        "sha256": "e9e64cc9526cd540ca2508ec411afb364511cc57afa145749cff54069b378538"
+      }
+    }
+  }
+}

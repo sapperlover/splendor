@@ -47,7 +47,7 @@
 
 本次只确认固定表征下50步的学习能力；value整体误差仍较高，没有确定最优步数／学习率、充分拟合后的误差下限或跨训练种子的稳定性。此留出集用于开发诊断，尚未验证搜索决策和实际棋力，正式16600模型及B→C→D流程未变更。
 
-下一步建议另做“critic追赶”诊断：从正式16600冻结其encoder和policy，用相同采样口径记录额外25/50/100步critic补训，检查在保留新policy的同时，能否恢复或超过16550的全窗口／近期留出MSE。这样先判断交替更新能否解决漂移，再决定是否需要独立value encoder。若补训改善留出MSE，再用相同policy、相同搜索设置比较补训前后的棋力。后续已按用户指定完成[原16600 critic额外0/50/200/500步补训与完整MSE](../entity_attention_critic_adaptation_strength_20261008/README.md)，棋力脚本准备完成但对战尚未启动。
+下一步建议另做“critic追赶”诊断：从正式16600冻结其encoder和policy，用相同采样口径记录额外25/50/100步critic补训，检查在保留新policy的同时，能否恢复或超过16550的全窗口／近期留出MSE。这样先判断交替更新能否解决漂移，再决定是否需要独立value encoder。若补训改善留出MSE，再用相同policy、相同搜索设置比较补训前后的棋力。后续已按用户指定完成[原16600 critic额外0/50/200/500步补训与完整MSE](../entity_attention_critic_adaptation_strength_20261008/README.md)，后续三个DEV已完成，未确认棋力提升；独立HEAD和阶段替换仍未完成。
 
 后续按用户指定完成[16500／16600冻结encoder、相同新critic的500步拟合对照](../entity_attention_encoder_critic_refit_20261008/README.md)：200与500步整体留出MSE基本重合，500步0.792473／0.792415，差值区间跨0。未发现该预算下16600 encoder整体value可拟合性明显下降，更符合已有critic适应表征变化不足的解释；尚未测出绝对拟合上限。该配对实验本身没有执行原critic补训或棋力比较，原critic补训见上面的后续报告。
 

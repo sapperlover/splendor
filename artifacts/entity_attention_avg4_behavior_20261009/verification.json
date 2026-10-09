@@ -1,0 +1,104 @@
+{
+  "status": "prepared_finite_validated",
+  "recorded_at_utc": "2026-10-08T17:49:50.325366+00:00",
+  "training_started": false,
+  "formal_strength_matches_started": false,
+  "tests": [
+    {
+      "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest -q tests/test_policy_averaging.py tests/test_iteration_suite.py tests/test_hybrid_training.py --junitxml=artifacts/entity_attention_avg4_behavior_20261009/preparation_tests.xml",
+      "scope": "main finite regression; before final explicit runner-diagnostic job-reference release",
+      "counts": {
+        "tests": 30,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "junit": "artifacts/entity_attention_avg4_behavior_20261009/preparation_tests.xml",
+      "sha256": "2e411c71da6b94ff4be187fcbd042ca6628815d2e74f694c7e23c49d46480f52",
+      "seconds": 94.569
+    },
+    {
+      "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest -q tests/test_policy_averaging.py tests/test_hybrid_training.py::test_behavior_plus3_real_hybrid_training_and_partial_resume --junitxml=artifacts/entity_attention_avg4_behavior_20261009/tree_release_tests.xml",
+      "scope": "final release change; weakrefs confirm completed search jobs are reclaimed, and real hybrid resume remains exact",
+      "counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "junit": "artifacts/entity_attention_avg4_behavior_20261009/tree_release_tests.xml",
+      "sha256": "2634cb75568fdfef9c9b578f85d93c55cf1df18ab5dc8cf55817e83756e5bce0",
+      "seconds": 15.328
+    }
+  ],
+  "prepare_only": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u -m splendor.iteration_suite --config configs/entity_attention_v1/iteration_avg4_behavior_20261009.json --prepare-only",
+    "status": "ready",
+    "preflight_sha256": "8b2f204109671936c97316bb8718ff8f79a118e55b1385fa80cd02e50365b85c",
+    "uncapped_child_execution_verified": true
+  },
+  "cuda_smoke": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u artifacts/entity_attention_avg4_behavior_20261009/cuda_smoke.py",
+    "script_sha256": "8cc6be768a708e0ae98cc0475494bb4894be390ed6f939ceb486e524eb28b230",
+    "report_sha256": "4c4986e8fdbbf158a2fa9e5eb9ae40271091e39d1dcaf1f11dedfdc2a07332ed",
+    "status": "passed",
+    "games": 2,
+    "per_search_simulations": 8,
+    "extra_simulations": 3096,
+    "raw_output": "runtime/entity_attention_avg4_behavior_20261009/cuda_smoke_final",
+    "checks": [
+      "archived behavior is sample0",
+      "target_mean equals mean of four",
+      "raw selfplay NPZ hashes unchanged",
+      "3 independent additional full S8/N1 searches for every searchable root"
+    ],
+    "previous_smoke_preserved": "runtime/entity_attention_avg4_behavior_20261009/cuda_smoke"
+  },
+  "plan_checks": {
+    "rounds": 16,
+    "new_games_per_round": 200,
+    "updates_per_round": 100,
+    "learning_rate": 0.0001,
+    "policy_recent_rounds": 4,
+    "value_replay_games": 3000,
+    "behavior_search_reused": true,
+    "extra_searches": 3,
+    "evaluation_rounds": [
+      2,
+      4,
+      8,
+      12,
+      16
+    ],
+    "total_pairs": 500,
+    "probe_rounds": 16,
+    "hard_ram_limit": null
+  },
+  "git_head": "320d381ff47a8c53acdc113cdfc70c75275cc8c6",
+  "implementation_sha256": {
+    "src/splendor/policy_averaging.py": "705e03871329ebf8b41378024f1ab202ad157afd66e919cd6db7d393d465235f",
+    "src/splendor/hybrid_train.py": "e7706759df5b091e3b2472c765949590ef26be5ba887dabbe6eac3ce67edcd20",
+    "src/splendor/offline_train.py": "f975d295a26f65d6d4431df8a27797f002db99eab1913ebdf89f96ac9f64a723",
+    "src/splendor/iteration_suite.py": "cbd38b7a12f119ce3f70c9e5821963cc1b7ce4928f66ee5cd1a160a6467a69e5",
+    "tests/test_policy_averaging.py": "e97cca253c44890a4dad43b68bff4331ef26d1666fa0fbb31ea5b9c260f68b33",
+    "tests/test_hybrid_training.py": "1056354eb5aed8b144485d8f0c4918eb994ef326a284ea856923bdd3eef92ad6",
+    "tests/test_iteration_suite.py": "4f23a1fe9341acb75d8de091e2f6c7998c1fcb47e0ee0852274f12806f7302ce"
+  },
+  "plan_sha256": "c694e978f78edcd34a690e3b4326089c41c63bbfb3451c1a9acb05b459069b3e",
+  "limitations": [
+    "No formal S1024/N1 200-game relabeling round or 16-round run executed.",
+    "No full-strength match executed for this branch.",
+    "Finite CPU/CUDA correctness and bounded job lifetime do not establish multi-hour leak-free behavior or strength improvement."
+  ],
+  "time_estimate": {
+    "hours": [
+      10,
+      12
+    ],
+    "scope": "old timings extrapolated, includes five 100-pair panels; not this branch measured end-to-end",
+    "sources": [
+      "artifacts/entity_attention_target_averaging_20261007/README.md",
+      "docs/guides/entity_attention_iteration_suite_zh-CN.md"
+    ]
+  }
+}
