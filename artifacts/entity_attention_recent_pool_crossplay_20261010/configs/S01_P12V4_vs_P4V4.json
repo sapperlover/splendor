@@ -1,0 +1,108 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 30520000,
+  "device": "cuda",
+  "execution": {
+    "active_games": 100,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "max_batch_size": 64,
+    "max_batch_wait_ms": 0.0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "experiment": "entity_attention_recent_pool_crossplay_20261010",
+    "kind": "search",
+    "models": {
+      "policy_a": {
+        "checkpoint": "runs/entity_attention_recent_pool_20261009/compositions/final_policy_early_value.pt",
+        "sha256": "4bf89f6a623f963e96fa6cf3c59d435ad36fdf02d621613f42e43aa345caf469",
+        "sources": {
+          "policy": {
+            "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/final.pt",
+            "sha256": "9faa66af917c597fbc62b823eeffea14e8403391415ce552d7a4114481d2784a"
+          },
+          "value": {
+            "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+            "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+          }
+        }
+      },
+      "policy_b": {
+        "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+        "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+      }
+    },
+    "panel": "S01_P12V4_vs_P4V4",
+    "protocol": "recent-pool-crossplay-20261010-v1",
+    "seed_scope": "fresh fixed crossplay seeds"
+  },
+  "pairs": 200,
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/compositions/final_policy_early_value.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "P12V4",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "P4V4",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_seed_base": 30510000,
+  "seed_start": 30500000,
+  "workers": 1
+}

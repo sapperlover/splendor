@@ -15,9 +15,27 @@
       <span class="brand-mark">◈</span>
       <div><strong>璀璨宝石</strong><small>LOCAL MATCH</small></div>
     </div>
-    <div id="turn-status" class="turn-status">请开始新对局</div>
-    <button id="new-game-button" class="ghost-button" type="button">新对局</button>
+    <div class="turn-info">
+      <div id="turn-status" class="turn-status">请开始新对局</div>
+      <div id="evaluation-panel" class="evaluation-panel" hidden title="由模型 value 换算的估计得分率，平局计半分；未经胜率校准。">
+        <div class="evaluation-labels"><span id="human-evaluation"></span><small id="evaluation-source">模型评估</small><span id="opponent-evaluation"></span></div>
+        <div id="evaluation-track" class="evaluation-track" role="progressbar" aria-label="模型估计：你的得分率" aria-valuemin="0" aria-valuemax="100"><div id="human-evaluation-fill"></div></div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button id="undo-button" data-undo class="ghost-button" type="button" disabled>悔棋</button>
+      <button id="new-game-button" class="ghost-button" type="button">新对局</button>
+    </div>
   </header>
+
+  <section id="decision-bar" class="actions-zone panel" hidden aria-live="polite">
+    <div class="action-copy">
+      <span id="phase-label" class="phase-badge"></span>
+      <strong id="action-title"></strong>
+      <small id="action-hint">请选择一种方案完成当前操作</small>
+    </div>
+    <div id="action-list" class="action-list"></div>
+  </section>
 
   <main id="board" class="board is-empty" aria-live="polite">
     <section class="market-zone panel">
@@ -38,36 +56,43 @@
     <aside class="players-zone">
       <div id="opponent-panel"></div>
       <div id="self-panel"></div>
+      <form id="search-budget-form" class="search-controls panel" hidden>
+        <strong>AI 搜索预算</strong>
+        <div class="budget-fields">
+          <label>总模拟次数 S<input id="game-simulations" type="number" min="1" step="1" list="simulation-presets" required></label>
+          <label>隐藏局面数 N<input id="game-determinizations" type="number" min="1" step="1" required></label>
+        </div>
+        <small>S 在 N 个隐藏局面间分配；N 不超过 S。增加 S 通常会延长思考时间。</small>
+        <button class="ghost-button" type="submit">应用到后续 AI 行动</button>
+      </form>
+      <section class="history-zone panel">
+        <div class="section-heading"><span>最近行动</span><small>最新在上</small></div>
+        <div id="history-list" class="history-list">
+          <div class="history-empty">开局后会在这里记录双方行动</div>
+        </div>
+      </section>
     </aside>
-
-    <section class="history-zone panel">
-      <div class="section-heading"><span>最近行动</span><small>最新在上</small></div>
-      <div id="history-list" class="history-list">
-        <div class="history-empty">开局后会在这里记录双方行动</div>
-      </div>
-    </section>
-
-    <section class="actions-zone panel">
-      <div class="action-copy">
-        <span id="phase-label" class="phase-badge">MAIN ACTION</span>
-        <strong id="action-title">选择你的行动</strong>
-        <small id="action-hint">只会显示规则引擎返回的合法候选</small>
-      </div>
-      <div id="action-list" class="action-list"></div>
-    </section>
   </main>
 
   <div id="setup-modal" class="modal is-open" role="dialog" aria-modal="true">
     <form id="setup-form" class="setup-card">
       <p class="eyebrow">NEW LOCAL GAME</p>
       <h1>开始对局</h1>
-      <p class="setup-intro">选择固定策略、普通 checkpoint 或配置好的搜索 checkpoint。对手只会看到自己的 Observation 和合法动作。</p>
+      <p class="setup-intro">选择对手和行动顺序。MCTS 对手可调整搜索预算，对局中也能修改。</p>
       <label>
         <span>对手策略</span>
         <select id="opponent-select" required>
           <option value="" disabled selected>正在读取可用对手…</option>
         </select>
       </label>
+      <fieldset id="setup-search-budget" class="search-controls" hidden disabled>
+        <legend>MCTS 搜索预算</legend>
+        <div class="budget-fields">
+          <label>总模拟次数 S<input id="setup-simulations" type="number" min="1" step="1" value="1024" list="simulation-presets" required></label>
+          <label>隐藏局面数 N<input id="setup-determinizations" type="number" min="1" step="1" value="1" required></label>
+        </div>
+        <small>S1024/N1 与当前棋力评测预算一致。S 是总模拟次数，N 是采样的隐藏局面数。</small>
+      </fieldset>
       <fieldset>
         <legend>行动顺序</legend>
         <label class="radio-option"><input type="radio" name="order" value="first" checked><span>我先手</span></label>
@@ -87,11 +112,16 @@
       <p class="eyebrow">GAME OVER</p>
       <h1 id="result-title">对局结束</h1>
       <p id="result-detail"></p>
+      <button id="result-undo-button" data-undo class="ghost-button" type="button" disabled>悔棋，回到上一步</button>
       <button id="result-new-game" class="primary-button" type="button">再来一局</button>
     </div>
   </div>
 
   <div id="toast" class="toast" role="status"></div>
+  <datalist id="simulation-presets">
+    <option value="128"></option><option value="256"></option><option value="512"></option>
+    <option value="1024"></option><option value="2048"></option><option value="4096"></option>
+  </datalist>
   <script src="/app.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,32 @@
+{
+  "protocol": "p4-pool-self-iteration-v1",
+  "hybrid_config": "configs/entity_attention_v1/hybrid_p4_pool_20261010.json",
+  "output": "runs/entity_attention_p4_pool_iteration_20261010",
+  "artifacts": "artifacts/entity_attention_p4_pool_iteration_20261010",
+  "rounds": 9,
+  "greedy_evaluation": {
+    "adjudicate_deterministic_policy_cycles": true,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 30820000,
+    "device": "cpu",
+    "max_completed_turns": 400,
+    "pairs": 200,
+    "policy_a": {
+      "checkpoint": "generated-at-runtime",
+      "kind": "greedy_checkpoint",
+      "name": "online_candidate"
+    },
+    "policy_b": {
+      "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+      "kind": "greedy_checkpoint",
+      "name": "P4V4"
+    },
+    "policy_seed_base": 30810000,
+    "seed_start": 30800000,
+    "workers": 8
+  },
+  "strong_anchor": {
+    "path": "runs/entity_attention_recent_pool_20261009/compositions/final_policy_early_value.pt",
+    "sha256": "4bf89f6a623f963e96fa6cf3c59d435ad36fdf02d621613f42e43aa345caf469"
+  }
+}

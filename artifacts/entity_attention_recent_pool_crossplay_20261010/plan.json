@@ -1,0 +1,222 @@
+{
+  "fresh_seed_range": [
+    30500000,
+    30500199
+  ],
+  "greedy": "argmax policy; CPU8 workers, one Torch thread each; value variants with identical policy are deduplicated",
+  "manifest_sha256": "d5d49d8e019767b90e6b2eb5457f0a5f74dbab1f116b10ecbcce06fc3675fe6b",
+  "models": {
+    "P12V12": {
+      "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/final.pt",
+      "sha256": "9faa66af917c597fbc62b823eeffea14e8403391415ce552d7a4114481d2784a"
+    },
+    "P12V4": {
+      "checkpoint": "runs/entity_attention_recent_pool_20261009/compositions/final_policy_early_value.pt",
+      "sha256": "4bf89f6a623f963e96fa6cf3c59d435ad36fdf02d621613f42e43aa345caf469",
+      "sources": {
+        "policy": {
+          "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/final.pt",
+          "sha256": "9faa66af917c597fbc62b823eeffea14e8403391415ce552d7a4114481d2784a"
+        },
+        "value": {
+          "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+          "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+        }
+      }
+    },
+    "P4V12": {
+      "checkpoint": "runs/entity_attention_recent_pool_crossplay_20261010/compositions/P4V12.pt",
+      "sha256": "c7ad5334bb6840b76a91976a182cda16ae5d52b5e5c14bc19ffeb246795c7bd4",
+      "sources": {
+        "policy": {
+          "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+          "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+        },
+        "value": {
+          "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/final.pt",
+          "sha256": "9faa66af917c597fbc62b823eeffea14e8403391415ce552d7a4114481d2784a"
+        }
+      }
+    },
+    "P4V4": {
+      "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+      "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+    },
+    "P8V4": {
+      "checkpoint": "runs/entity_attention_recent_pool_crossplay_20261010/compositions/P8V4.pt",
+      "sha256": "d168e3b2ed3eed85de84696dcca36ea3bbffea6bbf847d175a6434f78a528a0e",
+      "sources": {
+        "policy": {
+          "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000068796.pt",
+          "sha256": "81f1183efc6c550a79204d8e1d1e5b7705e3306bf912041d4d7b9a47d2ec1dba"
+        },
+        "value": {
+          "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+          "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+        }
+      }
+    },
+    "P8V8": {
+      "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000068796.pt",
+      "sha256": "81f1183efc6c550a79204d8e1d1e5b7705e3306bf912041d4d7b9a47d2ec1dba"
+    },
+    "hybrid_r6": {
+      "checkpoint": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-005/checkpoints/final.pt",
+      "sha256": "909c5007beb9d5018f3e3e9f20c5c1f3edca34d4f3dabbd48b4d03ed33b4d68c"
+    },
+    "hybrid_r9": {
+      "checkpoint": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/checkpoints/final.pt",
+      "sha256": "af3b2b64007705cc9adcbb3e8a6ad68239f4dc967c31c515e857b1240479e44a"
+    },
+    "offline9500": {
+      "checkpoint": "runs/entity_attention_offline_9500_replay/checkpoints/step-000009500.pt",
+      "sha256": "a179d043b35b302a4c5edaff7a37f00a2f77a8510925817c19f4c4b1d72835b0"
+    },
+    "theta5000": {
+      "checkpoint": "runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+      "sha256": "6fec2039cfe5fa7e8775ec5b5692a5defadfa3ab21bdb398e400696be17b08db"
+    }
+  },
+  "panels": [
+    {
+      "a": "P12V4",
+      "b": "P4V4",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/S01_P12V4_vs_P4V4.json",
+      "config_sha256": "f7acbe73b3ed2646f47be6c744c4a516cadbb3885688c314020b8cbecc34ceb7",
+      "id": "S01_P12V4_vs_P4V4",
+      "kind": "search",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/S01_P12V4_vs_P4V4.json",
+      "pairs": 200
+    },
+    {
+      "a": "P4V12",
+      "b": "theta5000",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/S02_P4V12_vs_theta5000.json",
+      "config_sha256": "c830ec534009ef3e21f2216b044ca38f27e30066efae9d90db7370daf2cd8e59",
+      "id": "S02_P4V12_vs_theta5000",
+      "kind": "search",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/S02_P4V12_vs_theta5000.json",
+      "pairs": 200
+    },
+    {
+      "a": "P8V4",
+      "b": "theta5000",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/S03_P8V4_vs_theta5000.json",
+      "config_sha256": "4fadcca30aec3e214090346258cedea3104fb08ab9bcdaf309e0817f15213526",
+      "id": "S03_P8V4_vs_theta5000",
+      "kind": "search",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/S03_P8V4_vs_theta5000.json",
+      "pairs": 200
+    },
+    {
+      "a": "P4V4",
+      "b": "theta5000",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G01_P4V4_vs_theta5000.json",
+      "config_sha256": "ba1b82b65bc9b38b9cbbb4c305bdb00bb2f53f1e95eaa6c00147ceef9a824ef4",
+      "id": "G01_P4V4_vs_theta5000",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G01_P4V4_vs_theta5000.json",
+      "pairs": 200
+    },
+    {
+      "a": "P8V8",
+      "b": "theta5000",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G02_P8V8_vs_theta5000.json",
+      "config_sha256": "070552655246c0654a23737cfc21aeff3d8a453a1f8019bd7f782623be819932",
+      "id": "G02_P8V8_vs_theta5000",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G02_P8V8_vs_theta5000.json",
+      "pairs": 200
+    },
+    {
+      "a": "P12V12",
+      "b": "theta5000",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G03_P12V12_vs_theta5000.json",
+      "config_sha256": "c4ae4fe40b20aedf866c2f1b5c65514761b2058f160c9c7b33739a71a0cf4ea5",
+      "id": "G03_P12V12_vs_theta5000",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G03_P12V12_vs_theta5000.json",
+      "pairs": 200
+    },
+    {
+      "a": "offline9500",
+      "b": "theta5000",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G04_offline9500_vs_theta5000.json",
+      "config_sha256": "e64808e90fd14a3db0442f49ab5cc7044960554040505be4af1dfc88206ff210",
+      "id": "G04_offline9500_vs_theta5000",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G04_offline9500_vs_theta5000.json",
+      "pairs": 200
+    },
+    {
+      "a": "hybrid_r6",
+      "b": "theta5000",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G05_hybrid_r6_vs_theta5000.json",
+      "config_sha256": "840db49944dfd9129c8d499cd4cd98a58b055449c488e17a98081156e7d06b36",
+      "id": "G05_hybrid_r6_vs_theta5000",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G05_hybrid_r6_vs_theta5000.json",
+      "pairs": 200
+    },
+    {
+      "a": "hybrid_r9",
+      "b": "theta5000",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G06_hybrid_r9_vs_theta5000.json",
+      "config_sha256": "15a9cc188d74d4e53887f64df7ca22017ff337c0d8a6ea3e42df90b7349add89",
+      "id": "G06_hybrid_r9_vs_theta5000",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G06_hybrid_r9_vs_theta5000.json",
+      "pairs": 200
+    },
+    {
+      "a": "P12V12",
+      "b": "P4V4",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G07_P12V12_vs_P4V4.json",
+      "config_sha256": "5574f1b869005198b99b1380af07819b28b49ed78a31158f2c96dc817c384cc6",
+      "id": "G07_P12V12_vs_P4V4",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G07_P12V12_vs_P4V4.json",
+      "pairs": 200
+    },
+    {
+      "a": "P8V8",
+      "b": "P4V4",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G08_P8V8_vs_P4V4.json",
+      "config_sha256": "44dd9b83b04095329c20996b5b2d7afbdc0bb2b04ebc1d9054ea95e5d2ebc1f4",
+      "id": "G08_P8V8_vs_P4V4",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G08_P8V8_vs_P4V4.json",
+      "pairs": 200
+    },
+    {
+      "a": "P12V12",
+      "b": "P8V8",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G09_P12V12_vs_P8V8.json",
+      "config_sha256": "0d5393dd0247c284aa74923fb1d5587fb0dc43037bdfbee62a594cc70e788542",
+      "id": "G09_P12V12_vs_P8V8",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G09_P12V12_vs_P8V8.json",
+      "pairs": 200
+    },
+    {
+      "a": "hybrid_r9",
+      "b": "hybrid_r6",
+      "config": "artifacts/entity_attention_recent_pool_crossplay_20261010/configs/G10_hybrid_r9_vs_hybrid_r6.json",
+      "config_sha256": "960e73ef417d9fe939dd4d70555ab20e87a09109ca502b0a1ccf2a4ec0a5626a",
+      "id": "G10_hybrid_r9_vs_hybrid_r6",
+      "kind": "greedy",
+      "output": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/G10_hybrid_r9_vs_hybrid_r6.json",
+      "pairs": 200
+    }
+  ],
+  "pool_seed_overlap": 0,
+  "protocol": "recent-pool-crossplay-20261010-v1",
+  "reused_dev_seed_range": [
+    14900000,
+    14900199
+  ],
+  "scope": "fixed matchups; one training trajectory; theta5000 contrasts reuse DEV, direct search and greedy use fresh openers; no training",
+  "script_sha256": "c1a6bdc6bda880e24420d28aa502092dd83525940547130912f5a43612d6ba41",
+  "search": "native S1024/N1, compiled, no root noise, temperature0; one CUDA owner, active100, batch64",
+  "template_sha256": "546360a263441ec278ea0df7b848a8436a4b58b88f1c49c296214b21f59d3eca"
+}

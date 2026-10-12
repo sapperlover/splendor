@@ -1,0 +1,41 @@
+{
+  "absolute_round": 30,
+  "experiment": "entity_attention_r30_search_budget_arena_20261011",
+  "global_step": 59898,
+  "model": {
+    "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-020/checkpoints/final.pt",
+    "sha256": "9fc258b211954cf32cd7b688d5d534a502441304ea7cc92a7a35e059a7c91b0f"
+  },
+  "panels": [
+    {
+      "config": {
+        "path": "artifacts/entity_attention_r30_search_budget_arena_20261011/configs/S01_S1024_vs_greedy.json",
+        "sha256": "d2222b78435f84cdc719aa62477cc557b27c60bf1093c37061aa59779e4b60ec"
+      },
+      "id": "S01_S1024_vs_greedy",
+      "label": "第30轮 S1024/N1 vs 无搜索greedy",
+      "output": "artifacts/entity_attention_r30_search_budget_arena_20261011/panels/S01_S1024_vs_greedy.json",
+      "pairs": 200
+    },
+    {
+      "config": {
+        "path": "artifacts/entity_attention_r30_search_budget_arena_20261011/configs/S02_S4096_vs_S1024.json",
+        "sha256": "f43017849b38b300c129f90bc02559a2b610600b438285f23c49c02af1b6ee94"
+      },
+      "id": "S02_S4096_vs_S1024",
+      "label": "第30轮 S4096/N1 vs S1024/N1",
+      "output": "artifacts/entity_attention_r30_search_budget_arena_20261011/panels/S02_S4096_vs_S1024.json",
+      "pairs": 200
+    }
+  ],
+  "runner": {
+    "path": "artifacts/entity_attention_r30_search_budget_arena_20261011/run.py",
+    "sha256": "665299dfab8c70a16b371e8321e3d99e924c644819a818af599ab72b1fa2bae3"
+  },
+  "scope": "Two direct 200-pair seat-swapped arenas on fresh separate opener banks, using the original weight1 round30 complete network on every side. S01 measures S1024 search gain over greedy; S02 measures additional gain from S4096 over S1024. Draws score one half; 10000 whole-pair bootstrap resamples. One checkpoint and fixed DEV panels, no multiplicity correction.",
+  "settings": "N1, c_puct1.5, no root noise, native_batched/CUDA compiled search, active100, max_batch64; greedy argmax without search; separate sequential subprocesses",
+  "template": {
+    "path": "artifacts/entity_attention_r30_value_weight_20261011/baseline/evaluation/search.json",
+    "sha256": "d3588a18af3f175e87ea86d7d15c5f18f9c794066f12470e2556ed99fc427e52"
+  }
+}

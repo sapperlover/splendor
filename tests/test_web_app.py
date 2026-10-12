@@ -3,12 +3,16 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import torch
 
 from splendor.actor_critic import ActorCritic
 import splendor.web_app as web_app
 from splendor.contracts import PublicReservedCard
 from splendor.actions import ReserveDeck
 from splendor.model import ReservationSource, Tier
+from splendor.mcts_policy import MCTSConfig
+from splendor.native_policy import NativePUCTSearchPolicy
+from splendor.heuristic_policy import ScorePolicy
 from splendor.search_policy import PolicyValueSearchPolicy, SearchConfig
 from splendor.web_app import (
     WebGameService,
@@ -213,6 +217,10 @@ def test_web_game_uses_configured_search_policy_for_opponent_turn(
             catalog: object,
         ) -> None:
             created_policies.append((policy_model, config, device, catalog))
+            self.evaluator = self
+
+        def value_only(self, requests):
+            return (0.0,) * len(requests)
 
         def choose(self, request: object) -> object:
             return request.legal_actions[0]  # type: ignore[attr-defined]
@@ -321,3 +329,200 @@ def test_web_game_runs_real_search_policy_for_opponent_turn(
     assert loaded == [(checkpoint.resolve(), "cpu")]
     assert payload["players"]["opponent"]["completedTurns"] == 1
     assert payload["legalActions"]
+
+
+def test_mcts_budget_changes_apply_to_next_search_without_changing_board(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pytest.importorskip("splendor._native_search")
+    checkpoint = tmp_path / "round24.pt"
+    checkpoint.write_bytes(b"test checkpoint")
+    model = ActorCritic().eval()
+    monkeypatch.setattr(web_app, "load_frozen_actor_critic_checkpoint", lambda *a, **kw: model)
+    service = WebGameService(
+        checkpoint_dir=tmp_path / "play_checkpoints",
+        failure_dir=tmp_path / "failures",
+        mcts_checkpoint=checkpoint,
+        mcts_label="第24轮 · θ53898",
+    )
+    listed = service.available_opponents()[-1]
+    assert listed["searchBudget"] == {"simulations": 1024, "determinizations": 1}
+    initial = service.create_game(
+        opponent="mcts", human_first=False, seed=43,
+        search_budget={"simulations": 4, "determinizations": 1},
+    )
+    policy = service._games[initial["gameId"]].opponent
+    assert isinstance(policy, NativePUCTSearchPolicy)
+    assert str(policy.device) == "cpu"
+    assert initial["players"]["opponent"]["completedTurns"] == 1
+    assert tuple(policy.last_search_result.simulation_budgets) == (4,)
+
+    updated = service.set_search_budget(
+        initial["gameId"], {"simulations": 6, "determinizations": 2}
+    )
+    assert updated["revision"] == initial["revision"]
+    assert updated["market"] == initial["market"]
+    assert updated["players"] == initial["players"]
+    assert updated["searchBudget"] == {"simulations": 6, "determinizations": 2}
+    assert "第24轮 · θ53898 · MCTS S6/N2" in updated["opponentLabel"]
+    moved = service.apply_action(initial["gameId"], revision=updated["revision"], action_index=0)
+    assert tuple(policy.last_search_result.simulation_budgets) == (3, 3)
+    assert policy.config.root_noise_fraction == 0.0
+    restored = service.undo(initial["gameId"], revision=moved["revision"])
+    assert restored["searchBudget"] == {"simulations": 6, "determinizations": 2}
+    assert restored["evaluation"] == initial["evaluation"]
+
+
+@pytest.mark.parametrize("budget", [
+    {"simulations": 0, "determinizations": 1},
+    {"simulations": 1, "determinizations": 2},
+    {"simulations": True, "determinizations": 1},
+    {"simulations": 4.5, "determinizations": 1},
+    {"simulations": 4},
+    "1024",
+])
+def test_invalid_mcts_budget_is_rejected_before_loading_model(
+    tmp_path: Path, budget: object
+) -> None:
+    checkpoint = tmp_path / "round24.pt"
+    checkpoint.write_bytes(b"not a loadable checkpoint")
+    service = WebGameService(
+        checkpoint_dir=tmp_path / "play_checkpoints", mcts_checkpoint=checkpoint
+    )
+    with pytest.raises(ValueError):
+        service.create_game(
+            opponent="mcts", human_first=True, seed=1, search_budget=budget
+        )
+
+
+def test_search_budget_requires_mcts_opponent(tmp_path: Path) -> None:
+    service = _service(tmp_path)
+    initial = service.create_game(opponent="score", human_first=True, seed=1)
+    with pytest.raises(ValueError, match="MCTS"):
+        service.set_search_budget(
+            initial["gameId"], {"simulations": 4, "determinizations": 1}
+        )
+
+
+def test_web_cli_builds_requested_mcts_configuration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkpoint = tmp_path / "round24.pt"
+    checkpoint.write_bytes(b"test checkpoint")
+    services = []
+
+    class FakeServer:
+        def __init__(self, address, service):
+            services.append(service)
+
+        def serve_forever(self):
+            pass
+
+        def server_close(self):
+            pass
+
+    monkeypatch.setattr(web_app, "WebGameServer", FakeServer)
+    assert web_app.main([
+        "--mcts-checkpoint", str(checkpoint), "--mcts-label", "第24轮",
+        "--mcts-simulations", "512", "--mcts-determinizations", "2",
+        "--mcts-seed", "7",
+    ]) == 0
+    assert services[0].mcts_checkpoint == checkpoint.resolve()
+    assert services[0].mcts_config == MCTSConfig(
+        simulations=512, determinizations=2, seed=7, root_noise_fraction=0.0
+    )
+
+
+@pytest.mark.parametrize(("value", "rate"), [(-2.0, 0.0), (-0.6, 0.2), (0.0, 0.5), (0.6, 0.8), (2.0, 1.0)])
+def test_web_value_bar_uses_human_request_and_clips_only_display_rate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, value: float, rate: float
+) -> None:
+    service = _service(tmp_path)
+    checkpoint = service.checkpoint_dir / "model.pt"
+    checkpoint.write_bytes(b"test checkpoint")
+    model = ActorCritic().eval()
+    with torch.no_grad():
+        for parameter in model.critic.parameters():
+            parameter.zero_()
+        model.critic[-1].bias.fill_(value)
+    monkeypatch.setattr(web_app, "load_frozen_actor_critic_checkpoint", lambda *a, **kw: model)
+    payload = service.create_game(opponent="checkpoint:model.pt", human_first=False, seed=43)
+    assert payload["evaluation"]["source"] == "model"
+    assert payload["evaluation"]["value"] == pytest.approx(value)
+    assert payload["evaluation"]["humanScoreRate"] == pytest.approx(rate)
+    assert payload["evaluation"]["opponentScoreRate"] == pytest.approx(1.0 - rate)
+    game = service._games[payload["gameId"]]
+    requests = []
+    original = game.evaluator.value_only
+
+    def record(request_batch):
+        requests.extend(request_batch)
+        return original(request_batch)
+
+    monkeypatch.setattr(game.evaluator, "value_only", record)
+    web_app._game_payload(payload["gameId"], game)
+    assert requests[0].observation == game.engine.observation_for(game.human_player)
+    assert requests[0].observation.self_is_first_player is False
+
+
+def test_undo_restores_rng_replay_history_and_rejects_stale_clicks(tmp_path: Path) -> None:
+    service = _service(tmp_path)
+    initial = service.create_game(opponent="development", human_first=True, seed=5)
+    game_id = initial["gameId"]
+    game = service._games[game_id]
+    digest = game.engine.current_state_digest
+    replay = game.engine.replay_record
+    assert initial["canUndo"] is False
+    assert initial["evaluation"] is None
+    with pytest.raises(ValueError, match="no previous"):
+        service.undo(game_id, revision=initial["revision"])
+    moved = service.apply_action(game_id, revision=initial["revision"], action_index=0)
+    assert moved["canUndo"] is True
+    with pytest.raises(ValueError, match="stale"):
+        service.undo(game_id, revision=initial["revision"])
+    restored = service.undo(game_id, revision=moved["revision"])
+    assert restored["revision"] > moved["revision"]
+    assert restored["canUndo"] is False
+    assert game.engine.current_state_digest == digest
+    assert game.engine.replay_record == replay
+    for field in ("players", "market", "supply", "legalActions", "phase", "history"):
+        assert restored[field] == initial[field]
+    with pytest.raises(ValueError, match="stale"):
+        service.apply_action(game_id, revision=moved["revision"], action_index=0)
+    repeated = service.apply_action(game_id, revision=restored["revision"], action_index=0)
+    for field in ("players", "market", "supply", "legalActions", "history"):
+        assert repeated[field] == moved[field]
+
+
+def test_payment_and_finished_game_can_be_undone(tmp_path: Path) -> None:
+    service = _service(tmp_path)
+    payload = service.create_game(opponent="score", human_first=True, seed=5)
+    game_id = payload["gameId"]
+    chooser = ScorePolicy()
+    checked_payment = False
+    for _ in range(300):
+        if payload["result"] is not None:
+            break
+        game = service._games[game_id]
+        request = game.response
+        before = payload
+        action = chooser.choose(request)
+        index = request.legal_actions.index(action)
+        payload = service.apply_action(game_id, revision=payload["revision"], action_index=index)
+        if payload["phase"] == "payment" and not checked_payment:
+            payment = payload
+            restored = service.undo(game_id, revision=payload["revision"])
+            assert restored["phase"] == "main_action"
+            assert restored["market"] == before["market"]
+            payload = service.apply_action(game_id, revision=restored["revision"], action_index=index)
+            assert payload["phase"] == "payment"
+            assert payload["legalActions"] == payment["legalActions"]
+            checked_payment = True
+    assert checked_payment
+    assert payload["result"] is not None
+    assert payload["evaluation"]["source"] == "result"
+    payoff = service._games[game_id].response.payoff(0)
+    assert payload["evaluation"]["humanScoreRate"] == (payoff + 1) / 2
+    restored = service.undo(game_id, revision=payload["revision"])
+    assert restored["result"] is None and restored["legalActions"]
+    assert service._games[game_id].engine.replay_record.result is None

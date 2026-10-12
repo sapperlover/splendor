@@ -1,0 +1,117 @@
+{
+  "cpu_checks": [
+    "uninterrupted and segmented model/AdamW/RNG bitwise equality",
+    "whole-game window eviction and stable per-generation Train diagnostic subsets across window changes",
+    "all diagnostic nodes on fixed references",
+    "valid losing scores cannot reject teachers",
+    "offline control shares start and total optimizer budget",
+    "completed command is idempotent",
+    "lossless compact inputs including signed zero",
+    "real greedy pair resume"
+  ],
+  "current_source_files": {
+    "configs/entity_attention_v1/hybrid_p4_pool_20261010.json": "8180b042eb44df70154f7840763cc3f9b19b7a1f2909b1a2abcf236a08df5425",
+    "configs/entity_attention_v1/p4_pool_iteration_20261010.json": "f345977399657e23dfefef656f4110421e38958442f8e40aaed0105731e64550",
+    "src/splendor/compact_game_cache.py": "73b663eddc5eb5bfc6198522ec7f32681b625d08d5bc9823c366c1308e4391df",
+    "src/splendor/hybrid_train.py": "25bbd3984b77bc2ada63e47b2fcee337122661747302acd9a0942746e2e19d74",
+    "src/splendor/pool_fitting.py": "48b2102934646845fdba05d0b0a9011e85217c23096ce047fbcef0a3f99cff7e",
+    "src/splendor/pool_iteration.py": "1991388aeca70cb4383eff7c5a102c27ff129843f0da931e9ae7888763c65868",
+    "tests/test_pool_iteration.py": "0290b67bbf2edcb5fc12e9c0526274e8b191601fbc648d68ac32cc2c9bbb064c"
+  },
+  "formal_run_exists": false,
+  "gpu_smoke": {
+    "active_games": 2,
+    "complete": {
+      "path": "runtime/entity_attention_p4_pool_iteration_20261010/gpu_smoke/run/complete.json",
+      "sha256": "0aa60724d8fec828611e2f3991e1d9aa4b39c135b3b597f06115e5e10063ff5c"
+    },
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "final_control_global_step": 34400,
+    "final_online_global_step": 34400,
+    "games": 2,
+    "initial_global_step": 34398,
+    "initial_weights_optimizer_sampling_and_torch_rng_preserved": true,
+    "max_batch_size": 2,
+    "panels": [
+      {
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "kind": "mcts_checkpoint",
+        "pairs": 1,
+        "passed": true,
+        "path": "runtime/entity_attention_p4_pool_iteration_20261010/gpu_smoke/run/rounds/round-000/evaluation/mcts_vs_fixed_anchor.json",
+        "search_simulations": 2,
+        "sha256": "c4c732358b53767f8edea7de0a7333de25be4a676a2a7181da6a4efc7d160079"
+      },
+      {
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "kind": "greedy_checkpoint",
+        "pairs": 1,
+        "passed": true,
+        "path": "runtime/entity_attention_p4_pool_iteration_20261010/gpu_smoke/run/rounds/round-000/evaluation/greedy_vs_start.json",
+        "search_simulations": null,
+        "sha256": "b36850d7ecc1cd8fa7960c11dea63a6f9864ed874eb7b351b528b506bdff2d00"
+      },
+      {
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "kind": "mcts_checkpoint",
+        "pairs": 1,
+        "passed": true,
+        "path": "runtime/entity_attention_p4_pool_iteration_20261010/gpu_smoke/run/final_evaluation/online_vs_P12V4.json",
+        "search_simulations": 2,
+        "sha256": "b8a88692af3071ed7bd19987e285813a7a063482e89e74ce25ecd21e90b1e1e6"
+      },
+      {
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "kind": "mcts_checkpoint",
+        "pairs": 1,
+        "passed": true,
+        "path": "runtime/entity_attention_p4_pool_iteration_20261010/gpu_smoke/run/final_evaluation/online_vs_offline_control.json",
+        "search_simulations": 2,
+        "sha256": "14c02510bf395c0a367ae5ce8cb0e6e8f0b6430e9ccfb5d60b77d1ecbf5a55dd"
+      }
+    ],
+    "plan": "runtime/entity_attention_p4_pool_iteration_20261010/gpu_smoke/plan.json",
+    "search_workers": 2,
+    "simulations": 2,
+    "source_snapshots": [
+      {
+        "path": "runtime/entity_attention_p4_pool_iteration_20261010/gpu_smoke/run/source/1791607965098228789/identity.json",
+        "sha256": "907e76d8b4496ec43817d1a70eddb58d2835740bb115fb37891af72e59be3b16"
+      },
+      {
+        "path": "runtime/entity_attention_p4_pool_iteration_20261010/gpu_smoke/run/source/1791608074941789383/identity.json",
+        "sha256": "8291237ece7e4f4bb26708c8909c4e50e3c9d428e72c2df99c2db9ecbc2e31b9"
+      }
+    ],
+    "split_sessions": "1 optimizer update, resume remaining update, offline control 2 updates and four one-pair panels"
+  },
+  "limits": [
+    "CPU replay equality does not establish GPU uninterrupted bitwise equality.",
+    "GPU smoke uses 2 games/S2 and small batching, not the formal W8/active1000/B500/S1024 load.",
+    "No long-run memory peak, globally optimal execution configuration or playing-strength improvement is claimed.",
+    "GPU execution snapshots precede final reporting/parameter-validation and historical Train-subset freezing edits; final CPU regression and smoke-result publication are separately checked."
+  ],
+  "scope": "framework engineering validation; no formal nine-round training or 200-pair strength experiment started",
+  "tests": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python -m pytest -q tests/test_hybrid_training.py tests/test_pool_iteration.py tests/test_alphazero_training.py tests/test_alphazero_replay.py --junitxml=runtime/entity_attention_p4_pool_iteration_20261010/pytest.xml",
+    "errors": 0,
+    "failures": 0,
+    "final_targeted_regression": {
+      "errors": 0,
+      "failures": 0,
+      "junit": "runtime/entity_attention_p4_pool_iteration_20261010/pytest_pool_final.xml",
+      "sha256": "eccead1632d9ae4a8daec34a1dafc408ceac21b757418031b85cd1eae77a8eed",
+      "skipped": 0,
+      "tests": 3
+    },
+    "junit": "runtime/entity_attention_p4_pool_iteration_20261010/pytest.xml",
+    "sha256": "dfbb110af7d72eb0a95f2cccc0ce162c47836818e1943347b9405c1807763ee8",
+    "skipped": 0,
+    "tests": 43
+  },
+  "verified_at": "2026-10-10T13:07:49.007185+08:00"
+}

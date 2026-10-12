@@ -11,12 +11,14 @@ import json
 import mimetypes
 import threading
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+
+import torch
 
 from .actor_critic import ActorCritic
 from .actions import (
@@ -43,10 +45,13 @@ from .contracts import (
 from .engine import GameEngine, IllegalActionError
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
 from .model import Color, DecisionPhase, GemVector, ReservationSource, Tier, TokenVector
+from .mcts_policy import MCTSConfig
+from .native_policy import NativePUCTSearchPolicy
 from .neural_policy import GreedyActorCriticPolicy
 from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .replay import ActionEvent, ForcedSkipEvent, ReplayEvent
 from .result import TerminalResult
+from .search_inference import FrozenSearchInference
 from .search_policy import PolicyValueSearchPolicy, SearchConfig
 
 
@@ -70,8 +75,17 @@ class _WebGame:
     opponent_label: str
     opponent: Policy
     response: DecisionRequest | TerminalResult
+    evaluator: FrozenSearchInference | None = None
     revision: int = 0
     history: list["_HistoryEntry"] = field(default_factory=list)
+    undo_stack: list["_UndoState"] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class _UndoState:
+    engine: GameEngine
+    response: DecisionRequest
+    history_length: int
 
 
 @dataclass(slots=True)
@@ -308,6 +322,26 @@ def _result_payload(result: TerminalResult, human_player: int) -> dict[str, Any]
     }
 
 
+def _evaluation_payload(game: _WebGame) -> dict[str, Any] | None:
+    if isinstance(game.response, TerminalResult):
+        value = float(game.response.payoff(game.human_player))
+        source = "result"
+    elif game.evaluator is not None:
+        # The displayed request belongs to the human, including payment/return phases.
+        value = game.evaluator.value_only((game.response,))[0]
+        source = "model"
+    else:
+        return None
+    human_rate = (max(-1.0, min(1.0, value)) + 1.0) / 2.0
+    return {
+        "value": value,
+        "humanScoreRate": human_rate,
+        "opponentScoreRate": 1.0 - human_rate,
+        "source": source,
+        "perspective": "human",
+    }
+
+
 def _game_payload(game_id: str, game: _WebGame) -> dict[str, Any]:
     if isinstance(game.response, DecisionRequest):
         observation = game.response.observation
@@ -328,8 +362,14 @@ def _game_payload(game_id: str, game: _WebGame) -> dict[str, Any]:
     return {
         "gameId": game_id,
         "revision": game.revision,
+        "canUndo": bool(game.undo_stack),
+        "evaluation": _evaluation_payload(game),
         "opponent": game.opponent_id,
         "opponentLabel": game.opponent_label,
+        "searchBudget": {
+            "simulations": game.opponent.config.simulations,
+            "determinizations": game.opponent.config.determinizations,
+        } if isinstance(game.opponent, NativePUCTSearchPolicy) else None,
         "phase": observation.phase.value,
         "supply": _vector(observation.supply),
         "deckCounts": {str(tier.value): observation.deck_counts[tier.value - 1] for tier in Tier},
@@ -370,6 +410,9 @@ class WebGameService:
         checkpoint_dir: Path | None = None,
         search_checkpoint: Path | None = None,
         search_config: SearchConfig | None = None,
+        mcts_checkpoint: Path | None = None,
+        mcts_config: MCTSConfig | None = None,
+        mcts_label: str | None = None,
     ) -> None:
         self.catalog = load_default_catalog()
         self.failure_dir = failure_dir or Path.cwd() / "web_failures"
@@ -389,11 +432,24 @@ class WebGameService:
             self.search_config = search_config or SearchConfig()
         else:
             self.search_config = None
+        if mcts_checkpoint is None and (mcts_config is not None or mcts_label is not None):
+            raise ValueError("mcts_config and mcts_label require mcts_checkpoint")
+        self.mcts_checkpoint = None if mcts_checkpoint is None else mcts_checkpoint.resolve()
+        if self.mcts_checkpoint is not None and (
+            self.mcts_checkpoint.suffix != ".pt" or not self.mcts_checkpoint.is_file()
+        ):
+            raise ValueError("mcts_checkpoint must be an existing .pt file")
+        self.mcts_config = mcts_config or MCTSConfig(
+            simulations=1024, determinizations=1, root_noise_fraction=0.0
+        )
+        self.mcts_label = mcts_label or (
+            "MCTS" if self.mcts_checkpoint is None else self.mcts_checkpoint.stem
+        )
         self._checkpoint_models: dict[tuple[Path, int, int], ActorCritic] = {}
         self._games: dict[str, _WebGame] = {}
         self._lock = threading.RLock()
 
-    def available_opponents(self) -> list[dict[str, str]]:
+    def available_opponents(self) -> list[dict[str, Any]]:
         opponents = [
             {"id": "score", "label": "ScorePolicy · 积分优先", "kind": "heuristic"},
             {
@@ -425,7 +481,28 @@ class WebGameService:
                     "kind": "search_checkpoint",
                 }
             )
+        if self.mcts_checkpoint is not None:
+            opponents.append({
+                "id": "mcts",
+                "label": self._mcts_opponent_label(self.mcts_config),
+                "kind": "mcts_checkpoint",
+                "searchBudget": {
+                    "simulations": self.mcts_config.simulations,
+                    "determinizations": self.mcts_config.determinizations,
+                },
+            })
         return opponents
+
+    def _mcts_opponent_label(self, config: MCTSConfig) -> str:
+        return (
+            f"{self.mcts_label} · MCTS S{config.simulations}/N{config.determinizations} · CPU"
+        )
+
+    @staticmethod
+    def _with_budget(config: MCTSConfig, budget: dict[str, Any]) -> MCTSConfig:
+        if not isinstance(budget, dict) or set(budget) != {"simulations", "determinizations"}:
+            raise ValueError("searchBudget must contain simulations and determinizations")
+        return replace(config, **budget)
 
     def _load_checkpoint(self, path: Path) -> ActorCritic:
         stat = path.stat()
@@ -441,7 +518,21 @@ class WebGameService:
             self._checkpoint_models[cache_key] = model
         return model
 
-    def _opponent_policy(self, opponent_id: str) -> tuple[str, Policy]:
+    def _opponent_policy(
+        self, opponent_id: str, search_budget: dict[str, Any] | None = None
+    ) -> tuple[str, Policy]:
+        if opponent_id == "mcts":
+            if self.mcts_checkpoint is None:
+                raise ValueError("MCTS opponent is not configured")
+            config = self.mcts_config
+            if search_budget is not None:
+                config = self._with_budget(config, search_budget)
+            model = self._load_checkpoint(self.mcts_checkpoint)
+            return self._mcts_opponent_label(config), NativePUCTSearchPolicy(
+                model, config=config, device="cpu", catalog=self.catalog
+            )
+        if search_budget is not None:
+            raise ValueError("searchBudget requires an MCTS opponent")
         if opponent_id == "score":
             return "ScorePolicy", ScorePolicy()
         if opponent_id == "development":
@@ -474,14 +565,17 @@ class WebGameService:
         label = f"PPO · {path.stem}"
         return label, GreedyActorCriticPolicy(model, device="cpu")
 
-    def create_game(self, *, opponent: str, human_first: bool, seed: int) -> dict[str, Any]:
+    def create_game(
+        self, *, opponent: str, human_first: bool, seed: int,
+        search_budget: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         if not isinstance(opponent, str):
             raise ValueError("opponent must be a string id")
         if not isinstance(human_first, bool):
             raise ValueError("humanFirst must be a boolean")
         if isinstance(seed, bool) or not isinstance(seed, int):
             raise ValueError("seed must be an integer")
-        opponent_label, opponent_policy = self._opponent_policy(opponent)
+        opponent_label, opponent_policy = self._opponent_policy(opponent, search_budget)
         human_player = 0
         engine = GameEngine.new(
             seed,
@@ -491,6 +585,11 @@ class WebGameService:
         )
         replay_start = len(engine.replay_record.events)
         response = engine.decision()
+        evaluator = None
+        if isinstance(opponent_policy, (NativePUCTSearchPolicy, PolicyValueSearchPolicy)):
+            evaluator = opponent_policy.evaluator
+        elif isinstance(opponent_policy, GreedyActorCriticPolicy):
+            evaluator = FrozenSearchInference(opponent_policy.model, device="cpu")
         game = _WebGame(
             engine=engine,
             human_player=human_player,
@@ -498,6 +597,7 @@ class WebGameService:
             opponent_label=opponent_label,
             opponent=opponent_policy,
             response=response,
+            evaluator=evaluator,
         )
         _record_replay_events(
             game, engine.replay_record.events[replay_start:], self.catalog
@@ -507,6 +607,18 @@ class WebGameService:
         with self._lock:
             self._games[game_id] = game
         return _game_payload(game_id, game)
+
+    def set_search_budget(self, game_id: str, budget: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            game = self._games.get(game_id)
+            if game is None:
+                raise KeyError("unknown game")
+            if not isinstance(game.opponent, NativePUCTSearchPolicy):
+                raise ValueError("searchBudget requires an MCTS opponent")
+            config = self._with_budget(game.opponent.config, budget)
+            game.opponent.config = config
+            game.opponent_label = self._mcts_opponent_label(config)
+            return _game_payload(game_id, game)
 
     def apply_action(self, game_id: str, *, revision: int, action_index: int) -> dict[str, Any]:
         with self._lock:
@@ -526,9 +638,33 @@ class WebGameService:
             if action_index < 0 or action_index >= len(game.response.legal_actions):
                 raise ValueError("actionIndex is not a current legal candidate")
             action = game.response.legal_actions[action_index]
+            game.undo_stack.append(_UndoState(
+                engine=game.engine.fork(),
+                response=game.response,
+                history_length=len(game.history),
+            ))
             game.response = self._apply_and_record(game, action)
             game.revision += 1
             self._advance_opponent(game)
+            return _game_payload(game_id, game)
+
+    def undo(self, game_id: str, *, revision: int) -> dict[str, Any]:
+        with self._lock:
+            game = self._games.get(game_id)
+            if game is None:
+                raise KeyError("unknown game")
+            if isinstance(revision, bool) or not isinstance(revision, int):
+                raise ValueError("revision must be an integer")
+            if revision != game.revision:
+                raise ValueError("stale game revision; refresh the displayed state")
+            if not game.undo_stack:
+                raise ValueError("no previous human action to undo")
+            previous = game.undo_stack.pop()
+            game.engine = previous.engine
+            game.response = previous.response
+            del game.history[previous.history_length:]
+            # Never reuse an old revision: a delayed pre-undo click must remain stale.
+            game.revision += 1
             return _game_payload(game_id, game)
 
     def _apply_and_record(
@@ -587,10 +723,21 @@ class _Handler(BaseHTTPRequestHandler):
                     opponent=body.get("opponent"),
                     human_first=body.get("humanFirst"),
                     seed=body.get("seed"),
+                    search_budget=body.get("searchBudget"),
                 )
                 self._send_json(HTTPStatus.CREATED, payload)
                 return
             pieces = path.strip("/").split("/")
+            if len(pieces) == 4 and pieces[:2] == ["api", "games"] and pieces[3] == "undo":
+                payload = self.server.service.undo(pieces[2], revision=body.get("revision"))
+                self._send_json(HTTPStatus.OK, payload)
+                return
+            if len(pieces) == 4 and pieces[:2] == ["api", "games"] and pieces[3] == "search-budget":
+                payload = self.server.service.set_search_budget(
+                    pieces[2], body.get("searchBudget")
+                )
+                self._send_json(HTTPStatus.OK, payload)
+                return
             if len(pieces) == 4 and pieces[:2] == ["api", "games"] and pieces[3] == "actions":
                 payload = self.server.service.apply_action(
                     pieces[2],
@@ -641,6 +788,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--checkpoint-dir", type=Path, default=_DEFAULT_CHECKPOINT_ROOT)
+    parser.add_argument("--mcts-checkpoint", type=Path, help="add a native MCTS opponent with adjustable S/N budgets")
+    parser.add_argument("--mcts-label", help="display name for the MCTS checkpoint")
+    parser.add_argument("--mcts-simulations", type=int, default=1024)
+    parser.add_argument("--mcts-determinizations", type=int, default=1)
+    parser.add_argument("--mcts-seed", type=int, default=0)
     parser.add_argument(
         "--search-checkpoint",
         type=Path,
@@ -657,6 +809,22 @@ def main(argv: list[str] | None = None) -> int:
         help="collapse forced payment/return/noble decisions in the search tree",
     )
     args = parser.parse_args(argv)
+
+    mcts_config = None
+    if args.mcts_checkpoint is None:
+        if (args.mcts_label is not None or args.mcts_simulations != 1024
+                or args.mcts_determinizations != 1 or args.mcts_seed != 0):
+            parser.error("MCTS options require --mcts-checkpoint")
+    else:
+        try:
+            mcts_config = MCTSConfig(
+                simulations=args.mcts_simulations,
+                determinizations=args.mcts_determinizations,
+                seed=args.mcts_seed,
+                root_noise_fraction=0.0,
+            )
+        except ValueError as error:
+            parser.error(str(error))
 
     search_config = None
     if args.search_checkpoint is None:
@@ -683,12 +851,17 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as error:
             parser.error(str(error))
 
+    # Keep single-match inference to one CPU thread alongside training.
+    torch.set_num_threads(1)
     server = WebGameServer(
         (args.host, args.port),
         WebGameService(
             checkpoint_dir=args.checkpoint_dir,
             search_checkpoint=args.search_checkpoint,
             search_config=search_config,
+            mcts_checkpoint=args.mcts_checkpoint,
+            mcts_config=mcts_config,
+            mcts_label=args.mcts_label,
         ),
     )
     print(f"Splendor web UI: http://{args.host}:{args.port}", flush=True)

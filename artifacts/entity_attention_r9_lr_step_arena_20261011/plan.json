@@ -1,0 +1,46 @@
+{
+  "config": {
+    "path": "artifacts/entity_attention_r9_lr_step_arena_20261011/config.json",
+    "sha256": "e176541b69a7aef0ec561183d5d3c17548296ec2f377c70ed574e20a27b96d37"
+  },
+  "experiment": "entity_attention_r9_lr_step_arena_20261011",
+  "games": 400,
+  "models": {
+    "policy_a": {
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_2e-05/checkpoints/step-000001000.pt",
+        "sha256": "6cfd9edd97c2817274b436c3c4f50c4ba3b71c7bc14b42bd89438c39404da26f"
+      },
+      "global_step": 39398,
+      "learning_rate": 2e-05,
+      "name": "lr2e-5_step1000",
+      "round_steps": 1000,
+      "validation_policy_kl": 0.4322309748474781,
+      "validation_value_mse": 0.7188997535793503
+    },
+    "policy_b": {
+      "checkpoint": {
+        "path": "runs/entity_attention_p4_pool_iteration_20261010/rounds/round-008/checkpoints/step-000000500.pt",
+        "sha256": "ff34660fece12590762da93d031523e4ae09db4fa6af5d2284c4af0dcd57237b"
+      },
+      "global_step": 38898,
+      "learning_rate": 0.0001,
+      "name": "lr1e-4_step500",
+      "round_steps": 500,
+      "validation_policy_kl": 0.43750117835523356,
+      "validation_value_mse": 0.7157357749338237
+    }
+  },
+  "pairs": 200,
+  "runner_sha256": "b0a8be9c2d68e39eff50651be3930a2085d46ef2ad14914ff2c8c025988ed4a2",
+  "scope": "Same round-eight start, AdamW, 6k pool and B256; learning rate AND update count differ. Measures these complete checkpoints, not an isolated learning-rate effect. Single training trajectory; fresh arena seeds, pair-bootstrap 95% CI.",
+  "settings": "Both S1024/N1, native_batched, compiled, active100, max_batch64, no root noise; seat swap per seed",
+  "settings_template": {
+    "path": "artifacts/entity_attention_p4_p9_crossplay_20261010/configs/S01_newP9_oldV4.json",
+    "sha256": "ee8b475058bcb1766c89a8fa452af7ffacdd3e914512166f7a6881bcd4077e48"
+  },
+  "training_results": {
+    "path": "artifacts/entity_attention_r9_ofat_20261010/summary.json",
+    "sha256": "1cdf15fea45f4ebf284a359663ae8068f8685c4acc70cb256f1f6d65d0591dfe"
+  }
+}

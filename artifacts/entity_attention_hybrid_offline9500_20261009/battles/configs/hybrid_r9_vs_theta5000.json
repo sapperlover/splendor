@@ -1,0 +1,87 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 14920000,
+  "device": "cuda",
+  "execution": {
+    "active_games": 100,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "max_batch_size": 64,
+    "max_batch_wait_ms": 0.0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "candidate": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/checkpoints/final.pt",
+    "experiment": "entity_attention_hybrid_offline9500_20261009",
+    "panel": "hybrid_r9_vs_theta5000",
+    "seeds": "game 14900000+, policy 14910000+, search 14930000+"
+  },
+  "pairs": 200,
+  "policy_a": {
+    "checkpoint": "/home/lc/\u4e0b\u8f7d/splendor/runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/checkpoints/final.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "hybrid_r9_vs_theta5000",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/\u4e0b\u8f7d/splendor/runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "theta_5000",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_seed_base": 14910000,
+  "seed_start": 14900000,
+  "workers": 1
+}

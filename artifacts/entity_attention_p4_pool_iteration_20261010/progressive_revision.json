@@ -1,0 +1,60 @@
+{
+  "verified_at": "2026-10-10T13:47:37.221144+08:00",
+  "scope": "progressive replay quotas and B500 batch-bucket revision; formal training not started",
+  "supersedes": "initial fixed 64/192 sampling and [64,256,500] collection buckets only",
+  "initial_delivery_verification": {
+    "path": "artifacts/entity_attention_p4_pool_iteration_20261010/verification.json",
+    "sha256": "9211307a19606f0f56703a3d96f03355c052c1198f42b04b174560d3eed0a869"
+  },
+  "git_head": "095c605a3ac77f523de1127fc55a9d620e367fa7",
+  "git_dirty": true,
+  "current_source_files": {
+    "configs/entity_attention_v1/hybrid_p4_pool_20261010.json": "51cc65705df32be53b2c4cd73fab119cd5f862039d0b84ba5b9ed59f9aa322b4",
+    "configs/entity_attention_v1/p4_pool_iteration_20261010.json": "f345977399657e23dfefef656f4110421e38958442f8e40aaed0105731e64550",
+    "src/splendor/compact_game_cache.py": "73b663eddc5eb5bfc6198522ec7f32681b625d08d5bc9823c366c1308e4391df",
+    "src/splendor/hybrid_train.py": "25bbd3984b77bc2ada63e47b2fcee337122661747302acd9a0942746e2e19d74",
+    "src/splendor/pool_fitting.py": "48b2102934646845fdba05d0b0a9011e85217c23096ce047fbcef0a3f99cff7e",
+    "src/splendor/pool_iteration.py": "04c28f0a5985b5f31a4daea90dcd7f261221fe820f9e30c739730ce56ca98d33",
+    "tests/test_pool_iteration.py": "f771bf8d0069cab731323f99eed1f478d17a2741e3b75146c9920d47dc0d90b3",
+    "src/splendor/actor_critic.py": "af5bf713a75eb5fc0d3e78997fa53e45885df10181d30526ba6cd55845707049",
+    "src/splendor/entity_attention.py": "6803fc3d2803ed1b428ebc82330f12cff54c1450d84edf8e4997c255eb9d0c93",
+    "src/splendor/search_inference.py": "088da23d26d31182e908d6d227f63af1d814a534d3ec11c80e9b7b155dfedf4b",
+    "src/splendor/multiworker_gpu.py": "06616999fdaca4bd86dd6d02272aca3f0e4c95ea4ce78037008d5693965205e0",
+    "tests/test_inference_modes.py": "93282b48b54dabf508d34e93ae537d15b9fde96b245603030e484e2cbdc16c2e",
+    "artifacts/entity_attention_p4_pool_iteration_20261010/verify_batching.py": "facd64a897ba8fc7caa58fc5b7cc2d7941629f8555d65ffeb074adf411317eb5"
+  },
+  "check": {
+    "path": "artifacts/entity_attention_p4_pool_iteration_20261010/check_progressive.json",
+    "sha256": "098d4fae60a96f67a6482021893ff0b84a726fcafff93591d6588f076d5e7d50"
+  },
+  "tests": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q tests/test_pool_iteration.py tests/test_hybrid_training.py::test_continuous_resume_optimizer_rng_and_latest_teacher tests/test_hybrid_training.py::test_same_game_numbers_are_isolated_and_zero_pool_does_not_draw tests/test_inference_modes.py::test_static_batch_buckets_preserve_entity_outputs_and_reuse_guards tests/test_inference_modes.py::test_static_warmup_all_configured_shapes_exceeds_default_guard_limit --junitxml=runtime/entity_attention_p4_pool_iteration_20261010/pytest_progressive.xml",
+    "junit": "artifacts/entity_attention_p4_pool_iteration_20261010/pytest_progressive.xml",
+    "sha256": "47e128a5a21c7ba4d8faab4ab3843406642cd7669d0b9520e224c204e9f1478e",
+    "tests": 10,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "seconds": 38.118
+  },
+  "gpu": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TORCHINDUCTOR_COMPILE_THREADS=1 python -u runtime/entity_attention_p4_pool_iteration_20261010/verify_progressive_batching.py",
+    "reproduction_script": "artifacts/entity_attention_p4_pool_iteration_20261010/verify_batching.py",
+    "raw_path": "artifacts/entity_attention_p4_pool_iteration_20261010/gpu_progressive_batching.json",
+    "sha256": "645df751078b31e274e6b3be9f0fd3ae5e0a3416ff2ab32a729339c987e55ef4",
+    "numeric_checks": 50,
+    "native_graph_captures": 40,
+    "compile_failures": [],
+    "eager_fallbacks": 0,
+    "max_value_error": 2.5480985641479492e-06,
+    "peak_allocated_bytes": 133755904,
+    "peak_reserved_bytes": 1654652928,
+    "seconds": 341.65368473700073
+  },
+  "formal_run_exists": false,
+  "limits": [
+    "GPU checks cover fixed real inputs repeated across batch sizes, not full selfplay throughput or long-run memory.",
+    "No claim that the new buckets or progressive quotas are optimal or improve playing strength.",
+    "Initial delivery GPU training smoke predates this quota/bucket revision; new progressive training/resume check is CPU."
+  ]
+}

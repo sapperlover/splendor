@@ -1,0 +1,70 @@
+{
+  "source_games": 29000,
+  "train_games": 26065,
+  "validation_games": 2935,
+  "initial_step": 34398,
+  "rounds": 9,
+  "new_games": 9000,
+  "updates": 4500,
+  "quotas_by_round": [
+    {
+      "round": 1,
+      "offline": 224,
+      "online": 32
+    },
+    {
+      "round": 2,
+      "offline": 186,
+      "online": 70
+    },
+    {
+      "round": 3,
+      "offline": 147,
+      "online": 109
+    },
+    {
+      "round": 4,
+      "offline": 109,
+      "online": 147
+    },
+    {
+      "round": 5,
+      "offline": 70,
+      "online": 186
+    },
+    {
+      "round": 6,
+      "offline": 32,
+      "online": 224
+    },
+    {
+      "round": 7,
+      "offline": 0,
+      "online": 256
+    },
+    {
+      "round": 8,
+      "offline": 0,
+      "online": 256
+    },
+    {
+      "round": 9,
+      "offline": 0,
+      "online": 256
+    }
+  ],
+  "collection_batching": {
+    "max_batch_size": 500,
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      192,
+      256,
+      384,
+      500
+    ]
+  },
+  "teacher_update": "every completed training round, unconditional on metrics/scores"
+}

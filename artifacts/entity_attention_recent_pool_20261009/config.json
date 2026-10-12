@@ -1,0 +1,41 @@
+{
+  "artifacts": "artifacts/entity_attention_recent_pool_20261009",
+  "baseline_checkpoints": {
+    "hybrid9500": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/checkpoints/final.pt",
+    "latest17700": "runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-011/checkpoints/final.pt"
+  },
+  "cache_mib": 8192,
+  "draw_exposures": 12,
+  "full_holdout_exposures": [
+    4,
+    8,
+    12
+  ],
+  "initialization_seed": 13100000,
+  "late_lr_multiplier": 0.25,
+  "learner": {
+    "batch_size": 256,
+    "checkpoint_every_steps": 1000,
+    "device": "cuda",
+    "history_batch_size": 128,
+    "learning_rate": 0.0001,
+    "max_grad_norm": 1.0,
+    "max_steps_per_round": null,
+    "policy_loss_weight": 1.0,
+    "steps_per_new_position": 4.0,
+    "validation_batch_size": 256,
+    "value_loss_weight": 1.0,
+    "weight_decay": 0.0001
+  },
+  "lr_drop_exposure": 8,
+  "manifest": "/home/lc/下载/splendor/artifacts/entity_attention_recent_pool_20261009/pool_games.jsonl",
+  "manifest_sha256": "d5d49d8e019767b90e6b2eb5457f0a5f74dbab1f116b10ecbcce06fc3675fe6b",
+  "model_config": {
+    "architecture": "entity_attention_v1"
+  },
+  "output": "runs/entity_attention_recent_pool_20261009",
+  "positions_per_source_split": 2048,
+  "protocol": "recent-attention-fixed-pool-offline-v1",
+  "sampling_seed": 30110000,
+  "validation_seed": 30120000
+}

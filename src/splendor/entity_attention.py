@@ -148,3 +148,53 @@ class EntityAttention(ActorCritic):
 
     def build_actor_projection(self):
         raise ValueError("entity_attention_v1 requires actor_projection=false")
+
+
+@dataclass(frozen=True, slots=True)
+class EntityAttentionPolicyValueConfig:
+    """Inference-only composition of two unchanged entity_attention_v1 models."""
+
+    architecture: str = "entity_attention_policy_value_v1"
+    feature_schema_version: str = FEATURE_SCHEMA_VERSION
+
+    def __post_init__(self):
+        if self.architecture != "entity_attention_policy_value_v1":
+            raise ValueError("invalid policy/value composition architecture")
+        if self.feature_schema_version != FEATURE_SCHEMA_VERSION:
+            raise ValueError("model feature schema mismatch")
+
+
+class _SelectValue(nn.Module):
+    def forward(self, state):
+        return state[1]
+
+
+class EntityAttentionPolicyValue(ActorCritic):
+    """Keep each frozen branch's encoder and return policy(A), value(B).
+
+    Compiled search calls encode_state/_actor_logits/critic directly, so the
+    opaque state also carries B's value output. This preserves the same routing
+    for eager, compiled, policy-only and state-only search entry points.
+    """
+
+    def __init__(self, config: EntityAttentionPolicyValueConfig | None = None):
+        nn.Module.__init__(self)
+        self.config = config or EntityAttentionPolicyValueConfig()
+        self.policy_model = EntityAttention()
+        self.value_model = EntityAttention()
+        self.critic = _SelectValue()
+
+    def encode_state(self, batch: TorchDecisionBatch | TorchStateBatch):
+        return (self.policy_model.encode_state(batch),
+                self.value_model.critic(self.value_model.encode_state(batch)))
+
+    def _actor_logits(self, prepared: TorchDecisionBatch, state):
+        return self.policy_model._actor_logits(prepared, state[0])
+
+    def _policy_logits_prepared(self, prepared, *, projection=None):
+        if projection is not None:
+            raise ValueError("policy/value composition requires actor_projection=false")
+        return self.policy_model._policy_logits_prepared(prepared)
+
+    def build_actor_projection(self):
+        raise ValueError("policy/value composition requires actor_projection=false")

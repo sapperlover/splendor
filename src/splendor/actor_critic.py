@@ -535,6 +535,9 @@ def model_config_from_dict(config: dict[str, Any] | ActorCriticConfig):
     if architecture == "entity_attention_v1":
         from .entity_attention import EntityAttentionConfig
         return EntityAttentionConfig(**values)
+    if architecture == "entity_attention_policy_value_v1":
+        from .entity_attention import EntityAttentionPolicyValueConfig
+        return EntityAttentionPolicyValueConfig(**values)
     raise ValueError(f"unknown model architecture: {architecture!r}")
 
 
@@ -543,5 +546,7 @@ def build_actor_critic(config: dict[str, Any] | ActorCriticConfig) -> ActorCriti
     parsed = model_config_from_dict(config)
     if isinstance(parsed, ActorCriticConfig):
         return ActorCritic(parsed)
-    from .entity_attention import EntityAttention
+    from .entity_attention import EntityAttention, EntityAttentionPolicyValue, EntityAttentionPolicyValueConfig
+    if isinstance(parsed, EntityAttentionPolicyValueConfig):
+        return EntityAttentionPolicyValue(parsed)
     return EntityAttention(parsed)

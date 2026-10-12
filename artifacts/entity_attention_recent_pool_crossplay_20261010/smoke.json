@@ -1,0 +1,133 @@
+{
+  "passed": true,
+  "plan_sha256": "e8f0d3a044723a37b3d1201c922cd0758aedd8ce67d0298a6694e63583815961",
+  "protocol": "recent-pool-crossplay-20261010-v1",
+  "results": [
+    {
+      "config": {
+        "adjudicate_deterministic_policy_cycles": true,
+        "bootstrap_resamples": 1000,
+        "bootstrap_seed": 14920000,
+        "device": "cuda",
+        "execution": {
+          "active_games": 4,
+          "actor_projection": false,
+          "backend": "native_batched",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "inference_mode": "compiled",
+          "max_batch_size": 64,
+          "max_batch_wait_ms": 0.0
+        },
+        "max_completed_turns": 400,
+        "metadata": {
+          "protocol": "recent-pool-crossplay-20261010-v1",
+          "purpose": "finite smoke; excluded from formal panels"
+        },
+        "pairs": 2,
+        "policy_a": {
+          "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_crossplay_20261010/compositions/P4V12.pt",
+          "inference": {
+            "actor_projection": false,
+            "candidate_buckets": [
+              16,
+              32,
+              48,
+              64
+            ],
+            "compile_failure_policy": "fail_fast",
+            "mode": "compiled",
+            "native_transport": "reused"
+          },
+          "kind": "mcts_checkpoint",
+          "name": "P4V12",
+          "search_backend": "native",
+          "search_config": {
+            "c_puct": 1.5,
+            "determinizations": 1,
+            "dirichlet_alpha": 0.3,
+            "fold_forced_phases": true,
+            "max_simulation_transitions": 512,
+            "root_noise_fraction": 0.0,
+            "seed": 14930000,
+            "simulations": 16
+          }
+        },
+        "policy_b": {
+          "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_crossplay_20261010/compositions/P8V4.pt",
+          "inference": {
+            "actor_projection": false,
+            "candidate_buckets": [
+              16,
+              32,
+              48,
+              64
+            ],
+            "compile_failure_policy": "fail_fast",
+            "mode": "compiled",
+            "native_transport": "reused"
+          },
+          "kind": "mcts_checkpoint",
+          "name": "P8V4",
+          "search_backend": "native",
+          "search_config": {
+            "c_puct": 1.5,
+            "determinizations": 1,
+            "dirichlet_alpha": 0.3,
+            "fold_forced_phases": true,
+            "max_simulation_transitions": 512,
+            "root_noise_fraction": 0.0,
+            "seed": 14930000,
+            "simulations": 16
+          }
+        },
+        "policy_seed_base": 14910000,
+        "seed_start": 30600000,
+        "workers": 1
+      },
+      "kind": "search",
+      "output": "runtime/entity_attention_recent_pool_crossplay_20261010/smoke-search.json",
+      "output_sha256": "9cbe4a4a12f555f6a137464506f0f45ef61689072ff3e154e3c7fe0b22df8145",
+      "pairs": 2,
+      "passed": true,
+      "resume_preserves_games": true
+    },
+    {
+      "config": {
+        "adjudicate_deterministic_policy_cycles": true,
+        "bootstrap_resamples": 1000,
+        "bootstrap_seed": 30520000,
+        "device": "cpu",
+        "max_completed_turns": 400,
+        "metadata": {
+          "protocol": "recent-pool-crossplay-20261010-v1",
+          "purpose": "finite smoke; excluded from formal panels"
+        },
+        "pairs": 2,
+        "policy_a": {
+          "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+          "kind": "greedy_checkpoint",
+          "name": "P4V4"
+        },
+        "policy_b": {
+          "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+          "kind": "greedy_checkpoint",
+          "name": "theta5000"
+        },
+        "policy_seed_base": 30510000,
+        "seed_start": 30600000,
+        "workers": 8
+      },
+      "kind": "greedy",
+      "output": "runtime/entity_attention_recent_pool_crossplay_20261010/smoke-greedy.json",
+      "output_sha256": "29b1899a2d3fe00879456f0a01641d35a74ee8f709ddb1bca3153f390296398d",
+      "pairs": 2,
+      "passed": true,
+      "resume_preserves_games": true
+    }
+  ]
+}

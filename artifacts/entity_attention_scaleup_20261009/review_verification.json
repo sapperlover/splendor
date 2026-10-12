@@ -1,0 +1,572 @@
+{
+  "protocol": "entity-attention-scaleup-statistical-review-v1",
+  "reviewed_on": "2026-10-09",
+  "scope": "修正扩样统计与结论表述；仅复算已有逐根／逐局记录，未新增训练、搜索或对战。",
+  "local_before_backup": {
+    "path": "runtime/entity_attention_scaleup_20261009/review_before",
+    "manifest": "runtime/entity_attention_scaleup_20261009/review_before/manifest.json",
+    "manifest_sha256": "c3df026b36dec12a4783da6b996b44f5cfcb7fe967fef9d38306afe9bcaf535d",
+    "backup_files_verified": 8
+  },
+  "files_before": [
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/analyze.py",
+      "sha256": "c68110083767cae680892db29717d8f28cb9c3c234d8963f505239e1008e4b08"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/test_scaleup.py",
+      "sha256": "2fe00751b8767cb74d43ee18cf4d9c1a9ebc3deba566f5a16673a769ee2b7d25"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/README.md",
+      "sha256": "9ef045ad8583e77a7b1f0320f1e7eb2928e2538054df1ea06305e40635aae05c"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/results.json",
+      "sha256": "cbed4fc87150a41beac14e765a190f3dec0f63ca759aa01e4cfc13c839defd9f"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/lr_results.json",
+      "sha256": "cd8b8e736bc0be518d6ef11ecaeb48e58cdd23cd7b7385fa1cc1235fcdcdbfc5"
+    },
+    {
+      "path": "docs/current_project_state_zh-CN.md",
+      "sha256": "41f35a7111d5787d166d5a27cf963eaedf85b71f0ef62ce4ab92d37814cfbd0a"
+    },
+    {
+      "path": "docs/reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md",
+      "sha256": "ca32205caae1330d55fc2e651c5c0b613cb09c8f0cf5497235887fdfb90526d4"
+    },
+    {
+      "path": "artifacts/experiment_index.json",
+      "sha256": "e47d14c0d3bf8bf4291361368fdf33f0f24d79769deb58bb229571517524f37f"
+    }
+  ],
+  "current_review_files": [
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/analyze.py",
+      "sha256": "855145d151a6977cfd088ed88bd4afa445f2108e9fee442f95da4afd4fb83179"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/test_scaleup.py",
+      "sha256": "af0542dace051417d7cbde22d0f9036379d0cc3dadb90a92c914d9e440efd4d6"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/README.md",
+      "sha256": "f1b4ed332381a3a068af7250c9ad0dc76e88fa265b9c0323f3169d3964bdd961"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/results.json",
+      "sha256": "9917a611cb164ebcdebd0f7f018efde2ca62a85be8f4ffdcb45369e6633d50b6"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/lr_results.json",
+      "sha256": "cd8b8e736bc0be518d6ef11ecaeb48e58cdd23cd7b7385fa1cc1235fcdcdbfc5"
+    },
+    {
+      "path": "docs/current_project_state_zh-CN.md",
+      "sha256": "9313acd6f302aa1610c5891a7e0570a8059b1a7749c9f4c8a7d725079498d2ab"
+    },
+    {
+      "path": "docs/reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md",
+      "sha256": "26b3ef960828e1d3bd4a947e92d2b2261ac877798e082322a15a559639d40836"
+    }
+  ],
+  "unchanged_source_inventory": [
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/battle_summary.json",
+      "sha256": "c5165b52d80a5caf15f50406414a8ce44a7052d827a22bceec1b0c8651773875"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/common.py",
+      "sha256": "f0f5add3f41214a598137b700fafba73b822bfc2514360841fc3e3dad810079f"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/lr_results.json",
+      "sha256": "cd8b8e736bc0be518d6ef11ecaeb48e58cdd23cd7b7385fa1cc1235fcdcdbfc5"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/fresh_stored_summary.json",
+      "sha256": "ec482376c1a8ba8a9569501ce3b51cee4ab700c369d66fb9f9611b198bed8326"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/expanded_summary.json",
+      "sha256": "329dca55d21a7237fac3d9109412c6cbc097418ff3c54cc0b77c8150442639db"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/expand_specification.json",
+      "sha256": "679e2ff6b978d02ccca1784bcd6e251dc21bf07c1e731ae1591830b0b4d08cd5"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/fresh_summary.json",
+      "sha256": "4bafcc9506c576d2bd19109977bafbe875f9b9decab8c6946356c554375f42ad"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/lr_probe.py",
+      "sha256": "3660e33534e7119de6ea12cceaf604ddbca48d68d6d3928dd97e0432bf861ff8"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/expand_roots.py",
+      "sha256": "2d11740cce3f8e250a64851661fe33b7eaa98c6ded6b5bb2bccd8637b0031f4b"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/lr_specification.json",
+      "sha256": "1b69081b9d9a62661bbf14380533c8b7cfe61502b0990f6c492e215c5c785e6d"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/fresh_eval_specification.json",
+      "sha256": "f4bb0a3b9f98113bdf240825b2d23c574060be59cd41f999eacc0e3a126350e3"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/fresh_eval.py",
+      "sha256": "787f30512a6e219152ca2abbcfe5a8206061068900900a07f47cdcd160ffefa5"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/battle_extend.py",
+      "sha256": "d3e6b47612169f5b5c56395535fbf875f94dfa369a22e374d292b63d2420d3fc"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/battles/seed1_avg4_r012_ext200.json",
+      "sha256": "77223ea8ed1d8faa6895f318a92e365427ffddf6801dea6ecdea5cc9e326b08d"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/battles/seed1_avg4_r004_ext200.json",
+      "sha256": "b35bbfce4422c6f831f12a6662ffb00579aa82a1fbbdafd4f328bc2645ac0be0"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r008_A_lr2.5e-5_000500.json",
+      "sha256": "cc4fa4fd0143cc4844f00066cab731fc764dbfbcc2a53037fa70b5014d3c2497"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r008_A_lr2.5e-5_000200.json",
+      "sha256": "b61c5691eed6ff861c5aa7a3536ed34cea5e3033a08a70ae765c2454495e668b"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r012_A_lr2.5e-5_000200.json",
+      "sha256": "061fce10d428c70a8d23952e36778fc225fb2ae3e528793eda0cc5d25aa6b2be"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r008_A_lr2.5e-5_000050.json",
+      "sha256": "1bfe923bd34f7d8e221e7ff76cf1357d17419e7896925131d0905596715a9c52"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r004_A_lr2.5e-5_000000.json",
+      "sha256": "ec025e80e13b4bde5cfe113a3c23a96da1f5dcd01c81610f7c1cff97434c7168"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r004_A_lr2.5e-5_000200.json",
+      "sha256": "846966f5779e016b58caa6a4f8c68b008c1c691e98fb969cc0a6f5acf1b1f9d0"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r008_A_lr2.5e-5_000100.json",
+      "sha256": "e52d7ebda3f8b64d6cd82beb3e5305ee5cb2d3a928ce14192566636f21139c71"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r008_A_lr2.5e-5_000000.json",
+      "sha256": "e3491f4a4191a63a6a5c3be8231650c43c6445cd9401aeb91554f7fb5e9119f4"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r004_A_lr2.5e-5_000050.json",
+      "sha256": "1d2ad47ec7f2fd493d2b112198f7f966db116bdb55a5da2735baaa940425e08b"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r012_A_lr2.5e-5_000500.json",
+      "sha256": "a6fd78524836bace74bd84423b9ca636a9dc91c18932712f39c408591f97c5f5"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r012_A_lr2.5e-5_000000.json",
+      "sha256": "b402f41400af386995757fc29f1abe18a70927032a522cf10778a5df15830987"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r004_A_lr2.5e-5_000100.json",
+      "sha256": "867ec2c385beab6eccf9c94f070a4bda956f65dffb018dcec6f0783030f9cdbb"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r012_A_lr2.5e-5_000100.json",
+      "sha256": "7521bb9d6e143a856736c5dd789ba72bdef8bc2f2a76132ffe313643bd85e36e"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r012_A_lr2.5e-5_000050.json",
+      "sha256": "45af4950820158cf2952e478e304badf58942fec7861011d65ab7185241ab5cd"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/nodes/r004_A_lr2.5e-5_000500.json",
+      "sha256": "5948755c4901f21a8bbaa7acf7551ef007aae052128979c3867be36888095add"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/battles/configs/seed1_avg4_r012_ext200.json",
+      "sha256": "cb6acc9b04d907839f94b1b45bf042350db98512f3dcf973105c4930456d8935"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/battles/configs/seed1_avg4_r008_ext200.json",
+      "sha256": "800b26b9621dc09059ee8898c561f1fc6bc829b72c27e55094d096a5214c95da"
+    },
+    {
+      "path": "artifacts/entity_attention_scaleup_20261009/battles/configs/seed1_avg4_r004_ext200.json",
+      "sha256": "68aa73a60ef728e8cafa9578dfd9e14dbb327c0ed934d0219c9baa409267c8e6"
+    },
+    {
+      "path": "runtime/entity_attention_scaleup_20261009/fresh_rows.jsonl",
+      "sha256": "b7d0d6357ead69f7218bb359ff91b78f89cb2ddde3aaf1580066f294106ab339"
+    },
+    {
+      "path": "runtime/entity_attention_scaleup_20261009/fresh_rows_both.jsonl",
+      "sha256": "3ca9b429ef2e2dfa144014a78568ae2ae83e0d12ce80fc08163deccd2aca70d9"
+    }
+  ],
+  "checks": {
+    "unchanged_inventory_count": 35,
+    "raw_specs_nodes_summaries_battles_and_fresh_rows_preserved": true,
+    "retained_results_sections_identical_to_before": [
+      "stored_nodes",
+      "expanded_roots",
+      "fresh_labels",
+      "fresh_labels_same_position",
+      "battles"
+    ],
+    "stored_point_estimates_game_counts_improved_fractions_and_per_key_unchanged": true,
+    "independent_read_only_review_statistics_reproduced": true,
+    "focused_pytest": {
+      "command": "conda run -n splendor env PYTHONPATH=src python -m pytest -q artifacts/entity_attention_scaleup_20261009/test_scaleup.py",
+      "result": "7 passed, 0 skipped",
+      "new_regressions": [
+        "Separate same game_id from different teacher rounds in stored bootstrap",
+        "Use training start as baseline and exclude Train rows for fresh validation net changes"
+      ]
+    },
+    "index_evidence_hashes_verified": 518,
+    "local_markdown_links_verified": 56,
+    "git_diff_check": "passed"
+  },
+  "stored_pair_correction": {
+    "scope": "recent four teacher generations, equal game weight, stratified by start_key",
+    "old_cluster": "start_key:game_id",
+    "new_cluster": "start_key:teacher_round:game_id",
+    "before": {
+      "50": {
+        "estimate": -0.008524807350983907,
+        "games": 246,
+        "improved_fraction": 0.7926829268292683,
+        "lower": -0.009671456234198593,
+        "per_key": {
+          "r004": {
+            "estimate": -0.0030977636739978605,
+            "games": 81
+          },
+          "r008": {
+            "estimate": -0.015022385856172151,
+            "games": 87
+          },
+          "r012": {
+            "estimate": -0.006913284375144078,
+            "games": 78
+          }
+        },
+        "upper": -0.007392176484802048
+      },
+      "200": {
+        "estimate": -0.005285234968584391,
+        "games": 246,
+        "improved_fraction": 0.7195121951219512,
+        "lower": -0.00641538365367747,
+        "per_key": {
+          "r004": {
+            "estimate": -0.0067612737324685215,
+            "games": 81
+          },
+          "r008": {
+            "estimate": -0.0036047417182473334,
+            "games": 87
+          },
+          "r012": {
+            "estimate": -0.005626821800696051,
+            "games": 78
+          }
+        },
+        "upper": -0.004126397941653863
+      },
+      "500": {
+        "estimate": -0.008359876302114877,
+        "games": 246,
+        "improved_fraction": 0.7642276422764228,
+        "lower": -0.009921022445036764,
+        "per_key": {
+          "r004": {
+            "estimate": -0.008243812532938162,
+            "games": 81
+          },
+          "r008": {
+            "estimate": -0.010162821398454569,
+            "games": 87
+          },
+          "r012": {
+            "estimate": -0.006469426839573346,
+            "games": 78
+          }
+        },
+        "upper": -0.006858549738341222
+      }
+    },
+    "after": {
+      "50": {
+        "cluster": "start_key:teacher_round:game_id",
+        "estimate": -0.008524807350983907,
+        "games": 246,
+        "improved_fraction": 0.7926829268292683,
+        "lower": -0.009688057752673816,
+        "per_key": {
+          "r004": {
+            "estimate": -0.0030977636739978605,
+            "games": 81
+          },
+          "r008": {
+            "estimate": -0.015022385856172151,
+            "games": 87
+          },
+          "r012": {
+            "estimate": -0.006913284375144078,
+            "games": 78
+          }
+        },
+        "scope": "recent_four_holdout",
+        "strata": "start_key",
+        "upper": -0.007351822630645202,
+        "weighting": "equal_game"
+      },
+      "200": {
+        "cluster": "start_key:teacher_round:game_id",
+        "estimate": -0.005285234968584391,
+        "games": 246,
+        "improved_fraction": 0.7195121951219512,
+        "lower": -0.006398495033472398,
+        "per_key": {
+          "r004": {
+            "estimate": -0.0067612737324685215,
+            "games": 81
+          },
+          "r008": {
+            "estimate": -0.0036047417182473334,
+            "games": 87
+          },
+          "r012": {
+            "estimate": -0.005626821800696051,
+            "games": 78
+          }
+        },
+        "scope": "recent_four_holdout",
+        "strata": "start_key",
+        "upper": -0.004145284626724529,
+        "weighting": "equal_game"
+      },
+      "500": {
+        "cluster": "start_key:teacher_round:game_id",
+        "estimate": -0.008359876302114877,
+        "games": 246,
+        "improved_fraction": 0.7642276422764228,
+        "lower": -0.009885998614945324,
+        "per_key": {
+          "r004": {
+            "estimate": -0.008243812532938162,
+            "games": 81
+          },
+          "r008": {
+            "estimate": -0.010162821398454569,
+            "games": 87
+          },
+          "r012": {
+            "estimate": -0.006469426839573346,
+            "games": 78
+          }
+        },
+        "scope": "recent_four_holdout",
+        "strata": "start_key",
+        "upper": -0.006792757737011582,
+        "weighting": "equal_game"
+      }
+    }
+  },
+  "fresh_validation_net_change": {
+    "arms": {
+      "A": {
+        "50": {
+          "estimate": 0.013741400240040441,
+          "games": 63,
+          "lower": 0.007317293900555531,
+          "per_key": {
+            "r004": 0.011568850918385026,
+            "r008": 0.022699175251176183,
+            "r012": 0.006956174550560107
+          },
+          "positions": 768,
+          "upper": 0.020017734275137932
+        },
+        "200": {
+          "estimate": 0.01044278136524665,
+          "games": 63,
+          "lower": 0.005395104685533157,
+          "per_key": {
+            "r004": 0.013663472687735644,
+            "r008": 0.007414463933504026,
+            "r012": 0.010250407474500275
+          },
+          "positions": 768,
+          "upper": 0.015942843837927795
+        },
+        "500": {
+          "estimate": 0.01284128083115989,
+          "games": 63,
+          "lower": 0.005901852265481206,
+          "per_key": {
+            "r004": 0.016323667948494835,
+            "r008": 0.015951091784315172,
+            "r012": 0.006249082760669661
+          },
+          "positions": 768,
+          "upper": 0.01999209099878966
+        }
+      },
+      "B": {
+        "50": {
+          "estimate": 0.01787575754173221,
+          "games": 63,
+          "lower": 0.012656715112529911,
+          "per_key": {
+            "r004": 0.012070632218868707,
+            "r008": 0.03259855983930766,
+            "r012": 0.008958080567020276
+          },
+          "positions": 768,
+          "upper": 0.023171853502807722
+        },
+        "200": {
+          "estimate": 0.007528627501288656,
+          "games": 63,
+          "lower": 0.0028258080821663553,
+          "per_key": {
+            "r004": 0.0038352239651902537,
+            "r008": 0.015186602678945978,
+            "r012": 0.0035640558597297358
+          },
+          "positions": 768,
+          "upper": 0.012298258865522485
+        },
+        "500": {
+          "estimate": 0.004700022341448991,
+          "games": 63,
+          "lower": -0.0011631042212251446,
+          "per_key": {
+            "r004": 0.006072242522872287,
+            "r008": 0.009130327336969156,
+            "r012": -0.0011025028354944674
+          },
+          "positions": 768,
+          "upper": 0.010685345637450256
+        }
+      },
+      "C": {
+        "50": {
+          "estimate": 0.013953397997399824,
+          "games": 63,
+          "lower": 0.007295962257863314,
+          "per_key": {
+            "r004": 0.012438773848590084,
+            "r008": 0.019633232383065913,
+            "r012": 0.00978818776054348
+          },
+          "positions": 768,
+          "upper": 0.020768857676793064
+        },
+        "200": {
+          "estimate": 0.015304402751253063,
+          "games": 63,
+          "lower": 0.008558999412313906,
+          "per_key": {
+            "r004": 0.01709016779492061,
+            "r008": 0.015376529468769658,
+            "r012": 0.013446510990068924
+          },
+          "positions": 768,
+          "upper": 0.021954040069068044
+        },
+        "500": {
+          "estimate": 0.013981208853686028,
+          "games": 63,
+          "lower": 0.0059632840998943264,
+          "per_key": {
+            "r004": 0.017041204970415592,
+            "r008": 0.012458355172716984,
+            "r012": 0.012444066417925503
+          },
+          "positions": 768,
+          "upper": 0.022218642446783003
+        }
+      },
+      "lr2.5e-5": {
+        "50": {
+          "estimate": 0.007067578812394909,
+          "games": 63,
+          "lower": 0.003125714433271123,
+          "per_key": {
+            "r004": 0.008708360369731341,
+            "r008": 0.009880219887858673,
+            "r012": 0.0026141561795947144
+          },
+          "positions": 768,
+          "upper": 0.010976032983338142
+        },
+        "100": {
+          "estimate": 0.0030057397032305162,
+          "games": 63,
+          "lower": -0.0012461874489949237,
+          "per_key": {
+            "r004": 0.01047768675493461,
+            "r008": 0.0029667610885854953,
+            "r012": -0.004427228733828557
+          },
+          "positions": 768,
+          "upper": 0.0071848899646671195
+        },
+        "200": {
+          "estimate": 0.0018573603199668772,
+          "games": 63,
+          "lower": -0.0018917798348508034,
+          "per_key": {
+            "r004": 0.0028153658059081456,
+            "r008": 0.004028453339608067,
+            "r012": -0.0012717381856155818
+          },
+          "positions": 768,
+          "upper": 0.0057755024115656315
+        },
+        "500": {
+          "estimate": 0.0026161624080458076,
+          "games": 63,
+          "lower": -0.0021894145587055304,
+          "per_key": {
+            "r004": 0.004755622342420437,
+            "r008": 0.0059715775066664836,
+            "r012": -0.0028787126249494943
+          },
+          "positions": 768,
+          "upper": 0.007488266919180678
+        }
+      }
+    },
+    "cluster": "start_key:game_id",
+    "metric": "KL(fresh || student) after - start",
+    "scope": "latest_validation",
+    "strata": "start_key",
+    "weighting": "equal_position"
+  },
+  "wording_corrections": [
+    "1e-4→2.5e-5是降低4倍",
+    "相对A的优势与相对训练前的净变化分别报告",
+    "近期四代／最新代、对局／位置权重分别标注",
+    "主集合Train／validation拆分；模型×局面行数不是独立根数",
+    "未抽中仅针对原生产A@100账本",
+    "训练曲线非普遍单调，未确定收敛点与最优步数",
+    "B边界探索性结果需复验；未检出棋力差异不等于效应为零；未排除标签噪声贡献",
+    "修正r004扩展面板胜负计数；合并300pair为原100pair的严格超集"
+  ],
+  "index_hash_note": "索引纳入本文件的SHA；为避免循环哈希，此文件仅保留索引修改前SHA，最终索引路径与哈希另行有限核验。"
+}

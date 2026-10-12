@@ -1,0 +1,91 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 14920000,
+  "device": "cuda",
+  "execution": {
+    "active_games": 100,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "max_batch_size": 64,
+    "max_batch_wait_ms": 0.0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "candidate_sha256": "9faa66af917c597fbc62b823eeffea14e8403391415ce552d7a4114481d2784a",
+    "candidate_step": 103194,
+    "checkpoint_selection": "predeclared final training step, not minimum heldout MSE",
+    "experiment": "entity_attention_recent_pool_20261009",
+    "panel": "final103194_vs_theta5000",
+    "seeds": "shared DEV panel: game 14900000+, policy 14910000+, search 14930000+",
+    "template_config": "artifacts/entity_attention_hybrid_offline9500_20261009/battles/configs/offline9500_vs_theta5000.json",
+    "template_sha256": "4626ad677f6153073e30b58324634012a6f7ceb9f5c4b00ee9a449b98d8124da"
+  },
+  "pairs": 200,
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/checkpoints/final.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "recent_pool_final103194",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "theta_5000",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_seed_base": 14910000,
+  "seed_start": 14900000,
+  "workers": 1
+}

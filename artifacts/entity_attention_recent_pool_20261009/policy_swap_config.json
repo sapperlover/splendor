@@ -1,0 +1,100 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 14920000,
+  "device": "cuda",
+  "execution": {
+    "active_games": 100,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "max_batch_size": 64,
+    "max_batch_wait_ms": 0.0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "candidate_sha256": "4bf89f6a623f963e96fa6cf3c59d435ad36fdf02d621613f42e43aa345caf469",
+    "experiment": "entity_attention_recent_pool_20261009",
+    "panel": "final_policy_early_value_vs_theta5000",
+    "seeds": "shared DEV with original step34398 and final103194 panels",
+    "sources": {
+      "policy": {
+        "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/final.pt",
+        "sha256": "9faa66af917c597fbc62b823eeffea14e8403391415ce552d7a4114481d2784a",
+        "step": 103194
+      },
+      "value": {
+        "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+        "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec",
+        "step": 34398
+      }
+    },
+    "template_sha256": "546360a263441ec278ea0df7b848a8436a4b58b88f1c49c296214b21f59d3eca"
+  },
+  "pairs": 200,
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/compositions/final_policy_early_value.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "final_policy103194_value34398",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "theta_5000",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_seed_base": 14910000,
+  "seed_start": 14900000,
+  "workers": 1
+}

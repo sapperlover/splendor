@@ -1,0 +1,89 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 26800200,
+  "device": "cuda",
+  "execution": {
+    "active_games": 64,
+    "actor_projection": true,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "eager",
+    "max_batch_size": 64,
+    "max_batch_wait_ms": 0.0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "scaleup_job": {
+      "id": "seed1_avg4_r004_ext200",
+      "note": "disjoint seed domain extension of the published 100-pair panel",
+      "pairs": 200,
+      "source_config": "artifacts/entity_attention_avg4_behavior_20261009/evaluation_configs/seed1_avg4_r004.json"
+    }
+  },
+  "pairs": 200,
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_avg4_behavior_20261009/seed1_avg4/rounds/round-003/checkpoints/final.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "eager",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "seed1_avg4_r004",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 26700000,
+      "simulations": 1024
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "eager",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "frozen_start",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 26700000,
+      "simulations": 1024
+    }
+  },
+  "policy_seed_base": 26600200,
+  "seed_start": 26500100,
+  "workers": 1
+}

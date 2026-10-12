@@ -1,0 +1,75 @@
+{
+  "sampled_unix": 1791543082.9383829,
+  "scope": "observed first-8 raw-cache steps versus a later warmed compact-cache window; not matched minibatch benchmarking",
+  "raw_cache_first8": {
+    "steps": 8,
+    "mean_seconds": {
+      "collate": 0.005384541625971906,
+      "draw_load": 0.6778539117499349,
+      "update": 0.05479831762386311
+    }
+  },
+  "compact_warm": {
+    "step_range": [
+      5512,
+      5611
+    ],
+    "steps": 100,
+    "mean_seconds": {
+      "collate": 0.0157637538398194,
+      "draw_load": 0.0013499040701572085,
+      "update": 0.03760634296992066
+    }
+  },
+  "live_snapshot": {
+    "cache": {
+      "cache_bytes": 5147319802,
+      "capacity_bytes": 8589934592,
+      "decode_count": 28793,
+      "decoded_bytes": 5147319802,
+      "encode_seconds": 137.36074564693263,
+      "entries": 28793,
+      "hits": 1545149,
+      "load_seconds": 102.39618911104844,
+      "misses": 28793,
+      "peak_cache_bytes": 5147319802,
+      "peak_entries": 28793,
+      "raw_decoded_bytes": 20000663672,
+      "storage": "lossless-float32-dictionary-v1"
+    },
+    "draw_exposure": 0.6512006512006512,
+    "last_step_seconds": {
+      "collate": 0.018790346999594476,
+      "draw_load": 0.0015282290005416144,
+      "update": 0.054589704999671085
+    },
+    "rss_peak_kib": 7007344,
+    "status": "training",
+    "step": 5600,
+    "steps_target": 103194,
+    "time_unix": 1791543081.8913646
+  },
+  "launch": {
+    "pid": 466685,
+    "command": [
+      "conda",
+      "run",
+      "--no-capture-output",
+      "-n",
+      "splendor",
+      "env",
+      "PYTHONPATH=src",
+      "OMP_NUM_THREADS=1",
+      "MKL_NUM_THREADS=1",
+      "OPENBLAS_NUM_THREADS=1",
+      "python",
+      "-u",
+      "artifacts/entity_attention_recent_pool_20261009/run.py",
+      "run"
+    ],
+    "cwd": "/home/lc/下载/splendor",
+    "start_unix": 1791542665.0544477,
+    "log": "/home/lc/下载/splendor/runtime/entity_attention_recent_pool_20261009/train.log",
+    "resume_from_step": 8
+  }
+}

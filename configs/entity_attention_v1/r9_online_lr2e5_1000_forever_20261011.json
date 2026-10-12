@@ -1,0 +1,34 @@
+{
+  "protocol": "p4-pool-self-iteration-v1",
+  "hybrid_config": "configs/entity_attention_v1/hybrid_r9_online_lr2e5_1000_forever_20261011.json",
+  "output": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011",
+  "artifacts": "artifacts/entity_attention_r9_online_lr2e5_1000_forever_20261011",
+  "greedy_evaluation": {
+    "adjudicate_deterministic_policy_cycles": true,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 30820000,
+    "device": "cpu",
+    "max_completed_turns": 400,
+    "pairs": 200,
+    "policy_a": {
+      "checkpoint": "generated-at-runtime",
+      "kind": "greedy_checkpoint",
+      "name": "online_candidate"
+    },
+    "policy_b": {
+      "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+      "kind": "greedy_checkpoint",
+      "name": "P4V4"
+    },
+    "policy_seed_base": 30810000,
+    "seed_start": 30800000,
+    "workers": 8
+  },
+  "forever": true,
+  "fork_from": {
+    "run": "runs/entity_attention_p4_pool_iteration_20261010",
+    "round": 9,
+    "checkpoint_sha256": "ff34660fece12590762da93d031523e4ae09db4fa6af5d2284c4af0dcd57237b",
+    "replay_snapshot_sha256": "78c31a0b0310ea8610d03b08e7d568229c0d1cf6028183f9e99b7c3cfa14a1c3"
+  }
+}

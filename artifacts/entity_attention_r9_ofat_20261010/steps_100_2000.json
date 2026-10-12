@@ -1,0 +1,3070 @@
+{
+  "scope": "Existing round-nine OFAT data only; same round-eight endpoint and AdamW state; no new training or evaluation",
+  "steps": [
+    100,
+    250,
+    500,
+    1000,
+    2000
+  ],
+  "configurations": [
+    {
+      "id": "baseline",
+      "label": "原配置",
+      "axis": "baseline",
+      "learner": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "pool_games": 6000,
+      "generations": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "axis": "learning_rate",
+      "generations": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "id": "lr_5e-05",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 5e-05,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "learning_rate": 5e-05
+      },
+      "pool_games": 6000,
+      "replay_identity": {
+        "digest": "e08e8043da5e05bd43258bcee95766fff790df1240d5f4a24d7ee6776e5c171f",
+        "pool_games": 6000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 5383,
+      "train_positions": 436458,
+      "label": "lr=5e-5"
+    },
+    {
+      "axis": "learning_rate",
+      "generations": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "id": "lr_2e-05",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 2e-05,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "learning_rate": 2e-05
+      },
+      "pool_games": 6000,
+      "replay_identity": {
+        "digest": "e08e8043da5e05bd43258bcee95766fff790df1240d5f4a24d7ee6776e5c171f",
+        "pool_games": 6000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 5383,
+      "train_positions": 436458,
+      "label": "lr=2e-5"
+    },
+    {
+      "axis": "learning_rate",
+      "generations": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "id": "lr_1e-05",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 1e-05,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "learning_rate": 1e-05
+      },
+      "pool_games": 6000,
+      "replay_identity": {
+        "digest": "e08e8043da5e05bd43258bcee95766fff790df1240d5f4a24d7ee6776e5c171f",
+        "pool_games": 6000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 5383,
+      "train_positions": 436458,
+      "label": "lr=1e-5"
+    },
+    {
+      "axis": "pool_games",
+      "generations": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "id": "pool_9000",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "pool_games": 9000
+      },
+      "pool_games": 9000,
+      "replay_identity": {
+        "digest": "05d4c574f282e99320d56500426a43b767210ece14aef05fcc98ef46ecfa3fae",
+        "pool_games": 9000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 8054,
+      "train_positions": 654945,
+      "label": "池=9k局"
+    },
+    {
+      "axis": "pool_games",
+      "generations": [
+        7,
+        8,
+        9
+      ],
+      "id": "pool_3000",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "pool_games": 3000
+      },
+      "pool_games": 3000,
+      "replay_identity": {
+        "digest": "6ab0d4ed2bec2d40c1022d4a712e931a143699944eba9bb730551ddd048b26bd",
+        "pool_games": 3000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 2681,
+      "train_positions": 216778,
+      "label": "池=3k局"
+    },
+    {
+      "axis": "pool_games",
+      "generations": [
+        9
+      ],
+      "id": "pool_1000",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "pool_games": 1000
+      },
+      "pool_games": 1000,
+      "replay_identity": {
+        "digest": "69148018df2273734ceb72150c00c5cfa8a81ad8074c7991e89fce8dbf2ac6ca",
+        "pool_games": 1000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 900,
+      "train_positions": 72915,
+      "label": "池=1k局"
+    },
+    {
+      "axis": "batch_size",
+      "generations": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "id": "batch_64",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 64,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 64,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "batch_size": 64
+      },
+      "pool_games": 6000,
+      "replay_identity": {
+        "digest": "e08e8043da5e05bd43258bcee95766fff790df1240d5f4a24d7ee6776e5c171f",
+        "pool_games": 6000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 5383,
+      "train_positions": 436458,
+      "label": "B=64"
+    },
+    {
+      "axis": "batch_size",
+      "generations": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "id": "batch_128",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 128,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "batch_size": 128
+      },
+      "pool_games": 6000,
+      "replay_identity": {
+        "digest": "e08e8043da5e05bd43258bcee95766fff790df1240d5f4a24d7ee6776e5c171f",
+        "pool_games": 6000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 5383,
+      "train_positions": 436458,
+      "label": "B=128"
+    },
+    {
+      "axis": "batch_size",
+      "generations": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "id": "batch_512",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 512,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "batch_size": 512
+      },
+      "pool_games": 6000,
+      "replay_identity": {
+        "digest": "e08e8043da5e05bd43258bcee95766fff790df1240d5f4a24d7ee6776e5c171f",
+        "pool_games": 6000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 5383,
+      "train_positions": 436458,
+      "label": "B=512"
+    },
+    {
+      "axis": "batch_size",
+      "generations": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "id": "batch_1024",
+      "inactive_history_field": "history_batch_size unused by explicit zero-history drawer; clipped to batch only for dataclass validation",
+      "learner": {
+        "batch_size": 1024,
+        "checkpoint_every_steps": 50,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "override": {
+        "batch_size": 1024
+      },
+      "pool_games": 6000,
+      "replay_identity": {
+        "digest": "e08e8043da5e05bd43258bcee95766fff790df1240d5f4a24d7ee6776e5c171f",
+        "pool_games": 6000,
+        "scope": "original whole-game splits; uniform Train-position sampling; no offline samples",
+        "source": "artifacts/entity_attention_r9_ofat_20261010/dataset.json"
+      },
+      "steps": [
+        0,
+        100,
+        125,
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "target": 2000,
+      "train_games": 5383,
+      "train_positions": 436458,
+      "label": "B=1024"
+    }
+  ],
+  "unique_points": 55,
+  "inputs": [
+    {
+      "path": "artifacts/entity_attention_r9_ofat_20261010/plan.json",
+      "sha256": "9fafe517d631f4dfcc9e430a432f2a9dab60a9512bc1ecb1a91eec0f18661b7e"
+    },
+    {
+      "path": "artifacts/entity_attention_r9_ofat_20261010/summary.json",
+      "sha256": "1cdf15fea45f4ebf284a359663ae8068f8685c4acc70cb256f1f6d65d0591dfe"
+    }
+  ],
+  "start": {
+    "path": "/home/lc/下载/splendor/runs/entity_attention_p4_pool_iteration_20261010/rounds/round-007/checkpoints/final.pt",
+    "sha256": "c17496196e5ea3d4198088898f610c8a56f51b7c0be4859a4d9d7cae02cb298e",
+    "total_train_step": 38398
+  },
+  "initial_checkpoint": {
+    "path": "runs/entity_attention_p4_pool_iteration_20261010/rounds/round-008/checkpoints/initial.pt",
+    "sha256": "91128be3dc3f19809c03fe1ecee47873bb69ee240b8abb76805aaff1196bc57e"
+  },
+  "validation": {
+    "games": 100,
+    "generation": 9,
+    "policy_positions": 6688,
+    "positions": 8174
+  },
+  "latest_train": {
+    "positions": 2048,
+    "policy_positions": 1652,
+    "set_digest": "c3bfa38fe7e671424dcfc283a3a61f858e635b31f642229800bdead620ec9f98",
+    "references": {
+      "path": "artifacts/entity_attention_r9_ofat_20261010/latest_train_references.json",
+      "sha256": "5862e0af7e2c48abe3662ac912b80c5dc1a45944d49f55c8f45f55954e46e6a6"
+    }
+  },
+  "rows": [
+    {
+      "config_id": "baseline",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.4596194111420607,
+      "value_mse": 0.7384306566128287,
+      "latest_train_kl": 0.4629183717155768,
+      "latest_train_mse": 0.7107386442264586,
+      "checkpoint": {
+        "path": "runs/entity_attention_p4_pool_iteration_20261010/rounds/round-008/checkpoints/step-000000100.pt",
+        "sha256": "56366ece3482b2d66c7138f4b62790dec442ee9c4e02bad4a4230180fd7ffd62"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/baseline/step-000000100.json",
+        "sha256": "478d683939a446642aa9cdc9a704ee3c8c44d5e5f38f5e671456817ab5e42151"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_500",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.01758798790195756,
+            0.02661359598622509
+          ],
+          "delta": 0.022118232786826852
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.0008950109728823483,
+            0.04545443726924414
+          ],
+          "delta": 0.02269488167900236
+        }
+      }
+    },
+    {
+      "config_id": "baseline",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.45613467464700236,
+      "value_mse": 0.7380250299593798,
+      "latest_train_kl": 0.4609807413381288,
+      "latest_train_mse": 0.7129037244478789,
+      "checkpoint": {
+        "path": "runs/entity_attention_p4_pool_iteration_20261010/rounds/round-008/checkpoints/step-000000250.pt",
+        "sha256": "88ad2a9181d28835e89d903ad3aad692d39fd85b0ec73c4d6968df4b43558648"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/baseline/step-000000250.json",
+        "sha256": "c8ff446e1c9f56b44e04537324654965ea5627dd880c3353a928e68e298e49d9"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_500",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.014467243740680645,
+            0.023019151257021194
+          ],
+          "delta": 0.018633496291768647
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.002924920964901962,
+            0.04729993400346782
+          ],
+          "delta": 0.022289255025555177
+        }
+      }
+    },
+    {
+      "config_id": "baseline",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.43750117835523356,
+      "value_mse": 0.7157357749338237,
+      "latest_train_kl": 0.4430455924966836,
+      "latest_train_mse": 0.6950273653038858,
+      "checkpoint": {
+        "path": "runs/entity_attention_p4_pool_iteration_20261010/rounds/round-008/checkpoints/step-000000500.pt",
+        "sha256": "ff34660fece12590762da93d031523e4ae09db4fa6af5d2284c4af0dcd57237b"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/baseline/step-000000500.json",
+        "sha256": "2f28aed20ed858239d14fcd5cb97792bc953560503960b09dff4860e58b70448"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_500",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "delta": 0.0
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "delta": 0.0
+        }
+      }
+    },
+    {
+      "config_id": "baseline",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.43848285039484686,
+      "value_mse": 0.7262271645774994,
+      "latest_train_kl": 0.4423142509625485,
+      "latest_train_mse": 0.6672664934810935,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_step_extension_20261010/checkpoints/step-000001000.pt",
+        "sha256": "2feae818090b8f90f8acf1870d9708ffb4ce2e087870c6d38c05b52929c6edf2"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/baseline/step-000001000.json",
+        "sha256": "dec20724a019e8fe4f62ae78823385d3008a06229fc532fa6a2eb3e9a379cee2"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_500",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.0018899770155233933,
+            0.0038727972812650766
+          ],
+          "delta": 0.0009816720396132964
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.012405272076446632,
+            0.03191975086320346
+          ],
+          "delta": 0.010491389643677232
+        }
+      }
+    },
+    {
+      "config_id": "baseline",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.44390803870677403,
+      "value_mse": 0.7726831373524189,
+      "latest_train_kl": 0.44737335969651587,
+      "latest_train_mse": 0.6237958222510118,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_step_extension_20261010/checkpoints/step-000002000.pt",
+        "sha256": "fea6e16cd38de8267ddb08a6c9cecacab82130040af8a1c73539b54e014f63ad"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/baseline/step-000002000.json",
+        "sha256": "8a81f0d67db9a5bd6a16cec68e73e726dff2d9e43ca449bb37f525e72b5f1f8d"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_500",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.0022032969615912177,
+            0.01071728193345579
+          ],
+          "delta": 0.0064068603515405964
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.02466109449621067,
+            0.09196983827699881
+          ],
+          "delta": 0.056947362418594966
+        }
+      }
+    },
+    {
+      "config_id": "lr_5e-05",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.43760099238499095,
+      "value_mse": 0.7204074026095296,
+      "latest_train_kl": 0.4420146831764306,
+      "latest_train_mse": 0.712375560616568,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_5e-05/checkpoints/step-000000100.pt",
+        "sha256": "94c3791234eb68cc7f2c885c251a8e66eb7f70c9ed0ac76199f7e68c569c5746"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_5e-05/step-000000100.json",
+        "sha256": "9d8d66c3da5e4a6701110a4f0cec521db981de928eac265bfa5f422049837bf5"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.024853430616796717,
+            -0.019186989516440107
+          ],
+          "delta": -0.022018418757069454
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.03143692653490905,
+            -0.004756413044598586
+          ],
+          "delta": -0.018023254003295543
+        }
+      }
+    },
+    {
+      "config_id": "lr_5e-05",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.4374176917703478,
+      "value_mse": 0.7282733448574902,
+      "latest_train_kl": 0.44251690620864126,
+      "latest_train_mse": 0.710947215806792,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_5e-05/checkpoints/step-000000250.pt",
+        "sha256": "6b691b03c747ed798ecbe8c734eed3729f30e7918285e8953d0243cc23f077a2"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_5e-05/step-000000250.json",
+        "sha256": "b5e2d32b8f504827751fea27ce1451ea28d93e030c34ff16f8a61cccc84ca80f"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.022070481225392586,
+            -0.015484705577870687
+          ],
+          "delta": -0.01871698287665445
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.019518972204733608,
+            0.000106704444444707
+          ],
+          "delta": -0.009751685101890534
+        }
+      }
+    },
+    {
+      "config_id": "lr_5e-05",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.436240625243852,
+      "value_mse": 0.7174650691345723,
+      "latest_train_kl": 0.4407635879132265,
+      "latest_train_mse": 0.7027224994206105,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_5e-05/checkpoints/step-000000500.pt",
+        "sha256": "250c84c5f4a0a6155bfb674869cb991d1592bbacb47e3c7763fad53f48a2aec3"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_5e-05/step-000000500.json",
+        "sha256": "d74420d01d2ec6d8f9d110341504d393c7547cfb7aaf9e2b30985c1222032f06"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.0030558427913853973,
+            0.0005724310413456058
+          ],
+          "delta": -0.001260553111381563
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.007780222773075346,
+            0.01095769536792454
+          ],
+          "delta": 0.0017292942007517294
+        }
+      }
+    },
+    {
+      "config_id": "lr_5e-05",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.43265879473943597,
+      "value_mse": 0.72383707997106,
+      "latest_train_kl": 0.4374715364574838,
+      "latest_train_mse": 0.6815719664399296,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_5e-05/checkpoints/step-000001000.pt",
+        "sha256": "d70cd281d066b96ae95bf3f01783ee2289eaa154c022d5b9c7ed3b725ccf3ab6"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_5e-05/step-000001000.json",
+        "sha256": "d2edc781127f8c51dc55b37d662900dc528cc7ed1990d18b05277b4a9b7e1346"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.007718303621061114,
+            -0.003975307157306708
+          ],
+          "delta": -0.005824055655410889
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.014994887986187507,
+            0.010656997070118879
+          ],
+          "delta": -0.0023900846064413266
+        }
+      }
+    },
+    {
+      "config_id": "lr_5e-05",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.4376972713952218,
+      "value_mse": 0.7328025435945296,
+      "latest_train_kl": 0.44087622837894413,
+      "latest_train_mse": 0.6555658353081288,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_5e-05/checkpoints/step-000002000.pt",
+        "sha256": "2fb91c94d5174e5636a77dbd8dd944486b7e855196e24f3cc5cf4a2b403dbc1c"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_5e-05/step-000002000.json",
+        "sha256": "8b301bed6258d450c7eee9fc7c4d5c410fe555d212aedda2c5845c3493ff61b0"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.008843334063919454,
+            -0.003572272802037223
+          ],
+          "delta": -0.006210767311552377
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.06066529824399448,
+            -0.02089060720471687
+          ],
+          "delta": -0.03988059375789011
+        }
+      }
+    },
+    {
+      "config_id": "lr_2e-05",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.4385787624513004,
+      "value_mse": 0.7231298647502165,
+      "latest_train_kl": 0.4451570876335897,
+      "latest_train_mse": 0.7095259413280196,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_2e-05/checkpoints/step-000000100.pt",
+        "sha256": "3522271baaf8830bab8386e49f3ea09b360c88e61508dc7e36ee05f498604177"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_2e-05/step-000000100.json",
+        "sha256": "a5f9868f99e204d0105e9de32da32faf00e1ce975d8bb25fd6e44e2b990619fb"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.024035366265116414,
+            -0.01810156905537561
+          ],
+          "delta": -0.021040648690759996
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.030448733360342133,
+            -0.00015060603099261685
+          ],
+          "delta": -0.015300791862607991
+        }
+      }
+    },
+    {
+      "config_id": "lr_2e-05",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.43361398175003757,
+      "value_mse": 0.7219771973415935,
+      "latest_train_kl": 0.4399842967593927,
+      "latest_train_mse": 0.711801808279097,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_2e-05/checkpoints/step-000000250.pt",
+        "sha256": "31287d2ff0bd7e2e8ba1373faa9336a30d0ad2a83a37903dac22b76c9aed8637"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_2e-05/step-000000250.json",
+        "sha256": "a07f6c6c5f57327352168975bd035cc248a9a07dee935eeef85244ff63f4adab"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.026257613470783245,
+            -0.01896025686359899
+          ],
+          "delta": -0.022520692896964636
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.029037537573955337,
+            -0.002737894210805686
+          ],
+          "delta": -0.016047832617786518
+        }
+      }
+    },
+    {
+      "config_id": "lr_2e-05",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.43287220197276577,
+      "value_mse": 0.7211015621109497,
+      "latest_train_kl": 0.43761156665584067,
+      "latest_train_mse": 0.7043381914134272,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_2e-05/checkpoints/step-000000500.pt",
+        "sha256": "e6ab08a961153d4f59b04956d49f6ea889fe8f1032100fd65d2a1a5e9929a7c7"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_2e-05/step-000000500.json",
+        "sha256": "59bf77526af354b6773cb1c200a3af2a2761a382fb5e71b3308adc1d63663bd1"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.006674523614021,
+            -0.002564591412612633
+          ],
+          "delta": -0.004628976382467807
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.010304629544720143,
+            0.021211033934184543
+          ],
+          "delta": 0.005365787177124716
+        }
+      }
+    },
+    {
+      "config_id": "lr_2e-05",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.4322309748474781,
+      "value_mse": 0.7188997535793503,
+      "latest_train_kl": 0.43786868463537865,
+      "latest_train_mse": 0.693570810679903,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_2e-05/checkpoints/step-000001000.pt",
+        "sha256": "6cfd9edd97c2817274b436c3c4f50c4ba3b71c7bc14b42bd89438c39404da26f"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_2e-05/step-000001000.json",
+        "sha256": "99a4fa6a9168dae75849244e0a31096ebdeb69969cfdfc0593a049969af0f7c9"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.008783145141901946,
+            -0.003759717200623307
+          ],
+          "delta": -0.006251875547368789
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.027790706507835237,
+            0.01404318036154066
+          ],
+          "delta": -0.007327410998149801
+        }
+      }
+    },
+    {
+      "config_id": "lr_2e-05",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.43380044170985865,
+      "value_mse": 0.7304596798601029,
+      "latest_train_kl": 0.438598590070371,
+      "latest_train_mse": 0.682308518577353,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_2e-05/checkpoints/step-000002000.pt",
+        "sha256": "acde527fcf327bdc71a3ad2eda446dd01b3f650de0ac54bd4ba686cb9b7b9fed"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_2e-05/step-000002000.json",
+        "sha256": "9890ca353007ff7d36b2d53936cf611ee7bc3b37fe7c6a66c4143c6eaa57fc46"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.013822743406068132,
+            -0.006431112476927428
+          ],
+          "delta": -0.010107596996915488
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.0684975975338012,
+            -0.01669448885963877
+          ],
+          "delta": -0.04222345749231748
+        }
+      }
+    },
+    {
+      "config_id": "lr_1e-05",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.43584286192500715,
+      "value_mse": 0.7263928062637581,
+      "latest_train_kl": 0.4421073513583248,
+      "latest_train_mse": 0.7138453597510479,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_1e-05/checkpoints/step-000000100.pt",
+        "sha256": "a85e307ef7a5c43d99e22c8b56e189830aa46ae21aabf71ad98c975bd4007fe1"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_1e-05/step-000000100.json",
+        "sha256": "fbeb41c6bf4e58b82453dfccfa8d709a027944b9f53f680c4dc692f8a69cdc30"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.02730272496741226,
+            -0.020307509866266303
+          ],
+          "delta": -0.02377654921705314
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.029006649304554183,
+            0.004703167694462008
+          ],
+          "delta": -0.012037850349066402
+        }
+      }
+    },
+    {
+      "config_id": "lr_1e-05",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.4326648648945728,
+      "value_mse": 0.7215652532954945,
+      "latest_train_kl": 0.4386720072856899,
+      "latest_train_mse": 0.7126348577656649,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_1e-05/checkpoints/step-000000250.pt",
+        "sha256": "b27b086b10c5f77ff9bb80e655f3b8e19e1eaced6de05fe75514582c7f7c6616"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_1e-05/step-000000250.json",
+        "sha256": "73acc48da909168f75ccac9e84c9efee17089e4ce809bd805b1d9a47d7e1fa3b"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.027144028379012957,
+            -0.019939501671651448
+          ],
+          "delta": -0.02346980975242954
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.03140092662264147,
+            -0.0012726499204482617
+          ],
+          "delta": -0.016459776663887996
+        }
+      }
+    },
+    {
+      "config_id": "lr_1e-05",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.4350230381370626,
+      "value_mse": 0.7238062518004916,
+      "latest_train_kl": 0.4390096413452212,
+      "latest_train_mse": 0.7079212585545668,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_1e-05/checkpoints/step-000000500.pt",
+        "sha256": "89edd8acb8a63f000042fb86d53af31c7bfa891821c20ee39ece8fc79cda6d8a"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_1e-05/step-000000500.json",
+        "sha256": "935a7204ad2c0192febb12d800c2f3ceab80ea8423edda7aff022940768c07e9"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.0047121524903233365,
+            -0.0002664484355233466
+          ],
+          "delta": -0.0024781402181708084
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.010789526602969448,
+            0.02723973006464373
+          ],
+          "delta": 0.008070476866669157
+        }
+      }
+    },
+    {
+      "config_id": "lr_1e-05",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.4306675765488942,
+      "value_mse": 0.7196993776571249,
+      "latest_train_kl": 0.4354253008710702,
+      "latest_train_mse": 0.7058082632206661,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_1e-05/checkpoints/step-000001000.pt",
+        "sha256": "df53e9496e0d4c727a7ab211d984bdf5cd98775b4aaa88981d5c218d20b04020"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_1e-05/step-000001000.json",
+        "sha256": "f1fcfedbdb31295f30ef30ce57c78b123983044db69081e364c900c599e581ab"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.010204421321463012,
+            -0.005461628411008779
+          ],
+          "delta": -0.007815273845952635
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.02951013969483141,
+            0.0175522464357819
+          ],
+          "delta": -0.006527786920376256
+        }
+      }
+    },
+    {
+      "config_id": "lr_1e-05",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.431316665440478,
+      "value_mse": 0.7225787569881095,
+      "latest_train_kl": 0.43584900421903583,
+      "latest_train_mse": 0.6924342823111701,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/lr_1e-05/checkpoints/step-000002000.pt",
+        "sha256": "64fbbd0c8893db6b0aa2bbde3d5055ca94f1447ee4cfe79a689aad1fa1f773ff"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/lr_1e-05/step-000002000.json",
+        "sha256": "615e1d33a3eeebfabcc2f5c68e1c8c58602c798274b84b15f1f875ec60410a6c"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.016241300276242106,
+            -0.009044852333728391
+          ],
+          "delta": -0.012591373266296182
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.079946246312793,
+            -0.021375960665421034
+          ],
+          "delta": -0.05010438036431018
+        }
+      }
+    },
+    {
+      "config_id": "pool_9000",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.44563143767654406,
+      "value_mse": 0.7302421095744445,
+      "latest_train_kl": 0.4489463967398391,
+      "latest_train_mse": 0.7185226269521442,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_9000/checkpoints/step-000000100.pt",
+        "sha256": "194f5586e0a97c0614c33eb2ad973d3989a27dda6ebb69b2744fefafaaffcb1f"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_9000/step-000000100.json",
+        "sha256": "ac6eb5b8688779557bbeb22e91f45e8fa0f3ce52592ce4e2ec7215d37205c0fb"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.01820260908601563,
+            -0.009800566430605501
+          ],
+          "delta": -0.013987973465516324
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.027947917140219682,
+            0.011994159463460705
+          ],
+          "delta": -0.008188547038377786
+        }
+      }
+    },
+    {
+      "config_id": "pool_9000",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.4651158418820259,
+      "value_mse": 0.739618920929162,
+      "latest_train_kl": 0.47143940928539513,
+      "latest_train_mse": 0.7230289296851394,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_9000/checkpoints/step-000000250.pt",
+        "sha256": "c983891cbfec1d042ed9df7134c791759974e3c4346447f87d83f613eceedea8"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_9000/step-000000250.json",
+        "sha256": "b5d253fb9b6dc1ad04b74a1202df6679adfec1cb45f66eb822497ca090bbfb36"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.004914428500334358,
+            0.012998165184066645
+          ],
+          "delta": 0.008981167235023426
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.02032999938931059,
+            0.024052380389187132
+          ],
+          "delta": 0.0015938909697855305
+        }
+      }
+    },
+    {
+      "config_id": "pool_9000",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.4537113861701142,
+      "value_mse": 0.7315464012058771,
+      "latest_train_kl": 0.45352080585383736,
+      "latest_train_mse": 0.7032304941188225,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_9000/checkpoints/step-000000500.pt",
+        "sha256": "4983ea58f6889a4796e4cebd2c9925b835398a9964f0e7bafb050f8aef1f3246"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_9000/step-000000500.json",
+        "sha256": "22e1e02500d42a342e9a5c48c2c4dd52fda0d3d2aff19cbd3652086f3e1a8e47"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.012579543920144216,
+            0.019828444476468688
+          ],
+          "delta": 0.01621020781488049
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.006214688611678413,
+            0.038313354512280656
+          ],
+          "delta": 0.015810626272055255
+        }
+      }
+    },
+    {
+      "config_id": "pool_9000",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.4534976312389089,
+      "value_mse": 0.7521171221175696,
+      "latest_train_kl": 0.4531540322310712,
+      "latest_train_mse": 0.6883997407390752,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_9000/checkpoints/step-000001000.pt",
+        "sha256": "76122cfd3587f5e7d27fb2ea612f0fa758e64d3ceeaf1231aff3556ce78c55e3"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_9000/step-000001000.json",
+        "sha256": "8d54e8c738b1b453d962d7dc43966b430996bc9d75f5abbd15f12c9bd26f7c12"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.010018047885288523,
+            0.01999750234953887
+          ],
+          "delta": 0.015014780844062065
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.004532984356803878,
+            0.05684968879336759
+          ],
+          "delta": 0.025889957540067433
+        }
+      }
+    },
+    {
+      "config_id": "pool_9000",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.45012808517831154,
+      "value_mse": 0.7737921105627836,
+      "latest_train_kl": 0.4548905890932824,
+      "latest_train_mse": 0.6723674148664255,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_9000/checkpoints/step-000002000.pt",
+        "sha256": "47e595c8902d9a82f6044de2264d8959896b5afdb7fbe403461ed2aa9a0691ae"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_9000/step-000002000.json",
+        "sha256": "6fa54679f23aab9b17349a11cc502797139ed15e81742cc5a7dd3e72f1373cdc"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.0011619601275842195,
+            0.011389566616891136
+          ],
+          "delta": 0.006220046471537226
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.0367258673698569,
+            0.03878726843759731
+          ],
+          "delta": 0.0011089732103644217
+        }
+      }
+    },
+    {
+      "config_id": "pool_3000",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.44371880041055295,
+      "value_mse": 0.7302718785040475,
+      "latest_train_kl": 0.445867358657271,
+      "latest_train_mse": 0.6904721330670655,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_3000/checkpoints/step-000000100.pt",
+        "sha256": "fa9a4c9fcd7ea9b06b70ec10eba53c847ee4fc04aecbedf78d7336c5f4e631c6"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_3000/step-000000100.json",
+        "sha256": "1ae891acc375c780460d4977d839667873b9ae3f61733f1d75a3d9b3d3ca7ce5"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.020109454419138126,
+            -0.011731886534651095
+          ],
+          "delta": -0.01590061073150745
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.02662430467343463,
+            0.010456980033732162
+          ],
+          "delta": -0.008158778108779402
+        }
+      }
+    },
+    {
+      "config_id": "pool_3000",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.44511904730481866,
+      "value_mse": 0.746718066600411,
+      "latest_train_kl": 0.44748211651658204,
+      "latest_train_mse": 0.6788975279779583,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_3000/checkpoints/step-000000250.pt",
+        "sha256": "c0fe2e2a73d23599a74a06a5148a49430f6007e85b42d5986186221592229268"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_3000/step-000000250.json",
+        "sha256": "883f83ab6c89a3fb5c5f6c07f151dbc480065704342d6803b443d31bb0d83a06"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.016357519499687445,
+            -0.005801539280053407
+          ],
+          "delta": -0.01101562734218353
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.016123636108384576,
+            0.03398309313668053
+          ],
+          "delta": 0.008693036641032915
+        }
+      }
+    },
+    {
+      "config_id": "pool_3000",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.433819551096762,
+      "value_mse": 0.753285412182783,
+      "latest_train_kl": 0.4333416535531706,
+      "latest_train_mse": 0.6542762468325648,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_3000/checkpoints/step-000000500.pt",
+        "sha256": "27a44f6a59bf1604c447f7954bea2dc048206f6f1e9554bddd6c60bdd303e7d9"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_3000/step-000000500.json",
+        "sha256": "abe560c06edebd4ac20c0361a06222239176c3db62e791bf8be274723e5c85fe"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.007076118407902522,
+            -0.0003206236548704369
+          ],
+          "delta": -0.0036816272584715526
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.006647343903653398,
+            0.06941064914939116
+          ],
+          "delta": 0.03754963724895816
+        }
+      }
+    },
+    {
+      "config_id": "pool_3000",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.43912944852420754,
+      "value_mse": 0.7444237904090757,
+      "latest_train_kl": 0.4323396469620455,
+      "latest_train_mse": 0.6083732141761998,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_3000/checkpoints/step-000001000.pt",
+        "sha256": "372a56f46cbc52c23511295b6a05f9c540843c85fa64732e83ed3ca6dc3f8a97"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_3000/step-000001000.json",
+        "sha256": "d633277d88e0ecaf79985513589b041777e17ca3858e456a651a7148777022e3"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.002967511332294801,
+            0.00423077420365023
+          ],
+          "delta": 0.0006465981293606698
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.015485805403400048,
+            0.05108612222711709
+          ],
+          "delta": 0.018196625831579015
+        }
+      }
+    },
+    {
+      "config_id": "pool_3000",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.43930139340575275,
+      "value_mse": 0.8390649707352158,
+      "latest_train_kl": 0.43319268616531564,
+      "latest_train_mse": 0.5290408557434865,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_3000/checkpoints/step-000002000.pt",
+        "sha256": "4adcdbfd1b298ba5c4dd70ad9ddf6f2ce89b1756f1783c575abcd01f2091f823"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_3000/step-000002000.json",
+        "sha256": "a9505222a7a5be1d4587b82e96e0beb9bd9666244925944ebf13709e2e25e1a2"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.008962614618964717,
+            -0.0001552412269763165
+          ],
+          "delta": -0.0046066453010214
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.003008549962734493,
+            0.12999626334367642
+          ],
+          "delta": 0.06638183338279605
+        }
+      }
+    },
+    {
+      "config_id": "pool_1000",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.43762986994328906,
+      "value_mse": 0.7358094598956679,
+      "latest_train_kl": 0.43595451243002703,
+      "latest_train_mse": 0.6578297073037845,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_1000/checkpoints/step-000000100.pt",
+        "sha256": "2efd7310b8b8c3d0c8e0a8477c2052b8fede1cb9e17cde7f703bb46b47db75aa"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_1000/step-000000100.json",
+        "sha256": "f6c2994b3d21240cbf62243e2f4d7920238c74ae2a2e9ab04dd61ede41a78567"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.02791549928340293,
+            -0.016177883064612406
+          ],
+          "delta": -0.021989541198771227
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.03717781737175176,
+            0.03134824539325744
+          ],
+          "delta": -0.002621196717159935
+        }
+      }
+    },
+    {
+      "config_id": "pool_1000",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.44083735480856395,
+      "value_mse": 0.7522558473191033,
+      "latest_train_kl": 0.434659707672008,
+      "latest_train_mse": 0.6097279817159048,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_1000/checkpoints/step-000000250.pt",
+        "sha256": "2239d82313f5c18f632b296ccd4f3233570bc3fe4d14e179a42117663d8894c4"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_1000/step-000000250.json",
+        "sha256": "0cf4a5aa938e3718fe8a64dac30feb82fcaf097aadc11239bc30b937b206d57e"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.020643110445208487,
+            -0.010296297310083719
+          ],
+          "delta": -0.015297319838438126
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.03127343245436466,
+            0.05807690896266087
+          ],
+          "delta": 0.014230817359722623
+        }
+      }
+    },
+    {
+      "config_id": "pool_1000",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.43838914587665795,
+      "value_mse": 0.838633595936322,
+      "latest_train_kl": 0.4242582631446991,
+      "latest_train_mse": 0.5571294639966214,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_1000/checkpoints/step-000000500.pt",
+        "sha256": "4c7706d72c69e3aafc80711d229301f7db251b7a2911f4c60fae908229df9f8f"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_1000/step-000000500.json",
+        "sha256": "aa2bd73ba816d023ee4ec69310e936907e677ce28eeb6f7e43efd4d8b229ed6d"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.0032734156076882036,
+            0.004966373358672042
+          ],
+          "delta": 0.000887967521424373
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.05208262094514241,
+            0.19420585881104072
+          ],
+          "delta": 0.12289782100249673
+        }
+      }
+    },
+    {
+      "config_id": "pool_1000",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.43656595115396435,
+      "value_mse": 0.9102473313543896,
+      "latest_train_kl": 0.41842749801849294,
+      "latest_train_mse": 0.408645834593979,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_1000/checkpoints/step-000001000.pt",
+        "sha256": "83fbd632bf9ed98540d3187b640f7ec4a07aaa4b1d309e47a96747a702607e2d"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_1000/step-000001000.json",
+        "sha256": "14fcd4e33bb0722b29793f56832dc03c1c22ff53e1c807449f6bc4e40458df24"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.005341166267369982,
+            0.0017087453703215278
+          ],
+          "delta": -0.0019168992408824996
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.09875089531481049,
+            0.2738149209768317
+          ],
+          "delta": 0.18402016677688451
+        }
+      }
+    },
+    {
+      "config_id": "pool_1000",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.443188293809543,
+      "value_mse": 1.0150970741282879,
+      "latest_train_kl": 0.41303995649610903,
+      "latest_train_mse": 0.2545055703167359,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/pool_1000/checkpoints/step-000002000.pt",
+        "sha256": "dfd09f465af5076149c17ff5748ab799d3c05dcbb84fa2453f9faf61547fe967"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/pool_1000/step-000002000.json",
+        "sha256": "d6a98fd33434393a5ef726ab58d9cc835b1e6eb957c19453a03fbbe8160784d2"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.00590947359099387,
+            0.004572337331459168
+          ],
+          "delta": -0.000719744897231185
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.13239822184731448,
+            0.35825864638764787
+          ],
+          "delta": 0.24241393677586465
+        }
+      }
+    },
+    {
+      "config_id": "batch_64",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.4731271387674923,
+      "value_mse": 0.7736692702169075,
+      "latest_train_kl": 0.47776239209212973,
+      "latest_train_mse": 0.7383099809725855,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_64/checkpoints/step-000000100.pt",
+        "sha256": "92bd6fd383e90418a2e7dc24741bf4b9a438def35c1af23242651687678809c3"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_64/step-000000100.json",
+        "sha256": "888aa55d1b4ece615ca7c626e50bac766bb8227ecfad952f2439ace5642d6136"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.008977154971563053,
+            0.01800520861605191
+          ],
+          "delta": 0.013507727625431593
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.006509025451984392,
+            0.0643572098820107
+          ],
+          "delta": 0.03523861360408272
+        }
+      }
+    },
+    {
+      "config_id": "batch_64",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.46251637091953085,
+      "value_mse": 0.7317072436763848,
+      "latest_train_kl": 0.46523551247957484,
+      "latest_train_mse": 0.725920949175344,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_64/checkpoints/step-000000250.pt",
+        "sha256": "405a15c7e32fd88c263c164e3df526fc2e6b5871cd1c2d74461ee8ff1ddbd367"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_64/step-000000250.json",
+        "sha256": "046d1cba6f0ed0c5a401fa10e87d2cf651debde5c98810b6ef2919eaf36b311f"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.001764226846599231,
+            0.010969757959172571
+          ],
+          "delta": 0.006381696272528364
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.034935643198906324,
+            0.02152671965063136
+          ],
+          "delta": -0.00631778628299436
+        }
+      }
+    },
+    {
+      "config_id": "batch_64",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.4560046388750803,
+      "value_mse": 0.7608602439071549,
+      "latest_train_kl": 0.4630820681791413,
+      "latest_train_mse": 0.7101694115051952,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_64/checkpoints/step-000000500.pt",
+        "sha256": "70ad73ee498d4428f5b891a2e74ef9ef038dd16dc2d5ec18c12559738235a437"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_64/step-000000500.json",
+        "sha256": "2adde9827c15ea5ae36c1c2c95d1cd96f6db9e3945f5bab8a27f6454b1ddd603"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.013927264093232554,
+            0.023130633397398948
+          ],
+          "delta": 0.01850346051984663
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.017715444458710698,
+            0.07358522883325785
+          ],
+          "delta": 0.045124468973332485
+        }
+      }
+    },
+    {
+      "config_id": "batch_64",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.4734471312130767,
+      "value_mse": 0.7825245885317541,
+      "latest_train_kl": 0.4768043466187443,
+      "latest_train_mse": 0.7370617178714596,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_64/checkpoints/step-000001000.pt",
+        "sha256": "910008b11e244160f56ba190eee392b61a3f3b07375e2a7c855d89cac8c91a6e"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_64/step-000001000.json",
+        "sha256": "5b7eb8243cefe14c3399bc2713689b39a7dda8b8cad61dc0595d12c9d311251c"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.02996127456315814,
+            0.04022894105956627
+          ],
+          "delta": 0.03496428081822943
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.02484514739241151,
+            0.08796363179111841
+          ],
+          "delta": 0.056297423954253696
+        }
+      }
+    },
+    {
+      "config_id": "batch_64",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.46066441838462086,
+      "value_mse": 0.756661781140375,
+      "latest_train_kl": 0.46256087647006633,
+      "latest_train_mse": 0.6894131546729909,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_64/checkpoints/step-000002000.pt",
+        "sha256": "0cf94cd55d5e14ce228800a2c5edbbeede9592208bf39a398ce49e64eb2720b7"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_64/step-000002000.json",
+        "sha256": "1d85d521fc6303904ff0666aa72b5b634cb37b7e4e1a4e0721447d585c190a6a"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.01210977267409053,
+            0.02145257526097463
+          ],
+          "delta": 0.016756379677846416
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.05104428460587727,
+            0.019040366437996933
+          ],
+          "delta": -0.016021356212043387
+        }
+      }
+    },
+    {
+      "config_id": "batch_128",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.4513602957404366,
+      "value_mse": 0.7203069031859882,
+      "latest_train_kl": 0.45472496106476257,
+      "latest_train_mse": 0.7108630634563089,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_128/checkpoints/step-000000100.pt",
+        "sha256": "a41cc3a421a4a8e7ea3c88a13af8e98114550cbae9b62f7f40d1ebd89eaad2b4"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_128/step-000000100.json",
+        "sha256": "4e4dab5a0ff3c536dbe7df75730e621ceead57c6999d095f00463956790e5cba"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.01347099518880598,
+            -0.0031335624666472203
+          ],
+          "delta": -0.008259115401623931
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.04932860473598826,
+            0.012865952937200532
+          ],
+          "delta": -0.018123753426841
+        }
+      }
+    },
+    {
+      "config_id": "batch_128",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.4547766443998343,
+      "value_mse": 0.7525824576236336,
+      "latest_train_kl": 0.45927288179875453,
+      "latest_train_mse": 0.711248835775012,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_128/checkpoints/step-000000250.pt",
+        "sha256": "49e0d9ee6795f56a8e9f65e232b35f699d258243c705141e3c000f0a6baa2749"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_128/step-000000250.json",
+        "sha256": "f7e4464770a612bbb3afbe2d64b5b70d03c520ddaafc14f0bca80ded693bac60"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.00487519028081646,
+            0.002180176434321076
+          ],
+          "delta": -0.001358030247168044
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.009514476271756785,
+            0.039745425103999636
+          ],
+          "delta": 0.01455742766425394
+        }
+      }
+    },
+    {
+      "config_id": "batch_128",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.45381133761399317,
+      "value_mse": 0.7428305188588454,
+      "latest_train_kl": 0.45849652256892437,
+      "latest_train_mse": 0.7068822943887989,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_128/checkpoints/step-000000500.pt",
+        "sha256": "d166b0c671967226079bc6418d4c748f5505670c1060185ab152f08182aae20a"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_128/step-000000500.json",
+        "sha256": "69f503cae95983bf3b7b74a229159ac5748b144645c31790fecd7a9e12f8a661"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.011779899246897424,
+            0.02087299641955381
+          ],
+          "delta": 0.01631015925875961
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.007755245090390416,
+            0.046733601851763784
+          ],
+          "delta": 0.027094743925021925
+        }
+      }
+    },
+    {
+      "config_id": "batch_128",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.4576058858386696,
+      "value_mse": 0.7307399274037525,
+      "latest_train_kl": 0.46252929146842625,
+      "latest_train_mse": 0.6923565162352113,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_128/checkpoints/step-000001000.pt",
+        "sha256": "d2763845f5d9e22158b9bb7102dbb3be31cc2cc02f21eb0eb1a2ec2c621c26f6"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_128/step-000001000.json",
+        "sha256": "156044591b6ff5bbd17013d17e4934486cfd58afc9a4a774b03683cf784a6430"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.014618846314657485,
+            0.023763283250525215
+          ],
+          "delta": 0.019123035443822635
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.016646593780224987,
+            0.025536733414336644
+          ],
+          "delta": 0.004512762826256892
+        }
+      }
+    },
+    {
+      "config_id": "batch_128",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.4502732291586933,
+      "value_mse": 0.7373186887244091,
+      "latest_train_kl": 0.4549090523519536,
+      "latest_train_mse": 0.6640227028354159,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_128/checkpoints/step-000002000.pt",
+        "sha256": "39aa7ec66057f9c36ce2f5646948d4978a4efb4d79627495bbd238c54fadc97f"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_128/step-000002000.json",
+        "sha256": "e00964d7adcb548a19b2ad17e76e1586d82e7117a0071a1dfc2bda53f9676562"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.0015776523101193917,
+            0.011274850864663165
+          ],
+          "delta": 0.006365190451918983
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.0804403211231517,
+            0.007371503213516756
+          ],
+          "delta": -0.03536444862800985
+        }
+      }
+    },
+    {
+      "config_id": "batch_512",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.4375691716261399,
+      "value_mse": 0.7382401753211802,
+      "latest_train_kl": 0.4430804237418157,
+      "latest_train_mse": 0.714461285670951,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_512/checkpoints/step-000000100.pt",
+        "sha256": "d027b87b69c33b615c84d67f248dc35f42e085d61abc3f84482577f03756081b"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_512/step-000000100.json",
+        "sha256": "03dbb911999ff01e8d75851196fd6a0e3abd5bd596576fd8070cc4d64e993c91"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.0267630778427435,
+            -0.01734124440593662
+          ],
+          "delta": -0.022050239515920646
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.015848113956094728,
+            0.01469830708422482
+          ],
+          "delta": -0.00019048129164024187
+        }
+      }
+    },
+    {
+      "config_id": "batch_512",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.4349911216069661,
+      "value_mse": 0.7203561262047107,
+      "latest_train_kl": 0.4404552973535551,
+      "latest_train_mse": 0.70340113757542,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_512/checkpoints/step-000000250.pt",
+        "sha256": "fc6fd1ecca322fc8ce048fc3b15ff623d79b5acfdcca0e0ed8f1423cb1068a85"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_512/step-000000250.json",
+        "sha256": "03d77f2be1af9515052cd165aed01a63db9d711f2be8645a1e395b62cc19ffc8"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.02552555689359815,
+            -0.0170233016621164
+          ],
+          "delta": -0.02114355304003593
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.03953408420342739,
+            0.004231346843089226
+          ],
+          "delta": -0.017668903754667287
+        }
+      }
+    },
+    {
+      "config_id": "batch_512",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.4451546504954632,
+      "value_mse": 0.7301071087044579,
+      "latest_train_kl": 0.45001656345902225,
+      "latest_train_mse": 0.6761349021276647,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_512/checkpoints/step-000000500.pt",
+        "sha256": "b30b079699dce6880f208e8d0c12fa8806727f9cd4c4bafad1b6cad4e5686838"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_512/step-000000500.json",
+        "sha256": "6f2b2a54a8f1c65386ac9f1746b3c0e32531af4c3d06683289558397fcc134bf"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            0.004835946646514301,
+            0.010492264809987663
+          ],
+          "delta": 0.007653472140229639
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.007962329886154635,
+            0.03639282781567645
+          ],
+          "delta": 0.01437133377063392
+        }
+      }
+    },
+    {
+      "config_id": "batch_512",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.44173666461037714,
+      "value_mse": 0.7503812567640835,
+      "latest_train_kl": 0.44584889441307063,
+      "latest_train_mse": 0.6556350772862073,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_512/checkpoints/step-000001000.pt",
+        "sha256": "5ff2ce18d7f3dae27119761d11ea3de0ef85280cb6a397dc7c467f3d820ed5c9"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_512/step-000001000.json",
+        "sha256": "9d2e3e9c00e68575a67895e06fb468a998eb38d64e25e7f5fc2921bbb41966a2"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            5.5105191878441645e-05,
+            0.006458984647441847
+          ],
+          "delta": 0.0032538142155304145
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.00039502290157333777,
+            0.04880887647230239
+          ],
+          "delta": 0.02415409218657949
+        }
+      }
+    },
+    {
+      "config_id": "batch_512",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.4387343907138657,
+      "value_mse": 0.7801382534987896,
+      "latest_train_kl": 0.4378764798944825,
+      "latest_train_mse": 0.5961209682592683,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_512/checkpoints/step-000002000.pt",
+        "sha256": "cb17d6104d2e7d311051d92776b21287b2d597b197b4c58db2c786b1b121a52b"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_512/step-000002000.json",
+        "sha256": "5a84fa9b23f84f8ddce369b15015e31431bd7137d1085b996972a94e9eafd045"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.009177070006052588,
+            -0.0012417745426238495
+          ],
+          "delta": -0.005173647992908432
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.020177080248932812,
+            0.03530174068308941
+          ],
+          "delta": 0.00745511614636763
+        }
+      }
+    },
+    {
+      "config_id": "batch_1024",
+      "step": 100,
+      "global_step": 38498,
+      "policy_kl": 0.43712126706722454,
+      "value_mse": 0.743745803067343,
+      "latest_train_kl": 0.442575293613705,
+      "latest_train_mse": 0.7041061605456201,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_1024/checkpoints/step-000000100.pt",
+        "sha256": "4c0238c2bc2c490ad21153a5a8d54a1ab82d48af02e64b6a3ff7069733d40b56"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_1024/step-000000100.json",
+        "sha256": "2da9f87cd9e2843eff4a1eafea0caff7e180ea5c3c3b4e58db5fadb09565912f"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.026198324670209754,
+            -0.018787068603711345
+          ],
+          "delta": -0.022498144074835885
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.01217783476833566,
+            0.02233993543735436
+          ],
+          "delta": 0.0053151464545162265
+        }
+      }
+    },
+    {
+      "config_id": "batch_1024",
+      "step": 250,
+      "global_step": 38648,
+      "policy_kl": 0.4329782404202906,
+      "value_mse": 0.7206515110593329,
+      "latest_train_kl": 0.43916247129279123,
+      "latest_train_mse": 0.6862602849354029,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_1024/checkpoints/step-000000250.pt",
+        "sha256": "afd416f9021c670d4edc0e0112fa8448725673b6b595dba9308fc8ac1ff0732a"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_1024/step-000000250.json",
+        "sha256": "03183b11f4339ce0a60e3fbb80ed4f1b9716a62cd705f81d3ac73646e815009a"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.027828252137910545,
+            -0.01879513629825944
+          ],
+          "delta": -0.02315643422671163
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.033355625193241936,
+            -0.0018914751443805037
+          ],
+          "delta": -0.01737351890004507
+        }
+      }
+    },
+    {
+      "config_id": "batch_1024",
+      "step": 500,
+      "global_step": 38898,
+      "policy_kl": 0.4370280265064565,
+      "value_mse": 0.7457283996596091,
+      "latest_train_kl": 0.44257616573412095,
+      "latest_train_mse": 0.6659923761949329,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_1024/checkpoints/step-000000500.pt",
+        "sha256": "9e400394b1c714acb5b24d5ff660b70990fa6f291bcdb228182a4dfdd3276b05"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_1024/step-000000500.json",
+        "sha256": "98837d88d4cf903116d2238beddc4e40be01cc9d4cea96672081abc8246cb30a"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.0033496537281715514,
+            0.0024706601322578535
+          ],
+          "delta": -0.00047315184877704035
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.0045927737080247374,
+            0.05482768919319156
+          ],
+          "delta": 0.02999262472578377
+        }
+      }
+    },
+    {
+      "config_id": "batch_1024",
+      "step": 1000,
+      "global_step": 39398,
+      "policy_kl": 0.43291238502736984,
+      "value_mse": 0.7474400598358575,
+      "latest_train_kl": 0.43269444354063397,
+      "latest_train_mse": 0.623914982390858,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_1024/checkpoints/step-000001000.pt",
+        "sha256": "4c935db298bd21d1db0fba8a8980216a344092b5d8c9ebba7276beeadb9b9567"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_1024/step-000001000.json",
+        "sha256": "f183bf54a55f0cc4ec7f11c0c982189c8d2b13786150bf44ef2f70c389a41649"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.008683680619374837,
+            -0.002428448077690405
+          ],
+          "delta": -0.00557046536747714
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            -0.009725193320340468,
+            0.05344590236021746
+          ],
+          "delta": 0.021212895258355548
+        }
+      }
+    },
+    {
+      "config_id": "batch_1024",
+      "step": 2000,
+      "global_step": 40398,
+      "policy_kl": 0.4309118854194003,
+      "value_mse": 0.8223576910018843,
+      "latest_train_kl": 0.428389452957798,
+      "latest_train_mse": 0.5421081601203283,
+      "checkpoint": {
+        "path": "runs/entity_attention_r9_ofat_20261010/batch_1024/checkpoints/step-000002000.pt",
+        "sha256": "82b22160dee1f8065152afa94a004a81dc0a2d53521ed6f5fa793de1bfd38a3c"
+      },
+      "raw_evaluation": {
+        "path": "artifacts/entity_attention_r9_ofat_20261010/fitting/batch_1024/step-000002000.json",
+        "sha256": "6b163ec2f31a1a00fc7ed2453e6da7cfa2a89e693820e5106cd14f7fcec60d71"
+      },
+      "existing_comparison": {
+        "reference": "delta_vs_same_step",
+        "games": 100,
+        "policy_kl": {
+          "ci95": [
+            -0.016912790338571678,
+            -0.009119878689589514
+          ],
+          "delta": -0.01299615328737359
+        },
+        "resamples": 10000,
+        "seed": 31050000,
+        "unit": "whole validation game",
+        "value_mse": {
+          "ci95": [
+            0.015424233072118543,
+            0.08578684134694871
+          ],
+          "delta": 0.04967455364946539
+        }
+      }
+    }
+  ],
+  "matrices": {
+    "policy_kl": {
+      "baseline": [
+        0.4596194111420607,
+        0.45613467464700236,
+        0.43750117835523356,
+        0.43848285039484686,
+        0.44390803870677403
+      ],
+      "lr_5e-05": [
+        0.43760099238499095,
+        0.4374176917703478,
+        0.436240625243852,
+        0.43265879473943597,
+        0.4376972713952218
+      ],
+      "lr_2e-05": [
+        0.4385787624513004,
+        0.43361398175003757,
+        0.43287220197276577,
+        0.4322309748474781,
+        0.43380044170985865
+      ],
+      "lr_1e-05": [
+        0.43584286192500715,
+        0.4326648648945728,
+        0.4350230381370626,
+        0.4306675765488942,
+        0.431316665440478
+      ],
+      "pool_9000": [
+        0.44563143767654406,
+        0.4651158418820259,
+        0.4537113861701142,
+        0.4534976312389089,
+        0.45012808517831154
+      ],
+      "pool_3000": [
+        0.44371880041055295,
+        0.44511904730481866,
+        0.433819551096762,
+        0.43912944852420754,
+        0.43930139340575275
+      ],
+      "pool_1000": [
+        0.43762986994328906,
+        0.44083735480856395,
+        0.43838914587665795,
+        0.43656595115396435,
+        0.443188293809543
+      ],
+      "batch_64": [
+        0.4731271387674923,
+        0.46251637091953085,
+        0.4560046388750803,
+        0.4734471312130767,
+        0.46066441838462086
+      ],
+      "batch_128": [
+        0.4513602957404366,
+        0.4547766443998343,
+        0.45381133761399317,
+        0.4576058858386696,
+        0.4502732291586933
+      ],
+      "batch_512": [
+        0.4375691716261399,
+        0.4349911216069661,
+        0.4451546504954632,
+        0.44173666461037714,
+        0.4387343907138657
+      ],
+      "batch_1024": [
+        0.43712126706722454,
+        0.4329782404202906,
+        0.4370280265064565,
+        0.43291238502736984,
+        0.4309118854194003
+      ]
+    },
+    "value_mse": {
+      "baseline": [
+        0.7384306566128287,
+        0.7380250299593798,
+        0.7157357749338237,
+        0.7262271645774994,
+        0.7726831373524189
+      ],
+      "lr_5e-05": [
+        0.7204074026095296,
+        0.7282733448574902,
+        0.7174650691345723,
+        0.72383707997106,
+        0.7328025435945296
+      ],
+      "lr_2e-05": [
+        0.7231298647502165,
+        0.7219771973415935,
+        0.7211015621109497,
+        0.7188997535793503,
+        0.7304596798601029
+      ],
+      "lr_1e-05": [
+        0.7263928062637581,
+        0.7215652532954945,
+        0.7238062518004916,
+        0.7196993776571249,
+        0.7225787569881095
+      ],
+      "pool_9000": [
+        0.7302421095744445,
+        0.739618920929162,
+        0.7315464012058771,
+        0.7521171221175696,
+        0.7737921105627836
+      ],
+      "pool_3000": [
+        0.7302718785040475,
+        0.746718066600411,
+        0.753285412182783,
+        0.7444237904090757,
+        0.8390649707352158
+      ],
+      "pool_1000": [
+        0.7358094598956679,
+        0.7522558473191033,
+        0.838633595936322,
+        0.9102473313543896,
+        1.0150970741282879
+      ],
+      "batch_64": [
+        0.7736692702169075,
+        0.7317072436763848,
+        0.7608602439071549,
+        0.7825245885317541,
+        0.756661781140375
+      ],
+      "batch_128": [
+        0.7203069031859882,
+        0.7525824576236336,
+        0.7428305188588454,
+        0.7307399274037525,
+        0.7373186887244091
+      ],
+      "batch_512": [
+        0.7382401753211802,
+        0.7203561262047107,
+        0.7301071087044579,
+        0.7503812567640835,
+        0.7801382534987896
+      ],
+      "batch_1024": [
+        0.743745803067343,
+        0.7206515110593329,
+        0.7457283996596091,
+        0.7474400598358575,
+        0.8223576910018843
+      ]
+    },
+    "latest_train_kl": {
+      "baseline": [
+        0.4629183717155768,
+        0.4609807413381288,
+        0.4430455924966836,
+        0.4423142509625485,
+        0.44737335969651587
+      ],
+      "lr_5e-05": [
+        0.4420146831764306,
+        0.44251690620864126,
+        0.4407635879132265,
+        0.4374715364574838,
+        0.44087622837894413
+      ],
+      "lr_2e-05": [
+        0.4451570876335897,
+        0.4399842967593927,
+        0.43761156665584067,
+        0.43786868463537865,
+        0.438598590070371
+      ],
+      "lr_1e-05": [
+        0.4421073513583248,
+        0.4386720072856899,
+        0.4390096413452212,
+        0.4354253008710702,
+        0.43584900421903583
+      ],
+      "pool_9000": [
+        0.4489463967398391,
+        0.47143940928539513,
+        0.45352080585383736,
+        0.4531540322310712,
+        0.4548905890932824
+      ],
+      "pool_3000": [
+        0.445867358657271,
+        0.44748211651658204,
+        0.4333416535531706,
+        0.4323396469620455,
+        0.43319268616531564
+      ],
+      "pool_1000": [
+        0.43595451243002703,
+        0.434659707672008,
+        0.4242582631446991,
+        0.41842749801849294,
+        0.41303995649610903
+      ],
+      "batch_64": [
+        0.47776239209212973,
+        0.46523551247957484,
+        0.4630820681791413,
+        0.4768043466187443,
+        0.46256087647006633
+      ],
+      "batch_128": [
+        0.45472496106476257,
+        0.45927288179875453,
+        0.45849652256892437,
+        0.46252929146842625,
+        0.4549090523519536
+      ],
+      "batch_512": [
+        0.4430804237418157,
+        0.4404552973535551,
+        0.45001656345902225,
+        0.44584889441307063,
+        0.4378764798944825
+      ],
+      "batch_1024": [
+        0.442575293613705,
+        0.43916247129279123,
+        0.44257616573412095,
+        0.43269444354063397,
+        0.428389452957798
+      ]
+    },
+    "latest_train_mse": {
+      "baseline": [
+        0.7107386442264586,
+        0.7129037244478789,
+        0.6950273653038858,
+        0.6672664934810935,
+        0.6237958222510118
+      ],
+      "lr_5e-05": [
+        0.712375560616568,
+        0.710947215806792,
+        0.7027224994206105,
+        0.6815719664399296,
+        0.6555658353081288
+      ],
+      "lr_2e-05": [
+        0.7095259413280196,
+        0.711801808279097,
+        0.7043381914134272,
+        0.693570810679903,
+        0.682308518577353
+      ],
+      "lr_1e-05": [
+        0.7138453597510479,
+        0.7126348577656649,
+        0.7079212585545668,
+        0.7058082632206661,
+        0.6924342823111701
+      ],
+      "pool_9000": [
+        0.7185226269521442,
+        0.7230289296851394,
+        0.7032304941188225,
+        0.6883997407390752,
+        0.6723674148664255
+      ],
+      "pool_3000": [
+        0.6904721330670655,
+        0.6788975279779583,
+        0.6542762468325648,
+        0.6083732141761998,
+        0.5290408557434865
+      ],
+      "pool_1000": [
+        0.6578297073037845,
+        0.6097279817159048,
+        0.5571294639966214,
+        0.408645834593979,
+        0.2545055703167359
+      ],
+      "batch_64": [
+        0.7383099809725855,
+        0.725920949175344,
+        0.7101694115051952,
+        0.7370617178714596,
+        0.6894131546729909
+      ],
+      "batch_128": [
+        0.7108630634563089,
+        0.711248835775012,
+        0.7068822943887989,
+        0.6923565162352113,
+        0.6640227028354159
+      ],
+      "batch_512": [
+        0.714461285670951,
+        0.70340113757542,
+        0.6761349021276647,
+        0.6556350772862073,
+        0.5961209682592683
+      ],
+      "batch_1024": [
+        0.7041061605456201,
+        0.6862602849354029,
+        0.6659923761949329,
+        0.623914982390858,
+        0.5421081601203283
+      ]
+    }
+  },
+  "duplicate_baseline_audit": [
+    {
+      "step": 100,
+      "source": {
+        "path": "runs/entity_attention_p4_pool_iteration_20261010/rounds/round-008/fitting/step-000000100.json",
+        "sha256": "d08df7a956def36cc2b327ea15a261e2a4a64271ed293e3e4708194c82a6e923"
+      },
+      "checkpoint_sha256": "56366ece3482b2d66c7138f4b62790dec442ee9c4e02bad4a4230180fd7ffd62",
+      "metrics_checked": [
+        "policy_kl",
+        "value_mse",
+        "latest_train_kl",
+        "latest_train_mse"
+      ],
+      "max_abs_difference": 1.2730059228971413e-09
+    },
+    {
+      "step": 250,
+      "source": {
+        "path": "runs/entity_attention_p4_pool_iteration_20261010/rounds/round-008/fitting/step-000000250.json",
+        "sha256": "809eb0edc606a1beb51afdfc0e775d6ba6c9c237899cf221454fc78bcaf1516d"
+      },
+      "checkpoint_sha256": "88ad2a9181d28835e89d903ad3aad692d39fd85b0ec73c4d6968df4b43558648",
+      "metrics_checked": [
+        "policy_kl",
+        "value_mse",
+        "latest_train_kl",
+        "latest_train_mse"
+      ],
+      "max_abs_difference": 1.6993614293525638e-09
+    },
+    {
+      "step": 500,
+      "source": {
+        "path": "runs/entity_attention_p4_pool_iteration_20261010/rounds/round-008/fitting/step-000000500.json",
+        "sha256": "db80d391425e90a77d68e417b3af3a5caae6aaf2009ee9917db82f6eef179452"
+      },
+      "checkpoint_sha256": "ff34660fece12590762da93d031523e4ae09db4fa6af5d2284c4af0dcd57237b",
+      "metrics_checked": [
+        "policy_kl",
+        "value_mse",
+        "latest_train_kl",
+        "latest_train_mse"
+      ],
+      "max_abs_difference": 3.017107452762957e-09
+    },
+    {
+      "step": 1000,
+      "source": {
+        "path": "artifacts/entity_attention_r9_step_extension_20261010/fitting/step-000001000.json",
+        "sha256": "6bc49f070dbb447bffd6b6ba69ddd5fdf3119e1d55d8af21de8bd9871977fded"
+      },
+      "checkpoint_sha256": "2feae818090b8f90f8acf1870d9708ffb4ce2e087870c6d38c05b52929c6edf2",
+      "metrics_checked": [
+        "policy_kl",
+        "value_mse"
+      ],
+      "max_abs_difference": 0.0
+    },
+    {
+      "step": 2000,
+      "source": {
+        "path": "artifacts/entity_attention_r9_step_extension_20261010/fitting/step-000002000.json",
+        "sha256": "8ce4fe48746308ae410b768ebdc93495fdbe2965d4a143e4a97f98592523cb0f"
+      },
+      "checkpoint_sha256": "fea6e16cd38de8267ddb08a6c9cecacab82130040af8a1c73539b54e014f63ad",
+      "metrics_checked": [
+        "policy_kl",
+        "value_mse"
+      ],
+      "max_abs_difference": 0.0
+    },
+    {
+      "step": 500,
+      "source": {
+        "path": "artifacts/entity_attention_r9_step_extension_20261010/fitting/step-000000500.json",
+        "sha256": "607780d3528ba858e7445c85a3f818790ed4b23ea1e9cdce350b47f6ee0b3e3e"
+      },
+      "checkpoint_sha256": "ff34660fece12590762da93d031523e4ae09db4fa6af5d2284c4af0dcd57237b",
+      "metrics_checked": [
+        "policy_kl",
+        "value_mse"
+      ],
+      "max_abs_difference": 0.0
+    }
+  ],
+  "excluded_steps": {
+    "baseline": [
+      0,
+      5000
+    ],
+    "all_new_branches": [
+      0
+    ],
+    "batch_1024": [
+      125
+    ]
+  },
+  "caveat": "Single starting model and sampling seed; reused fixed DEV; row minima descriptive; no new strength results"
+}

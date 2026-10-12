@@ -177,6 +177,28 @@ def test_steps_target_formula():
     assert capped.steps_for_round(5000) == 4
 
 
+def test_zero_value_loss_weight_removes_value_gradient():
+    config = LearnerConfig(device="cpu", value_loss_weight=0.0)
+    logits = torch.tensor([[0.2, -0.3]], requires_grad=True)
+    values = torch.tensor([0.5], requires_grad=True)
+    terms = alphazero_loss_sums(
+        logits, values, candidate_mask=torch.ones(1, 2, dtype=torch.bool),
+        policy_targets=torch.tensor([[1.0, 0.0]]), value_targets=torch.tensor([-1.0]),
+        policy_weights=torch.ones(1), value_weights=torch.ones(1),
+    )
+    assert torch.equal(terms.total(config), terms.policy_loss)
+    terms.total(config).backward()
+    assert logits.grad.abs().sum() > 0
+    assert torch.equal(values.grad, torch.zeros_like(values))
+    assert float(terms.value_loss.detach()) == pytest.approx(2.25)
+
+
+@pytest.mark.parametrize("weight", [-0.25, float("nan"), float("inf"), True])
+def test_invalid_value_loss_weight_is_rejected(weight):
+    with pytest.raises(ValueError, match="value_loss_weight"):
+        LearnerConfig(value_loss_weight=weight)
+
+
 def test_learner_update_changes_parameters_and_handles_zero_policy_batch(az_runs):
     checkpoint, first, second = az_runs
     index = build_replay_index([first, second], max_games=10, cache_bytes=CACHE_BYTES)

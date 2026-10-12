@@ -109,10 +109,14 @@ class LearnerConfig:
                 raise ValueError(f"{name} must be a positive integer")
         if self.history_batch_size > self.batch_size:
             raise ValueError("history_batch_size cannot exceed batch_size")
-        for name in ("learning_rate", "weight_decay", "policy_loss_weight", "value_loss_weight", "max_grad_norm", "steps_per_new_position"):
+        for name in ("learning_rate", "weight_decay", "policy_loss_weight", "max_grad_norm", "steps_per_new_position"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
                 raise ValueError(f"{name} must be finite and positive")
+        if (isinstance(self.value_loss_weight, bool)
+                or not isinstance(self.value_loss_weight, (int, float))
+                or not math.isfinite(self.value_loss_weight) or self.value_loss_weight < 0):
+            raise ValueError("value_loss_weight must be finite and nonnegative")
         if self.max_steps_per_round is not None and (
             type(self.max_steps_per_round) is not int or self.max_steps_per_round <= 0
         ):
@@ -404,8 +408,15 @@ class AlphazeroLearner:
             metadata=metadata,
         )
 
-    def train_step(self, batch: SelfPlayBatch, *, references: Sequence[ReplayReference]) -> dict[str, Any]:
-        """One optimizer update; raises instead of skipping a bad batch."""
+    def train_step(
+        self, batch: SelfPlayBatch, *, references: Sequence[ReplayReference],
+        value_batch: SelfPlayBatch | None = None,
+    ) -> dict[str, Any]:
+        """Joint update with optional separate value samples and one global clip.
+
+        Both losses backpropagate through the encoder. With no ``value_batch``
+        the original shared-minibatch forward and update are unchanged.
+        """
 
         tensors = _torch_batch(batch, self.device)
         self.model.train()
@@ -419,6 +430,14 @@ class AlphazeroLearner:
             policy_weights=tensors["policy_weights"],
             value_weights=tensors["value_weights"],
         )
+        if value_batch is not None:
+            value_tensors = _torch_batch(value_batch, self.device)
+            values = self.model.value_only(value_batch.decisions)
+            terms = AlphazeroLossSums(
+                terms.policy_ce_sum, terms.policy_weight_sum,
+                ((values - value_tensors["value_targets"]) ** 2 * value_tensors["value_weights"]).sum(),
+                value_tensors["value_weights"].sum(), terms.entropy_sum,
+            )
         total = terms.total(self.config)
         self.optimizer.zero_grad(set_to_none=True)
         finite = (
@@ -471,6 +490,13 @@ class AlphazeroLearner:
             "learning_rate": float(self.optimizer.param_groups[0]["lr"]),
             "batch_size": int(tensors["value_targets"].shape[0]),
         }
+        if value_batch is not None:
+            record.update({key: value for key, value in label_statistics(value_batch).items()
+                           if key.startswith("value_")})
+            record.update(training_mode="joint_separate_batches",
+                          policy_batch_size=len(batch.value_targets),
+                          value_batch_size=len(value_batch.value_targets),
+                          batch_size=len(batch.value_targets) + len(value_batch.value_targets))
         ratios = metric_ratios(record)
         record.update({key: ratios[key] for key in ("target_entropy", "policy_kl", "value_zero_mse")})
         return record
@@ -666,11 +692,14 @@ def run_training_round(
     max_steps_this_session: int | None = None,
     batch_drawer: Callable[[DeterministicRng], DrawnBatch] | None = None,
     split_grad_norms: tuple[float, float] | None = None,
+    joint_separate_batches: bool = False,
 ) -> dict[str, Any]:
     """Drive one round of optimizer steps and checkpoint every N updates."""
 
     if steps_target < 0:
         raise ValueError("steps_target cannot be negative")
+    if joint_separate_batches and split_grad_norms is not None:
+        raise ValueError("joint separate batches use the single global gradient limit")
     if learner.round_steps_target != steps_target:
         raise ValueError("learner step target disagrees with this training round")
     if max_steps_this_session is not None and max_steps_this_session <= 0:
@@ -704,12 +733,17 @@ def run_training_round(
                        if drawn.value_samples is not None else None)
         collate_seconds = time.perf_counter() - tick
         tick = time.perf_counter()
-        if (value_batch is None) != (split_grad_norms is None):
-            raise ValueError("split batches and independent gradient limits must be supplied together")
-        record = (learner.train_step(batch, references=drawn.references) if value_batch is None else
-                  learner.train_split_step(batch, value_batch, references=drawn.references,
-                                           policy_max_grad_norm=split_grad_norms[0],
-                                           value_max_grad_norm=split_grad_norms[1]))
+        if joint_separate_batches:
+            if value_batch is None:
+                raise ValueError("joint separate batches require explicit value samples")
+            record = learner.train_step(batch, value_batch=value_batch, references=drawn.references)
+        else:
+            if (value_batch is None) != (split_grad_norms is None):
+                raise ValueError("split batches and independent gradient limits must be supplied together")
+            record = (learner.train_step(batch, references=drawn.references) if value_batch is None else
+                      learner.train_split_step(batch, value_batch, references=drawn.references,
+                                               policy_max_grad_norm=split_grad_norms[0],
+                                               value_max_grad_norm=split_grad_norms[1]))
         update_seconds = time.perf_counter() - tick
         record["seconds"] = {"draw_load": draw_seconds, "collate": collate_seconds, "update_host": update_seconds}
         for key, value in record["seconds"].items():

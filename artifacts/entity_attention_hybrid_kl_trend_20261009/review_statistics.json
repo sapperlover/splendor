@@ -1,0 +1,586 @@
+{
+  "protocol": "hybrid-kl-report-review-v1",
+  "reviewed_on": "2026-10-09",
+  "scope": "Baseline and wording correction from existing KL matrices and training-time validation records; no new training/search/matches or forward evaluation in this revision.",
+  "source": {
+    "matrix": {
+      "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/online_matrix.json",
+      "sha256": "2935595621d6581ced295cdfc3b66491b04b0f9da74bc4c034c1420e298b2043"
+    },
+    "trend": {
+      "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/trend.json",
+      "sha256": "4ccb6bc1f807a7ebfb42e554586360ed0a46a8e976035f240911177dae73f73f"
+    },
+    "offline_curve": {
+      "path": "runs/entity_attention_hybrid_static_graph_seed1/offline/validation_curve.jsonl",
+      "sha256": "96e590640db99be9b00e9e07b040442665ecc28938b592870ab12b5285d09520"
+    },
+    "n1_final_replay": {
+      "path": "runs/entity_attention_hybrid_s1024_n1_from_round9_seed1/rounds/round-049/replay_snapshot.json",
+      "sha256": "677cfc2a99493a911d0168b94159957939242c7514a4ebf52c618187f1aefb89"
+    }
+  },
+  "formulas": {
+    "one_round_delta": "KL[5000+500*g, g] - KL[5000+500*(g-1), g]",
+    "theta9500_minus_own_before": "KL[9500, g] - KL[5000+500*(g-1), g]",
+    "theta9500_minus_theta5000": "KL[9500, g] - KL[5000, g]",
+    "lowest_observed": "argmin over the existing 60 checkpoints; selected after observing this same holdout, not an optimal schedule",
+    "theta14500_minus_own_before": "KL[14500, g] - KL[5000+500*(g-1), g]"
+  },
+  "generations": [
+    {
+      "generation": 1,
+      "teacher_step": 5000,
+      "theta5000_kl": 0.40632848482501,
+      "own_before_kl": 0.40632848482501,
+      "own_after_kl": 0.39309748669918165,
+      "one_round_delta": -0.013230998125828342,
+      "theta9500_kl": 0.37324526620055876,
+      "theta14500_kl": 0.5277880615120233,
+      "theta9500_minus_own_before": -0.03308321862445124,
+      "theta9500_minus_theta5000": -0.03308321862445124,
+      "theta14500_minus_theta5000": 0.1214595766870133,
+      "already_changed_before_generation": 0.0,
+      "lowest_observed_step": 8500,
+      "lowest_observed_kl": 0.34530424937831516,
+      "fixed_subset_positions": 2048,
+      "validation_games": 95,
+      "policy_weight_sum": 1509.0,
+      "full_current": {
+        "before_kl": 0.4240505772989316,
+        "after_kl": 0.4120266846834161,
+        "delta": -0.012023892615515508,
+        "positions": 8198,
+        "before_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-000/validation_before.json",
+        "before_sha256": "6c138998b1c743df2f1ba8ee3767044bd5e7cf5ae9d96392537ee8f37a7d645f",
+        "after_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-000/validation_after.json",
+        "after_sha256": "f9446ab73bcda46254060e5f3cc7bef883b3697218d6f2a90ce5fcfd3981c024"
+      },
+      "theta14500_minus_own_before": 0.1214595766870133
+    },
+    {
+      "generation": 2,
+      "teacher_step": 5500,
+      "theta5000_kl": 0.4749323281107459,
+      "own_before_kl": 0.4548896830767763,
+      "own_after_kl": 0.42799009919872055,
+      "one_round_delta": -0.026899583878055744,
+      "theta9500_kl": 0.42498842466967574,
+      "theta14500_kl": 0.5484456462443565,
+      "theta9500_minus_own_before": -0.02990125840710056,
+      "theta9500_minus_theta5000": -0.04994390344107019,
+      "theta14500_minus_theta5000": 0.07351331813361062,
+      "already_changed_before_generation": -0.02004264503396963,
+      "lowest_observed_step": 8500,
+      "lowest_observed_kl": 0.40768852646056536,
+      "fixed_subset_positions": 2048,
+      "validation_games": 108,
+      "policy_weight_sum": 1488.0,
+      "full_current": {
+        "before_kl": 0.4542379822544943,
+        "after_kl": 0.42511557548841056,
+        "delta": -0.02912240676608374,
+        "positions": 9495,
+        "before_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-001/validation_before.json",
+        "before_sha256": "8e654e1233626dd0bab461ddb9e829026e0006f2b674561e1b131a6d80af021c",
+        "after_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-001/validation_after.json",
+        "after_sha256": "2c87a9f2262171a9a2c16eb8da41abb2817565d4110b36e9cc8df524f05dbb74"
+      },
+      "theta14500_minus_own_before": 0.09355596316758025
+    },
+    {
+      "generation": 3,
+      "teacher_step": 6000,
+      "theta5000_kl": 0.546632277701091,
+      "own_before_kl": 0.5144321601486833,
+      "own_after_kl": 0.5113422644138171,
+      "one_round_delta": -0.003089895734866177,
+      "theta9500_kl": 0.48381133631453443,
+      "theta14500_kl": 0.5684753699984109,
+      "theta9500_minus_own_before": -0.03062082383414888,
+      "theta9500_minus_theta5000": -0.06282094138655658,
+      "theta14500_minus_theta5000": 0.021843092297319844,
+      "already_changed_before_generation": -0.0322001175524077,
+      "lowest_observed_step": 8000,
+      "lowest_observed_kl": 0.46113194291276066,
+      "fixed_subset_positions": 2048,
+      "validation_games": 102,
+      "policy_weight_sum": 1686.0,
+      "full_current": {
+        "before_kl": 0.4982903553705879,
+        "after_kl": 0.4983121785838262,
+        "delta": 2.1823213238292283e-05,
+        "positions": 9023,
+        "before_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-002/validation_before.json",
+        "before_sha256": "3ce7c234264917b2cd53f227b44981da1d939aa88ac2ba769879689b823bbf3d",
+        "after_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-002/validation_after.json",
+        "after_sha256": "c775ad57ce0ff3d2e27f2e6fe78815aa666701d7e41593359fe89651d7e3008d"
+      },
+      "theta14500_minus_own_before": 0.05404320984972755
+    },
+    {
+      "generation": 4,
+      "teacher_step": 6500,
+      "theta5000_kl": 0.516131753409939,
+      "own_before_kl": 0.45982903001649256,
+      "own_after_kl": 0.45293991553713914,
+      "one_round_delta": -0.00688911447935342,
+      "theta9500_kl": 0.43313339061633366,
+      "theta14500_kl": 0.5532445501983598,
+      "theta9500_minus_own_before": -0.0266956394001589,
+      "theta9500_minus_theta5000": -0.08299836279360534,
+      "theta14500_minus_theta5000": 0.03711279678842083,
+      "already_changed_before_generation": -0.05630272339344644,
+      "lowest_observed_step": 10300,
+      "lowest_observed_kl": 0.4290177351226285,
+      "fixed_subset_positions": 2048,
+      "validation_games": 105,
+      "policy_weight_sum": 1534.0,
+      "full_current": {
+        "before_kl": 0.4658156533564692,
+        "after_kl": 0.45556723160609414,
+        "delta": -0.010248421750375047,
+        "positions": 9031,
+        "before_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-003/validation_before.json",
+        "before_sha256": "5851e965bb5b73735b4dc2dba84995fa960dec2c69b2da5f6a3d6acf6000d1ac",
+        "after_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-003/validation_after.json",
+        "after_sha256": "5cd1b31621d6e6eb634a985f6d68bb00ec64dd578079a6a5f73b433ae02bdce0"
+      },
+      "theta14500_minus_own_before": 0.09341552018186727
+    },
+    {
+      "generation": 5,
+      "teacher_step": 7000,
+      "theta5000_kl": 0.5143739230277683,
+      "own_before_kl": 0.4535569693855473,
+      "own_after_kl": 0.45905950423023323,
+      "one_round_delta": 0.005502534844685936,
+      "theta9500_kl": 0.4338938549701056,
+      "theta14500_kl": 0.5293688678082695,
+      "theta9500_minus_own_before": -0.019663114415441718,
+      "theta9500_minus_theta5000": -0.08048006805766272,
+      "theta14500_minus_theta5000": 0.01499494478050123,
+      "already_changed_before_generation": -0.060816953642221006,
+      "lowest_observed_step": 10100,
+      "lowest_observed_kl": 0.4218035447976,
+      "fixed_subset_positions": 2048,
+      "validation_games": 91,
+      "policy_weight_sum": 1586.0,
+      "full_current": {
+        "before_kl": 0.4627957714638719,
+        "after_kl": 0.46496483341658285,
+        "delta": 0.002169061952710938,
+        "positions": 7815,
+        "before_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-004/validation_before.json",
+        "before_sha256": "730bb6e22495ac922ab1e2927559c96d56c73946f34a4253ea1f5606041bdcaf",
+        "after_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-004/validation_after.json",
+        "after_sha256": "8dcf084cd1e7e32404a4e3ff416eafab7918c854f641aec0367eb9491ad72cfd"
+      },
+      "theta14500_minus_own_before": 0.07581189842272223
+    },
+    {
+      "generation": 6,
+      "teacher_step": 7500,
+      "theta5000_kl": 0.5445728239382247,
+      "own_before_kl": 0.4800940836319997,
+      "own_after_kl": 0.4680496693479619,
+      "one_round_delta": -0.012044414284037797,
+      "theta9500_kl": 0.4519027645002362,
+      "theta14500_kl": 0.5306855857719349,
+      "theta9500_minus_own_before": -0.02819131913176348,
+      "theta9500_minus_theta5000": -0.0926700594379885,
+      "theta14500_minus_theta5000": -0.013887238166289784,
+      "already_changed_before_generation": -0.06447874030622502,
+      "lowest_observed_step": 10600,
+      "lowest_observed_kl": 0.44618738905955563,
+      "fixed_subset_positions": 2048,
+      "validation_games": 112,
+      "policy_weight_sum": 1631.0,
+      "full_current": {
+        "before_kl": 0.453648684702642,
+        "after_kl": 0.4412856224228728,
+        "delta": -0.012363062279769244,
+        "positions": 9591,
+        "before_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-005/validation_before.json",
+        "before_sha256": "47a14f3c5f65ce24bf62e95d8871c5468f0d8af56eaa135eda8b4042fb585b87",
+        "after_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-005/validation_after.json",
+        "after_sha256": "66d4954faf2f895218f2348ee4d0dd606331813cc26eddd6d50d773e925fd554"
+      },
+      "theta14500_minus_own_before": 0.05059150213993524
+    },
+    {
+      "generation": 7,
+      "teacher_step": 8000,
+      "theta5000_kl": 0.4899404703550636,
+      "own_before_kl": 0.4225095574276194,
+      "own_after_kl": 0.4526554192592654,
+      "one_round_delta": 0.03014586183164597,
+      "theta9500_kl": 0.41981867664383354,
+      "theta14500_kl": 0.4444577919952497,
+      "theta9500_minus_own_before": -0.002690880783785876,
+      "theta9500_minus_theta5000": -0.07012179371123006,
+      "theta14500_minus_theta5000": -0.0454826783598139,
+      "already_changed_before_generation": -0.06743091292744419,
+      "lowest_observed_step": 9800,
+      "lowest_observed_kl": 0.40405124222957595,
+      "fixed_subset_positions": 2048,
+      "validation_games": 95,
+      "policy_weight_sum": 1602.0,
+      "full_current": {
+        "before_kl": 0.4318823465205121,
+        "after_kl": 0.45566976858569624,
+        "delta": 0.02378742206518414,
+        "positions": 7991,
+        "before_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-006/validation_before.json",
+        "before_sha256": "70721bc395eccaa95ad321b262407592bd820ffd3d5368d420606a8a6dd6dd88",
+        "after_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-006/validation_after.json",
+        "after_sha256": "5c94a3ca681155492173f375a49fca5516cce1aec152cb8959abc71766e30f10"
+      },
+      "theta14500_minus_own_before": 0.021948234567630287
+    },
+    {
+      "generation": 8,
+      "teacher_step": 8500,
+      "theta5000_kl": 0.5361444434714001,
+      "own_before_kl": 0.45931588532855977,
+      "own_after_kl": 0.4619160442497094,
+      "one_round_delta": 0.00260015892114962,
+      "theta9500_kl": 0.4432777875975666,
+      "theta14500_kl": 0.5029712808363722,
+      "theta9500_minus_own_before": -0.016038097730993184,
+      "theta9500_minus_theta5000": -0.09286665587383353,
+      "theta14500_minus_theta5000": -0.0331731626350279,
+      "already_changed_before_generation": -0.07682855814284034,
+      "lowest_observed_step": 10300,
+      "lowest_observed_kl": 0.4377486112612566,
+      "fixed_subset_positions": 2048,
+      "validation_games": 97,
+      "policy_weight_sum": 1594.0,
+      "full_current": {
+        "before_kl": 0.4566907706467053,
+        "after_kl": 0.45526417651218665,
+        "delta": -0.0014265941345186772,
+        "positions": 8373,
+        "before_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-007/validation_before.json",
+        "before_sha256": "c955738c6f7a4277c62cdbeb2bc6862509de5c8dbec798313e00c0e2f0ac4786",
+        "after_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-007/validation_after.json",
+        "after_sha256": "bb9fcd7f2a43c8ee52761e3269e99d6c6d132b6136ece32e8028c8fe5b692d62"
+      },
+      "theta14500_minus_own_before": 0.043655395507812444
+    },
+    {
+      "generation": 9,
+      "teacher_step": 9000,
+      "theta5000_kl": 0.5901158835921234,
+      "own_before_kl": 0.4824325864796941,
+      "own_after_kl": 0.4922305187264202,
+      "one_round_delta": 0.009797932246726093,
+      "theta9500_kl": 0.4922305187264202,
+      "theta14500_kl": 0.5491726842433242,
+      "theta9500_minus_own_before": 0.009797932246726093,
+      "theta9500_minus_theta5000": -0.0978853648657032,
+      "theta14500_minus_theta5000": -0.0409431993487992,
+      "already_changed_before_generation": -0.1076832971124293,
+      "lowest_observed_step": 10600,
+      "lowest_observed_kl": 0.47260821933633923,
+      "fixed_subset_positions": 2048,
+      "validation_games": 100,
+      "policy_weight_sum": 1637.0,
+      "full_current": {
+        "before_kl": 0.46970668446918695,
+        "after_kl": 0.4768890554977751,
+        "delta": 0.007182371028588153,
+        "positions": 8444,
+        "before_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/validation_before.json",
+        "before_sha256": "964e09ffc1ed4defaae46567c461c962aee787687b45debc5ca46f89d8479acd",
+        "after_path": "runs/entity_attention_hybrid_static_graph_seed1/rounds/round-008/validation_after.json",
+        "after_sha256": "bd0c70a23e83c70465c4d6d99b8ed6a79173fb6630c80e4ed1b1c2791eb4b8f9"
+      },
+      "theta14500_minus_own_before": 0.0667400977636301
+    }
+  ],
+  "counts": {
+    "sampled_positions": 18432,
+    "sampled_games": 905,
+    "full_current_holdout_positions": 77961,
+    "one_round_decreased": 5,
+    "theta9500_vs_own_before_decreased": 8,
+    "theta9500_vs_theta5000_decreased": 9,
+    "theta14500_vs_own_before_increased": 9
+  },
+  "offline_curve": {
+    "initial_kl": 1.094709985069165,
+    "final_kl": 0.6160598932371848,
+    "adjacent_intervals": 50,
+    "increasing_intervals": 13,
+    "increases": [
+      {
+        "before_step": 800,
+        "after_step": 900,
+        "before_kl": 0.69053813240883,
+        "after_kl": 0.6982121464317569
+      },
+      {
+        "before_step": 1300,
+        "after_step": 1400,
+        "before_kl": 0.6730717755454466,
+        "after_kl": 0.6739156065267323
+      },
+      {
+        "before_step": 1400,
+        "after_step": 1500,
+        "before_kl": 0.6739156065267323,
+        "after_kl": 0.6791584566371541
+      },
+      {
+        "before_step": 2200,
+        "after_step": 2300,
+        "before_kl": 0.6541215862167855,
+        "after_kl": 0.6548391282791833
+      },
+      {
+        "before_step": 2400,
+        "after_step": 2500,
+        "before_kl": 0.6445719379069407,
+        "after_kl": 0.6472847411678935
+      },
+      {
+        "before_step": 2600,
+        "after_step": 2700,
+        "before_kl": 0.6443888523843202,
+        "after_kl": 0.6461027634533051
+      },
+      {
+        "before_step": 2800,
+        "after_step": 2900,
+        "before_kl": 0.6401713131143805,
+        "after_kl": 0.6495539026166527
+      },
+      {
+        "before_step": 3200,
+        "after_step": 3300,
+        "before_kl": 0.6375521469583347,
+        "after_kl": 0.6466380577305212
+      },
+      {
+        "before_step": 3500,
+        "after_step": 3600,
+        "before_kl": 0.630117616139171,
+        "after_kl": 0.6413064872361125
+      },
+      {
+        "before_step": 4100,
+        "after_step": 4200,
+        "before_kl": 0.6290515254369397,
+        "after_kl": 0.6303619661985308
+      },
+      {
+        "before_step": 4200,
+        "after_step": 4300,
+        "before_kl": 0.6303619661985308,
+        "after_kl": 0.6313327044287187
+      },
+      {
+        "before_step": 4500,
+        "after_step": 4600,
+        "before_kl": 0.6221859280423829,
+        "after_kl": 0.6259010143373176
+      },
+      {
+        "before_step": 4700,
+        "after_step": 4800,
+        "before_kl": 0.6179878262756345,
+        "after_kl": 0.6276374346134358
+      }
+    ]
+  },
+  "previous_read_only_verification": {
+    "scope": "Read-only review of 9-generation frozen holdout matrix; no training/search/matches or repository edits",
+    "parent_90_cells_recomputed_exactly": true,
+    "holdout_digests_rebuilt_match": true,
+    "references_unique_and_validation_only": true,
+    "sampled_positions": 18432,
+    "sampled_games": 905,
+    "full_current_holdout_positions": 77961,
+    "generations": [
+      {
+        "generation": 1,
+        "positions": 2048,
+        "sampled_games": 95,
+        "full_holdout_positions": 8198,
+        "digest": "c2ac6762952f621491a71e532628d21585a7938b5fc4842914648f02e01c479e"
+      },
+      {
+        "generation": 2,
+        "positions": 2048,
+        "sampled_games": 108,
+        "full_holdout_positions": 9495,
+        "digest": "b1f369e327824d8e7471a75e7d9010400bfc6db9c21ecf58d05126e0e067bc0f"
+      },
+      {
+        "generation": 3,
+        "positions": 2048,
+        "sampled_games": 102,
+        "full_holdout_positions": 9023,
+        "digest": "7c72df6b38f2134399ac0dddc56f44130dc1a1f72033b8919245d9ee0c27e6db"
+      },
+      {
+        "generation": 4,
+        "positions": 2048,
+        "sampled_games": 105,
+        "full_holdout_positions": 9031,
+        "digest": "7e8102a5cb17d6a72a0b397c688e702862820309fe9b9cc6bbb47eafacf55a26"
+      },
+      {
+        "generation": 5,
+        "positions": 2048,
+        "sampled_games": 91,
+        "full_holdout_positions": 7815,
+        "digest": "1287651f0c9cacf03f8df738286ecdc86c6c33ec07a44aa4ed37ab552106704a"
+      },
+      {
+        "generation": 6,
+        "positions": 2048,
+        "sampled_games": 112,
+        "full_holdout_positions": 9591,
+        "digest": "94585611213049f3a54fc68f155b8e388073cbaea36ab14e24154cbbf5d04121"
+      },
+      {
+        "generation": 7,
+        "positions": 2048,
+        "sampled_games": 95,
+        "full_holdout_positions": 7991,
+        "digest": "1fdfef5b059c97d05c736ae74dcceaf9c5db55351dcb77591c782c8a80e40073"
+      },
+      {
+        "generation": 8,
+        "positions": 2048,
+        "sampled_games": 97,
+        "full_holdout_positions": 8373,
+        "digest": "e20339fb317485cdad160032342ef7c9b87d0297ce23858ad8d051f742a567c9"
+      },
+      {
+        "generation": 9,
+        "positions": 2048,
+        "sampled_games": 100,
+        "full_holdout_positions": 8444,
+        "digest": "dde54c51182b8533a03a2db762dac39729e6b83e9571baccc56cc97170cc055f"
+      }
+    ],
+    "source_sha256": {
+      "artifacts/entity_attention_hybrid_kl_trend_20261009/online_matrix.json": "2935595621d6581ced295cdfc3b66491b04b0f9da74bc4c034c1420e298b2043",
+      "artifacts/entity_attention_hybrid_kl_trend_20261009/online_matrix.py": "f805cef05fff28e1e1b98f8531749f7bfa793c9dcef4bcf22f397d8ecbb5aff0",
+      "src/splendor/offline_train.py": "f975d295a26f65d6d4431df8a27797f002db99eab1913ebdf89f96ac9f64a723",
+      "src/splendor/alphazero_train.py": "88f05c927d39f221df1c7eb6802586c633f25a975682d5bf4de4488a28e41b1e"
+    },
+    "parent_recomputed_output_sha256": "b8a45c699a3806d653f5aba0687707653dfb8771326d0a85f5a2ff4d59c9dcdf"
+  },
+  "local_before_backup": {
+    "path": "runtime/entity_attention_hybrid_kl_trend_20261009/report_revision_before",
+    "manifest_sha256": "b9876505586c042110f89a34d315404fce9ec6eb32a732a5bc31238a99da94e9"
+  },
+  "limits": [
+    "Fixed archived search targets, not new independent searches.",
+    "One training trajectory; no training-seed population inference.",
+    "Nine-generation baseline tables report point estimates, without paired confidence intervals or multiple-comparison correction.",
+    "The 9 original generation holdouts do not cover the current replay window at step14500."
+  ],
+  "revision_checks": {
+    "retained_artifact_files": [
+      {
+        "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/online_matrix.json",
+        "sha256": "2935595621d6581ced295cdfc3b66491b04b0f9da74bc4c034c1420e298b2043"
+      },
+      {
+        "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/online_matrix.png",
+        "sha256": "0df92debaa27fa986dd724603820f92e53da6d67075910f971a439bbb1ed5f1b"
+      },
+      {
+        "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/online_matrix.py",
+        "sha256": "f805cef05fff28e1e1b98f8531749f7bfa793c9dcef4bcf22f397d8ecbb5aff0"
+      },
+      {
+        "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/plot.py",
+        "sha256": "a73cae604d32a05cde2823a85afc15452b09b58e5482977a92c05524f178f01b"
+      },
+      {
+        "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/plot_matrix.py",
+        "sha256": "91a00fb83dda37ba25e3939efe126993491c92534affeb3c016e52618f6c68de"
+      },
+      {
+        "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/run.py",
+        "sha256": "7d0da8e968533ed273f6bf326efb74a495d05961ce66bd07de45cd67fde8ff50"
+      },
+      {
+        "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/trend.json",
+        "sha256": "4ccb6bc1f807a7ebfb42e554586360ed0a46a8e976035f240911177dae73f73f"
+      },
+      {
+        "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/trend.png",
+        "sha256": "8f5d627f8e3aef7de2d4d4082c8369ef144dce52e01f7b7b50d8077a5bdcdcb0"
+      }
+    ],
+    "backup_files_verified": 6,
+    "markdown_tables_checked": 5,
+    "numerical_metric_tables_checked": 4,
+    "local_links_checked": 130,
+    "baseline_formulas_and_full_current_source_hashes_verified": true,
+    "git_diff_check": "passed",
+    "new_experiments_started": false
+  },
+  "files_before": [
+    {
+      "path": "artifacts/entity_attention_hybrid_kl_trend_20261009/README.md",
+      "sha256": "6e9cb1cca7a5c2289188a0c22e4abe04edbd0018b0686363b942910efd0eda64"
+    },
+    {
+      "path": "docs/current_project_state_zh-CN.md",
+      "sha256": "b66136d23e34234340aa54c6eef0e30fee96c28330070d69aeddf6ba3960a3df"
+    },
+    {
+      "path": "docs/guides/entity_attention_hybrid_zh-CN.md",
+      "sha256": "5c2cfe12c7faf710678b19e6f56498f6a130e1bdddec75fec921f532639e92dd"
+    },
+    {
+      "path": "docs/reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md",
+      "sha256": "26b3ef960828e1d3bd4a947e92d2b2261ac877798e082322a15a559639d40836"
+    },
+    {
+      "path": "artifacts/experiment_index.json",
+      "sha256": "e028c71be09bb69a1eab215f6922c9b5fcdd33727d8ed0fe37da6191c1873d69"
+    },
+    {
+      "path": "artifacts/index.md",
+      "sha256": "d8c61cf92a9286ef7c91f2dd74676f0a8b9efcc45359fdcecc975205498c7442"
+    }
+  ],
+  "document_after_sha256": {
+    "artifacts/entity_attention_hybrid_kl_trend_20261009/README.md": "0dfdcccf645bdd23f139eb03a06993e2f7c38745492349926d6e06ef4008bb3e",
+    "docs/current_project_state_zh-CN.md": "3afe8ce57371e59b7190ba62d984874f123c6442b02cab05b56f60ce5bf042d6",
+    "docs/guides/entity_attention_hybrid_zh-CN.md": "5546c47762db680d731ffe77715a15a48e7595f28583d366c6c3d92185d02b2c",
+    "docs/reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md": "319fb88d1ffea054ad2a2a519d850c1b7774b7a5d10c4d1c4e1e35afab50dcb0",
+    "artifacts/index.md": "8eaa368507ea3f8ec03d3d943ccfc1505a274fd1e705df52b6e826a0f6c3eea7"
+  },
+  "index_note": "实验索引保存本文件SHA；避免循环哈希，此文件只记录索引修改前SHA。",
+  "n1_final_replay": {
+    "games": 3000,
+    "data_round_indices": [
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58
+    ],
+    "contains_original_generation_1_to_9": false
+  }
+}

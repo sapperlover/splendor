@@ -85,6 +85,8 @@ L    = policy_loss_weight * L_pi + value_loss_weight * L_v
 
 训练超参：AdamW、`lr=1e-4`、`weight_decay=1e-4`、两种 loss 权重 1.0、`max_grad_norm=1.0`、batch 256。首轮只载入旧模型权重并创建新 AdamW；后续轮次经 `AlphazeroLearner.continue_from()` 延续同一 AdamW state 与全局训练步 `total_train_step`（跨轮单调递增，TensorBoard `train/*` 不会在轮边界重叠），只把轮内计数归零。
 
+`value_loss_weight`允许取0，用于取消value损失项；这不会冻结critic或共享encoder，也不会清除AdamW已有动量。已有动量、weight decay和policy对共享encoder的更新仍可能改变value输出。相关受控实验见[第29轮起点的value权重比较](../../artifacts/entity_attention_r30_value_weight_20261011/README.md)。
+
 ## 5. checkpoint 格式与兼容加载
 
 ### 5.1 AZ checkpoint

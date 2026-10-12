@@ -14,6 +14,7 @@ const PHASE_NAMES = {
 let game = null;
 let busy = false;
 let selectedTokens = [];
+let opponents = [];
 
 const byId = (id) => document.getElementById(id);
 const html = (value) => String(value).replace(/[&<>'"]/g, (ch) => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", '"':"&quot;"}[ch]));
@@ -143,7 +144,7 @@ function playerPanel(player, own) {
     <div class="purchased-tooltip"><b>${COLOR_NAMES[color]}色已购牌</b>${groups[color].length ? groups[color].map(cardSummary).join("") : `<div class="tooltip-card">暂无</div>`}</div>
   </div>`).join("");
   const nobles = player.nobles.length ? `已获贵族 ${player.nobles.length} 位（${player.nobles.reduce((sum, n) => sum + n.points, 0)} 分）` : "尚未获得贵族";
-  const label = own ? "你" : game.opponentLabel;
+  const label = own ? "你" : html(game.opponentLabel);
   return `<section class="player-panel ${own ? "self" : "opponent"}">
     <div class="player-head">
       <div class="player-name"><span class="avatar">${own ? "你" : "AI"}</span><span><strong>${label} ${player.isFirst ? `<em class="first-badge">先手</em>` : ""}</strong><small>已完成 ${player.completedTurns} 回合</small></span></div>
@@ -176,6 +177,8 @@ function renderHistory() {
 }
 
 function renderActions() {
+  const needsChoice = ["payment", "return_tokens", "choose_noble"].includes(game.phase);
+  byId("decision-bar").hidden = !needsChoice;
   byId("phase-label").textContent = PHASE_NAMES[game.phase] || game.phase;
   const titles = {
     main_action: "选择你的主行动",
@@ -185,11 +188,30 @@ function renderActions() {
     terminal: "对局已结束",
   };
   byId("action-title").textContent = titles[game.phase] || "选择行动";
-  const visible = game.phase === "main_action" ? [] : game.legalActions;
+  const visible = needsChoice ? game.legalActions : [];
   byId("action-list").innerHTML = visible.map((action) => {
     const color = action.color || action.colors?.[0] || "gold";
     return `<button class="action-button ${action.kind.startsWith("Take") ? "token-action" : ""}" style="--action-color:var(--${color})" data-action-index="${action.index}" type="button">${html(action.label)}</button>`;
-  }).join("") || (game.phase === "main_action" ? `<span class="card-id">点击宝石堆自由组合拿取；购买和保留请操作对应卡牌或牌堆。</span>` : "");
+  }).join("");
+}
+
+function renderEvaluation() {
+  const evaluation = game.evaluation;
+  byId("evaluation-panel").hidden = !evaluation;
+  if (!evaluation) return;
+  const percent = evaluation.humanScoreRate * 100;
+  byId("human-evaluation").textContent = `你 ${percent.toFixed(1)}%`;
+  byId("opponent-evaluation").textContent = `AI ${(evaluation.opponentScoreRate * 100).toFixed(1)}%`;
+  byId("evaluation-source").textContent = evaluation.source === "result" ? "终局结果" : "模型估计得分率";
+  byId("human-evaluation-fill").style.width = `${percent}%`;
+  byId("evaluation-track").setAttribute("aria-valuenow", percent.toFixed(1));
+  byId("evaluation-panel").title = `你的视角 value=${evaluation.value.toFixed(4)}；显示 (clip(value, -1, 1) + 1) / 2，平局计半分，未经胜率校准。`;
+}
+
+function updateUndoButtons() {
+  document.querySelectorAll("[data-undo]").forEach((button) => {
+    button.disabled = busy || !game?.canUndo;
+  });
 }
 
 function renderResult() {
@@ -205,6 +227,34 @@ function render() {
   byId("board").classList.remove("is-empty");
   byId("turn-status").textContent = game.result ? "对局结束" : `轮到你行动 · ${PHASE_NAMES[game.phase]}`;
   renderMarket(); renderSupply(); renderNobles(); renderPlayers(); renderHistory(); renderActions(); renderResult();
+  renderEvaluation(); updateUndoButtons();
+  byId("search-budget-form").hidden = !game.searchBudget || !!game.result;
+  if (game.searchBudget) {
+    byId("game-simulations").value = game.searchBudget.simulations;
+    byId("game-determinizations").value = game.searchBudget.determinizations;
+  }
+}
+
+function readSearchBudget(prefix) {
+  const simulations = Number(byId(`${prefix}-simulations`).value);
+  const determinizations = Number(byId(`${prefix}-determinizations`).value);
+  if (!Number.isSafeInteger(simulations) || simulations < 1
+      || !Number.isSafeInteger(determinizations) || determinizations < 1
+      || determinizations > simulations) {
+    throw new Error("S、N 必须是正整数，且 N 不超过 S");
+  }
+  return {simulations, determinizations};
+}
+
+function syncSetupOpponent() {
+  const opponent = opponents.find((item) => item.id === byId("opponent-select").value);
+  const budget = opponent?.searchBudget;
+  byId("setup-search-budget").hidden = !budget;
+  byId("setup-search-budget").disabled = !budget;
+  if (budget) {
+    byId("setup-simulations").value = budget.simulations;
+    byId("setup-determinizations").value = budget.determinizations;
+  }
 }
 
 async function api(path, body) {
@@ -222,10 +272,16 @@ async function loadOpponents() {
     const response = await fetch("/api/opponents", {cache: "no-store"});
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.message || "无法读取对手列表");
-    select.innerHTML = payload.opponents.map((opponent) =>
+    const previous = select.value;
+    opponents = payload.opponents;
+    select.innerHTML = opponents.map((opponent) =>
       `<option value="${html(opponent.id)}">${html(opponent.label)}</option>`
     ).join("");
-    start.disabled = payload.opponents.length === 0;
+    select.value = opponents.find((item) => item.id === previous)?.id
+      || opponents.find((item) => item.kind === "mcts_checkpoint")?.id
+      || opponents[0]?.id || "";
+    syncSetupOpponent();
+    start.disabled = opponents.length === 0;
   } catch (error) {
     select.innerHTML = `<option value="">读取失败</option>`;
     byId("setup-error").textContent = error.message;
@@ -235,17 +291,32 @@ async function loadOpponents() {
 function setBusy(value) {
   busy = value;
   if (value) {
-    document.querySelectorAll("button:not(:disabled)").forEach((button) => {
+    document.querySelectorAll("button:not(:disabled), input:not(:disabled), select:not(:disabled)").forEach((button) => {
       button.disabled = true;
       button.dataset.busyDisabled = "true";
     });
   } else {
-    document.querySelectorAll("button[data-busy-disabled]").forEach((button) => {
+    document.querySelectorAll("[data-busy-disabled]").forEach((button) => {
       button.disabled = false;
       delete button.dataset.busyDisabled;
     });
   }
   if (value && game) byId("turn-status").textContent = "对手思考中…";
+  updateUndoButtons();
+}
+
+async function undoGame() {
+  if (busy || !game?.canUndo) return;
+  setBusy(true);
+  try {
+    game = await api(`/api/games/${game.gameId}/undo`, {revision: game.revision});
+    render();
+    showToast("已回退到上一次你的操作之前");
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    setBusy(false);
+  }
 }
 
 async function performAction(index) {
@@ -269,6 +340,7 @@ function showToast(message) {
 }
 
 document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-undo]")) { undoGame(); return; }
   const token = event.target.closest("[data-token-color]");
   if (token) { selectToken(token.dataset.tokenColor); return; }
   if (event.target.closest("[data-token-reset]")) {
@@ -289,6 +361,13 @@ byId("setup-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const seed = Number(byId("seed-input").value);
   if (!Number.isSafeInteger(seed)) { byId("setup-error").textContent = "Seed 必须是安全整数"; return; }
+  let searchBudget = null;
+  try {
+    if (!byId("setup-search-budget").hidden) searchBudget = readSearchBudget("setup");
+  } catch (error) {
+    byId("setup-error").textContent = error.message;
+    return;
+  }
   setBusy(true);
   byId("setup-error").textContent = "";
   try {
@@ -296,11 +375,29 @@ byId("setup-form").addEventListener("submit", async (event) => {
       opponent: byId("opponent-select").value,
       humanFirst: document.querySelector('input[name="order"]:checked').value === "first",
       seed,
+      searchBudget,
     });
     byId("setup-modal").classList.remove("is-open");
     render();
   } catch (error) {
     byId("setup-error").textContent = error.message;
+  } finally {
+    setBusy(false);
+  }
+});
+
+byId("opponent-select").addEventListener("change", syncSetupOpponent);
+byId("search-budget-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (busy || !game) return;
+  try {
+    const searchBudget = readSearchBudget("game");
+    setBusy(true);
+    game = await api(`/api/games/${game.gameId}/search-budget`, {searchBudget});
+    render();
+    showToast(`已应用 S${searchBudget.simulations}/N${searchBudget.determinizations}，下次 AI 行动生效`);
+  } catch (error) {
+    showToast(error.message);
   } finally {
     setBusy(false);
   }

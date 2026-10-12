@@ -1,0 +1,276 @@
+{
+  "final_step": 103194,
+  "fixed_subset_best_policy": {
+    "draw_exposure": 11.861154718297575,
+    "learning_rate": 2.5e-05,
+    "step": 102000,
+    "train": {
+      "policy_kl": 0.4165185794657164,
+      "value_mse": 0.40342059918660633
+    },
+    "validation": {
+      "policy_kl": 0.40861056863483064,
+      "value_mse": 0.9188118831917906
+    }
+  },
+  "fixed_subset_best_value": {
+    "draw_exposure": 3.6048607477178907,
+    "learning_rate": 0.0001,
+    "step": 31000,
+    "train": {
+      "policy_kl": 0.4426684011367018,
+      "value_mse": 0.7262063343097603
+    },
+    "validation": {
+      "policy_kl": 0.4341978524602288,
+      "value_mse": 0.7634545929799141
+    }
+  },
+  "full_holdout": {
+    "103194": {
+      "policy_kl": 0.41593357713809553,
+      "value_mse": 0.929513487523644
+    },
+    "34398": {
+      "policy_kl": 0.44145335169368566,
+      "value_mse": 0.7422823789114079
+    },
+    "68796": {
+      "policy_kl": 0.4253010093532091,
+      "value_mse": 0.8685940252392607
+    }
+  },
+  "inputs": {
+    "/home/lc/下载/splendor/artifacts/entity_attention_recent_pool_20261009/full_holdout_step_000034398.json": "99e842d2560939f5ce27bd75ce1f2942df90f0a924d21e6da13a3a0179f7453b",
+    "/home/lc/下载/splendor/artifacts/entity_attention_recent_pool_20261009/full_holdout_step_000068796.json": "e62572cbb0f4d23eb09464f64206a14c8f41f7ee80a494190efa89f554c9bf6b",
+    "/home/lc/下载/splendor/artifacts/entity_attention_recent_pool_20261009/full_holdout_step_000103194.json": "c7bf7b15f3fec9bea5e9ca5e6ad0d8160dc0f48865f5561d636189d6fe44ac47",
+    "/home/lc/下载/splendor/artifacts/entity_attention_recent_pool_20261009/training_summary.json": "fd093cd6a5dd566f84af6eecd2eb0a1084398021ff7bb06dc2ff2e2ddbc86f48"
+  },
+  "interpretation": {
+    "policy": "Heldout stored KL continues to decrease with smaller late gains; train/validation policy gaps do not exhibit value-like divergence. LR also drops 4x at exposure 8, so the curve alone cannot establish an architecture/noise fitting limit.",
+    "stopping": "Exposure 4 is best for value among the three full milestone evaluations; subset best is 31000 steps. Neither is an established optimal step or strength-best checkpoint.",
+    "strength": "One predeclared final-103194 S1024/N1 panel versus theta5000 is being measured separately; this single panel cannot identify the best training duration or isolate critic damage.",
+    "value": "Train MSE continues downward while full holdout MSE rises across all seven sources from exposure 4 to 12, with worse early/mid and late correlations: clear overfitting of terminal-value targets in this fixed-pool experiment."
+  },
+  "paired_changes": {
+    "103194_minus_34398": {
+      "policy_kl": {
+        "estimate": -0.02551977455558969,
+        "games": 2935,
+        "lower": -0.026314635363214645,
+        "resamples": 10000,
+        "seed": 30300004,
+        "unit": "one complete original validation game; paired ratio of summed errors to summed weights",
+        "upper": -0.024719442920377605
+      },
+      "value_mse": {
+        "estimate": 0.18723110861222741,
+        "games": 2935,
+        "lower": 0.17209063014095705,
+        "resamples": 10000,
+        "seed": 30300005,
+        "unit": "one complete original validation game; paired ratio of summed errors to summed weights",
+        "upper": 0.20180855797226394
+      }
+    },
+    "103194_minus_68796": {
+      "policy_kl": {
+        "estimate": -0.009367432215114253,
+        "games": 2935,
+        "lower": -0.009888615763860005,
+        "resamples": 10000,
+        "seed": 30300002,
+        "unit": "one complete original validation game; paired ratio of summed errors to summed weights",
+        "upper": -0.008831391863546065
+      },
+      "value_mse": {
+        "estimate": 0.06091946228438154,
+        "games": 2935,
+        "lower": 0.052716054789764086,
+        "resamples": 10000,
+        "seed": 30300003,
+        "unit": "one complete original validation game; paired ratio of summed errors to summed weights",
+        "upper": 0.06933125018519794
+      }
+    },
+    "68796_minus_34398": {
+      "policy_kl": {
+        "estimate": -0.016152342340475436,
+        "games": 2935,
+        "lower": -0.01696456018130162,
+        "resamples": 10000,
+        "seed": 30300000,
+        "unit": "one complete original validation game; paired ratio of summed errors to summed weights",
+        "upper": -0.015343199085815808
+      },
+      "value_mse": {
+        "estimate": 0.12631164632784586,
+        "games": 2935,
+        "lower": 0.11369647895457691,
+        "resamples": 10000,
+        "seed": 30300001,
+        "unit": "one complete original validation game; paired ratio of summed errors to summed weights",
+        "upper": 0.1386626206935149
+      }
+    }
+  },
+  "protocol": "recent-pool-fit-review-v1",
+  "scope": "stored original teacher labels; repeated DEV holdout, one initialization/training seed; bootstrap does not cover training-seed variability or adaptive checkpoint selection",
+  "source_changes_4_to_12": {
+    "attention_3x1000/validation/all": {
+      "delta_policy_kl": -0.017634243411316697,
+      "delta_value_mse": 0.16746984837200196,
+      "policy_kl_after": 0.542848883651036,
+      "policy_kl_before": 0.5604831270623527,
+      "value_mse_after": 0.8950523539272944,
+      "value_mse_before": 0.7275825055552925
+    },
+    "behavior_m4_12x200/validation/all": {
+      "delta_policy_kl": -0.038091073978008205,
+      "delta_value_mse": 0.21382197149915905,
+      "policy_kl_after": 0.4324474274158777,
+      "policy_kl_before": 0.4705385013938859,
+      "value_mse_after": 0.9611295494202464,
+      "value_mse_before": 0.7473075779210874
+    },
+    "hybrid_9x1000/validation/all": {
+      "delta_policy_kl": -0.019737331487740428,
+      "delta_value_mse": 0.18431102931311572,
+      "policy_kl_after": 0.386224644444067,
+      "policy_kl_before": 0.40596197593180744,
+      "value_mse_after": 0.9343590031723054,
+      "value_mse_before": 0.7500479738591896
+    },
+    "n1_50x200/validation/all": {
+      "delta_policy_kl": -0.02617398281849309,
+      "delta_value_mse": 0.1904667260347862,
+      "policy_kl_after": 0.40532670246427116,
+      "policy_kl_before": 0.43150068528276425,
+      "value_mse_after": 0.9237988561004716,
+      "value_mse_before": 0.7333321300656854
+    },
+    "native_probe_200/validation/all": {
+      "delta_policy_kl": -0.03679714802224182,
+      "delta_value_mse": 0.08302686540765547,
+      "policy_kl_after": 0.3780364960665285,
+      "policy_kl_before": 0.4148336440887703,
+      "value_mse_after": 0.6935600163927854,
+      "value_mse_before": 0.61053315098513
+    },
+    "split_20x200/validation/all": {
+      "delta_policy_kl": -0.03389315650254254,
+      "delta_value_mse": 0.19749499039592744,
+      "policy_kl_after": 0.4045056780586859,
+      "policy_kl_before": 0.43839883456122847,
+      "value_mse_after": 0.9515311605172414,
+      "value_mse_before": 0.754036170121314
+    },
+    "steps50_2x200/validation/all": {
+      "delta_policy_kl": -0.03496802747867267,
+      "delta_value_mse": 0.10825314942294106,
+      "policy_kl_after": 0.4254067526396961,
+      "policy_kl_before": 0.46037478011836874,
+      "value_mse_after": 0.9484184448933624,
+      "value_mse_before": 0.8401652954704213
+    }
+  },
+  "stage_metrics": {
+    "103194": {
+      "all": {
+        "policy_kl": 0.4159335771380968,
+        "policy_weight": 195067.0,
+        "positions": 247453,
+        "teacher_top1_agreement": 0.5546555798776831,
+        "value_bias": -0.025790243938485075,
+        "value_correlation": 0.3871025570498192,
+        "value_mse": 0.9295134875236859,
+        "value_zero_mse": 0.9882806027811342
+      },
+      "early_mid": {
+        "policy_kl": 0.409579593889713,
+        "policy_weight": 168385.0,
+        "positions": 211207,
+        "teacher_top1_agreement": 0.5574071324642932,
+        "value_bias": -0.03156265189587686,
+        "value_correlation": 0.3214685027687023,
+        "value_mse": 0.9962408558668513,
+        "value_zero_mse": 0.9886651484089068
+      },
+      "late": {
+        "policy_kl": 0.45603235044138046,
+        "policy_weight": 26682.0,
+        "positions": 36246,
+        "teacher_top1_agreement": 0.5372910576418559,
+        "value_bias": 0.007845825350728823,
+        "value_correlation": 0.691722579528139,
+        "value_mse": 0.5406902439752564,
+        "value_zero_mse": 0.9860398388787728
+      }
+    },
+    "34398": {
+      "all": {
+        "policy_kl": 0.4414533516936828,
+        "policy_weight": 195067.0,
+        "positions": 247453,
+        "teacher_top1_agreement": 0.5393172602234104,
+        "value_bias": 0.004371903282915896,
+        "value_correlation": 0.5001687039029228,
+        "value_mse": 0.7422823789114277,
+        "value_zero_mse": 0.9882806027811342
+      },
+      "early_mid": {
+        "policy_kl": 0.4352904097789609,
+        "policy_weight": 168385.0,
+        "positions": 211207,
+        "teacher_top1_agreement": 0.541301184784868,
+        "value_bias": -0.0025562723345407485,
+        "value_correlation": 0.43581507966096394,
+        "value_mse": 0.8024832779289894,
+        "value_zero_mse": 0.9886651484089068
+      },
+      "late": {
+        "policy_kl": 0.4803464996702393,
+        "policy_weight": 26682.0,
+        "positions": 36246,
+        "teacher_top1_agreement": 0.5267970916722884,
+        "value_bias": 0.04474268040690656,
+        "value_correlation": 0.7778533773394742,
+        "value_mse": 0.3914891526573929,
+        "value_zero_mse": 0.9860398388787728
+      }
+    },
+    "68796": {
+      "all": {
+        "policy_kl": 0.42530100935321125,
+        "policy_weight": 195067.0,
+        "positions": 247453,
+        "teacher_top1_agreement": 0.5504160109090722,
+        "value_bias": -0.009207233879668911,
+        "value_correlation": 0.4115610745194362,
+        "value_mse": 0.8685940252392886,
+        "value_zero_mse": 0.9882806027811342
+      },
+      "early_mid": {
+        "policy_kl": 0.4187138929351081,
+        "policy_weight": 168385.0,
+        "positions": 211207,
+        "teacher_top1_agreement": 0.5533687680019004,
+        "value_bias": -0.022491865575463597,
+        "value_correlation": 0.3460723749381963,
+        "value_mse": 0.929680033723365,
+        "value_zero_mse": 0.9886651484089068
+      },
+      "late": {
+        "policy_kl": 0.46687104151203396,
+        "policy_weight": 26682.0,
+        "positions": 36246,
+        "teacher_top1_agreement": 0.531781725507833,
+        "value_bias": 0.0682028860390451,
+        "value_correlation": 0.7066820802669518,
+        "value_mse": 0.5126432280783113,
+        "value_zero_mse": 0.9860398388787728
+      }
+    }
+  },
+  "training_status": "complete"
+}

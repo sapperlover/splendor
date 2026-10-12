@@ -92,6 +92,8 @@ def test_inference_config_rejects_unknown_modes():
 @pytest.mark.parametrize('buckets,rows', [
     ((4, 8), (1, 3, 5, 4, 2)),
     ((16, 32, 64, 128, 200), (1, 17, 33, 65, 129, 200, 128)),
+    ((16, 32, 64, 128, 192, 256, 384, 500),
+     (1, 17, 33, 65, 129, 193, 257, 385, 500, 3)),
 ])
 def test_static_batch_buckets_preserve_entity_outputs_and_reuse_guards(monkeypatch, buckets, rows):
     from splendor.entity_attention import EntityAttention

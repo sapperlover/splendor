@@ -1,0 +1,30 @@
+{
+  "checkpoint": {
+    "path": "runs/entity_attention_r30_value_weight_20261011/value025/checkpoints/final.pt",
+    "sha256": "3e870b839ca1c9dddc6853c7bc8fca14efea428afdebc6b425578a192ee475e9"
+  },
+  "clip_fraction": 1.0,
+  "identical_sample_sequence_to_weight1": true,
+  "mean_preclip_grad_norm": 2.9826954065561293,
+  "parameter_drift": {
+    "actor": {
+      "delta_l2": 0.07037144840802417,
+      "delta_max_abs": 0.003275930881500244,
+      "tensor_count": 6
+    },
+    "critic": {
+      "delta_l2": 0.058939504587626555,
+      "delta_max_abs": 0.002149157226085663,
+      "tensor_count": 6
+    },
+    "shared_encoder": {
+      "delta_l2": 0.3061659783895841,
+      "delta_max_abs": 0.0035524889826774597,
+      "tensor_count": 57
+    }
+  },
+  "sample_draws": 256000,
+  "steps": 1000,
+  "value_loss_weight": 0.25,
+  "zero_weight_semantics": "No value-loss gradient; existing AdamW moments/decay and shared encoder can still change critic predictions. No parameter freezing or optimizer reset."
+}

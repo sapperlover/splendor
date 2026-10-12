@@ -1,0 +1,91 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 14920000,
+  "device": "cuda",
+  "execution": {
+    "active_games": 100,
+    "actor_projection": false,
+    "backend": "native_batched",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "inference_mode": "compiled",
+    "max_batch_size": 64,
+    "max_batch_wait_ms": 0.0
+  },
+  "max_completed_turns": 400,
+  "metadata": {
+    "candidate_sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec",
+    "candidate_step": 34398,
+    "experiment": "entity_attention_recent_pool_20261009",
+    "panel": "selected_early_vs_theta5000",
+    "seeds": "shared DEV with final103194 and previous offline9500 panels",
+    "selection_rule": "minimum full-heldout policy_KL + value_MSE among the three points and existing step34398; original training weights are 1:1; ties prefer earlier step",
+    "selection_sha256": "8a8e786e74df85448a0d89a111d4b5df9d2c2f1a4c197618f88abd8b2b0e8775",
+    "template_sha256": "da037027817fb2c4eb8251522f4cc07d1e64a5e3a74fc02888fbfdd8fef21377"
+  },
+  "pairs": 200,
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "recent_pool_early34398",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+    "inference": {
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "mode": "compiled",
+      "native_transport": "reused"
+    },
+    "kind": "mcts_checkpoint",
+    "name": "theta_5000",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.0,
+      "seed": 14930000,
+      "simulations": 1024
+    }
+  },
+  "policy_seed_base": 14910000,
+  "seed_start": 14900000,
+  "workers": 1
+}

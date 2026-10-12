@@ -17,6 +17,7 @@ from typing import Any
 import torch
 
 from .alphazero_checkpoint import load_alphazero_checkpoint
+from .actor_critic import model_config_from_dict
 from .alphazero_loop import LoopSeeds, SelfPlaySection
 from .alphazero_recording import ReferenceWriter, append_json, read_json, sha256, source_identity, write_json
 from .alphazero_replay import PositionPool, ReplayRun, build_replay_index
@@ -82,10 +83,39 @@ class HybridConfig:
     # Unlike execution cache sizing this changes the learning algorithm.
     learning_rate_override: float | None = None
     policy_averaging: PolicyAveragingConfig | None = None
+    # Warm start on a separately frozen, multi-source offline pool.
+    initialization: dict[str, Any] | None = None
+    fitting_diagnostics: dict[str, Any] | None = None
+    # Fork an existing online window without loading or evaluating an offline pool.
+    online_only: bool = False
 
     def __post_init__(self):
         if not self.run_id:
             raise ValueError("run_id must be nonempty")
+        if type(self.online_only) is not bool:
+            raise ValueError("online_only must be bool")
+        if self.online_only and (self.initialization is not None or self.mix_schedule):
+            raise ValueError("online_only requires a replay fork and an empty mixing schedule")
+        if self.initialization is not None:
+            if set(self.initialization) != {"checkpoint", "manifest"}:
+                raise ValueError("initialization requires checkpoint and manifest identities")
+            for identity in self.initialization.values():
+                if set(identity) != {"path", "sha256"}:
+                    raise ValueError("initialization identities require path and sha256")
+        if self.fitting_diagnostics is not None:
+            if (self.initialization is None and not self.online_only) or self.split_training is not None:
+                raise ValueError("pool fitting diagnostics require joint initialized or online-only training")
+            steps = self.fitting_diagnostics["steps"]
+            if (steps != sorted(set(steps)) or not steps or steps[0] != 0
+                    or steps[-1] != self.updates_per_round
+                    or any(type(s) is not int or s < 0 for s in steps)
+                    or any(s % self.offline.learner.checkpoint_every_steps for s in steps)):
+                raise ValueError("fitting steps must include 0/final and align with checkpoints")
+            names = ("train_positions_per_generation",) if self.online_only else (
+                "train_positions_per_generation", "offline_positions_per_source_split")
+            for name in names:
+                if type(self.fitting_diagnostics[name]) is not int or self.fitting_diagnostics[name] <= 0:
+                    raise ValueError(f"{name} must be positive")
         if self.policy_averaging is not None and (self.split_training is None
                 or self.selfplay.search_config["determinizations"] != 1):
             raise ValueError("policy averaging requires split training and native N1 behavior")
@@ -146,8 +176,11 @@ class HybridConfig:
 
     def to_dict(self):
         values = {"protocol": PROTOCOL, **asdict(self)}
+        if not self.online_only:
+            del values["online_only"]
         # Preserve the frozen representation of existing joint runs.
-        for name in ("split_training", "evaluation_anchor", "learning_rate_override", "policy_averaging"):
+        for name in ("split_training", "evaluation_anchor", "learning_rate_override", "policy_averaging",
+                     "initialization", "fitting_diagnostics"):
             if values[name] is None:
                 del values[name]
         if self.split_training is not None:
@@ -162,7 +195,7 @@ class HybridConfig:
 
 
 def draw_mixed_batch(offline_pool, online_pool, rng, offline_count, online_count,
-                     *, inherited_run_ids=None):
+                     *, inherited_run_ids=None, record_rounds=False):
     samples, references = [], []
     for pool, count in ((offline_pool, offline_count), (online_pool, online_count)):
         for _ in range(count):
@@ -170,10 +203,13 @@ def draw_mixed_batch(offline_pool, online_pool, rng, offline_count, online_count
             samples.append(sample)
             references.append(reference)
     sources = {"offline": offline_count, "online": online_count}
+    if record_rounds:
+        for ref in references[offline_count:]:
+            key = f"online_round_{ref.round_index}"
+            sources[key] = sources.get(key, 0) + 1
     if inherited_run_ids is not None:
         inherited = sum(ref.run_id in inherited_run_ids for ref in references[offline_count:])
-        sources = {"offline": offline_count, "inherited_online": inherited,
-                   "branch_online": online_count - inherited}
+        sources.update(inherited_online=inherited, branch_online=online_count - inherited)
     return DrawnBatch(tuple(samples), tuple(references), online_count, offline_count, sources)
 
 
@@ -373,9 +409,11 @@ def prepare_fork(config, parent, round_number=None):
     if chosen == len(completed) and checkpoint_identity != state["latest_checkpoint"]:
         raise ValueError("fork checkpoint differs from the parent's committed latest checkpoint")
     dataset_path = parent / "offline/dataset.json"
-    dataset = read_json(dataset_path)
-    if freeze_dataset(config.offline)["digest"] != dataset["digest"]:
-        raise ValueError("fork must preserve the original frozen offline dataset")
+    dataset = None
+    if not config.online_only:
+        dataset = read_json(dataset_path)
+        if freeze_dataset(config.offline)["digest"] != dataset["digest"]:
+            raise ValueError("fork must preserve the original frozen offline dataset")
     anchor = Path(state["anchor_checkpoint"]["path"])
     if _identity(anchor) != state["anchor_checkpoint"]:
         raise ValueError("parent fixed evaluation anchor changed")
@@ -395,7 +433,17 @@ def prepare_fork(config, parent, round_number=None):
         runs[key] = {"round_index": key[0], "run_id": key[1], "root": key[2]}
     if config.split_training is not None:
         split_replay_pools(make_index({"games": records}, config.offline.replay_cache_bytes), config)
-    inputs = [parent / "config.json", snapshot_path, dataset_path, parent / "offline/fixed_validation.json"]
+    inputs = [parent / "config.json", snapshot_path]
+    if not config.online_only:
+        inputs.extend([dataset_path, parent / "offline/fixed_validation.json"])
+    train_refs = stage / "fitting/train_references.json"
+    if config.online_only and config.fitting_diagnostics is not None:
+        references = read_json(train_refs)
+        # Freeze exactly the parent's fixed subsets for still-active generations.
+        active = {(g["round_index"], g["game_id"]) for g in games}
+        inherited_refs = [ref for ref in references["references"]
+                          if (ref["round_index"], ref["game_id"]) in active]
+        inputs.append(train_refs)
     fixed_online = [parent / name for name in ("fixed_online_dataset.json", "fixed_online_validation.json")]
     if any(path.exists() for path in fixed_online):
         if not all(path.exists() for path in fixed_online):
@@ -404,8 +452,12 @@ def prepare_fork(config, parent, round_number=None):
     result = {"protocol": "az-hybrid-fork-v1", "parent_run": str(parent), "parent_round": chosen,
               "parent_checkpoint": checkpoint_identity, "anchor_checkpoint": state["anchor_checkpoint"],
               "online_round_offset": payload.round_index, "games": records,
-              "inherited_runs": list(runs.values()), "offline_dataset_digest": dataset["digest"],
+              "inherited_runs": list(runs.values()), "offline_dataset_digest": dataset["digest"] if dataset else None,
               "inputs": [{"path": str(p.resolve()), "sha256": sha256(p)} for p in inputs]}
+    if config.online_only:
+        result["online_only"] = True
+        if config.fitting_diagnostics is not None:
+            result["train_references"] = inherited_refs
     result["digest"] = _digest(result)
     return result
 
@@ -413,14 +465,15 @@ def prepare_fork(config, parent, round_number=None):
 def _initialize_fork(output, manifest):
     parent = Path(manifest["parent_run"])
     offline = output / "offline"
-    offline.mkdir(parents=True, exist_ok=True)
     checkpoints = output / "checkpoints"
     checkpoints.mkdir(parents=True, exist_ok=True)
     initial, anchor = checkpoints / "fork_initial.pt", checkpoints / "theta_5000.pt"
     _copy_checkpoint(Path(manifest["parent_checkpoint"]["path"]), initial)
     _copy_checkpoint(Path(manifest["anchor_checkpoint"]["path"]), anchor)
-    for filename in ("dataset.json", "fixed_validation.json"):
-        shutil.copyfile(parent / "offline" / filename, offline / filename)
+    if not manifest.get("online_only", False):
+        offline.mkdir(parents=True, exist_ok=True)
+        for filename in ("dataset.json", "fixed_validation.json"):
+            shutil.copyfile(parent / "offline" / filename, offline / filename)
     # Preserve the shared historical holdout even when its games leave replay.
     for filename in ("fixed_online_dataset.json", "fixed_online_validation.json"):
         if (parent / filename).exists():
@@ -438,6 +491,8 @@ def _load_fork(output, state, config):
     if sha256(path) != state["fork_manifest_sha256"]:
         raise ValueError("frozen fork manifest changed")
     manifest = read_json(path)
+    if manifest.get("online_only", False) != config.online_only:
+        raise ValueError("fork online-only mode changed")
     if manifest["online_round_offset"] != state["online_round_offset"]:
         raise ValueError("fork round offset changed")
     if sha256(output / "checkpoints/fork_initial.pt") != manifest["parent_checkpoint"]["sha256"]:
@@ -478,9 +533,65 @@ def _replay_runs(config, output, r, offset, fork):
     return runs
 
 
+def frozen_offline_dataset(config):
+    if config.initialization is None:
+        return freeze_dataset(config.offline)
+    identity = config.initialization["manifest"]
+    path = Path(identity["path"])
+    if sha256(path) != identity["sha256"]:
+        raise ValueError("frozen offline pool manifest changed")
+    games = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    keys = {(g["round_index"], g["game_id"]) for g in games}
+    if len(keys) != len(games) or {g["split"] for g in games} != {"train", "validation"}:
+        raise ValueError("offline pool requires unique games and preserved train/validation splits")
+    if set(config.offline.rounds) != {g["round_index"] for g in games}:
+        raise ValueError("offline source rounds differ from the frozen manifest")
+    for game in games:
+        stat = Path(game["path"]).stat()
+        if stat.st_size != game["size"] or stat.st_mtime_ns != game["mtime_ns"]:
+            raise ValueError(f"offline source archive changed: {game['path']}")
+    dataset = {"protocol": "az-offline-data-v1", "games": games,
+               "sources": [identity], "scope": "frozen multi-source whole-game splits; original behavior labels"}
+    dataset["digest"] = _digest(dataset)
+    return dataset
+
+
+def prepare_initialization(config):
+    identity = config.initialization["checkpoint"]
+    if sha256(Path(identity["path"])) != identity["sha256"]:
+        raise ValueError("initial checkpoint changed")
+    payload = load_alphazero_checkpoint(identity["path"])
+    original, target = dict(payload.learner_config), asdict(config.offline.learner)
+    # Checkpoint cadence is execution/recording only; AdamW settings stay intact.
+    original.pop("checkpoint_every_steps")
+    target.pop("checkpoint_every_steps")
+    if original != target:
+        raise ValueError("warm start must preserve the learner/optimizer settings")
+    if payload.model_config != asdict(model_config_from_dict(config.offline.model_config)):
+        raise ValueError("warm start architecture differs from configuration")
+    return frozen_offline_dataset(config)
+
+
+def _initialize_checkpoint(output, config):
+    dataset = prepare_initialization(config)
+    offline = output / "offline"
+    write_json(offline / "dataset.json", dataset)
+    index = make_index(dataset, config.offline.replay_cache_bytes // 2)
+    write_json(offline / "fixed_validation.json", freeze_validation(index, config.offline))
+    checkpoint = output / "checkpoints/starting_model.pt"
+    checkpoint.parent.mkdir(parents=True, exist_ok=True)
+    _copy_checkpoint(Path(config.initialization["checkpoint"]["path"]), checkpoint)
+    return {"protocol": PROTOCOL, "completed_rounds": [], "latest_checkpoint": _identity(checkpoint),
+            "anchor_checkpoint": _identity(checkpoint)}
+
+
 def run_hybrid(config, output, *, resume=False, online_rounds=None, forever=False,
                max_steps_this_session=None, fork_from=None, fork_round=None,
-               replay_cache_bytes_override=None):
+               replay_cache_bytes_override=None, round_callback=None, round_commit_callback=None):
+    if config.online_only and not resume and fork_from is None:
+        raise ValueError("online-only training must inherit a completed replay fork")
+    if config.initialization is not None and fork_from is not None:
+        raise ValueError("checkpoint initialization and inherited replay fork are mutually exclusive")
     if config.split_training is not None and not resume and fork_from is None:
         raise ValueError("split training must fork from a completed hybrid replay window")
     if config.learning_rate_override is not None and not resume and fork_from is None:
@@ -503,7 +614,7 @@ def run_hybrid(config, output, *, resume=False, online_rounds=None, forever=Fals
     with (output / ".hybrid.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return _run_hybrid(config, output, resume, online_rounds, forever, max_steps_this_session,
-                           fork_from, fork_round, replay_cache_bytes_override)
+                           fork_from, fork_round, replay_cache_bytes_override, round_callback, round_commit_callback)
 
 
 def _algorithm_config(raw):
@@ -515,7 +626,7 @@ def _algorithm_config(raw):
 
 
 def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_from, fork_round,
-                replay_cache_bytes_override):
+                replay_cache_bytes_override, round_callback=None, round_commit_callback=None):
     torch.set_num_threads(1)
     execution = ExecutionConfig(**config.selfplay.execution)
     if config.evaluation_anchor is not None:
@@ -532,7 +643,8 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
     else:
         if resume:
             raise ValueError("cannot resume an uninitialized hybrid run")
-        state = (_initialize_fork(output, prepare_fork(config, fork_from, fork_round))
+        state = (_initialize_checkpoint(output, config) if config.initialization is not None else
+                 _initialize_fork(output, prepare_fork(config, fork_from, fork_round))
                  if fork_from is not None else
                  {"protocol": PROTOCOL, "completed_rounds": [], "latest_checkpoint": None})
         write_json(state_path, state)
@@ -557,7 +669,8 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                 "inductor_compile_threads_env": os.environ.get("TORCHINDUCTOR_COMPILE_THREADS"),
                 "collection_execution": asdict(execution)})
     offline_root = output / "offline"
-    anchor = output / "checkpoints/theta_5000.pt"
+    anchor = output / ("checkpoints/starting_model.pt" if config.initialization is not None
+                       else "checkpoints/theta_5000.pt")
     if state["latest_checkpoint"] is None:
         previous = sorted((offline_root / "checkpoints").glob("step-*.pt"))
         before = load_alphazero_checkpoint(previous[-1]).total_train_step if previous else 0
@@ -578,15 +691,20 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
         raise ValueError("fixed theta_5000 checkpoint changed")
     evaluation_anchor = (Path(config.evaluation_anchor["path"]).resolve()
                          if config.evaluation_anchor is not None else anchor)
-    # Check frozen original source identities on every invocation, including pure online.
-    dataset = read_json(offline_root / "dataset.json")
-    if freeze_dataset(config.offline)["digest"] != dataset["digest"]:
-        raise ValueError("original offline dataset changed")
-    cache_half = cache_bytes // 2
-    off_index = make_index(dataset, cache_half)
-    off_pool = PositionPool(off_index.split_games("train"), off_index.cache, "offline")
-    old_fixed = read_json(offline_root / "fixed_validation.json")
-    offline_holdout_keys = {(ref["round_index"], ref["game_id"]) for ref in old_fixed["references"]}
+    dataset = off_index = off_pool = old_fixed = None
+    cache_half = 0 if config.online_only else cache_bytes // 2
+    if not config.online_only:
+        # Legacy runs continue to verify and observe their frozen offline pool.
+        dataset = read_json(offline_root / "dataset.json")
+        if frozen_offline_dataset(config)["digest"] != dataset["digest"]:
+            raise ValueError("original offline dataset changed")
+        off_index = make_index(dataset, cache_half)
+        if config.initialization is not None:
+            from .compact_game_cache import CompactGameCache
+            off_index.cache = CompactGameCache(cache_half)
+        off_pool = PositionPool(off_index.split_games("train"), off_index.cache, "offline")
+        old_fixed = read_json(offline_root / "fixed_validation.json")
+        offline_holdout_keys = {(ref["round_index"], ref["game_id"]) for ref in old_fixed["references"]}
     _emit("replay_cache_capacity", offline_bytes=cache_half, online_bytes=cache_bytes - cache_half,
           frozen_total_bytes=config.offline.replay_cache_bytes)
     online_cache = None
@@ -594,11 +712,12 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
         if budget is not None and budget <= 0:
             break
         r = len(state["completed_rounds"])
+        display_round = offset + r + 1 if config.online_only else r + 1
         quotas = config.quotas(r)
-        if quotas[0] == 0:
+        if quotas[0] == 0 and off_index is not None:
             removed = off_index.cache.retain(offline_holdout_keys)
             if removed:
-                _emit("replay_cache_pruned", round=r + 1, source="offline", removed_games=removed,
+                _emit("replay_cache_pruned", round=display_round, source="offline", removed_games=removed,
                       **off_index.cache.stats())
         data_round = offset + r
         stage = output / "rounds" / f"round-{r:03d}"
@@ -617,31 +736,31 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             frozen_execution = asdict(ExecutionConfig(**read_json(manifest_path)["config"]["execution"]))
             if any(raw["execution"].get(name) != frozen_execution[name]
                    for name in COLLECTION_BATCHING_FIELDS):
-                _emit("collection_batching_preserved", round=r + 1,
+                _emit("collection_batching_preserved", round=display_round,
                       **{name: frozen_execution[name] for name in COLLECTION_BATCHING_FIELDS})
             for name in COLLECTION_BATCHING_FIELDS:
                 raw["execution"][name] = frozen_execution[name]
         collection = FastSelfPlayConfig.from_dict(raw)
-        _emit("collect_start", round=r + 1, teacher=teacher["path"], games=config.new_games_per_round)
+        _emit("collect_start", round=display_round, teacher=teacher["path"], games=config.new_games_per_round)
         devices = list(range(torch.cuda.device_count())) if config.offline.learner.device == "cuda" else []
         with torch.random.fork_rng(devices=devices):
             try:
                 summary = generate(collection, root, resume=(root / "manifest.json").exists(),
-                                   progress_callback=lambda done, total: _emit("collect_progress", round=r + 1,
+                                   progress_callback=lambda done, total: _emit("collect_progress", round=display_round,
                                                                                completed=done, total=total))
             finally:
                 _release_inference_memory()
         if summary["completed_games"] != config.new_games_per_round or summary["missing_games"]:
             raise RuntimeError("online collection is incomplete")
         if config.policy_averaging is not None:
-            _emit("policy_averaging_start", round=r + 1, samples=4, behavior_search_reused=True, extra_searches=3)
+            _emit("policy_averaging_start", round=display_round, samples=4, behavior_search_reused=True, extra_searches=3)
             with torch.random.fork_rng(devices=devices):
                 try:
                     generate_labels(root, stage / "policy_labels", config.policy_averaging,
                                     device=config.offline.learner.device,
                                     progress_callback=lambda block, repeat, done, total:
                                     _emit("policy_averaging_search" if block < 0 else "policy_averaging_chunk",
-                                          round=r + 1, block=block, repeat=repeat,
+                                          round=display_round, block=block, repeat=repeat,
                                           completed_roots=done, total_roots=total))
                 finally:
                     _release_inference_memory()
@@ -653,6 +772,9 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                                    state_path=output / "online_replay_index.json", allowed_game_keys=allowed_keys)
         if online_cache is not None:
             index.cache = online_cache
+        elif config.initialization is not None or config.online_only:
+            from .compact_game_cache import CompactGameCache
+            index.cache = CompactGameCache(cache_bytes - cache_half)
         online_cache = index.cache
         fixed_online = _fixed_online(config, index, output, first_online_round=offset)
         online_keep_keys = {game.key for game in index.games}
@@ -660,7 +782,7 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             online_keep_keys.update(game.key for game in fixed_online[0].games)
         removed = online_cache.retain(online_keep_keys)
         if removed:
-            _emit("replay_cache_pruned", round=r + 1, source="online", removed_games=removed,
+            _emit("replay_cache_pruned", round=display_round, source="online", removed_games=removed,
                   **online_cache.stats())
         online_pool = PositionPool(index.split_games("train"), index.cache, "online")
         if not len(online_pool):
@@ -698,11 +820,13 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
         if snap_path.exists() and read_json(snap_path) != snapshot:
             raise ValueError("online training snapshot changed on resume")
         write_json(snap_path, snapshot)
-        identity = {"protocol": PROTOCOL, "digest": _digest([dataset["digest"], snapshot["digest"]]),
-                    "offline": {"digest": dataset["digest"], "dataset_path": str(offline_root / "dataset.json"),
-                                "run_ids": sorted({g["run_id"] for g in dataset["games"]})},
+        identity = {"protocol": PROTOCOL,
+                    "digest": _digest([dataset["digest"], snapshot["digest"]]) if dataset else snapshot["digest"],
                     "online": {"digest": snapshot["digest"], "dataset_path": str(snap_path),
                                "run_ids": sorted({g.run_id for g in index.games})}}
+        if dataset is not None:
+            identity["offline"] = {"digest": dataset["digest"], "dataset_path": str(offline_root / "dataset.json"),
+                                   "run_ids": sorted({g["run_id"] for g in dataset["games"]})}
         if split_pools is not None:
             identity["split_training"] = snapshot["split_training"]
             for name in ("policy_recent", "value_recent", "value_history"):
@@ -716,7 +840,9 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
         else:
             payload = load_alphazero_checkpoint(teacher["path"])
             first_override = config.learning_rate_override is not None and r == 0 and fork is not None
+            warm_start = config.initialization is not None and r == 0
             learner = AlphazeroLearner.resume(teacher["path"],
+                      type(learner_config)(**payload.learner_config) if warm_start else
                       config.offline.learner if first_override else learner_config,
                       replay_identity=payload.replay_identity, round_index=payload.round_index,
                       round_steps_target=payload.round_steps_target)
@@ -724,6 +850,8 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                 learner.config = learner_config
                 for group in learner.optimizer.param_groups:
                     group["lr"] = learner_config.learning_rate
+            if warm_start:
+                learner.config = learner_config
             learner.round_index, learner.round_train_step = data_round + 1, 0
             learner.round_steps_target = config.updates_per_round
             learner.replay_identity, learner.parent_checkpoint = identity, teacher
@@ -749,9 +877,10 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             write_json(before_path, before)
         split_grad_norms = None
         if split_pools is None:
-            writer = HybridReferenceWriter(stage / "usage", session, identity, quotas)
+            writer = (HybridReferenceWriter(stage / "usage", session, identity, (quotas[1],), ("online",))
+                      if config.online_only else HybridReferenceWriter(stage / "usage", session, identity, quotas))
             drawer = lambda rng: draw_mixed_batch(off_pool, online_pool, rng, *quotas,
-                                                  inherited_run_ids=inherited_ids)
+                inherited_run_ids=inherited_ids, record_rounds=config.fitting_diagnostics is not None)
         else:
             split = config.split_training
             names = ("policy_recent", "value_recent", "value_history")
@@ -767,8 +896,15 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                 sources = {**batch.source_positions, "policy_m4": sum(target_store.is_averaged(s) for s in batch.samples)}
                 return replace(batch, samples=tuple(target_store.transform(s) for s in batch.samples),
                                source_positions=sources)
+        fitting_observer = None
+        if config.fitting_diagnostics is not None:
+            from .pool_fitting import RoundFitting
+            fitting_observer = RoundFitting(config.fitting_diagnostics, output, stage, off_index, index, dataset,
+                inherited_references=fork.get("train_references") if fork else None)
+            fitting_observer(learner, cps / (f"step-{learner.round_train_step:09d}.pt"
+                                           if learner.round_train_step else "initial.pt"))
         start_step = learner.round_train_step
-        _emit("train_start", round=r + 1, global_step=learner.total_train_step,
+        _emit("train_start", round=display_round, global_step=learner.total_train_step,
               offline_positions=quotas[0], online_positions=quotas[1], target=config.updates_per_round)
         try:
             run_training_round(learner, steps_target=config.updates_per_round,
@@ -776,8 +912,9 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                                validation_samples=(), validation_games=0, checkpoint_dir=cps,
                                metrics_path=stage / "training_metrics.jsonl", reference_writer=writer,
                                batch_drawer=drawer, split_grad_norms=split_grad_norms,
+                               checkpoint_callback=fitting_observer,
                                max_steps_this_session=budget,
-                               progress_callback=lambda row: _emit("train_progress", round=r + 1,
+                               progress_callback=lambda row: _emit("train_progress", round=display_round,
                                    global_step=row["total_train_step"], step=row["round_train_step"],
                                    loss=row["total_loss"]) if row["round_train_step"] % 100 == 0 else None)
         finally:
@@ -789,7 +926,7 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
         final = cps / "final.pt"
         _copy_checkpoint(cps / f"step-{learner.round_train_step:09d}.pt", final)
         validation = {"total_train_step": learner.total_train_step,
-                      "offline_fixed": evaluate_validation(learner, off_index, old_fixed),
+                      "offline_fixed": evaluate_validation(learner, off_index, old_fixed) if off_index else None,
                       "current": evaluate_validation(learner, current, **validation_kwargs)}
         if recent_validation is not None:
             validation["recent"] = evaluate_validation(learner, recent_validation, **validation_kwargs)
@@ -799,9 +936,23 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             validation["online_fixed"] = evaluate_validation(learner, *fixed_online)
         write_json(stage / "validation_after.json", validation)
         usage = {
-            name: {"draws": config.updates_per_round * count, "pool_positions": len(pool),
-                   "average_exposure": config.updates_per_round * count / len(pool)}
+            name: {"draws": config.updates_per_round * count, "pool_positions": len(pool) if pool else 0,
+                   "average_exposure": config.updates_per_round * count / len(pool) if pool else None}
             for name, count, pool in zip(("offline", "online"), quotas, (off_pool, online_pool))}
+        if config.fitting_diagnostics is not None:
+            by_round = {}
+            for line in (stage / "training_metrics.jsonl").read_text().splitlines():
+                record = json.loads(line)
+                if record["event"] == "train_step":
+                    for key, count in record["source_positions"].items():
+                        if key.startswith("online_round_"):
+                            by_round[key] = by_round.get(key, 0) + count
+            usage["online_by_generation"] = [{"round_index": gen,
+                "train_positions": sum(g.decision_count for g in index.split_games("train") if g.round_index == gen),
+                "actual_draws": by_round.get(f"online_round_{gen}", 0)}
+                for gen in sorted({g.round_index for g in index.games})]
+            for entry in usage["online_by_generation"]:
+                entry["average_exposure"] = entry["actual_draws"] / entry["train_positions"]
         if split_pools is not None:
             counts = snapshot["split_training"]["quotas"]
             usage = {name: {"draws": config.updates_per_round * counts[name], "pool_positions": len(pool),
@@ -833,18 +984,30 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                         draws[source] += record["source_positions"][source]
             usage["online_replacement"] = {**snapshot["replacement"], "actual_draws": draws}
         write_json(stage / "source_usage.json", usage)
-        if config.evaluation_every_rounds and (r + 1) % config.evaluation_every_rounds == 0:
+        evaluation_round = data_round + 1 if config.online_only else r + 1
+        if config.evaluation_every_rounds and evaluation_round % config.evaluation_every_rounds == 0:
             with torch.random.fork_rng(devices=devices):
                 try:
                     _evaluation(config, final, evaluation_anchor, stage)
                 finally:
                     _release_inference_memory()
+        if round_callback is not None:
+            with torch.random.fork_rng(devices=devices):
+                try:
+                    round_callback(display_round, final, stage)
+                finally:
+                    _release_inference_memory()
         state["latest_checkpoint"] = _identity(final)
         state["completed_rounds"].append(r)
         write_json(state_path, state)
-        append_json(output / "round_metrics.jsonl", {"round_index": r, "teacher": teacher,
-                    "checkpoint": state["latest_checkpoint"], "quotas": list(quotas), "validation": validation})
-        _emit("round_complete", round=r + 1, global_step=learner.total_train_step,
+        round_record = {"round_index": r, "teacher": teacher,
+                       "checkpoint": state["latest_checkpoint"], "quotas": list(quotas), "validation": validation}
+        if config.online_only:
+            round_record.update(absolute_round=data_round + 1, local_round=r + 1)
+        append_json(output / "round_metrics.jsonl", round_record)
+        if round_commit_callback is not None:
+            round_commit_callback(data_round + 1, final, stage, state)
+        _emit("round_complete", round=display_round, global_step=learner.total_train_step,
               checkpoint=str(final), online_fraction=quotas[1] / config.offline.learner.batch_size)
         del learner
         gc.collect()
@@ -873,7 +1036,8 @@ def main(argv=None):
     if args.fork_round is not None and args.fork_from is None:
         parser.error("--fork-round requires --fork-from")
     if args.check_config:
-        data = freeze_dataset(config.offline)
+        data = (prepare_initialization(config) if config.initialization is not None
+                else freeze_dataset(config.offline))
         fork = prepare_fork(config, args.fork_from, args.fork_round) if args.fork_from else None
         if config.evaluation_anchor is not None:
             if sha256(Path(config.evaluation_anchor["path"])) != config.evaluation_anchor["sha256"]:

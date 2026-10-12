@@ -10,7 +10,7 @@ from typing import Literal
 
 import torch
 
-from .actor_critic import ActorCritic, ActorCriticConfig, build_actor_critic
+from .actor_critic import ActorCritic, ActorCriticConfig, MODEL_WEIGHTS_FORMAT_VERSION, build_actor_critic
 from .alphazero_checkpoint import is_alphazero_payload, normalize_actor_critic_payload
 from .contracts import Policy
 from .features import FEATURE_SCHEMA_VERSION
@@ -58,6 +58,15 @@ def _now_utc() -> str:
 
 def _checkpoint_payload(path: Path, device: torch.device | str) -> dict[str, object]:
     payload = torch.load(path, map_location=device, weights_only=True)
+    if payload.get("checkpoint_schema") == "splendor-frozen-actor-critic-v1":
+        if payload.get("format_version") != MODEL_WEIGHTS_FORMAT_VERSION:
+            raise ValueError("unsupported frozen model weights format")
+        if payload.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+            raise ValueError("neural opponent feature schema mismatch")
+        if payload.get("metadata", {}).get("rules_version") != RULESET_ID:
+            raise ValueError("neural opponent rules version mismatch")
+        return {"model_config": payload["config"], "model_state_dict": payload["state_dict"],
+                "feature_schema_version": payload["feature_schema_version"], "metadata": payload["metadata"]}
     if is_alphazero_payload(payload):
         # AlphaZero checkpoints are read-only model sources here; their
         # optimizer state stays with the AlphaZero learner.

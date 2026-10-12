@@ -1,0 +1,38 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 30520000,
+  "device": "cpu",
+  "max_completed_turns": 400,
+  "metadata": {
+    "experiment": "entity_attention_recent_pool_crossplay_20261010",
+    "kind": "greedy",
+    "models": {
+      "policy_a": {
+        "checkpoint": "runs/entity_attention_offline_9500_replay/checkpoints/step-000009500.pt",
+        "sha256": "a179d043b35b302a4c5edaff7a37f00a2f77a8510925817c19f4c4b1d72835b0"
+      },
+      "policy_b": {
+        "checkpoint": "runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+        "sha256": "6fec2039cfe5fa7e8775ec5b5692a5defadfa3ab21bdb398e400696be17b08db"
+      }
+    },
+    "panel": "G04_offline9500_vs_theta5000",
+    "protocol": "recent-pool-crossplay-20261010-v1",
+    "seed_scope": "fresh fixed crossplay seeds"
+  },
+  "pairs": 200,
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_offline_9500_replay/checkpoints/step-000009500.pt",
+    "kind": "greedy_checkpoint",
+    "name": "offline9500"
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+    "kind": "greedy_checkpoint",
+    "name": "theta5000"
+  },
+  "policy_seed_base": 30510000,
+  "seed_start": 30500000,
+  "workers": 8
+}
