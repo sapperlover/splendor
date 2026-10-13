@@ -14,7 +14,8 @@ from .alphazero_replay import _GameCache
 from .selfplay_data import STATE_FIELDS, SelfPlaySample, load_game
 
 NEEDED = (*STATE_FIELDS, "candidate_offsets", "candidate_features", "policy_target",
-          "behavior_policy", "value_target", "policy_weight", "value_weight", "decision_index", "player_id")
+          "behavior_policy", "root_network_prior", "value_target", "policy_weight", "value_weight", "decision_index", "player_id",
+          "completed_player_turns")
 
 
 class DictionaryArray:
@@ -37,7 +38,7 @@ def compact(arrays, metadata):
               and (name in STATE_FIELDS or name == "candidate_features") else arrays[name]
               for name in NEEDED}
     size = sum(a.nbytes for a in result.values())
-    meta = {k: metadata[k] for k in ("game_id", "run_id", "round_index", "split")}
+    meta = {k: metadata[k] for k in ("game_id", "run_id", "round_index", "split", "terminal_result")}
     return result, meta, size
 
 

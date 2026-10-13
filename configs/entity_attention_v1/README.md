@@ -4,6 +4,7 @@
 
 | 配置 | 用途与前置条件 |
 | --- | --- |
+| `offline_r24_r43_policy_surprise_20261013.json`、`offline_r24_r43_value_auxiliary_20261013.json` | 原R43起点，绝对R24–43的20000局固定池，同数据／同抽样各22681步；分别启用50% PSW、分差与剩余回合辅助头（各权重0.25）。由 `splendor.offline_objectives` 启动／恢复，只训练，不自动评测；两组训练完成，随后单独对原R43各200pair greedy得分50.000%／50.125%，未确认提升。[设置和命令](../../artifacts/entity_attention_r24_r43_offline_objectives_20261013/README.md)、[结果](../../artifacts/entity_attention_r24_r43_offline_objectives_20261013/results.md) |
 | `r9_online_lr2e5_1000_forever_20261011.json`、`hybrid_r9_online_lr2e5_1000_forever_20261011.json` | 原第9轮／38898步续训，继承第4–9轮6000局及原split；纯在线、1000局／1000步／lr2e-5／batch256、B500采集。1000步完整模型无条件升级；每轮greedy、绝对第12／15……轮搜索各200pair；无限循环，同一命令启动／恢复。入口及只读check已通过，正式未启动。[流程与命令](../../docs/guides/entity_attention_p4_pool_forever_plan_20261011_zh-CN.md) |
 | `p4_pool_iteration_20261010.json`、`hybrid_p4_pool_20261010.json` | P4/34398步及连续AdamW，9轮1000局/500步，旧池／在线224／32渐变至第6轮32／224，第7轮起仅在线近6000局；采集B500、Graph档16/32/64/128/192/256/384/500。教师无条件升级；主线、同预算对照、全量留出及14面板已全部完成，终点搜索胜过三个已测对手，限定单seed/DEV，未确定最优参数。[完整报告](../../docs/reports/entity_attention_p4_pool_iteration_20261010_zh-CN.md)、[数据与命令](../../docs/guides/entity_attention_p4_pool_iteration_zh-CN.md) |
 | `offline_attention.json` | 新结构随机初始化，全部十轮原 split，batch256、12,045步、4 GiB LRU；写 `runs/entity_attention_offline` |

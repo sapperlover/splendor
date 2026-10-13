@@ -1,8 +1,16 @@
 # Splendor 双人 AI
 
+2026-10-13完成[R24–43固定数据的PSW／value双辅助目标离线训练与greedy评测](artifacts/entity_attention_r24_r43_offline_objectives_20261013/results.md)：两组从R43出发，各22681步；final对原R43的200pair greedy得分50.000%／50.125%，均未确认提升。辅助标签学进去了，胜负value留出后期回升；未测搜索棋力。
+
 双人基础版规则引擎、Deep-Sets／实体注意力 Actor–Critic、PPO、冻结网络搜索与 AlphaZero 式训练，含 C++ 原生后端和本地人机网页。规则范围为双人基础版。
 
 从 [文档导航](docs/index.md) 查找操作说明；[当前状态](docs/current_project_state_zh-CN.md) 区分完成、未完成与历史方案；[实验索引](artifacts/experiment_index.json) 定位原始证据。
+
+2026-10-12完成[第24轮模型的4.3万局历史池离线实验](artifacts/entity_attention_r24_history_pool_20261012/README.md)：＋24388步节点对原R24的独立500pair得分54.00% [50.80%,57.10%]，支持本对手／预算下的小幅收益。已启动[离线候选直接对R43，再从R43同池离线训练与评测](artifacts/entity_attention_r43_history_pool_20261012/README.md)；新链路结果以其阶段进度和结果表为准。
+
+2026-10-13新增 [R43 起点 S4096/N1、policy 2k／value 6k 连续自迭代](artifacts/entity_attention_r43_s4096_p2k_v6k_20261013/README.md)：每轮仍 1000 局／1000 步、lr2e-5、每头 B256，保持联合更新；本次会话上限 8 小时。小池此前仅改善部分 Train 拟合，本分支尚无收益结论。
+
+2026-10-13完成 [R43 固定4k S4096、Policy Surprise Weighting 对照](artifacts/entity_attention_r43_policy_surprise_s4096_20261013/README.md)：同起点／同抽样各1000步，50%局内surprise权重只用于policy。加权留出KL优于不加权对照，但普通留出KL更差；200pair greedy为81.625%对80.875%，配对差区间跨0，未确认棋力收益。该次实验没有使用value辅助头；其后已接入上文独立的R24–43离线入口。
 
 较早 M4 分支的结论见 [M4 与固定数据诊断完整结论](docs/reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md)。M4 分支已完成12轮／17700步，固定目标可以拟合，稳定留出收益和棋力收益尚未确认；较优步数、学习率和历史配额仍未确定。运行与恢复见 [M4 指南](docs/guides/entity_attention_avg4_iteration_zh-CN.md)，行为变化诊断见 [固定256局面测试集](docs/guides/decision_probe_zh-CN.md)。
 
@@ -10,7 +18,7 @@
 
 ## 环境与使用
 
-从原第9轮终点38898步继续的[长期纯在线续训入口与命令](docs/guides/entity_attention_p4_pool_forever_plan_20261011_zh-CN.md)已准备：继承6000局窗口，1000局／1000步／lr2e-5，每轮1000步完整模型无条件升级，支持同一命令中断续跑；正式任务尚未启动。
+从原第9轮终点38898步继续的[长期纯在线续训入口与命令](docs/guides/entity_attention_p4_pool_forever_plan_20261011_zh-CN.md)：继承6000局窗口，1000局／1000步／lr2e-5，每轮1000步完整模型无条件升级，支持同一命令中断续跑；已完成绝对第43轮，详见[当前结果](artifacts/entity_attention_r9_online_lr2e5_1000_forever_20261011/results.md)。
 
 从仓库根目录执行，使用 Conda `splendor`，设置 `PYTHONPATH=src`。依赖见 `pyproject.toml`，C++ 扩展构建见 [原生后端指南](docs/guides/native_search_zh-CN.md)。
 
@@ -36,5 +44,6 @@ conda run -n splendor env PYTHONPATH=src python -m splendor.web_app
 | `artifacts/` | 长期实验交付物、必要原始统计；[产物约定](artifacts/README.md) |
 | `runs/` | 训练数据、checkpoint、TensorBoard；Git 忽略 |
 | `runtime/` | 日志、缓存、运行状态、失败现场、本地保全；Git 忽略 |
+| `archive/` | [本地冷数据归档](archive/README.md)及[逐来源结论说明](artifacts/repository_archive_20261012/conclusions.md)；真实产物保留来源结构，旧路径通过符号链接访问 |
 
 实验目录保留原身份，运行与恢复路径保持稳定。历史资料、移动清单与本地保全位置见 [本次整理记录](artifacts/repository_cleanup_20261009/README.md)。

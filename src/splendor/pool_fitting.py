@@ -11,6 +11,8 @@ from .features import GLOBAL_FEATURE_NAMES, SCALES
 from .offline_train import _digest as digest
 from .rng import DeterministicRng
 from .selfplay_data import collate_selfplay_samples
+from .alphazero_replay import ReplayReference
+from .policy_surprise import PolicySurpriseConfig, PolicySurpriseWeighting
 
 def freeze_subsets(records, seed, per_source):
     rng = DeterministicRng(seed)
@@ -44,6 +46,10 @@ def ratios(sums):
         x = max(0., sums["pred_sq"] - sums["pred"] ** 2 / v)
         y = max(0., sums["target_sq"] - sums["target"] ** 2 / v)
         result["value_correlation"] = (sums["product"] - sums["pred"] * sums["target"] / v) / math.sqrt(x*y) if x*y > 0 else None
+    if "surprise_weight" in sums:
+        weight = sums["surprise_weight"]
+        result["surprise_policy_ce"] = sums["surprise_ce"] / weight if weight else None
+        result["surprise_policy_kl"] = sums["surprise_kl"] / weight if weight else None
     return result
 
 
@@ -90,12 +96,16 @@ class RoundFitting:
                 raise ValueError("fitting result differs from its committed checkpoint")
             return
         tick = time.perf_counter()
+        surprise = self.config.get("policy_surprise_weighting")
+        weighting = PolicySurpriseConfig(**surprise) if surprise is not None else None
         result = {"round_step": step, "total_train_step": learner.total_train_step,
             "checkpoint": str(checkpoint.resolve()), "checkpoint_sha256": sha256(checkpoint),
             "offline_fixed": evaluate(learner, self.offline_index, self.offline_records, fixed=self.offline_fixed)
                              if self.offline_index is not None else None,
-            "online_train_fixed": evaluate(learner, self.online_index, self.online_records, fixed=self.train_fixed),
-            "online_validation_full": evaluate(learner, self.online_index, self.online_records),
+            "online_train_fixed": evaluate(learner, self.online_index, self.online_records, fixed=self.train_fixed,
+                                            policy_surprise_weighting=weighting),
+            "online_validation_full": evaluate(learner, self.online_index, self.online_records,
+                                                policy_surprise_weighting=weighting),
             "stage_definition": "late=max(self_score,opponent_score)>=10; otherwise early_mid",
             "scope": "stored single behavior-search labels; fixed Train subsets and whole-game validation; DEV"}
         result["seconds"] = time.perf_counter() - tick
@@ -104,7 +114,7 @@ class RoundFitting:
               f"seconds={result['seconds']:.1f} path={path}", flush=True)
 
 
-def evaluate(learner, index, records, *, fixed=None):
+def evaluate(learner, index, records, *, fixed=None, policy_surprise_weighting=None):
     """Stream <= one minibatch of sample references, including full holdout."""
     by_key = {(r["round_index"], r["game_id"]): r for r in records}
     games = {g.key: g for g in index.games}
@@ -118,9 +128,16 @@ def evaluate(learner, index, records, *, fixed=None):
     score_columns = [GLOBAL_FEATURE_NAMES.index(n) for n in ("self_score_scaled", "opponent_score_scaled")]
     was_training = learner.model.training
     learner.model.eval()
+    weighter = PolicySurpriseWeighting(policy_surprise_weighting) if policy_surprise_weighting is not None else None
 
     def flush(samples, identities):
         batch = collate_selfplay_samples(samples)
+        surprise_weights = None
+        if weighter is not None:
+            refs = [ReplayReference(i["round_index"], i["run_id"], i["game_id"], s.index)
+                    for s, i in zip(samples, identities, strict=True)]
+            weighted_batch, _ = weighter.apply(batch, samples, refs)
+            surprise_weights = weighted_batch.policy_weights.astype(np.float64)
         with torch.inference_mode():
             logits, values = learner.model(batch.decisions)
             mask = torch.as_tensor(batch.decisions.candidate_mask, device=learner.device)
@@ -144,6 +161,10 @@ def evaluate(learner, index, records, *, fixed=None):
                 "entropy": float(-(probs[i]*lp[i]).sum())*pw[i], "top1": float(correct[i])*pw[i],
                 "sq_error": (pred[i]-y[i])**2, "pred": pred[i], "pred_sq": pred[i]**2,
                 "target": y[i], "target_sq": y[i]**2, "product": pred[i]*y[i]}
+            if surprise_weights is not None:
+                row.update(surprise_weight=float(surprise_weights[i]),
+                           surprise_ce=ce[i]*surprise_weights[i],
+                           surprise_kl=(ce[i]-th[i])*surprise_weights[i])
             for source in (identity["source_id"], "__all_observed__"):
                 for stage in ("all", "late" if late[i] else "early_mid"):
                     totals[f"{source}/{identity['split']}/{stage}"].update(row)

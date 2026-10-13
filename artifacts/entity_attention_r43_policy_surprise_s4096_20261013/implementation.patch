@@ -1,0 +1,710 @@
+diff --git a/src/splendor/alphazero_train.py b/src/splendor/alphazero_train.py
+index de76f55..4ab5abc 100644
+--- a/src/splendor/alphazero_train.py
++++ b/src/splendor/alphazero_train.py
+@@ -41,6 +41,7 @@ from .alphazero_checkpoint import (
+ )
+ from .alphazero_replay import PositionPool, ReplayReference
+ from .opponent_pool import load_frozen_actor_critic_checkpoint
++from .policy_surprise import PolicySurpriseConfig, PolicySurpriseWeighting
+ from .rng import DeterministicRng
+ from .selfplay_data import SelfPlayBatch, SelfPlaySample, collate_selfplay_samples
+ 
+@@ -693,6 +694,7 @@ def run_training_round(
+     batch_drawer: Callable[[DeterministicRng], DrawnBatch] | None = None,
+     split_grad_norms: tuple[float, float] | None = None,
+     joint_separate_batches: bool = False,
++    policy_surprise_weighting: PolicySurpriseConfig | None = None,
+ ) -> dict[str, Any]:
+     """Drive one round of optimizer steps and checkpoint every N updates."""
+ 
+@@ -700,6 +702,10 @@ def run_training_round(
+         raise ValueError("steps_target cannot be negative")
+     if joint_separate_batches and split_grad_norms is not None:
+         raise ValueError("joint separate batches use the single global gradient limit")
++    weighting_identity = asdict(policy_surprise_weighting) if policy_surprise_weighting is not None else None
++    if learner.replay_identity.get("policy_surprise_weighting") != weighting_identity:
++        raise ValueError("policy surprise weighting differs from checkpoint replay identity")
++    weighter = PolicySurpriseWeighting(policy_surprise_weighting) if policy_surprise_weighting is not None else None
+     if learner.round_steps_target != steps_target:
+         raise ValueError("learner step target disagrees with this training round")
+     if max_steps_this_session is not None and max_steps_this_session <= 0:
+@@ -729,6 +735,9 @@ def run_training_round(
+         draw_seconds = time.perf_counter() - tick
+         tick = time.perf_counter()
+         batch = collate_training_samples(drawn.samples)
++        weighting_stats = None
++        if weighter is not None:
++            batch, weighting_stats = weighter.apply(batch, drawn.samples, drawn.references[:len(drawn.samples)])
+         value_batch = (collate_training_samples(drawn.value_samples)
+                        if drawn.value_samples is not None else None)
+         collate_seconds = time.perf_counter() - tick
+@@ -745,6 +754,8 @@ def run_training_round(
+                                                policy_max_grad_norm=split_grad_norms[0],
+                                                value_max_grad_norm=split_grad_norms[1]))
+         update_seconds = time.perf_counter() - tick
++        if weighting_stats is not None:
++            record["policy_surprise_weighting"] = weighting_stats
+         record["seconds"] = {"draw_load": draw_seconds, "collate": collate_seconds, "update_host": update_seconds}
+         for key, value in record["seconds"].items():
+             timings[key] += value
+diff --git a/src/splendor/compact_game_cache.py b/src/splendor/compact_game_cache.py
+index 74e5ff7..d1179ed 100644
+--- a/src/splendor/compact_game_cache.py
++++ b/src/splendor/compact_game_cache.py
+@@ -14,7 +14,7 @@ from .alphazero_replay import _GameCache
+ from .selfplay_data import STATE_FIELDS, SelfPlaySample, load_game
+ 
+ NEEDED = (*STATE_FIELDS, "candidate_offsets", "candidate_features", "policy_target",
+-          "behavior_policy", "value_target", "policy_weight", "value_weight", "decision_index", "player_id")
++          "behavior_policy", "root_network_prior", "value_target", "policy_weight", "value_weight", "decision_index", "player_id")
+ 
+ 
+ class DictionaryArray:
+diff --git a/src/splendor/hybrid_train.py b/src/splendor/hybrid_train.py
+index 832bf09..436ddd6 100644
+--- a/src/splendor/hybrid_train.py
++++ b/src/splendor/hybrid_train.py
+@@ -26,6 +26,7 @@ from .evaluation import FixedEvaluationConfig, run_fixed_evaluation
+ from .offline_train import (OfflineConfig, _copy_checkpoint, _digest, evaluate_validation,
+                             freeze_dataset, freeze_validation, make_index, run_offline)
+ from .policy_averaging import (AveragedTargetStore, PolicyAveragingConfig, generate_labels, label_root)
++from .policy_surprise import PolicySurpriseConfig
+ from .selfplay_fast import ExecutionConfig, FastSelfPlayConfig, generate
+ 
+ PROTOCOL = "az-continuous-hybrid-v1"
+@@ -88,6 +89,9 @@ class HybridConfig:
+     fitting_diagnostics: dict[str, Any] | None = None
+     # Fork an existing online window without loading or evaluating an offline pool.
+     online_only: bool = False
++    # Joint updates with a narrower policy window; value keeps replay_max_games.
++    policy_replay_max_games: int | None = None
++    policy_surprise_weighting: PolicySurpriseConfig | None = None
+ 
+     def __post_init__(self):
+         if not self.run_id:
+@@ -96,6 +100,17 @@ class HybridConfig:
+             raise ValueError("online_only must be bool")
+         if self.online_only and (self.initialization is not None or self.mix_schedule):
+             raise ValueError("online_only requires a replay fork and an empty mixing schedule")
++        if self.policy_surprise_weighting is not None and (not self.online_only
++                or self.split_training is not None or self.policy_averaging is not None):
++            raise ValueError("policy surprise weighting requires joint online-only archived targets")
++        if self.policy_replay_max_games is not None:
++            if (type(self.policy_replay_max_games) is not int
++                    or not 0 < self.policy_replay_max_games <= self.replay_max_games):
++                raise ValueError("policy_replay_max_games must be in 1..replay_max_games")
++            if not self.online_only or self.split_training is not None:
++                raise ValueError("policy replay window requires joint online-only training")
++            if self.offline.model_config.get("architecture") != "entity_attention_v1":
++                raise ValueError("joint head pools require entity_attention_v1")
+         if self.initialization is not None:
+             if set(self.initialization) != {"checkpoint", "manifest"}:
+                 raise ValueError("initialization requires checkpoint and manifest identities")
+@@ -172,6 +187,8 @@ class HybridConfig:
+             values["split_training"] = SplitTrainingConfig(**values["split_training"])
+         if values.get("policy_averaging") is not None:
+             values["policy_averaging"] = PolicyAveragingConfig(**values["policy_averaging"])
++        if values.get("policy_surprise_weighting") is not None:
++            values["policy_surprise_weighting"] = PolicySurpriseConfig(**values["policy_surprise_weighting"])
+         return cls(**values)
+ 
+     def to_dict(self):
+@@ -180,7 +197,7 @@ class HybridConfig:
+             del values["online_only"]
+         # Preserve the frozen representation of existing joint runs.
+         for name in ("split_training", "evaluation_anchor", "learning_rate_override", "policy_averaging",
+-                     "initialization", "fitting_diagnostics"):
++                     "initialization", "fitting_diagnostics", "policy_replay_max_games", "policy_surprise_weighting"):
+             if values[name] is None:
+                 del values[name]
+         if self.split_training is not None:
+@@ -213,6 +230,59 @@ def draw_mixed_batch(offline_pool, online_pool, rng, offline_count, online_count
+     return DrawnBatch(tuple(samples), tuple(references), online_count, offline_count, sources)
+ 
+ 
++def joint_policy_pool(index, max_games):
++    """Count complete games before excluding whole-game validation, as replay does."""
++    games = index.games[-max_games:]
++    pool = PositionPool([g for g in games if g.split == "train"], index.cache, "policy")
++    if not len(pool):
++        raise ValueError("joint policy training pool is empty")
++    return pool
++
++
++def joint_replay_description(index, policy_pool, value_pool, config):
++    policy_keys = {g.key for g in policy_pool.games}
++    generations = []
++    for r in sorted({g.round_index for g in index.games}):
++        games = [g for g in index.games if g.round_index == r]
++        policy_positions = sum(g.decision_count for g in games if g.key in policy_keys)
++        value_positions = sum(g.decision_count for g in games if g.split == "train")
++        generations.append({"round_index": r, "run_ids": sorted({g.run_id for g in games}),
++            "games": len(games), "policy_train_positions": policy_positions,
++            "value_train_positions": value_positions,
++            "policy_expected_fraction": policy_positions / len(policy_pool),
++            "value_expected_fraction": value_positions / len(value_pool)})
++    return {"mode": "joint_separate_batches",
++        "policy_replay_max_games": config.policy_replay_max_games,
++        "value_replay_max_games": config.replay_max_games,
++        "policy_batch_size": config.offline.learner.batch_size,
++        "value_batch_size": config.offline.learner.batch_size,
++        "pool_positions": {"policy": len(policy_pool), "value": len(value_pool)},
++        "sampling": "uniform_train_positions_with_replacement; coupled head RNGs; value advances canonical stream",
++        "update": "shared encoder receives both losses; one weighted sum, global clip and AdamW step",
++        "generations": generations}
++
++
++def draw_joint_head_batch(policy_pool, value_pool, rng, batch_size, *, inherited_run_ids=None):
++    """Match R30 head-pool sampling and preserve the unchanged value RNG stream."""
++    from .rng import DeterministicRng
++    policy_rng = DeterministicRng.restore(rng.snapshot())
++    policy_samples, value_samples, references = [], [], []
++    sources = {"policy": batch_size, "value": batch_size}
++    for head, pool, head_rng, samples in (("policy", policy_pool, policy_rng, policy_samples),
++                                         ("value", value_pool, rng, value_samples)):
++        for _ in range(batch_size):
++            sample, ref = pool.sample(head_rng)
++            samples.append(sample)
++            references.append(ref)
++            key = f"{head}_round_{ref.round_index}"
++            sources[key] = sources.get(key, 0) + 1
++    if inherited_run_ids is not None:
++        inherited = sum(ref.run_id in inherited_run_ids for ref in references)
++        sources.update(inherited_online=inherited, branch_online=len(references) - inherited)
++    return DrawnBatch(tuple(policy_samples), tuple(references), len(references), 0, sources,
++                     tuple(value_samples))
++
++
+ def split_replay_pools(index, config):
+     """Select recent collection teachers, and a disjoint older value bucket."""
+     rounds = sorted({game.round_index for game in index.games})
+@@ -789,6 +859,8 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+             raise ValueError("online training pool is empty")
+         snapshot = {"games": [g.to_dict() for g in index.games], "teacher": teacher,
+                     "quotas": list(quotas), "round_index": data_round}
++        if config.policy_surprise_weighting is not None:
++            snapshot["policy_surprise_weighting"] = asdict(config.policy_surprise_weighting)
+         target_store = None
+         if config.policy_averaging is not None:
+             target_store = AveragedTargetStore(index.games, required_run_ids={run.run_id for run in runs
+@@ -796,6 +868,10 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+             snapshot["policy_labels"] = target_store.manifests
+         split_pools = None
+         policy_pool = None
++        joint_pool = None
++        if config.policy_replay_max_games is not None:
++            joint_pool = joint_policy_pool(index, config.policy_replay_max_games)
++            snapshot["joint_head_pools"] = joint_replay_description(index, joint_pool, online_pool, config)
+         if config.split_training is not None:
+             recent_pool, history_pool, recent_rounds = split_replay_pools(index, config)
+             split_pools = (recent_pool, history_pool)
+@@ -832,6 +908,13 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+             for name in ("policy_recent", "value_recent", "value_history"):
+                 identity[name] = {**identity["online"], "head_bucket": name,
+                                   "split_training": snapshot["split_training"]}
++        if joint_pool is not None:
++            identity["joint_head_pools"] = snapshot["joint_head_pools"]
++            for name in ("policy", "value"):
++                identity[name] = {**identity["online"], "head_bucket": name,
++                                  "joint_head_pools": snapshot["joint_head_pools"]}
++        if config.policy_surprise_weighting is not None:
++            identity["policy_surprise_weighting"] = asdict(config.policy_surprise_weighting)
+         cps = stage / "checkpoints"
+         steps = sorted(cps.glob("step-*.pt"))
+         if steps or (cps / "initial.pt").exists():
+@@ -876,7 +959,13 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+                 before["policy_target_scope"] = "current=M4; recent=mixed legacy single/M4 by teacher; value unchanged"
+             write_json(before_path, before)
+         split_grad_norms = None
+-        if split_pools is None:
++        if joint_pool is not None:
++            batch_size = config.offline.learner.batch_size
++            writer = HybridReferenceWriter(stage / "usage", session, identity,
++                                           (batch_size, batch_size), ("policy", "value"))
++            drawer = lambda rng: draw_joint_head_batch(joint_pool, online_pool, rng, batch_size,
++                                                       inherited_run_ids=inherited_ids)
++        elif split_pools is None:
+             writer = (HybridReferenceWriter(stage / "usage", session, identity, (quotas[1],), ("online",))
+                       if config.online_only else HybridReferenceWriter(stage / "usage", session, identity, quotas))
+             drawer = lambda rng: draw_mixed_batch(off_pool, online_pool, rng, *quotas,
+@@ -912,6 +1001,8 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+                                validation_samples=(), validation_games=0, checkpoint_dir=cps,
+                                metrics_path=stage / "training_metrics.jsonl", reference_writer=writer,
+                                batch_drawer=drawer, split_grad_norms=split_grad_norms,
++                               joint_separate_batches=joint_pool is not None,
++                               policy_surprise_weighting=config.policy_surprise_weighting,
+                                checkpoint_callback=fitting_observer,
+                                max_steps_this_session=budget,
+                                progress_callback=lambda row: _emit("train_progress", round=display_round,
+@@ -939,7 +1030,7 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+             name: {"draws": config.updates_per_round * count, "pool_positions": len(pool) if pool else 0,
+                    "average_exposure": config.updates_per_round * count / len(pool) if pool else None}
+             for name, count, pool in zip(("offline", "online"), quotas, (off_pool, online_pool))}
+-        if config.fitting_diagnostics is not None:
++        if config.fitting_diagnostics is not None and joint_pool is None:
+             by_round = {}
+             for line in (stage / "training_metrics.jsonl").read_text().splitlines():
+                 record = json.loads(line)
+@@ -953,6 +1044,20 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+                 for gen in sorted({g.round_index for g in index.games})]
+             for entry in usage["online_by_generation"]:
+                 entry["average_exposure"] = entry["actual_draws"] / entry["train_positions"]
++        if joint_pool is not None:
++            count = config.updates_per_round * config.offline.learner.batch_size
++            usage = {name: {"draws": count, "pool_positions": len(pool),
++                            "average_exposure": count / len(pool)}
++                     for name, pool in (("policy", joint_pool), ("value", online_pool))}
++            by_round = {}
++            for line in (stage / "training_metrics.jsonl").read_text().splitlines():
++                record = json.loads(line)
++                if record["event"] == "train_step":
++                    for key, draws in record["source_positions"].items():
++                        if key.startswith(("policy_round_", "value_round_")):
++                            by_round[key] = by_round.get(key, 0) + draws
++            usage["joint_head_pools"] = {**snapshot["joint_head_pools"],
++                                         "actual_draws_by_head_round": by_round}
+         if split_pools is not None:
+             counts = snapshot["split_training"]["quotas"]
+             usage = {name: {"draws": config.updates_per_round * counts[name], "pool_positions": len(pool),
+diff --git a/src/splendor/pool_fitting.py b/src/splendor/pool_fitting.py
+index 8111dd4..7c0d2be 100644
+--- a/src/splendor/pool_fitting.py
++++ b/src/splendor/pool_fitting.py
+@@ -11,6 +11,8 @@ from .features import GLOBAL_FEATURE_NAMES, SCALES
+ from .offline_train import _digest as digest
+ from .rng import DeterministicRng
+ from .selfplay_data import collate_selfplay_samples
++from .alphazero_replay import ReplayReference
++from .policy_surprise import PolicySurpriseConfig, PolicySurpriseWeighting
+ 
+ def freeze_subsets(records, seed, per_source):
+     rng = DeterministicRng(seed)
+@@ -44,6 +46,10 @@ def ratios(sums):
+         x = max(0., sums["pred_sq"] - sums["pred"] ** 2 / v)
+         y = max(0., sums["target_sq"] - sums["target"] ** 2 / v)
+         result["value_correlation"] = (sums["product"] - sums["pred"] * sums["target"] / v) / math.sqrt(x*y) if x*y > 0 else None
++    if "surprise_weight" in sums:
++        weight = sums["surprise_weight"]
++        result["surprise_policy_ce"] = sums["surprise_ce"] / weight if weight else None
++        result["surprise_policy_kl"] = sums["surprise_kl"] / weight if weight else None
+     return result
+ 
+ 
+@@ -90,12 +96,16 @@ class RoundFitting:
+                 raise ValueError("fitting result differs from its committed checkpoint")
+             return
+         tick = time.perf_counter()
++        surprise = self.config.get("policy_surprise_weighting")
++        weighting = PolicySurpriseConfig(**surprise) if surprise is not None else None
+         result = {"round_step": step, "total_train_step": learner.total_train_step,
+             "checkpoint": str(checkpoint.resolve()), "checkpoint_sha256": sha256(checkpoint),
+             "offline_fixed": evaluate(learner, self.offline_index, self.offline_records, fixed=self.offline_fixed)
+                              if self.offline_index is not None else None,
+-            "online_train_fixed": evaluate(learner, self.online_index, self.online_records, fixed=self.train_fixed),
+-            "online_validation_full": evaluate(learner, self.online_index, self.online_records),
++            "online_train_fixed": evaluate(learner, self.online_index, self.online_records, fixed=self.train_fixed,
++                                            policy_surprise_weighting=weighting),
++            "online_validation_full": evaluate(learner, self.online_index, self.online_records,
++                                                policy_surprise_weighting=weighting),
+             "stage_definition": "late=max(self_score,opponent_score)>=10; otherwise early_mid",
+             "scope": "stored single behavior-search labels; fixed Train subsets and whole-game validation; DEV"}
+         result["seconds"] = time.perf_counter() - tick
+@@ -104,7 +114,7 @@ class RoundFitting:
+               f"seconds={result['seconds']:.1f} path={path}", flush=True)
+ 
+ 
+-def evaluate(learner, index, records, *, fixed=None):
++def evaluate(learner, index, records, *, fixed=None, policy_surprise_weighting=None):
+     """Stream <= one minibatch of sample references, including full holdout."""
+     by_key = {(r["round_index"], r["game_id"]): r for r in records}
+     games = {g.key: g for g in index.games}
+@@ -118,9 +128,16 @@ def evaluate(learner, index, records, *, fixed=None):
+     score_columns = [GLOBAL_FEATURE_NAMES.index(n) for n in ("self_score_scaled", "opponent_score_scaled")]
+     was_training = learner.model.training
+     learner.model.eval()
++    weighter = PolicySurpriseWeighting(policy_surprise_weighting) if policy_surprise_weighting is not None else None
+ 
+     def flush(samples, identities):
+         batch = collate_selfplay_samples(samples)
++        surprise_weights = None
++        if weighter is not None:
++            refs = [ReplayReference(i["round_index"], i["run_id"], i["game_id"], s.index)
++                    for s, i in zip(samples, identities, strict=True)]
++            weighted_batch, _ = weighter.apply(batch, samples, refs)
++            surprise_weights = weighted_batch.policy_weights.astype(np.float64)
+         with torch.inference_mode():
+             logits, values = learner.model(batch.decisions)
+             mask = torch.as_tensor(batch.decisions.candidate_mask, device=learner.device)
+@@ -144,6 +161,10 @@ def evaluate(learner, index, records, *, fixed=None):
+                 "entropy": float(-(probs[i]*lp[i]).sum())*pw[i], "top1": float(correct[i])*pw[i],
+                 "sq_error": (pred[i]-y[i])**2, "pred": pred[i], "pred_sq": pred[i]**2,
+                 "target": y[i], "target_sq": y[i]**2, "product": pred[i]*y[i]}
++            if surprise_weights is not None:
++                row.update(surprise_weight=float(surprise_weights[i]),
++                           surprise_ce=ce[i]*surprise_weights[i],
++                           surprise_kl=(ce[i]-th[i])*surprise_weights[i])
+             for source in (identity["source_id"], "__all_observed__"):
+                 for stage in ("all", "late" if late[i] else "early_mid"):
+                     totals[f"{source}/{identity['split']}/{stage}"].update(row)
+diff --git a/tests/test_alphazero_training.py b/tests/test_alphazero_training.py
+index b928d5d..03b07b8 100644
+--- a/tests/test_alphazero_training.py
++++ b/tests/test_alphazero_training.py
+@@ -25,6 +25,7 @@ from splendor.ppo import TRAINING_CHECKPOINT_FORMAT_VERSION
+ from splendor.replay import RULESET_ID
+ from splendor.selfplay import derive_seed
+ from splendor.selfplay_data import collate_selfplay_samples
++from splendor.policy_surprise import PolicySurpriseConfig
+ from splendor.selfplay_fast import (
+     ExecutionConfig, FastSelfPlayConfig, generate as generate_selfplay,
+ )
+@@ -284,6 +285,60 @@ def test_checkpoint_roundtrip_matches_continuous_training(az_runs, tmp_path):
+     assert payload.round_train_step == 2 and payload.total_train_step == 2
+ 
+ 
++def test_surprise_weighted_driver_resume_is_exact(az_runs, tmp_path):
++    checkpoint, first, _ = az_runs
++    index = build_replay_index([first], max_games=10, cache_bytes=CACHE_BYTES)
++    pool = index.position_pool(split="train", round_index=0)
++    config = LearnerConfig(device="cpu", batch_size=4, history_batch_size=2,
++                           checkpoint_every_steps=2, learning_rate=1e-3)
++    weighting = PolicySurpriseConfig(.5)
++    identity = {**index.identity(), 'policy_surprise_weighting': asdict(weighting)}
++    initial = AlphazeroLearner.warm_start(checkpoint, config, sampling_seed=51,
++        replay_identity=identity, parent_checkpoint={'path': str(checkpoint), 'sha256': 'test'},
++        round_index=0, round_steps_target=4)
++    initial.save(tmp_path / 'initial.pt')
++
++    def run(learner, name, limit=None):
++        return run_training_round(learner, steps_target=4, current_pool=pool, history_pool=None,
++            validation_samples=(), validation_games=0, checkpoint_dir=tmp_path / name,
++            metrics_path=tmp_path / name / 'metrics.jsonl', max_steps_this_session=limit,
++            policy_surprise_weighting=weighting)
++
++    continuous = AlphazeroLearner.resume(tmp_path / 'initial.pt', config, replay_identity=identity,
++                                        round_index=0, round_steps_target=4)
++    run(continuous, 'continuous')
++    segmented = AlphazeroLearner.resume(tmp_path / 'initial.pt', config, replay_identity=identity,
++                                       round_index=0, round_steps_target=4)
++    run(segmented, 'segmented', 2)
++    segmented = AlphazeroLearner.resume(tmp_path / 'segmented/step-000000002.pt', config,
++        replay_identity=identity, round_index=0, round_steps_target=4)
++    run(segmented, 'segmented')
++    assert continuous.sampling_rng.snapshot() == segmented.sampling_rng.snapshot()
++    for key, value in continuous.model.state_dict().items():
++        torch.testing.assert_close(value, segmented.model.state_dict()[key], rtol=0, atol=0)
++    for key, params in continuous.optimizer.state_dict()['state'].items():
++        for name, value in params.items():
++            torch.testing.assert_close(value, segmented.optimizer.state_dict()['state'][key][name], rtol=0, atol=0)
++    rows = [json.loads(line) for line in (tmp_path / 'segmented/metrics.jsonl').read_text().splitlines()]
++    assert sum('policy_surprise_weighting' in row for row in rows) == 4
++    with pytest.raises(ValueError, match='checkpoint replay identity'):
++        run_training_round(segmented, steps_target=4, current_pool=pool, history_pool=None,
++            validation_samples=(), validation_games=0, checkpoint_dir=tmp_path / 'invalid',
++            metrics_path=tmp_path / 'invalid.jsonl')
++
++    from splendor.pool_fitting import evaluate
++    records = [{**g.to_dict(), 'source_id': 'test'} for g in index.games]
++    fixed = {'references': [{'round_index': pool.games[0].round_index,
++                             'game_id': pool.games[0].game_id, 'decision_index': i}
++                            for i in range(min(4, pool.games[0].decision_count))], 'digest': 'test'}
++    plain = evaluate(continuous, index, records, fixed=fixed)
++    weighted = evaluate(continuous, index, records, fixed=fixed, policy_surprise_weighting=weighting)
++    for key, values in plain['metrics'].items():
++        assert weighted['metrics'][key]['policy_ce'] == values['policy_ce']
++        assert weighted['metrics'][key]['value_mse'] == values['value_mse']
++        assert math.isfinite(weighted['metrics'][key]['surprise_policy_ce'])
++
++
+ def test_az_checkpoint_loads_in_frozen_search_and_evaluation(az_runs, tmp_path):
+     checkpoint, first, _ = az_runs
+     index = build_replay_index([first], max_games=10, cache_bytes=CACHE_BYTES)
+diff --git a/tests/test_hybrid_training.py b/tests/test_hybrid_training.py
+index 9a73c1f..d8de4de 100644
+--- a/tests/test_hybrid_training.py
++++ b/tests/test_hybrid_training.py
+@@ -17,6 +17,7 @@ from splendor.hybrid_train import (HybridConfig, SplitTrainingConfig, draw_mixed
+ from splendor.mcts_policy import MCTSConfig
+ from splendor.offline_train import OfflineConfig
+ from splendor.rng import DeterministicRng
++from splendor.policy_surprise import PolicySurpriseConfig
+ from splendor.selfplay import derive_seed
+ from splendor.selfplay_fast import ExecutionConfig, FastSelfPlayConfig, generate
+ 
+@@ -32,6 +33,18 @@ def test_formal_schedule_and_execution():
+     assert config.to_dict() == HybridConfig.from_dict(config.to_dict()).to_dict()
+ 
+ 
++def test_policy_surprise_config_roundtrip_and_old_config_unchanged():
++    raw = read_json(Path('configs/entity_attention_v1/hybrid_r9_online_lr2e5_1000_forever_20261011.json'))
++    config = HybridConfig.from_dict(raw)
++    assert 'policy_surprise_weighting' not in config.to_dict()
++    assert HybridConfig.from_dict(config.to_dict()) == config
++    weighted = replace(config, policy_surprise_weighting=PolicySurpriseConfig(.5))
++    assert HybridConfig.from_dict(weighted.to_dict()) == weighted
++    assert weighted.to_dict()['policy_surprise_weighting'] == {'fraction': .5}
++    with pytest.raises(ValueError, match='joint online-only'):
++        replace(weighted, online_only=False, policy_replay_max_games=None)
++
++
+ def test_formal_fork_configs_and_replacement_schedule():
+     original = HybridConfig.from_dict(read_json(Path('configs/entity_attention_v1/hybrid_static_graph.json')))
+     configs = []
+@@ -74,6 +87,44 @@ def test_same_game_numbers_are_isolated_and_zero_pool_does_not_draw(monkeypatch)
+     assert a.snapshot() == b.snapshot()
+ 
+ 
++def test_joint_head_windows_keep_value_stream_and_whole_game_holdout(monkeypatch):
++    monkeypatch.setattr(alphazero_replay, 'load_game',
++                        lambda path: ({'value_targets': np.zeros(8)}, {'run_id': str(path)}))
++    games = [ReplayGame(r, f'teacher-{r}', gid, 'validation' if gid else 'train', 8, 8,
++                        Path(f'{r}-{gid}')) for r in range(3) for gid in range(2)]
++    index = ReplayIndex(games)
++    policy = hybrid_train.joint_policy_pool(index, 2)
++    value = PositionPool(index.split_games('train'), index.cache, 'value')
++    assert [(g.round_index, g.game_id) for g in policy.games] == [(2, 0)]
++    rng, original = DeterministicRng(51), DeterministicRng(51)
++    state = rng.snapshot()
++    drawn = hybrid_train.draw_joint_head_batch(policy, value, rng, 64,
++                                               inherited_run_ids={'teacher-0', 'teacher-1'})
++    canonical = [value.sample(original)[1] for _ in range(64)]
++    assert drawn.references[64:] == tuple(canonical)
++    assert rng.snapshot() == original.snapshot()
++    assert {r.round_index for r in drawn.references[:64]} == {2}
++    assert all(r.game_id == 0 for r in drawn.references)
++    assert len(drawn.samples) == len(drawn.value_samples) == 64
++    assert sum(v for k, v in drawn.source_positions.items() if k.startswith('policy_round_')) == 64
++    assert sum(v for k, v in drawn.source_positions.items() if k.startswith('value_round_')) == 64
++    assert drawn.source_positions['inherited_online'] + drawn.source_positions['branch_online'] == 128
++    restored = hybrid_train.draw_joint_head_batch(policy, value, DeterministicRng.restore(state), 64)
++    assert drawn.references == restored.references
++    equal = hybrid_train.draw_joint_head_batch(value, value, DeterministicRng(51), 64)
++    assert equal.references[:64] == equal.references[64:]
++    raw = read_json(Path('configs/entity_attention_v1/hybrid_r9_online_lr2e5_1000_forever_20261011.json'))
++    config = HybridConfig.from_dict(raw)
++    assert 'policy_replay_max_games' not in config.to_dict()
++    narrow = replace(config, policy_replay_max_games=2000)
++    assert HybridConfig.from_dict(narrow.to_dict()) == narrow
++    for count in (0, 6001, True):
++        with pytest.raises(ValueError, match='1..replay_max_games'):
++            replace(config, policy_replay_max_games=count)
++    with pytest.raises(ValueError, match='joint online-only'):
++        replace(narrow, online_only=False)
++
++
+ @pytest.fixture(scope='module')
+ def source(tmp_path_factory):
+     root = tmp_path_factory.mktemp('hybrid-source')
+@@ -119,6 +170,29 @@ def small_config(source):
+         online_validation_positions=0, mix_schedule=((1, 3), (2, 2)), evaluation_every_rounds=0)
+ 
+ 
++def test_online_surprise_fork_calls_weighted_driver_and_resumes(tmp_path, source):
++    parent_config = small_config(source)
++    parent = tmp_path / 'surprise-parent'
++    run_hybrid(parent_config, parent, online_rounds=1)
++    config = replace(parent_config, run_id='surprise-child', online_only=True, mix_schedule=(),
++                     policy_surprise_weighting=PolicySurpriseConfig(.5))
++    full, partial = tmp_path / 'surprise-full', tmp_path / 'surprise-resumed'
++    run_hybrid(config, full, fork_from=parent, online_rounds=1)
++    run_hybrid(config, partial, fork_from=parent, online_rounds=1, max_steps_this_session=1)
++    state = run_hybrid(config, partial, resume=True, online_rounds=1)
++    a = load_alphazero_checkpoint(full / 'rounds/round-000/checkpoints/final.pt')
++    b = load_alphazero_checkpoint(state['latest_checkpoint']['path'])
++    assert a.replay_identity['policy_surprise_weighting'] == {'fraction': .5}
++    assert a.sampling_rng_state == b.sampling_rng_state
++    for key in a.model_state_dict:
++        torch.testing.assert_close(a.model_state_dict[key], b.model_state_dict[key], rtol=0, atol=0)
++    snapshot = read_json(partial / 'rounds/round-000/replay_snapshot.json')
++    assert snapshot['policy_surprise_weighting'] == {'fraction': .5}
++    import json
++    rows = [json.loads(line) for line in (partial / 'rounds/round-000/training_metrics.jsonl').read_text().splitlines()]
++    assert sum('policy_surprise_weighting' in row for row in rows) == 2
++
++
+ def test_continuous_resume_optimizer_rng_and_latest_teacher(tmp_path, source, monkeypatch):
+     config = small_config(source)
+     # Deliberately poor score is observational and cannot reject the new model.
+diff --git a/src/splendor/policy_surprise.py b/src/splendor/policy_surprise.py
+new file mode 100644
+index 0000000..294097e
+--- /dev/null
++++ b/src/splendor/policy_surprise.py
+@@ -0,0 +1,84 @@
++"""Policy-only surprise weighting from frozen search/teacher distributions.
++
++Adapted from KataGo's per-game uniform/surprise mixture. We deliberately use
++the archived *unnoised* root_network_prior and change only policy loss weights,
++not sampling probabilities or value weights. Validation remains unweighted.
++"""
++from __future__ import annotations
++
++import math
++from dataclasses import dataclass, replace
++from typing import Mapping, Sequence
++
++import numpy as np
++
++from .alphazero_replay import ReplayReference
++from .selfplay_data import SelfPlayBatch, SelfPlaySample
++
++
++@dataclass(frozen=True)
++class PolicySurpriseConfig:
++    fraction: float = 0.5
++
++    def __post_init__(self):
++        if (isinstance(self.fraction, bool) or not isinstance(self.fraction, (int, float))
++                or not math.isfinite(self.fraction) or not 0 <= self.fraction <= 1):
++            raise ValueError("policy surprise fraction must be finite and in [0, 1]")
++
++
++def game_policy_surprise(arrays: Mapping[str, np.ndarray], config: PolicySurpriseConfig):
++    """Return KL(search || teacher) and effective weights for every game row.
++
++    A fraction of each game's searchable policy mass is redistributed in
++    proportion to KL. Forced moves retain zero policy weight. A game with no
++    surprise retains its original weights. No validation or learner prediction
++    enters the normalization, and the raw archive is never modified.
++    """
++    starts = arrays["candidate_offsets"][:-1]
++    lengths = np.diff(arrays["candidate_offsets"])
++    target = np.asarray(arrays["policy_target"], dtype=np.float64)
++    prior = np.asarray(arrays["root_network_prior"], dtype=np.float64)
++    # Stored float32 distributions sum to one within archive tolerance.
++    target = target / np.repeat(np.add.reduceat(target, starts), lengths)
++    prior = prior / np.repeat(np.add.reduceat(prior, starts), lengths)
++    log_target = np.zeros_like(target)
++    np.log(target, out=log_target, where=target > 0)
++    terms = target * (log_target - np.log(np.maximum(prior, 1e-100)))
++    surprise = np.maximum(0., np.add.reduceat(terms, starts))
++    base = np.asarray(arrays["policy_weight"], dtype=np.float64)
++    mass = float(base.sum())
++    surprise_mass = float(np.dot(base, surprise))
++    weights = base.copy()
++    if surprise_mass > 0:
++        weights *= (1 - config.fraction) + config.fraction * surprise * mass / surprise_mass
++    return surprise, weights.astype(np.float32)
++
++
++class PolicySurpriseWeighting:
++    """Small per-game weight cache; deterministic across process resumes."""
++
++    def __init__(self, config: PolicySurpriseConfig):
++        self.config = config
++        self.games = {}
++
++    def apply(self, batch: SelfPlayBatch, samples: Sequence[SelfPlaySample],
++              references: Sequence[ReplayReference]):
++        weights, surprises = [], []
++        for sample, ref in zip(samples, references, strict=True):
++            key = ref.run_id, ref.round_index, ref.game_id
++            if key not in self.games:
++                self.games[key] = game_policy_surprise(sample.arrays, self.config)
++            surprise, effective = self.games[key]
++            weights.append(effective[sample.index])
++            surprises.append(surprise[sample.index])
++        weights = np.asarray(weights, dtype=np.float32)
++        active = batch.policy_weights > 0
++        selected = weights[active].astype(np.float64)
++        mass = float(selected.sum())
++        square_mass = float(np.dot(selected, selected))
++        stats = {"fraction": self.config.fraction, "policy_weight_sum": mass,
++                 "effective_policy_positions": mass * mass / square_mass if square_mass else 0.,
++                 "mean_weight": float(selected.mean()) if len(selected) else 0.,
++                 "max_weight": float(selected.max()) if len(selected) else 0.,
++                 "mean_teacher_surprise": float(np.asarray(surprises)[active].mean()) if active.any() else 0.}
++        return replace(batch, policy_weights=weights), stats
+diff --git a/tests/test_policy_surprise.py b/tests/test_policy_surprise.py
+new file mode 100644
+index 0000000..0aee209
+--- /dev/null
++++ b/tests/test_policy_surprise.py
+@@ -0,0 +1,65 @@
++from dataclasses import replace
++
++import numpy as np
++import pytest
++
++from splendor.alphazero_replay import ReplayReference
++from splendor.policy_surprise import PolicySurpriseConfig, PolicySurpriseWeighting, game_policy_surprise
++from splendor.selfplay_data import SelfPlaySample
++
++
++def arrays():
++    return {"candidate_offsets": np.array([0, 2, 4, 5]),
++            "policy_target": np.array([.5, .5, 1., 0., 1.], dtype=np.float32),
++            "root_network_prior": np.array([.5, .5, .25, .75, 1.], dtype=np.float32),
++            "root_used_prior": np.array([.1, .9, .9, .1, 1.], dtype=np.float32),
++            "policy_weight": np.array([1., 1., 0.], dtype=np.float32)}
++
++
++def test_per_game_mixture_uses_unnoised_teacher_and_preserves_mass():
++    raw = arrays()
++    surprise, weights = game_policy_surprise(raw, PolicySurpriseConfig(.5))
++    np.testing.assert_allclose(surprise, [0., np.log(4.), 0.])
++    np.testing.assert_allclose(weights, [.5, 1.5, 0.])
++    assert weights.sum() == raw['policy_weight'].sum()
++    np.testing.assert_array_equal(raw['policy_weight'], [1., 1., 0.])
++    raw['root_used_prior'][:] = 0
++    np.testing.assert_array_equal(game_policy_surprise(raw, PolicySurpriseConfig(.5))[1], weights)
++
++
++def test_zero_surprise_zero_prior_and_disabled_fraction_are_finite():
++    raw = arrays()
++    raw['root_network_prior'] = raw['policy_target'].copy()
++    np.testing.assert_array_equal(game_policy_surprise(raw, PolicySurpriseConfig())[1], raw['policy_weight'])
++    raw['root_network_prior'][2:4] = [0., 1.]
++    surprise, weights = game_policy_surprise(raw, PolicySurpriseConfig())
++    assert np.isfinite(surprise).all() and np.isfinite(weights).all()
++    assert surprise[1] == pytest.approx(100 * np.log(10))
++    np.testing.assert_array_equal(game_policy_surprise(raw, PolicySurpriseConfig(0))[1], raw['policy_weight'])
++    raw['policy_weight'][:] = 0
++    np.testing.assert_array_equal(game_policy_surprise(raw, PolicySurpriseConfig())[1], 0)
++
++
++@pytest.mark.parametrize('fraction', [-1, 1.01, True, float('nan'), float('inf')])
++def test_invalid_fraction(fraction):
++    with pytest.raises(ValueError, match='fraction'):
++        PolicySurpriseConfig(fraction)
++
++
++def test_weight_cache_isolates_runs_and_changes_only_policy_batch_fields():
++    from splendor.selfplay_data import SelfPlayBatch
++    raw = arrays()
++    samples = [SelfPlaySample(raw, {}, i) for i in range(3)]
++    refs = [ReplayReference(1, 'a', 0, i) for i in range(3)]
++    batch = SelfPlayBatch(None, None, None, np.array([1, -1, 1]), raw['policy_weight'],
++                         np.ones(3), ())
++    weighter = PolicySurpriseWeighting(PolicySurpriseConfig())
++    weighted, stats = weighter.apply(batch, samples, refs)
++    assert weighted.value_weights is batch.value_weights and weighted.value_targets is batch.value_targets
++    assert weighted.policy_targets is batch.policy_targets
++    np.testing.assert_array_equal(weighted.policy_weights, [.5, 1.5, 0])
++    assert stats['effective_policy_positions'] == pytest.approx(1.6)
++    other = {**raw, 'root_network_prior': raw['policy_target'].copy()}
++    weighted, _ = weighter.apply(batch, [replace(s, arrays=other) for s in samples],
++                                [replace(r, run_id='b') for r in refs])
++    np.testing.assert_array_equal(weighted.policy_weights, raw['policy_weight'])
+diff --git a/configs/entity_attention_v1/r43_policy_surprise_s4096_fixed4k_20261013.json b/configs/entity_attention_v1/r43_policy_surprise_s4096_fixed4k_20261013.json
+new file mode 100644
+index 0000000..dcfc8bd
+--- /dev/null
++++ b/configs/entity_attention_v1/r43_policy_surprise_s4096_fixed4k_20261013.json
+@@ -0,0 +1,15 @@
++{
++  "experiment": "entity_attention_r43_policy_surprise_s4096_20261013",
++  "initial_checkpoint": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
++  "initial_checkpoint_sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14",
++  "source_snapshot": "runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-003/replay_snapshot.json",
++  "source_snapshot_sha256": "2a2385159253eff1c0dcb97f7375fe89b8fa5238ef58926c4e07628c90980764",
++  "source_round_indices": [43, 44, 45, 46],
++  "source_train_references": "runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-003/fitting/train_references.json",
++  "updates": 1000,
++  "fitting_steps": [0, 100, 250, 500, 1000],
++  "branches": {"control": null, "surprise": {"fraction": 0.5}},
++  "cache_bytes": 8589934592,
++  "greedy_reference": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/evaluation/greedy_vs_start.json",
++  "scope": "One offline round from original R43, fixed existing 4000 S4096/N1 games, original whole-game split. Same 256 positions for both heads and both branches; original optimizer and RNG; all learner hyperparameters unchanged. No collection, relabeling or value architecture change. Fixed fitting and 200-pair greedy DEV panel, no search arena."
++}

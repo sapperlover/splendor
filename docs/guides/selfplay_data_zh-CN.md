@@ -32,6 +32,8 @@
 
 `metadata_json` 包含 schema、run/game 身份、语义配置指纹、checkpoint SHA、真实开局和双方有效搜索 seed、split、正式终局、样本计数、MCTS 统计、最终 digest 和已有引擎 replay。v1 包含上述完整 replay；v2 用下节 compact trace 替代逐步完整 replay。metadata、seed、z 不进入网络输入。概率写入 float32，校验容差 `1e-6`。
 
+2026-10-13新增可选[Policy Surprise Weighting](../../artifacts/entity_attention_r43_policy_surprise_s4096_20261013/README.md)：在训练时用`KL(policy_target || root_network_prior)`计算局内归一化的policy loss权重，明确使用加噪前教师策略。归档中的`policy_weight=searchable`、`value_weight=1`及数据schema不变；不加权的原留出指标保留。辅助分差与剩余玩家行动回合的标签从终局metadata和`completed_player_turns`生成；后续已接入[独立离线双辅助头入口](../../artifacts/entity_attention_r24_r43_offline_objectives_20261013/README.md)。这两项终局信息仅用作训练标签，原NPZ和输入特征schema不变。
+
 `SelfPlayDataset(root, split="train" | "validation" | None)` 只索引归档，按需加载当前局；`collate_selfplay_samples(samples)` 用 offsets 构造 `EncodedDecisionBatch`、padding 后的 policy/behavior 目标、z、两种权重和独立引用 metadata。模型可以直接消费：
 
 ```python
@@ -75,6 +77,8 @@ conda run -n splendor env PYTHONPATH=src python -m splendor.selfplay inspect \
 
 监督训练与跨代 replay 已接入 [AlphaZero 循环](alphazero_zh-CN.md)。单次采集的胜负、熵和吞吐属于数据健康与成本统计，不代表训练后棋力。
 
+2026-10-12归档核对：上面300局S256/N2实例与4局smoke均已有完成采集汇总，已迁入`archive/20261012/`并保留旧路径链接；仅说明原版本的采集与归档链路产生完整对局，不是独立棋力验证。完成数、用途和限制见[早期工程实验归档说明](../reports/archived_engineering_experiments_20261012_zh-CN.md)。
+
 
 ## v2 执行路径与 compact trace
 
@@ -98,3 +102,7 @@ conda run -n splendor env PYTHONPATH=src python -m splendor.reproduce_failure \
 ```
 
 训练 NPZ 和 checkpoint 保留在 `runs/`；值得长期复核的完成统计保存到 `artifacts/`。恢复、吞吐、并行局内累计时间与墙钟不是同一口径，不相互替代。
+
+## 联合训练的两个在线窗口
+
+`hybrid_train` 的可选 `policy_replay_max_games` 在 `online_only=true` 时缩小 policy 的最近完整对局窗口，value 继续使用 `replay_max_games`。先按完整局截取再排除整局 validation；两头均按 Train 局面均匀有放回抽样、每头保持原 batch。两头共享 encoder，合并损失后只执行一次全局梯度裁剪和 AdamW 更新。此配置与 `split_training` 互斥；未设置时原配置及采样行为保持不变。每轮快照记录 `joint_head_pools`，账本在 `usage/policy`、`usage/value`，`source_usage.json` 分头记录曝光及逐代实际抽样数。当前 [S4096、2k/6k 实验](../../artifacts/entity_attention_r43_s4096_p2k_v6k_20261013/README.md) 保存了命令、迁移期和结论边界。

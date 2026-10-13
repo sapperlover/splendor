@@ -79,7 +79,7 @@ def check(plan, config):
         greedy = FixedEvaluationConfig.from_dict(plan["greedy_evaluation"])
         if Path(greedy.policy_b.checkpoint).resolve() != Path(config.evaluation_anchor["path"]).resolve():
             raise ValueError("greedy opponent differs from the fixed anchor")
-        return {"forever": True, "parent_round": chosen, "first_absolute_round": payload.round_index+1,
+        result = {"forever": True, "parent_round": chosen, "first_absolute_round": payload.round_index+1,
             "source_games": len(games), "train_games": sum(g["split"] == "train" for g in games),
             "validation_games": sum(g["split"] == "validation" for g in games),
             "initial_step": payload.total_train_step, "effective_learning_rate": config.learning_rate_override,
@@ -87,6 +87,10 @@ def check(plan, config):
             "offline_batch": 0, "online_batch": config.offline.learner.batch_size,
             "online_cache_bytes": config.offline.replay_cache_bytes,
             "teacher_update": "each round's complete final checkpoint, unconditional on metrics/scores"}
+        if config.policy_replay_max_games is not None:
+            result["joint_head_pools"] = {"policy_games": config.policy_replay_max_games,
+                "value_games": config.replay_max_games, "batch_per_head": config.offline.learner.batch_size}
+        return result
     dataset = prepare_initialization(config)
     for identity in [config.evaluation_anchor, plan["strong_anchor"]]:
         if sha256(Path(identity["path"])) != identity["sha256"]:
@@ -219,13 +223,14 @@ def _online_summary(plan, state):
     completed = len(state["completed_rounds"])
     latest = _online_round_record(plan, state, completed) if completed else None
     result = {"status": "in_progress", "completed_rounds": completed, "target_rounds": None,
-        "parent_round": plan["fork_from"]["round"], "last_absolute_round": state["online_round_offset"]+completed,
+        "parent_round": plan["fork_from"]["round"], "parent_absolute_round": state["online_round_offset"],
+        "last_absolute_round": state["online_round_offset"]+completed,
         "latest_teacher": state["latest_checkpoint"], "latest_round": latest,
         "history": "rounds/round-*.json; one immutable record per committed absolute generation",
         "scope": "online-only; single training seed; stored-label DEV fitting and paired strength panels"}
     artifacts = Path(plan["artifacts"])
     write_json(artifacts / "summary.json", result)
-    lines = [f"# 第{result['parent_round']}轮终点长期在线续训", "", f"完成续训{completed}轮；最新绝对轮号{result['last_absolute_round']}；无轮数终点。",
+    lines = [f"# 第{result['parent_absolute_round']}轮终点长期在线续训", "", f"完成续训{completed}轮；最新绝对轮号{result['last_absolute_round']}；无轮数终点。",
         "", "教师每轮完整终点无条件升级；历史矩阵和对战摘要逐轮保存于 rounds/，原始结果保留在runs。", ""]
     if latest:
         lines += ["| 轮 | 本轮步数 | 最新代完整留出KL | 最新代完整留出MSE |", "|---|---:|---:|---:|"]

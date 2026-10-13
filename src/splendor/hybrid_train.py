@@ -26,6 +26,7 @@ from .evaluation import FixedEvaluationConfig, run_fixed_evaluation
 from .offline_train import (OfflineConfig, _copy_checkpoint, _digest, evaluate_validation,
                             freeze_dataset, freeze_validation, make_index, run_offline)
 from .policy_averaging import (AveragedTargetStore, PolicyAveragingConfig, generate_labels, label_root)
+from .policy_surprise import PolicySurpriseConfig
 from .selfplay_fast import ExecutionConfig, FastSelfPlayConfig, generate
 
 PROTOCOL = "az-continuous-hybrid-v1"
@@ -88,6 +89,9 @@ class HybridConfig:
     fitting_diagnostics: dict[str, Any] | None = None
     # Fork an existing online window without loading or evaluating an offline pool.
     online_only: bool = False
+    # Joint updates with a narrower policy window; value keeps replay_max_games.
+    policy_replay_max_games: int | None = None
+    policy_surprise_weighting: PolicySurpriseConfig | None = None
 
     def __post_init__(self):
         if not self.run_id:
@@ -96,6 +100,17 @@ class HybridConfig:
             raise ValueError("online_only must be bool")
         if self.online_only and (self.initialization is not None or self.mix_schedule):
             raise ValueError("online_only requires a replay fork and an empty mixing schedule")
+        if self.policy_surprise_weighting is not None and (not self.online_only
+                or self.split_training is not None or self.policy_averaging is not None):
+            raise ValueError("policy surprise weighting requires joint online-only archived targets")
+        if self.policy_replay_max_games is not None:
+            if (type(self.policy_replay_max_games) is not int
+                    or not 0 < self.policy_replay_max_games <= self.replay_max_games):
+                raise ValueError("policy_replay_max_games must be in 1..replay_max_games")
+            if not self.online_only or self.split_training is not None:
+                raise ValueError("policy replay window requires joint online-only training")
+            if self.offline.model_config.get("architecture") != "entity_attention_v1":
+                raise ValueError("joint head pools require entity_attention_v1")
         if self.initialization is not None:
             if set(self.initialization) != {"checkpoint", "manifest"}:
                 raise ValueError("initialization requires checkpoint and manifest identities")
@@ -172,6 +187,8 @@ class HybridConfig:
             values["split_training"] = SplitTrainingConfig(**values["split_training"])
         if values.get("policy_averaging") is not None:
             values["policy_averaging"] = PolicyAveragingConfig(**values["policy_averaging"])
+        if values.get("policy_surprise_weighting") is not None:
+            values["policy_surprise_weighting"] = PolicySurpriseConfig(**values["policy_surprise_weighting"])
         return cls(**values)
 
     def to_dict(self):
@@ -180,7 +197,7 @@ class HybridConfig:
             del values["online_only"]
         # Preserve the frozen representation of existing joint runs.
         for name in ("split_training", "evaluation_anchor", "learning_rate_override", "policy_averaging",
-                     "initialization", "fitting_diagnostics"):
+                     "initialization", "fitting_diagnostics", "policy_replay_max_games", "policy_surprise_weighting"):
             if values[name] is None:
                 del values[name]
         if self.split_training is not None:
@@ -211,6 +228,59 @@ def draw_mixed_batch(offline_pool, online_pool, rng, offline_count, online_count
         inherited = sum(ref.run_id in inherited_run_ids for ref in references[offline_count:])
         sources.update(inherited_online=inherited, branch_online=online_count - inherited)
     return DrawnBatch(tuple(samples), tuple(references), online_count, offline_count, sources)
+
+
+def joint_policy_pool(index, max_games):
+    """Count complete games before excluding whole-game validation, as replay does."""
+    games = index.games[-max_games:]
+    pool = PositionPool([g for g in games if g.split == "train"], index.cache, "policy")
+    if not len(pool):
+        raise ValueError("joint policy training pool is empty")
+    return pool
+
+
+def joint_replay_description(index, policy_pool, value_pool, config):
+    policy_keys = {g.key for g in policy_pool.games}
+    generations = []
+    for r in sorted({g.round_index for g in index.games}):
+        games = [g for g in index.games if g.round_index == r]
+        policy_positions = sum(g.decision_count for g in games if g.key in policy_keys)
+        value_positions = sum(g.decision_count for g in games if g.split == "train")
+        generations.append({"round_index": r, "run_ids": sorted({g.run_id for g in games}),
+            "games": len(games), "policy_train_positions": policy_positions,
+            "value_train_positions": value_positions,
+            "policy_expected_fraction": policy_positions / len(policy_pool),
+            "value_expected_fraction": value_positions / len(value_pool)})
+    return {"mode": "joint_separate_batches",
+        "policy_replay_max_games": config.policy_replay_max_games,
+        "value_replay_max_games": config.replay_max_games,
+        "policy_batch_size": config.offline.learner.batch_size,
+        "value_batch_size": config.offline.learner.batch_size,
+        "pool_positions": {"policy": len(policy_pool), "value": len(value_pool)},
+        "sampling": "uniform_train_positions_with_replacement; coupled head RNGs; value advances canonical stream",
+        "update": "shared encoder receives both losses; one weighted sum, global clip and AdamW step",
+        "generations": generations}
+
+
+def draw_joint_head_batch(policy_pool, value_pool, rng, batch_size, *, inherited_run_ids=None):
+    """Match R30 head-pool sampling and preserve the unchanged value RNG stream."""
+    from .rng import DeterministicRng
+    policy_rng = DeterministicRng.restore(rng.snapshot())
+    policy_samples, value_samples, references = [], [], []
+    sources = {"policy": batch_size, "value": batch_size}
+    for head, pool, head_rng, samples in (("policy", policy_pool, policy_rng, policy_samples),
+                                         ("value", value_pool, rng, value_samples)):
+        for _ in range(batch_size):
+            sample, ref = pool.sample(head_rng)
+            samples.append(sample)
+            references.append(ref)
+            key = f"{head}_round_{ref.round_index}"
+            sources[key] = sources.get(key, 0) + 1
+    if inherited_run_ids is not None:
+        inherited = sum(ref.run_id in inherited_run_ids for ref in references)
+        sources.update(inherited_online=inherited, branch_online=len(references) - inherited)
+    return DrawnBatch(tuple(policy_samples), tuple(references), len(references), 0, sources,
+                     tuple(value_samples))
 
 
 def split_replay_pools(index, config):
@@ -789,6 +859,8 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             raise ValueError("online training pool is empty")
         snapshot = {"games": [g.to_dict() for g in index.games], "teacher": teacher,
                     "quotas": list(quotas), "round_index": data_round}
+        if config.policy_surprise_weighting is not None:
+            snapshot["policy_surprise_weighting"] = asdict(config.policy_surprise_weighting)
         target_store = None
         if config.policy_averaging is not None:
             target_store = AveragedTargetStore(index.games, required_run_ids={run.run_id for run in runs
@@ -796,6 +868,10 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             snapshot["policy_labels"] = target_store.manifests
         split_pools = None
         policy_pool = None
+        joint_pool = None
+        if config.policy_replay_max_games is not None:
+            joint_pool = joint_policy_pool(index, config.policy_replay_max_games)
+            snapshot["joint_head_pools"] = joint_replay_description(index, joint_pool, online_pool, config)
         if config.split_training is not None:
             recent_pool, history_pool, recent_rounds = split_replay_pools(index, config)
             split_pools = (recent_pool, history_pool)
@@ -832,6 +908,13 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             for name in ("policy_recent", "value_recent", "value_history"):
                 identity[name] = {**identity["online"], "head_bucket": name,
                                   "split_training": snapshot["split_training"]}
+        if joint_pool is not None:
+            identity["joint_head_pools"] = snapshot["joint_head_pools"]
+            for name in ("policy", "value"):
+                identity[name] = {**identity["online"], "head_bucket": name,
+                                  "joint_head_pools": snapshot["joint_head_pools"]}
+        if config.policy_surprise_weighting is not None:
+            identity["policy_surprise_weighting"] = asdict(config.policy_surprise_weighting)
         cps = stage / "checkpoints"
         steps = sorted(cps.glob("step-*.pt"))
         if steps or (cps / "initial.pt").exists():
@@ -876,7 +959,13 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                 before["policy_target_scope"] = "current=M4; recent=mixed legacy single/M4 by teacher; value unchanged"
             write_json(before_path, before)
         split_grad_norms = None
-        if split_pools is None:
+        if joint_pool is not None:
+            batch_size = config.offline.learner.batch_size
+            writer = HybridReferenceWriter(stage / "usage", session, identity,
+                                           (batch_size, batch_size), ("policy", "value"))
+            drawer = lambda rng: draw_joint_head_batch(joint_pool, online_pool, rng, batch_size,
+                                                       inherited_run_ids=inherited_ids)
+        elif split_pools is None:
             writer = (HybridReferenceWriter(stage / "usage", session, identity, (quotas[1],), ("online",))
                       if config.online_only else HybridReferenceWriter(stage / "usage", session, identity, quotas))
             drawer = lambda rng: draw_mixed_batch(off_pool, online_pool, rng, *quotas,
@@ -912,6 +1001,8 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                                validation_samples=(), validation_games=0, checkpoint_dir=cps,
                                metrics_path=stage / "training_metrics.jsonl", reference_writer=writer,
                                batch_drawer=drawer, split_grad_norms=split_grad_norms,
+                               joint_separate_batches=joint_pool is not None,
+                               policy_surprise_weighting=config.policy_surprise_weighting,
                                checkpoint_callback=fitting_observer,
                                max_steps_this_session=budget,
                                progress_callback=lambda row: _emit("train_progress", round=display_round,
@@ -939,7 +1030,7 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
             name: {"draws": config.updates_per_round * count, "pool_positions": len(pool) if pool else 0,
                    "average_exposure": config.updates_per_round * count / len(pool) if pool else None}
             for name, count, pool in zip(("offline", "online"), quotas, (off_pool, online_pool))}
-        if config.fitting_diagnostics is not None:
+        if config.fitting_diagnostics is not None and joint_pool is None:
             by_round = {}
             for line in (stage / "training_metrics.jsonl").read_text().splitlines():
                 record = json.loads(line)
@@ -953,6 +1044,20 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
                 for gen in sorted({g.round_index for g in index.games})]
             for entry in usage["online_by_generation"]:
                 entry["average_exposure"] = entry["actual_draws"] / entry["train_positions"]
+        if joint_pool is not None:
+            count = config.updates_per_round * config.offline.learner.batch_size
+            usage = {name: {"draws": count, "pool_positions": len(pool),
+                            "average_exposure": count / len(pool)}
+                     for name, pool in (("policy", joint_pool), ("value", online_pool))}
+            by_round = {}
+            for line in (stage / "training_metrics.jsonl").read_text().splitlines():
+                record = json.loads(line)
+                if record["event"] == "train_step":
+                    for key, draws in record["source_positions"].items():
+                        if key.startswith(("policy_round_", "value_round_")):
+                            by_round[key] = by_round.get(key, 0) + draws
+            usage["joint_head_pools"] = {**snapshot["joint_head_pools"],
+                                         "actual_draws_by_head_round": by_round}
         if split_pools is not None:
             counts = snapshot["split_training"]["quotas"]
             usage = {name: {"draws": config.updates_per_round * counts[name], "pool_positions": len(pool),

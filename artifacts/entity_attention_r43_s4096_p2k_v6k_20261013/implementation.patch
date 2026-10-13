@@ -1,0 +1,314 @@
+diff --git a/src/splendor/hybrid_train.py b/src/splendor/hybrid_train.py
+index 832bf09..80ca237 100644
+--- a/src/splendor/hybrid_train.py
++++ b/src/splendor/hybrid_train.py
+@@ -88,6 +88,8 @@ class HybridConfig:
+     fitting_diagnostics: dict[str, Any] | None = None
+     # Fork an existing online window without loading or evaluating an offline pool.
+     online_only: bool = False
++    # Joint updates with a narrower policy window; value keeps replay_max_games.
++    policy_replay_max_games: int | None = None
+ 
+     def __post_init__(self):
+         if not self.run_id:
+@@ -96,6 +98,14 @@ class HybridConfig:
+             raise ValueError("online_only must be bool")
+         if self.online_only and (self.initialization is not None or self.mix_schedule):
+             raise ValueError("online_only requires a replay fork and an empty mixing schedule")
++        if self.policy_replay_max_games is not None:
++            if (type(self.policy_replay_max_games) is not int
++                    or not 0 < self.policy_replay_max_games <= self.replay_max_games):
++                raise ValueError("policy_replay_max_games must be in 1..replay_max_games")
++            if not self.online_only or self.split_training is not None:
++                raise ValueError("policy replay window requires joint online-only training")
++            if self.offline.model_config.get("architecture") != "entity_attention_v1":
++                raise ValueError("joint head pools require entity_attention_v1")
+         if self.initialization is not None:
+             if set(self.initialization) != {"checkpoint", "manifest"}:
+                 raise ValueError("initialization requires checkpoint and manifest identities")
+@@ -180,7 +190,7 @@ class HybridConfig:
+             del values["online_only"]
+         # Preserve the frozen representation of existing joint runs.
+         for name in ("split_training", "evaluation_anchor", "learning_rate_override", "policy_averaging",
+-                     "initialization", "fitting_diagnostics"):
++                     "initialization", "fitting_diagnostics", "policy_replay_max_games"):
+             if values[name] is None:
+                 del values[name]
+         if self.split_training is not None:
+@@ -213,6 +223,59 @@ def draw_mixed_batch(offline_pool, online_pool, rng, offline_count, online_count
+     return DrawnBatch(tuple(samples), tuple(references), online_count, offline_count, sources)
+ 
+ 
++def joint_policy_pool(index, max_games):
++    """Count complete games before excluding whole-game validation, as replay does."""
++    games = index.games[-max_games:]
++    pool = PositionPool([g for g in games if g.split == "train"], index.cache, "policy")
++    if not len(pool):
++        raise ValueError("joint policy training pool is empty")
++    return pool
++
++
++def joint_replay_description(index, policy_pool, value_pool, config):
++    policy_keys = {g.key for g in policy_pool.games}
++    generations = []
++    for r in sorted({g.round_index for g in index.games}):
++        games = [g for g in index.games if g.round_index == r]
++        policy_positions = sum(g.decision_count for g in games if g.key in policy_keys)
++        value_positions = sum(g.decision_count for g in games if g.split == "train")
++        generations.append({"round_index": r, "run_ids": sorted({g.run_id for g in games}),
++            "games": len(games), "policy_train_positions": policy_positions,
++            "value_train_positions": value_positions,
++            "policy_expected_fraction": policy_positions / len(policy_pool),
++            "value_expected_fraction": value_positions / len(value_pool)})
++    return {"mode": "joint_separate_batches",
++        "policy_replay_max_games": config.policy_replay_max_games,
++        "value_replay_max_games": config.replay_max_games,
++        "policy_batch_size": config.offline.learner.batch_size,
++        "value_batch_size": config.offline.learner.batch_size,
++        "pool_positions": {"policy": len(policy_pool), "value": len(value_pool)},
++        "sampling": "uniform_train_positions_with_replacement; coupled head RNGs; value advances canonical stream",
++        "update": "shared encoder receives both losses; one weighted sum, global clip and AdamW step",
++        "generations": generations}
++
++
++def draw_joint_head_batch(policy_pool, value_pool, rng, batch_size, *, inherited_run_ids=None):
++    """Match R30 head-pool sampling and preserve the unchanged value RNG stream."""
++    from .rng import DeterministicRng
++    policy_rng = DeterministicRng.restore(rng.snapshot())
++    policy_samples, value_samples, references = [], [], []
++    sources = {"policy": batch_size, "value": batch_size}
++    for head, pool, head_rng, samples in (("policy", policy_pool, policy_rng, policy_samples),
++                                         ("value", value_pool, rng, value_samples)):
++        for _ in range(batch_size):
++            sample, ref = pool.sample(head_rng)
++            samples.append(sample)
++            references.append(ref)
++            key = f"{head}_round_{ref.round_index}"
++            sources[key] = sources.get(key, 0) + 1
++    if inherited_run_ids is not None:
++        inherited = sum(ref.run_id in inherited_run_ids for ref in references)
++        sources.update(inherited_online=inherited, branch_online=len(references) - inherited)
++    return DrawnBatch(tuple(policy_samples), tuple(references), len(references), 0, sources,
++                     tuple(value_samples))
++
++
+ def split_replay_pools(index, config):
+     """Select recent collection teachers, and a disjoint older value bucket."""
+     rounds = sorted({game.round_index for game in index.games})
+@@ -796,6 +859,10 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+             snapshot["policy_labels"] = target_store.manifests
+         split_pools = None
+         policy_pool = None
++        joint_pool = None
++        if config.policy_replay_max_games is not None:
++            joint_pool = joint_policy_pool(index, config.policy_replay_max_games)
++            snapshot["joint_head_pools"] = joint_replay_description(index, joint_pool, online_pool, config)
+         if config.split_training is not None:
+             recent_pool, history_pool, recent_rounds = split_replay_pools(index, config)
+             split_pools = (recent_pool, history_pool)
+@@ -832,6 +899,11 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+             for name in ("policy_recent", "value_recent", "value_history"):
+                 identity[name] = {**identity["online"], "head_bucket": name,
+                                   "split_training": snapshot["split_training"]}
++        if joint_pool is not None:
++            identity["joint_head_pools"] = snapshot["joint_head_pools"]
++            for name in ("policy", "value"):
++                identity[name] = {**identity["online"], "head_bucket": name,
++                                  "joint_head_pools": snapshot["joint_head_pools"]}
+         cps = stage / "checkpoints"
+         steps = sorted(cps.glob("step-*.pt"))
+         if steps or (cps / "initial.pt").exists():
+@@ -876,7 +948,13 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+                 before["policy_target_scope"] = "current=M4; recent=mixed legacy single/M4 by teacher; value unchanged"
+             write_json(before_path, before)
+         split_grad_norms = None
+-        if split_pools is None:
++        if joint_pool is not None:
++            batch_size = config.offline.learner.batch_size
++            writer = HybridReferenceWriter(stage / "usage", session, identity,
++                                           (batch_size, batch_size), ("policy", "value"))
++            drawer = lambda rng: draw_joint_head_batch(joint_pool, online_pool, rng, batch_size,
++                                                       inherited_run_ids=inherited_ids)
++        elif split_pools is None:
+             writer = (HybridReferenceWriter(stage / "usage", session, identity, (quotas[1],), ("online",))
+                       if config.online_only else HybridReferenceWriter(stage / "usage", session, identity, quotas))
+             drawer = lambda rng: draw_mixed_batch(off_pool, online_pool, rng, *quotas,
+@@ -912,6 +990,7 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+                                validation_samples=(), validation_games=0, checkpoint_dir=cps,
+                                metrics_path=stage / "training_metrics.jsonl", reference_writer=writer,
+                                batch_drawer=drawer, split_grad_norms=split_grad_norms,
++                               joint_separate_batches=joint_pool is not None,
+                                checkpoint_callback=fitting_observer,
+                                max_steps_this_session=budget,
+                                progress_callback=lambda row: _emit("train_progress", round=display_round,
+@@ -939,7 +1018,7 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+             name: {"draws": config.updates_per_round * count, "pool_positions": len(pool) if pool else 0,
+                    "average_exposure": config.updates_per_round * count / len(pool) if pool else None}
+             for name, count, pool in zip(("offline", "online"), quotas, (off_pool, online_pool))}
+-        if config.fitting_diagnostics is not None:
++        if config.fitting_diagnostics is not None and joint_pool is None:
+             by_round = {}
+             for line in (stage / "training_metrics.jsonl").read_text().splitlines():
+                 record = json.loads(line)
+@@ -953,6 +1032,20 @@ def _run_hybrid(config, output, resume, online_rounds, forever, budget, fork_fro
+                 for gen in sorted({g.round_index for g in index.games})]
+             for entry in usage["online_by_generation"]:
+                 entry["average_exposure"] = entry["actual_draws"] / entry["train_positions"]
++        if joint_pool is not None:
++            count = config.updates_per_round * config.offline.learner.batch_size
++            usage = {name: {"draws": count, "pool_positions": len(pool),
++                            "average_exposure": count / len(pool)}
++                     for name, pool in (("policy", joint_pool), ("value", online_pool))}
++            by_round = {}
++            for line in (stage / "training_metrics.jsonl").read_text().splitlines():
++                record = json.loads(line)
++                if record["event"] == "train_step":
++                    for key, draws in record["source_positions"].items():
++                        if key.startswith(("policy_round_", "value_round_")):
++                            by_round[key] = by_round.get(key, 0) + draws
++            usage["joint_head_pools"] = {**snapshot["joint_head_pools"],
++                                         "actual_draws_by_head_round": by_round}
+         if split_pools is not None:
+             counts = snapshot["split_training"]["quotas"]
+             usage = {name: {"draws": config.updates_per_round * counts[name], "pool_positions": len(pool),
+diff --git a/src/splendor/pool_iteration.py b/src/splendor/pool_iteration.py
+index c82cf80..411b872 100644
+--- a/src/splendor/pool_iteration.py
++++ b/src/splendor/pool_iteration.py
+@@ -79,7 +79,7 @@ def check(plan, config):
+         greedy = FixedEvaluationConfig.from_dict(plan["greedy_evaluation"])
+         if Path(greedy.policy_b.checkpoint).resolve() != Path(config.evaluation_anchor["path"]).resolve():
+             raise ValueError("greedy opponent differs from the fixed anchor")
+-        return {"forever": True, "parent_round": chosen, "first_absolute_round": payload.round_index+1,
++        result = {"forever": True, "parent_round": chosen, "first_absolute_round": payload.round_index+1,
+             "source_games": len(games), "train_games": sum(g["split"] == "train" for g in games),
+             "validation_games": sum(g["split"] == "validation" for g in games),
+             "initial_step": payload.total_train_step, "effective_learning_rate": config.learning_rate_override,
+@@ -87,6 +87,10 @@ def check(plan, config):
+             "offline_batch": 0, "online_batch": config.offline.learner.batch_size,
+             "online_cache_bytes": config.offline.replay_cache_bytes,
+             "teacher_update": "each round's complete final checkpoint, unconditional on metrics/scores"}
++        if config.policy_replay_max_games is not None:
++            result["joint_head_pools"] = {"policy_games": config.policy_replay_max_games,
++                "value_games": config.replay_max_games, "batch_per_head": config.offline.learner.batch_size}
++        return result
+     dataset = prepare_initialization(config)
+     for identity in [config.evaluation_anchor, plan["strong_anchor"]]:
+         if sha256(Path(identity["path"])) != identity["sha256"]:
+@@ -219,13 +223,14 @@ def _online_summary(plan, state):
+     completed = len(state["completed_rounds"])
+     latest = _online_round_record(plan, state, completed) if completed else None
+     result = {"status": "in_progress", "completed_rounds": completed, "target_rounds": None,
+-        "parent_round": plan["fork_from"]["round"], "last_absolute_round": state["online_round_offset"]+completed,
++        "parent_round": plan["fork_from"]["round"], "parent_absolute_round": state["online_round_offset"],
++        "last_absolute_round": state["online_round_offset"]+completed,
+         "latest_teacher": state["latest_checkpoint"], "latest_round": latest,
+         "history": "rounds/round-*.json; one immutable record per committed absolute generation",
+         "scope": "online-only; single training seed; stored-label DEV fitting and paired strength panels"}
+     artifacts = Path(plan["artifacts"])
+     write_json(artifacts / "summary.json", result)
+-    lines = [f"# 第{result['parent_round']}轮终点长期在线续训", "", f"完成续训{completed}轮；最新绝对轮号{result['last_absolute_round']}；无轮数终点。",
++    lines = [f"# 第{result['parent_absolute_round']}轮终点长期在线续训", "", f"完成续训{completed}轮；最新绝对轮号{result['last_absolute_round']}；无轮数终点。",
+         "", "教师每轮完整终点无条件升级；历史矩阵和对战摘要逐轮保存于 rounds/，原始结果保留在runs。", ""]
+     if latest:
+         lines += ["| 轮 | 本轮步数 | 最新代完整留出KL | 最新代完整留出MSE |", "|---|---:|---:|---:|"]
+diff --git a/tests/test_hybrid_training.py b/tests/test_hybrid_training.py
+index 9a73c1f..3c5ad5a 100644
+--- a/tests/test_hybrid_training.py
++++ b/tests/test_hybrid_training.py
+@@ -74,6 +74,44 @@ def test_same_game_numbers_are_isolated_and_zero_pool_does_not_draw(monkeypatch)
+     assert a.snapshot() == b.snapshot()
+ 
+ 
++def test_joint_head_windows_keep_value_stream_and_whole_game_holdout(monkeypatch):
++    monkeypatch.setattr(alphazero_replay, 'load_game',
++                        lambda path: ({'value_targets': np.zeros(8)}, {'run_id': str(path)}))
++    games = [ReplayGame(r, f'teacher-{r}', gid, 'validation' if gid else 'train', 8, 8,
++                        Path(f'{r}-{gid}')) for r in range(3) for gid in range(2)]
++    index = ReplayIndex(games)
++    policy = hybrid_train.joint_policy_pool(index, 2)
++    value = PositionPool(index.split_games('train'), index.cache, 'value')
++    assert [(g.round_index, g.game_id) for g in policy.games] == [(2, 0)]
++    rng, original = DeterministicRng(51), DeterministicRng(51)
++    state = rng.snapshot()
++    drawn = hybrid_train.draw_joint_head_batch(policy, value, rng, 64,
++                                               inherited_run_ids={'teacher-0', 'teacher-1'})
++    canonical = [value.sample(original)[1] for _ in range(64)]
++    assert drawn.references[64:] == tuple(canonical)
++    assert rng.snapshot() == original.snapshot()
++    assert {r.round_index for r in drawn.references[:64]} == {2}
++    assert all(r.game_id == 0 for r in drawn.references)
++    assert len(drawn.samples) == len(drawn.value_samples) == 64
++    assert sum(v for k, v in drawn.source_positions.items() if k.startswith('policy_round_')) == 64
++    assert sum(v for k, v in drawn.source_positions.items() if k.startswith('value_round_')) == 64
++    assert drawn.source_positions['inherited_online'] + drawn.source_positions['branch_online'] == 128
++    restored = hybrid_train.draw_joint_head_batch(policy, value, DeterministicRng.restore(state), 64)
++    assert drawn.references == restored.references
++    equal = hybrid_train.draw_joint_head_batch(value, value, DeterministicRng(51), 64)
++    assert equal.references[:64] == equal.references[64:]
++    raw = read_json(Path('configs/entity_attention_v1/hybrid_r9_online_lr2e5_1000_forever_20261011.json'))
++    config = HybridConfig.from_dict(raw)
++    assert 'policy_replay_max_games' not in config.to_dict()
++    narrow = replace(config, policy_replay_max_games=2000)
++    assert HybridConfig.from_dict(narrow.to_dict()) == narrow
++    for count in (0, 6001, True):
++        with pytest.raises(ValueError, match='1..replay_max_games'):
++            replace(config, policy_replay_max_games=count)
++    with pytest.raises(ValueError, match='joint online-only'):
++        replace(narrow, online_only=False)
++
++
+ @pytest.fixture(scope='module')
+ def source(tmp_path_factory):
+     root = tmp_path_factory.mktemp('hybrid-source')
+diff --git a/tests/test_pool_iteration.py b/tests/test_pool_iteration.py
+index 1f962c8..257a3ff 100644
+--- a/tests/test_pool_iteration.py
++++ b/tests/test_pool_iteration.py
+@@ -169,7 +169,9 @@ def test_real_greedy_panel_resumes(source, tmp_path):
+     assert resumed['pairs'] == first['pairs']
+ 
+ 
+-def test_online_forever_inherits_window_resumes_lr_and_unconditionally_upgrades(tmp_path, source, monkeypatch):
++@pytest.mark.parametrize('policy_games', [None, 2])
++def test_online_forever_inherits_window_resumes_lr_and_unconditionally_upgrades(tmp_path, source, monkeypatch,
++                                                                             policy_games):
+     torch.set_num_threads(1)
+     old_plan, parent_cfg, _ = setup_plan(tmp_path, source)
+     split_base = next(seed for seed in range(30710000, 30720000) if all(
+@@ -194,6 +196,7 @@ def test_online_forever_inherits_window_resumes_lr_and_unconditionally_upgrades(
+     source_payload = load_alphazero_checkpoint(parent_final)
+     config = replace(parent_cfg, run_id='online-forever', online_only=True,
+         initialization=None, mix_schedule=(), learning_rate_override=2e-5,
++        policy_replay_max_games=policy_games,
+         # Old source paths must not be consulted, even for checks or validation.
+         offline=replace(parent_cfg.offline, source_run='unused-no-offline-source',
+                         source_artifacts='unused-no-offline-artifacts'))
+@@ -259,7 +262,26 @@ def test_online_forever_inherits_window_resumes_lr_and_unconditionally_upgrades(
+             assert point['offline_fixed'] is None
+             assert f'g{local+4:03d}/validation/all' in point['online_validation_full']['metrics']
+         usage = read_json(stage / 'source_usage.json')
+-        assert sum(g['actual_draws'] for g in usage['online_by_generation']) == 8
++        if policy_games is None:
++            assert sum(g['actual_draws'] for g in usage['online_by_generation']) == 8
++        else:
++            pools = snap['joint_head_pools']
++            assert pools['mode'] == 'joint_separate_batches'
++            assert pools['policy_replay_max_games'] == 2 and pools['value_replay_max_games'] == 4
++            assert [g['round_index'] for g in pools['generations'] if g['policy_expected_fraction']] == [local+3]
++            assert usage['policy']['draws'] == usage['value']['draws'] == 8
++            draws = usage['joint_head_pools']['actual_draws_by_head_round']
++            assert draws[f'policy_round_{local+3}'] == 8
++            assert sum(n for k, n in draws.items() if k.startswith('value_round_')) == 8
++            assert sum(usage['online_replacement']['actual_draws'].values()) == 16
++            import json
++            records = [json.loads(line) for line in (stage / 'training_metrics.jsonl').read_text().splitlines()]
++            steps = [row for row in records if row['event'] == 'train_step']
++            assert all(row['training_mode'] == 'joint_separate_batches' for row in steps)
++            assert all(row['policy_batch_size'] == row['value_batch_size'] == 4 for row in steps)
++            assert all('policy_grad_norm' not in row and 'value_grad_norm' not in row for row in steps)
++            for head in ('policy', 'value'):
++                assert all(read_json(p)['batch_size'] == 4 for p in (stage / 'usage' / head).glob('*.json'))
+     final = load_alphazero_checkpoint(root / 'rounds/round-002/checkpoints/final.pt')
+     assert final.total_train_step == source_payload.total_train_step+6
+     assert final.learner_config['learning_rate'] == 2e-5

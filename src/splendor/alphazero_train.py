@@ -41,8 +41,10 @@ from .alphazero_checkpoint import (
 )
 from .alphazero_replay import PositionPool, ReplayReference
 from .opponent_pool import load_frozen_actor_critic_checkpoint
+from .policy_surprise import PolicySurpriseConfig, PolicySurpriseWeighting
 from .rng import DeterministicRng
 from .selfplay_data import SelfPlayBatch, SelfPlaySample, collate_selfplay_samples
+from .value_auxiliary import ValueAuxiliaryConfig, auxiliary_targets
 
 DEFAULT_DEVICE = "cuda"
 _EPS = torch.finfo(torch.float32).tiny
@@ -411,6 +413,8 @@ class AlphazeroLearner:
     def train_step(
         self, batch: SelfPlayBatch, *, references: Sequence[ReplayReference],
         value_batch: SelfPlayBatch | None = None,
+        value_auxiliary: ValueAuxiliaryConfig | None = None,
+        auxiliary_labels: tuple[np.ndarray, np.ndarray] | None = None,
     ) -> dict[str, Any]:
         """Joint update with optional separate value samples and one global clip.
 
@@ -420,7 +424,14 @@ class AlphazeroLearner:
 
         tensors = _torch_batch(batch, self.device)
         self.model.train()
-        logits, values = self.model(batch.decisions)
+        if (value_auxiliary is None) != (auxiliary_labels is None):
+            raise ValueError("auxiliary configuration and labels must be supplied together")
+        if value_auxiliary is not None:
+            if value_batch is not None:
+                raise ValueError("auxiliary offline fitting requires one shared minibatch")
+            logits, values, score_prediction, turns_prediction = self.model.forward_with_auxiliary(batch.decisions)
+        else:
+            logits, values = self.model(batch.decisions)
         terms = alphazero_loss_sums(
             logits,
             values,
@@ -439,6 +450,20 @@ class AlphazeroLearner:
                 value_tensors["value_weights"].sum(), terms.entropy_sum,
             )
         total = terms.total(self.config)
+        auxiliary_metrics = {}
+        if value_auxiliary is not None:
+            score_target, turns_target = [torch.as_tensor(x, device=self.device) for x in auxiliary_labels]
+            if score_target.shape != values.shape or turns_target.shape != values.shape:
+                raise ValueError("auxiliary targets must match the shared minibatch")
+            weight = tensors["value_weights"]
+            denominator = weight.sum().clamp_min(_EPS)
+            score_loss = ((score_prediction - score_target).square() * weight).sum() / denominator
+            turns_loss = ((turns_prediction - turns_target).square() * weight).sum() / denominator
+            total = total + value_auxiliary.score_loss_weight * score_loss + value_auxiliary.turns_loss_weight * turns_loss
+            auxiliary_metrics = {"score_loss": float(score_loss.detach()),
+                                 "remaining_turns_loss": float(turns_loss.detach()),
+                                 "score_mse_points": float(score_loss.detach()) * value_auxiliary.score_scale ** 2,
+                                 "remaining_turns_mse": float(turns_loss.detach()) * value_auxiliary.turns_scale ** 2}
         self.optimizer.zero_grad(set_to_none=True)
         finite = (
             torch.isfinite(logits).all()
@@ -490,6 +515,7 @@ class AlphazeroLearner:
             "learning_rate": float(self.optimizer.param_groups[0]["lr"]),
             "batch_size": int(tensors["value_targets"].shape[0]),
         }
+        record.update(auxiliary_metrics)
         if value_batch is not None:
             record.update({key: value for key, value in label_statistics(value_batch).items()
                            if key.startswith("value_")})
@@ -693,6 +719,8 @@ def run_training_round(
     batch_drawer: Callable[[DeterministicRng], DrawnBatch] | None = None,
     split_grad_norms: tuple[float, float] | None = None,
     joint_separate_batches: bool = False,
+    policy_surprise_weighting: PolicySurpriseConfig | None = None,
+    value_auxiliary: ValueAuxiliaryConfig | None = None,
 ) -> dict[str, Any]:
     """Drive one round of optimizer steps and checkpoint every N updates."""
 
@@ -700,6 +728,15 @@ def run_training_round(
         raise ValueError("steps_target cannot be negative")
     if joint_separate_batches and split_grad_norms is not None:
         raise ValueError("joint separate batches use the single global gradient limit")
+    weighting_identity = asdict(policy_surprise_weighting) if policy_surprise_weighting is not None else None
+    if learner.replay_identity.get("policy_surprise_weighting") != weighting_identity:
+        raise ValueError("policy surprise weighting differs from checkpoint replay identity")
+    weighter = PolicySurpriseWeighting(policy_surprise_weighting) if policy_surprise_weighting is not None else None
+    auxiliary_identity = asdict(value_auxiliary) if value_auxiliary is not None else None
+    if learner.replay_identity.get("value_auxiliary") != auxiliary_identity:
+        raise ValueError("value auxiliary objective differs from checkpoint replay identity")
+    if value_auxiliary is not None and (joint_separate_batches or split_grad_norms is not None):
+        raise ValueError("auxiliary offline fitting requires joint shared minibatches")
     if learner.round_steps_target != steps_target:
         raise ValueError("learner step target disagrees with this training round")
     if max_steps_this_session is not None and max_steps_this_session <= 0:
@@ -729,6 +766,9 @@ def run_training_round(
         draw_seconds = time.perf_counter() - tick
         tick = time.perf_counter()
         batch = collate_training_samples(drawn.samples)
+        weighting_stats = None
+        if weighter is not None:
+            batch, weighting_stats = weighter.apply(batch, drawn.samples, drawn.references[:len(drawn.samples)])
         value_batch = (collate_training_samples(drawn.value_samples)
                        if drawn.value_samples is not None else None)
         collate_seconds = time.perf_counter() - tick
@@ -740,11 +780,17 @@ def run_training_round(
         else:
             if (value_batch is None) != (split_grad_norms is None):
                 raise ValueError("split batches and independent gradient limits must be supplied together")
-            record = (learner.train_step(batch, references=drawn.references) if value_batch is None else
+            auxiliary_kwargs = {}
+            if value_auxiliary is not None:
+                auxiliary_kwargs = {"value_auxiliary": value_auxiliary,
+                                    "auxiliary_labels": auxiliary_targets(drawn.samples, value_auxiliary)}
+            record = (learner.train_step(batch, references=drawn.references, **auxiliary_kwargs) if value_batch is None else
                       learner.train_split_step(batch, value_batch, references=drawn.references,
                                                policy_max_grad_norm=split_grad_norms[0],
                                                value_max_grad_norm=split_grad_norms[1]))
         update_seconds = time.perf_counter() - tick
+        if weighting_stats is not None:
+            record["policy_surprise_weighting"] = weighting_stats
         record["seconds"] = {"draw_load": draw_seconds, "collate": collate_seconds, "update_host": update_seconds}
         for key, value in record["seconds"].items():
             timings[key] += value

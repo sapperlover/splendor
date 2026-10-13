@@ -1,0 +1,362 @@
+{
+  "actual_r43_cpu_smoke": {
+    "policy_surprise": {
+      "batch_size": 8,
+      "checkpoint": "runtime/entity_attention_r24_r43_offline_objectives_20261013/policy_surprise_cpu_smoke.pt",
+      "checkpoint_sha256": "456d46326c1bcc6e028227107406bb202404119d2909be81ff5e34214e11ee1c",
+      "device": "cpu",
+      "metrics": {
+        "batch_size": 8,
+        "entropy_sum": 4.420702934265137,
+        "event": "train_step",
+        "grad_clipped": true,
+        "grad_norm": 29.021350860595703,
+        "learning_rate": 2e-05,
+        "policy_ce_sum": 4.197414875030518,
+        "policy_entropy": 1.1157631874084473,
+        "policy_kl": 0.1634602670688131,
+        "policy_loss": 1.0594063997268677,
+        "policy_positions": 6,
+        "policy_weight_sum": 3.9620442390441895,
+        "round_index": 0,
+        "round_train_step": 1,
+        "target_entropy": 0.8959460953505801,
+        "target_entropy_sum": 3.549778065577902,
+        "total_loss": 1.8668144941329956,
+        "total_train_step": 72899,
+        "value_loss": 0.8074080944061279,
+        "value_positions": 8,
+        "value_sq_sum": 6.459264755249023,
+        "value_target_sq_sum": 8.0,
+        "value_target_sum": 2.0,
+        "value_weight_sum": 8.0,
+        "value_zero_mse": 1.0
+      },
+      "updates": 1
+    },
+    "value_auxiliary": {
+      "batch_size": 8,
+      "checkpoint": "runtime/entity_attention_r24_r43_offline_objectives_20261013/value_auxiliary_cpu_smoke.pt",
+      "checkpoint_sha256": "6c882145ae9642c21720c65c1dcc417cf0686eaba2f2e1fc2c7c05fb6a58336c",
+      "device": "cpu",
+      "metrics": {
+        "batch_size": 8,
+        "entropy_sum": 6.5621185302734375,
+        "event": "train_step",
+        "grad_clipped": true,
+        "grad_norm": 29.065881729125977,
+        "learning_rate": 2e-05,
+        "policy_ce_sum": 6.338179111480713,
+        "policy_entropy": 1.0936864614486694,
+        "policy_kl": 0.14227779456630754,
+        "policy_loss": 1.0563632249832153,
+        "policy_positions": 6,
+        "policy_weight_sum": 6.0,
+        "remaining_turns_loss": 0.10689612478017807,
+        "remaining_turns_mse": 171.0337996482849,
+        "round_index": 0,
+        "round_train_step": 1,
+        "score_loss": 0.20524072647094727,
+        "score_mse_points": 46.179163455963135,
+        "target_entropy": 0.9140853906804779,
+        "target_entropy_sum": 5.484512344082868,
+        "total_loss": 1.9418054819107056,
+        "total_train_step": 72899,
+        "value_loss": 0.8074080944061279,
+        "value_positions": 8,
+        "value_sq_sum": 6.459264755249023,
+        "value_target_sq_sum": 8.0,
+        "value_target_sum": 2.0,
+        "value_weight_sum": 8.0,
+        "value_zero_mse": 1.0
+      },
+      "updates": 1
+    }
+  },
+  "code_hashes": {
+    "src/splendor/actor_critic.py": "23e558d68f710d9ec1ce160a4df4894295cb43e9acde3c27dd0b949e58e26828",
+    "src/splendor/alphazero_train.py": "09709c37f8db0e8dd3ea079787871910808908eb15484ab05cac678854103606",
+    "src/splendor/compact_game_cache.py": "32c301212a1b368a5272d28748148e559d2d62d7dd18b0f12dad241f30c614c7",
+    "src/splendor/entity_attention.py": "831cdc4083992a50d986533d2e284c665134fb93ef5245af514036319167cc95",
+    "src/splendor/offline_objectives.py": "6b04721e6a42f73e7494c0bc717a7dec9d383a89a78ab2b49a54661570e90515",
+    "src/splendor/value_auxiliary.py": "51ad04543c6ec207ac7f6d6132af2b95a1b03108f4821a99af01f894915e8d45"
+  },
+  "git_head": "3a3194b5237e3dfc11ddfd2c2977f1b9ca3e1cae",
+  "passed": true,
+  "plans": {
+    "policy_surprise": {
+      "absolute_rounds": [
+        24,
+        43
+      ],
+      "draw_exposures": 4.0,
+      "fixed_validation_digest": "8760e493b02a5c57300b21f1b53f42fac144a6fd392c03bc5cefa6bf4842283d",
+      "games": 20000,
+      "initial_checkpoint": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+      "initial_checkpoint_sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14",
+      "replay_identity": {
+        "digest": "9687da7220ed5eeac018788b7e79f21acd2edd312510460af11bcaaf4199b3f1",
+        "evicted_games": 0,
+        "first_key": [
+          23,
+          0
+        ],
+        "last_key": [
+          42,
+          999
+        ],
+        "policy_surprise_weighting": {
+          "fraction": 0.5
+        },
+        "protocol": "alphazero-replay-index-v1",
+        "total_games": 20000,
+        "train_games": 17971,
+        "train_positions": 1451525,
+        "validation_games": 2029,
+        "value_auxiliary": null
+      },
+      "splits": {
+        "train": {
+          "games": 17971,
+          "positions": 1451525
+        },
+        "validation": {
+          "games": 2029,
+          "positions": 163595
+        }
+      },
+      "status": "prepared",
+      "steps_target": 22681
+    },
+    "value_auxiliary": {
+      "absolute_rounds": [
+        24,
+        43
+      ],
+      "draw_exposures": 4.0,
+      "fixed_validation_digest": "8760e493b02a5c57300b21f1b53f42fac144a6fd392c03bc5cefa6bf4842283d",
+      "games": 20000,
+      "initial_checkpoint": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+      "initial_checkpoint_sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14",
+      "replay_identity": {
+        "digest": "983c2bad70c1ec3633474640423e8e71a0d47f8397727425f2bbf6728ac7ecc9",
+        "evicted_games": 0,
+        "first_key": [
+          23,
+          0
+        ],
+        "last_key": [
+          42,
+          999
+        ],
+        "policy_surprise_weighting": null,
+        "protocol": "alphazero-replay-index-v1",
+        "total_games": 20000,
+        "train_games": 17971,
+        "train_positions": 1451525,
+        "validation_games": 2029,
+        "value_auxiliary": {
+          "score_loss_weight": 0.25,
+          "score_scale": 15.0,
+          "turns_loss_weight": 0.25,
+          "turns_scale": 40.0
+        }
+      },
+      "splits": {
+        "train": {
+          "games": 17971,
+          "positions": 1451525
+        },
+        "validation": {
+          "games": 2029,
+          "positions": 163595
+        }
+      },
+      "status": "prepared",
+      "steps_target": 22681
+    }
+  },
+  "representative_archive_checks": [
+    {
+      "absolute_round": 24,
+      "archive_sha256": "118282db16c31bf786fd07e34b61a57951dac3e148eb70acb011b58abbeaa603",
+      "game_id": 999,
+      "positions": 81
+    },
+    {
+      "absolute_round": 25,
+      "archive_sha256": "36496eb01ad51713fd931ce4449060917c3d2e5bd5161846f8f00f2e4e5c085e",
+      "game_id": 999,
+      "positions": 85
+    },
+    {
+      "absolute_round": 26,
+      "archive_sha256": "8359a0acb09adfeb3529d5afebbe905d5f4e40698a812ecf9d63dbc2785c7a18",
+      "game_id": 999,
+      "positions": 82
+    },
+    {
+      "absolute_round": 27,
+      "archive_sha256": "39e8c120f26ace72671cbf2e984c433a0d659bf95c6345ce022fa8e7efd873e8",
+      "game_id": 999,
+      "positions": 84
+    },
+    {
+      "absolute_round": 28,
+      "archive_sha256": "e718e154be53e0a12f756a4ea3d55c5d517e4368dffa68029f79baae08411a8d",
+      "game_id": 999,
+      "positions": 88
+    },
+    {
+      "absolute_round": 29,
+      "archive_sha256": "396e7d60d89b4c7fdc374a7e28a545cae8878ff4d8899269bb2f6b8047538096",
+      "game_id": 999,
+      "positions": 75
+    },
+    {
+      "absolute_round": 30,
+      "archive_sha256": "35777375813941ab8c5a91ecbecacdd37f4556fd94151673cd9dd121a7321ee5",
+      "game_id": 999,
+      "positions": 79
+    },
+    {
+      "absolute_round": 31,
+      "archive_sha256": "b265250a42841bf1dca35f912ffb119e7c19421d76b05f19969c475656afbd74",
+      "game_id": 999,
+      "positions": 62
+    },
+    {
+      "absolute_round": 32,
+      "archive_sha256": "e77b00255eaee24621c17a72c04d0be5fe78a7ebfae8b0cb1d9fe2e1b23eab93",
+      "game_id": 999,
+      "positions": 85
+    },
+    {
+      "absolute_round": 33,
+      "archive_sha256": "947a036fb7d9e6a128227de6a191d7b56b3b9682f2041c1344af3c41c2de9fbe",
+      "game_id": 999,
+      "positions": 89
+    },
+    {
+      "absolute_round": 34,
+      "archive_sha256": "2389f920c3539bb4a543a3186d1bc36812ac7cfc66f9a9c66fb0319279661128",
+      "game_id": 999,
+      "positions": 86
+    },
+    {
+      "absolute_round": 35,
+      "archive_sha256": "d31842c3bc79d7c7bc57966ace1da3996933de6a42e01485521a821b87a61c72",
+      "game_id": 999,
+      "positions": 85
+    },
+    {
+      "absolute_round": 36,
+      "archive_sha256": "66fc223933c44bd9163fb6a032773749ae6d60f68cc0c1e95a3dccc9f37622ef",
+      "game_id": 999,
+      "positions": 76
+    },
+    {
+      "absolute_round": 37,
+      "archive_sha256": "46a33e4fbd25f36ff53d37f79b8dc2419ac990d59d0e69f886d327a7f3e6d6d5",
+      "game_id": 999,
+      "positions": 72
+    },
+    {
+      "absolute_round": 38,
+      "archive_sha256": "95ba1de3a6514b52a9fbd6639f63f496f4362db2e36c005dc49c75f878adad87",
+      "game_id": 999,
+      "positions": 78
+    },
+    {
+      "absolute_round": 39,
+      "archive_sha256": "870ad38521778d6fc0a0274a9649a1a5fb1dcd152f3360d6252595d59e575ddb",
+      "game_id": 999,
+      "positions": 80
+    },
+    {
+      "absolute_round": 40,
+      "archive_sha256": "5fc5bc93c85078458a9461bbb564444be67aad485a512ca44e0c9249e5c69901",
+      "game_id": 999,
+      "positions": 82
+    },
+    {
+      "absolute_round": 41,
+      "archive_sha256": "04ff9ef4f9334eb875994cee45e2861459a172acb8662acc1ecc61d8741c573e",
+      "game_id": 999,
+      "positions": 76
+    },
+    {
+      "absolute_round": 42,
+      "archive_sha256": "15cfc34d4f553fc0da4d31aba454dff4c0d1c1c56996a387eedd50af179fe010",
+      "game_id": 999,
+      "positions": 77
+    },
+    {
+      "absolute_round": 43,
+      "archive_sha256": "28560e2ffb74f4dd840ed393d740fad4d30876001719de416d3ab8109119a334",
+      "game_id": 999,
+      "positions": 58
+    }
+  ],
+  "same_dataset": true,
+  "same_fixed_validation": true,
+  "same_smoke_sampling": true,
+  "smoke_references": [
+    {
+      "decision_index": 41,
+      "game_id": 424,
+      "round_index": 24,
+      "run_id": "entity_attention_r9_online_lr2e5_1000_forever_20261011-round-015"
+    },
+    {
+      "decision_index": 11,
+      "game_id": 398,
+      "round_index": 38,
+      "run_id": "entity_attention_r9_online_lr2e5_1000_forever_20261011-round-029"
+    },
+    {
+      "decision_index": 35,
+      "game_id": 194,
+      "round_index": 41,
+      "run_id": "entity_attention_r9_online_lr2e5_1000_forever_20261011-round-032"
+    },
+    {
+      "decision_index": 35,
+      "game_id": 928,
+      "round_index": 26,
+      "run_id": "entity_attention_r9_online_lr2e5_1000_forever_20261011-round-017"
+    },
+    {
+      "decision_index": 77,
+      "game_id": 479,
+      "round_index": 30,
+      "run_id": "entity_attention_r9_online_lr2e5_1000_forever_20261011-round-021"
+    },
+    {
+      "decision_index": 54,
+      "game_id": 81,
+      "round_index": 23,
+      "run_id": "entity_attention_r9_online_lr2e5_1000_forever_20261011-round-014"
+    },
+    {
+      "decision_index": 62,
+      "game_id": 521,
+      "round_index": 36,
+      "run_id": "entity_attention_r9_online_lr2e5_1000_forever_20261011-round-027"
+    },
+    {
+      "decision_index": 36,
+      "game_id": 583,
+      "round_index": 39,
+      "run_id": "entity_attention_r9_online_lr2e5_1000_forever_20261011-round-030"
+    }
+  ],
+  "status": "prepared; formal training and strength not run",
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 67
+  },
+  "verification_command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/entity_attention_r24_r43_offline_objectives_20261013/verify.py"
+}

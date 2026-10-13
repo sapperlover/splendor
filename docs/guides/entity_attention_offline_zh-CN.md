@@ -1,5 +1,7 @@
 # 实体注意力模型与离线搜索经验学习
 
+2026-10-13新增[R24–43固定数据的PSW／value辅助目标离线入口](../../artifacts/entity_attention_r24_r43_offline_objectives_20261013/README.md)：两组从原R43继承参数与AdamW，同20000局和抽样预算，各22681步；分别启用50% policy surprise weighting、分差与剩余玩家回合两个辅助头。两组训练及各200pair greedy对原R43已完成，得分50.000%／50.125%，均未确认提升；详见[结果](../../artifacts/entity_attention_r24_r43_offline_objectives_20261013/results.md)。该入口是 `splendor.offline_objectives`，下文较早的 `splendor.offline_train` 不自动支持这些新目标。
+
 2026-10-04实现并完成有限CPU/GPU验证；2026-10-06状态更新：`runs/entity_attention_offline`已完成12045步，用户完成1000步、5000步及final对PPO 5.5M的搜索/greedy共六个200局面板。S1024/N1搜索score分别为11.75%、41.25%、59.5%；greedy分别为38.5%、60%、61.75%。现在混合训练使用的theta_5000与这里5000步节点全部模型参数相同，但它比完整离线final在共同PPO锚点上的表现更弱。身份核对及原第9轮/当前第50轮补测见[强锚点报告](../../artifacts/entity_attention_strong_anchor_20261006/README.md)。这些是重复DEV面板，不是独立FINAL验收。
 
 下文“仅准备”“尚未启动”描述相应命令首次交付时的状态，不能据此否认上述已完成的原始结果。配置见[目录说明](../../configs/entity_attention_v1/README.md)，原有限验证见[验证产物](../../artifacts/entity_attention_v1_20261004/README.md)，加载瓶颈及优化见[缓存记录](../../artifacts/offline_training_speed_20261004/README.md)。

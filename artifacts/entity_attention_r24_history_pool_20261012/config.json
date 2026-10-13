@@ -1,0 +1,90 @@
+{
+  "artifacts": "/home/lc/下载/splendor/artifacts/entity_attention_r24_history_pool_20261012",
+  "cache_mib": 8192,
+  "draw_exposures": 4,
+  "full_holdout_exposures": [
+    0,
+    0.5,
+    1,
+    2,
+    4
+  ],
+  "full_holdout_steps": [
+    1000
+  ],
+  "initial_checkpoint": {
+    "model_sha256": "6ccfa20b4065a4edfd0b571b08de0da22347d3fc0aaa3d1c45ff19d7e1ec8dd7",
+    "path": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-014/checkpoints/final.pt",
+    "sha256": "15424dc571c15dcbff0aeb3d6e698cdbea952583eb482f6f5826fc23b00f5bdb",
+    "total_train_step": 53898
+  },
+  "late_lr_multiplier": 1.0,
+  "learner": {
+    "batch_size": 256,
+    "checkpoint_every_steps": 1000,
+    "device": "cuda",
+    "history_batch_size": 128,
+    "learning_rate": 2e-05,
+    "max_grad_norm": 1.0,
+    "max_steps_per_round": null,
+    "policy_loss_weight": 1.0,
+    "steps_per_new_position": 4.0,
+    "validation_batch_size": 256,
+    "value_loss_weight": 1.0,
+    "weight_decay": 0.0001
+  },
+  "lr_drop_exposure": 4,
+  "manifest": "/home/lc/下载/splendor/artifacts/entity_attention_r24_history_pool_20261012/pool_games.jsonl",
+  "manifest_sha256": "99d7c8460d45206daa195d9bf0994b8935e148233833ec841a6e9d1dab611cfb",
+  "milestones": {
+    "0.5": 6097,
+    "1": 12194,
+    "2": 24388,
+    "4": 48776
+  },
+  "output": "/home/lc/下载/splendor/runs/entity_attention_r24_history_pool_20261012",
+  "positions_per_source_split": 512,
+  "preserve_optimizer": true,
+  "protocol": "r24-fixed-history-offline-v1",
+  "sampling_seed": 34410000,
+  "strength_plan": {
+    "confirmation": {
+      "pairs": 500,
+      "seed_start": 34700000,
+      "selection": "highest completed search DEV score; ties choose earlier step"
+    },
+    "greedy": {
+      "pairs": 200,
+      "seed_start": 34500000,
+      "steps": [
+        1000,
+        6097,
+        12194,
+        24388,
+        48776
+      ]
+    },
+    "opponent": "original complete round24 model for all panels",
+    "scope": "single training seed; best-node DEV scores are exploratory; separate opener bank confirms selection",
+    "search_dev": {
+      "pairs": 200,
+      "seed_start": 34600000,
+      "steps": [
+        6097,
+        12194,
+        24388,
+        48776
+      ]
+    },
+    "search_template": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-014/evaluation/mcts_vs_fixed_anchor.json",
+      "sha256": "701c21debffee717b2af044bc55bdd9e52153fd0f6112cd085bc48747b6d80fb"
+    }
+  },
+  "training_loop_origin": {
+    "changes": "warm R24 weights/AdamW; per-generation diagnostics; explicit full-holdout steps",
+    "path": "artifacts/entity_attention_recent_pool_20261009/train.py",
+    "sha256": "4f5e265fdc4b76b2cf31cdb4d80fccc869946900ffd49b5629797c76b2c80239"
+  },
+  "validation_seed": 34420000
+}

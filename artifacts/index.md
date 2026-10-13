@@ -1,5 +1,19 @@
 # 实验导航
 
+2026-10-13完成[R24–43固定数据：PSW与value双辅助目标离线及greedy结果](entity_attention_r24_r43_offline_objectives_20261013/results.md)：两组各22681步、同抽样；final对原R43各200pair greedy得分50.000%／50.125%，未确认提升。800局全部自然终局；辅助标签能学进去，胜负value留出后期回升；未测搜索棋力。
+
+2026-10-13完成[R43固定4k S4096：Policy Surprise Weighting](entity_attention_r43_policy_surprise_s4096_20261013/README.md)：各1000步同抽样，加权留出KL改善、普通KL差于对照；greedy 81.625%对80.875%，未确认棋力收益。[结果与逐局配对统计](entity_attention_r43_policy_surprise_s4096_20261013/results.md)、配置／命令／源码身份及原始诊断已保存。
+
+2026-10-13新增 [R43 起点 S4096/N1、policy 2k／value 6k 连续自迭代](entity_attention_r43_s4096_p2k_v6k_20261013/README.md)：每轮仍 1000 局／1000 步、lr2e-5、每头 B256，保持联合更新；本次会话上限 8 小时。小池此前仅改善部分 Train 拟合，本分支尚无收益结论。
+
+2026-10-12完成[本地实验归档与全量采样盘点](repository_archive_20261012/README.md)：约14.8GiB集中到仓库`archive/20261012/`；旧路径保留相对链接，当前4.3万局池与旧2.9万局池的原始数据未迁移。覆盖早期AZ、旧DeepSets教师、S512/N2及测速／验证采样，含逐项清单和恢复方法。
+
+归档文档核对见[全部45来源／721入口的结论索引](repository_archive_20261012/conclusions.md)。已补齐[旧θ5十轮完成报告](../docs/reports/az_theta5_10x1000_zh-CN.md)，更正“正式未启动”：训练及常规评测已完成，但终点对PPO追加面板仅100/200pair。早期smoke与临时校准器见[工程输出说明](../docs/reports/archived_engineering_experiments_20261012_zh-CN.md)。
+
+2026-10-12完成[第24轮模型：4.3万局历史池离线流程](entity_attention_r24_history_pool_20261012/README.md)：追加48776步、10组面板共2300pair；选中＋24388步，对原R24独立500pair为54.00% [50.80%,57.10%]。policy留出KL持续下降，value留出MSE先降后升；未由此证明超过R43。
+
+随后已启动[R24离线候选直接对R43](entity_attention_r24_offline_vs_r43_20261012/README.md)及[R43同池离线链路](entity_attention_r43_history_pool_20261012/README.md)：前置200pair，然后从R43沿用同一固定池、训练参数与诊断节点，追加48776步；各训练节点对原R43的评测日程与原实验相同。新结果须以完成面板为准。
+
 2026-10-09整理。机器可读身份、范围和证据SHA见[experiment_index.json](experiment_index.json)。有效记录不等于已证明棋力提升；未完成实验中可能有有效的已完成子结果。
 
 较早M4与固定数据诊断见[M4整合报告](../docs/reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md)，操作入口见[docs导航](../docs/index.md)。
@@ -87,6 +101,8 @@
 | --- | --- |
 | `python-engine-rules-v2` | [Python 规则引擎历史验收](../docs/reports/engine_validation_zh-CN.md) |
 | `ppo-5m-seed1` | [PPO 5M 单 seed 训练报告](../docs/reports/ppo_5m_zh-CN.md) |
+| `az-theta5-10x1000-seed1-preparation` | [旧θ5十轮的历史准备快照](../docs/archive/next_az_training_zh-CN.md)，不代表正式运行仍未启动 |
+| `az-theta5-10x1000-seed1-completed` | [旧θ5十轮完成事实、锚点结果与未完成面板](../docs/reports/az_theta5_10x1000_zh-CN.md) |
 | `native-early-panel` | [Native 推理吞吐：有效基线与结论边界](../docs/reports/inference_throughput_zh-CN.md) |
 | `entity-attention-hybrid-s1024-n1-2026-10-06` | [原第九轮 S1024/N1 小步更新配置验证](entity_attention_hybrid_s1024_n1_20261006/README.md) |
 | `entity-attention-hybrid-s1024-n1-replay3000-2026-10-06` | [原第九轮 S1024/N1 小步更新配置验证](entity_attention_hybrid_s1024_n1_20261006/README.md) |
@@ -104,6 +120,5 @@
 | 实验身份 | 阅读入口 |
 | --- | --- |
 | `native-multi-round-training` | [AlphaZero 式 policy/value 循环](../docs/guides/alphazero_zh-CN.md) |
-| `az-theta5-10x1000-seed1-preparation` | [旧 θ5 起点的 10×1000 AZ 训练准备](../docs/archive/next_az_training_zh-CN.md) |
 
 索引聚焦已复核的专题；未列入的既有基线和搜索汇总仍在原目录，未列入不代表失效。每个目录内的README、配置、原始汇总与分析入口共同限定其版本。目录身份和恢复产物不因本次导航整理而重建。

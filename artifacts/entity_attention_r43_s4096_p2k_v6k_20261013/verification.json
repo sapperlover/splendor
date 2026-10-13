@@ -1,0 +1,61 @@
+{
+  "config_diff_verified": "Only run identity, S1024->S4096, policy_replay_max_games=2000 and declared lr matching already effective source lr2e-5; other settings and seeds identical.",
+  "git_revision": "3a3194b5237e3dfc11ddfd2c2977f1b9ca3e1cae",
+  "gpu_training_smoke": {
+    "batch_per_head": 256,
+    "cuda_peak_allocated_bytes": 318571008,
+    "device": "cuda",
+    "elapsed_seconds": 8.100485711000147,
+    "global_clip": 1.0,
+    "learning_rate": 2e-05,
+    "passed": true,
+    "policy_positions": 146824,
+    "scope": "GPU call-chain smoke on inherited R43 stored labels; checkpoints stay in runtime and are not experiment teachers",
+    "steps": 2,
+    "training_metrics": "runtime/entity_attention_r43_s4096_p2k_v6k_20261013/gpu_training_smoke/training_metrics.jsonl",
+    "value_positions": 436348
+  },
+  "parent_checkpoint_sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14",
+  "parent_replay_snapshot_sha256": "fb5f78f878e2c2614ef3fd7a31484c2e489eedfe4d7a2e3cb3e62560aaad3aa2",
+  "passed": true,
+  "preflight": {
+    "effective_learning_rate": 2e-05,
+    "first_absolute_round": 44,
+    "forever": true,
+    "initial_step": 72898,
+    "joint_head_pools": {
+      "batch_per_head": 256,
+      "policy_games": 2000,
+      "value_games": 6000
+    },
+    "new_games_per_round": 1000,
+    "offline_batch": 0,
+    "online_batch": 256,
+    "online_cache_bytes": 8589934592,
+    "parent_round": 34,
+    "source_games": 6000,
+    "teacher_update": "each round's complete final checkpoint, unconditional on metrics/scores",
+    "train_games": 5405,
+    "updates_per_round": 1000,
+    "validation_games": 595
+  },
+  "regression": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 30
+  },
+  "regression_command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python -m pytest -q tests/test_hybrid_training.py tests/test_pool_iteration.py --junitxml=artifacts/entity_attention_r43_s4096_p2k_v6k_20261013/tests.xml",
+  "source_sha256": {
+    "artifacts/entity_attention_r43_s4096_p2k_v6k_20261013/run.py": "dda218c82a7b29c89a8057c46025e9fd29b5a31b8e47e7c42b96a20a38875113",
+    "src/splendor/alphazero_train.py": "874b63a7d6b3242775c11041d2cd5656b97baca23424c18d6e575c9a4afd8a3d",
+    "src/splendor/hybrid_train.py": "a0402ff1036fb6f51dfa81c8dc54ab7e58aa40312155de7279c7b66e3aa91312",
+    "src/splendor/pool_iteration.py": "5a2c4c48a79e8e7d64fb83ad807bdb84dbbc59a7edc30f8ad7238dbad1727d2e"
+  },
+  "execution_environment": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "TORCHINDUCTOR_COMPILE_THREADS": "1"
+  }
+}

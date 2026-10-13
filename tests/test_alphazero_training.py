@@ -25,6 +25,7 @@ from splendor.ppo import TRAINING_CHECKPOINT_FORMAT_VERSION
 from splendor.replay import RULESET_ID
 from splendor.selfplay import derive_seed
 from splendor.selfplay_data import collate_selfplay_samples
+from splendor.policy_surprise import PolicySurpriseConfig
 from splendor.selfplay_fast import (
     ExecutionConfig, FastSelfPlayConfig, generate as generate_selfplay,
 )
@@ -282,6 +283,60 @@ def test_checkpoint_roundtrip_matches_continuous_training(az_runs, tmp_path):
         assert torch.equal(reference_parameters[name], tensor), name
     payload = load_alphazero_checkpoint(checkpoint_path)
     assert payload.round_train_step == 2 and payload.total_train_step == 2
+
+
+def test_surprise_weighted_driver_resume_is_exact(az_runs, tmp_path):
+    checkpoint, first, _ = az_runs
+    index = build_replay_index([first], max_games=10, cache_bytes=CACHE_BYTES)
+    pool = index.position_pool(split="train", round_index=0)
+    config = LearnerConfig(device="cpu", batch_size=4, history_batch_size=2,
+                           checkpoint_every_steps=2, learning_rate=1e-3)
+    weighting = PolicySurpriseConfig(.5)
+    identity = {**index.identity(), 'policy_surprise_weighting': asdict(weighting)}
+    initial = AlphazeroLearner.warm_start(checkpoint, config, sampling_seed=51,
+        replay_identity=identity, parent_checkpoint={'path': str(checkpoint), 'sha256': 'test'},
+        round_index=0, round_steps_target=4)
+    initial.save(tmp_path / 'initial.pt')
+
+    def run(learner, name, limit=None):
+        return run_training_round(learner, steps_target=4, current_pool=pool, history_pool=None,
+            validation_samples=(), validation_games=0, checkpoint_dir=tmp_path / name,
+            metrics_path=tmp_path / name / 'metrics.jsonl', max_steps_this_session=limit,
+            policy_surprise_weighting=weighting)
+
+    continuous = AlphazeroLearner.resume(tmp_path / 'initial.pt', config, replay_identity=identity,
+                                        round_index=0, round_steps_target=4)
+    run(continuous, 'continuous')
+    segmented = AlphazeroLearner.resume(tmp_path / 'initial.pt', config, replay_identity=identity,
+                                       round_index=0, round_steps_target=4)
+    run(segmented, 'segmented', 2)
+    segmented = AlphazeroLearner.resume(tmp_path / 'segmented/step-000000002.pt', config,
+        replay_identity=identity, round_index=0, round_steps_target=4)
+    run(segmented, 'segmented')
+    assert continuous.sampling_rng.snapshot() == segmented.sampling_rng.snapshot()
+    for key, value in continuous.model.state_dict().items():
+        torch.testing.assert_close(value, segmented.model.state_dict()[key], rtol=0, atol=0)
+    for key, params in continuous.optimizer.state_dict()['state'].items():
+        for name, value in params.items():
+            torch.testing.assert_close(value, segmented.optimizer.state_dict()['state'][key][name], rtol=0, atol=0)
+    rows = [json.loads(line) for line in (tmp_path / 'segmented/metrics.jsonl').read_text().splitlines()]
+    assert sum('policy_surprise_weighting' in row for row in rows) == 4
+    with pytest.raises(ValueError, match='checkpoint replay identity'):
+        run_training_round(segmented, steps_target=4, current_pool=pool, history_pool=None,
+            validation_samples=(), validation_games=0, checkpoint_dir=tmp_path / 'invalid',
+            metrics_path=tmp_path / 'invalid.jsonl')
+
+    from splendor.pool_fitting import evaluate
+    records = [{**g.to_dict(), 'source_id': 'test'} for g in index.games]
+    fixed = {'references': [{'round_index': pool.games[0].round_index,
+                             'game_id': pool.games[0].game_id, 'decision_index': i}
+                            for i in range(min(4, pool.games[0].decision_count))], 'digest': 'test'}
+    plain = evaluate(continuous, index, records, fixed=fixed)
+    weighted = evaluate(continuous, index, records, fixed=fixed, policy_surprise_weighting=weighting)
+    for key, values in plain['metrics'].items():
+        assert weighted['metrics'][key]['policy_ce'] == values['policy_ce']
+        assert weighted['metrics'][key]['value_mse'] == values['value_mse']
+        assert math.isfinite(weighted['metrics'][key]['surprise_policy_ce'])
 
 
 def test_az_checkpoint_loads_in_frozen_search_and_evaluation(az_runs, tmp_path):

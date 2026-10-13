@@ -1,0 +1,34 @@
+{
+  "protocol": "p4-pool-self-iteration-v1",
+  "hybrid_config": "configs/entity_attention_v1/hybrid_r47_s4096_p6k_v6k_20261013.json",
+  "output": "runs/entity_attention_r47_s4096_p6k_v6k_20261013",
+  "artifacts": "artifacts/entity_attention_r47_s4096_p6k_v6k_20261013",
+  "greedy_evaluation": {
+    "adjudicate_deterministic_policy_cycles": true,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 30820000,
+    "device": "cpu",
+    "max_completed_turns": 400,
+    "pairs": 200,
+    "policy_a": {
+      "checkpoint": "generated-at-runtime",
+      "kind": "greedy_checkpoint",
+      "name": "online_candidate"
+    },
+    "policy_b": {
+      "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+      "kind": "greedy_checkpoint",
+      "name": "P4V4"
+    },
+    "policy_seed_base": 30810000,
+    "seed_start": 30800000,
+    "workers": 8
+  },
+  "forever": true,
+  "fork_from": {
+    "run": "runs/entity_attention_r43_s4096_p2k_v6k_20261013",
+    "round": 4,
+    "checkpoint_sha256": "ea70c057652db5100d362f2b41dbf0d17f184df27f99a38144cfcea45c07cc37",
+    "replay_snapshot_sha256": "2a2385159253eff1c0dcb97f7375fe89b8fa5238ef58926c4e07628c90980764"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "bootstrap_seed": 36220000,
+  "commands": [
+    [
+      "/home/lc/anaconda3/envs/splendor/bin/python",
+      "-u",
+      "-m",
+      "splendor.evaluation",
+      "--config",
+      "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43/policy_surprise_config.json",
+      "--output",
+      "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43/policy_surprise.json",
+      "--progress-every",
+      "10",
+      "--summary-every",
+      "10"
+    ],
+    [
+      "/home/lc/anaconda3/envs/splendor/bin/python",
+      "-u",
+      "-m",
+      "splendor.evaluation",
+      "--config",
+      "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43/value_auxiliary_config.json",
+      "--output",
+      "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43/value_auxiliary.json",
+      "--progress-every",
+      "10",
+      "--summary-every",
+      "10"
+    ]
+  ],
+  "difference_bootstrap_seed": 36230000,
+  "game_seed_range": [
+    36200000,
+    36200199
+  ],
+  "models": {
+    "policy_surprise": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_r24_r43_policy_surprise_offline_20261013/checkpoints/final.pt",
+      "sha256": "63fa248d81b1e9aecdf1e68c6271cd4c52e83a6bfab1bb899b3fa4386c9e184d",
+      "training_config_sha256": "5e45bc2d6080352520d60fc298598ba75d9b399874beb2b0d220c67c6e863b2e"
+    },
+    "value_auxiliary": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_r24_r43_value_auxiliary_offline_20261013/checkpoints/final.pt",
+      "sha256": "f832374da5721ef0567ee4538bd75b15c68085c54a623415c79c87bf7c45a895",
+      "training_config_sha256": "c16a738d02abf446a48fd7b4f10d348e28da2ed8f0ebe87a107552bbba178aa0"
+    }
+  },
+  "opponent": {
+    "path": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+    "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+  },
+  "pairs_per_panel": 200,
+  "policy_seed_base": 36210000,
+  "total_games": 800
+}

@@ -1,0 +1,73 @@
+# 2026-10-12 本地实验归档与全量采样盘点
+
+用户授权将上一轮列出的冷数据统一移动到仓库根目录的新文件夹，并进一步检查早期不再用于当前实验的采样。本次实际归档位于 [`archive/20261012/`](../../archive/20261012/README.md)，保留各来源在 `runs/`、`runtime/` 下的相对结构。未删除原始内容，未修改既有实验配置、冻结数据清单或 `.gitignore`，未启动新实验。
+
+归档内容的阅读顺序、文件用途和外置保存范围见[归档阅读说明](../../archive/20261012/README.md)。后续文档核对补齐了[逐来源结论索引](conclusions.md)，45个来源组覆盖全部721个迁移入口；[conclusion_index.json](conclusion_index.json)保存逐入口映射及专题／证据SHA，有限文档验证见[documentation_audit.json](documentation_audit.json)。工程验证、未核验临时输出与正式研究结果分别写明，不把归档解释为数据无效或新实验验收。
+
+此次补齐的专题包括[旧θ5十轮完成报告](../../docs/reports/az_theta5_10x1000_zh-CN.md)、[截至第43轮的在线主线快照](../entity_attention_r9_online_lr2e5_1000_forever_20261011/README.md)和[早期采集／工程试验说明](../../docs/reports/archived_engineering_experiments_20261012_zh-CN.md)。旧θ5 README中“正式未启动”已更正；终点对PPO仅完成100/200pair，59.25%不能写作完整200pair确认。原准备记录和原始数值文件保留。
+
+## 实际迁移
+
+共移动 **721 个文件或目录入口**，入口内常规文件的已分配空间合计 **14.775 GiB**，不含目录本身和新增符号链接占用。使用同一文件系统的 rename，旧位置建立相对符号链接；逐入口核对迁移前后的 device、inode、size、mtime_ns。详细路径、分类、空间统计与核验见 [manifest.json](manifest.json)，逐项完成记录见 [moves.jsonl](moves.jsonl)。
+
+| 分类 | 已分配空间 | 迁移范围 |
+| --- | ---: | --- |
+| 已结束实验分支 | 5.736 GiB | 第9轮 OFAT、policy history、S512/N2、第9轮步数扩展、第30轮 BCD 五个 run |
+| 主线密集 checkpoint | 3.286 GiB | 续训主线已完成 `round-000`～`round-033` 的 544 个非主要节点 `step-*.pt` |
+| M4 追加搜索标签 | 1.916 GiB | 12 轮 `policy_labels/`，共 482,982 文件，其中 482,934 个 NPZ |
+| 旧大池离线训练中间权重 | 0.629 GiB | 104 个 checkpoint，保留起点、P4/P8/P12、终点和 best KL |
+| 旧大池训练账本及逐步日志 | 0.899 GiB | `references.i64`、`training_metrics.jsonl` |
+| 已结束 runtime 验证／测速／诊断 | 1.473 GiB | 31 个来源目录；不包含当前历史池运行或网页运行目录 |
+| 早期 DeepSets 教师逐局采样 | 0.548 GiB | 原 AZ 五轮 2500 局、旧 θ5 续训十轮 10000 局的 `selfplay/`；模型留在原处 |
+| 早期 S256/N2 单次采集 | 0.014 GiB | `az_selfplay_seed1_round000` 的 300 局 |
+| Chance／CPW 采样 | 0.020 GiB | 两组各 200 局及 6 份 smoke；native 200 局保留 |
+| 迭代框架验证 | 0.254 GiB | 两版验证 run，共 32 份逐局 NPZ，连同验证权重和状态归档 |
+
+主线每轮的 `initial.pt`、`final.pt`、100／250／500／1000 步诊断节点均保留在原位置。M4 的 2400 局行为采集原件保留；追加标签和缓存不能当成 48 万局新对局。旧大池目录中的 `compositions/`、配置、结果摘要和主要模型保留。
+
+## 采样数据：哪些当前不用，哪些仍值得保留
+
+此次盘点覆盖 `runs/`、`runtime/`、`artifacts/` 及存在的失败现场目录，包含早期 AZ 与 PPO 时代留下的产物，而不按目录日期截断。逐来源完整表见 [sampling_inventory.md](sampling_inventory.md)，机器统计见 [sampling_inventory_before.json](sampling_inventory_before.json)。未解码或重放全部 NPZ，本次统计不是新的规则正确性认证。
+
+按 `games/game-*.npz` 识别逐局归档，排除 `policy_labels/` 和源码快照中的副本，迁移前共 **93,586 份逐局 NPZ**。这只是文件数，包含不同实验使用相同开局、smoke 及未完成采集，不声称全部为互相独立、可直接训练的有效对局。全部 NPZ 文件数为 579,650，含大量 M4 单局面搜索缓存和诊断数组，不能拿这个数当对局总量。JSON 对战 sidecar 不计入训练 NPZ 数。
+
+| 逐局数据类别 | 文件数 | 当前处理与价值 |
+| --- | ---: | --- |
+| 当前历史池：P4 第1–43轮 | 43,000 | 留在原处，当前离线训练直接读取；最新冻结池 |
+| 旧 2.9 万局池 | 29,000 | 留在原处；已用于成功大池蒸馏，仍有训练和复核价值 |
+| 当前在线主线未完成下一轮 | 23 | 留在原处，保留未来续采能力；不计入冻结 4.3 万局池 |
+| 早期 DeepSets 教师 | 12,500 | 已归档；当前主池不用，仍是早期蒸馏／架构对照的证据 |
+| S512/N2 分支 | 3,305 | 已归档；3300 局来自完成采集轮，最后 5 份属于未完成轮；预算口径不同 |
+| 早期 S256/N2 单次采集 | 300 | 已归档；旧协议、低预算采集，不直接并入当前 S1024/N1 池 |
+| Chance／CPW 与其 smoke | 406 | 已归档；400 局替代教师、6 份 smoke；当前正式教师不使用 |
+| 两版迭代框架验证 | 32 | 已归档；工程验证，不作为主训练样本 |
+| runtime 测速／smoke | 5,020 | 已归档；保留速度与实现复核用途，不当作独立训练对局累加 |
+| 合计 | **93,586** | 其中 **21,563** 份逐局 NPZ 已归档，**72,023** 份留在原位置 |
+
+旧 2.9 万局池由 3000 局早期 attention 自迭代、9000 局 hybrid、10000 局 S1024/N1、4000 局分头训练、2400 局 M4 行为采集、400 局趋势实验及 200 局 native 探针组成；不是本次归档的 12500 局 DeepSets 数据。两份冻结池共 72000 局，保留的原始 NPZ 合计约 3.2 GiB。当前方案不使用某一来源，不等于已证明该来源无效。
+
+PPO 训练目录本次没有发现持久化逐局 NPZ：早期大量环境交互不等于磁盘上保存了等量训练归档。当前 PPO 实现的 rollout 在内存中组批更新；历史目录以 checkpoint、指标和评测记录为主。其主要基准模型、旧 θ5、attention θ5000／9500、P4/P8/P12、当前第24／30／43轮等模型未作为本次新增早期采样迁移对象。
+
+## 当前任务保护与验证
+
+迁移时历史池链路已启动。以下入口保留原位置和原文件身份：
+
+- 当前 `entity_attention_r24_history_pool_20261012` 在 `runs/`、`runtime/`、`artifacts/` 的完整目录。
+- [当前 43000 局清单](../entity_attention_r24_history_pool_20261012/pool_games.jsonl)及[旧 29000 局清单](../entity_attention_recent_pool_20261009/pool_games.jsonl)的全部文件；迁移前核对冻结 size／mtime_ns，迁移后再次核对 device／inode／size／mtime_ns，72000 项全部一致。
+- 第24轮 `round-014/checkpoints/final.pt` 及搜索模板 `round-014/evaluation/mcts_vs_fixed_anchor.json`，原第9轮终点和 replay snapshot，当前在线窗口与未完成 `round-034`。
+- 当前代码仍导入的 `artifacts/entity_attention_recent_pool_20261009/pool.py`；所有既有 `artifacts/` 报告、统计和必要原始诊断留在原处。
+- `runtime/document_archive/` 与 `runtime/repository_cleanup_20261009/` 的独有文档／工作副本保全。
+
+没有重写历史报告内的绝对路径、源码 SHA 或数据 SHA。旧路径通过符号链接访问同一份内容；本次未声称重新执行了所有历史实验的续跑验证。
+
+最终复核见 [verification.json](verification.json)：721 项原路径链接与迁移文件身份一致；72000 局冻结 size／mtime_ns 仍匹配，按来源抽查的 27 份原始 NPZ 的 SHA 与冻结清单一致；12 个关键模型／模板／入口仍在原处。归档源和目标均受既有忽略规则覆盖。核验时当前训练已完成 48776 步，原链路继续执行搜索评测；归档操作没有启动新训练或对战。
+
+## 外置存档与恢复
+
+目前仍在同一磁盘，归档本身不释放磁盘空间。未来复制到移动硬盘时复制 `archive/20261012/` 的真实目录内容，而非只复制 `runs/` 中的兼容链接，同时携带本目录中的清单和说明。
+
+旧路径的相对链接指向本机 `archive/20261012/`。外置后若仍需通过旧路径访问，应将这个归档根目录映射到移动硬盘上的同一目录；断开外置盘时，归档的旧实验入口将不可读，留在本机的当前两份训练池不依赖这批归档。
+
+若要完全恢复原结构，对 `manifest.json` 中某一项先确认 `source` 仍是指向 `destination` 的本次链接，然后仅移除该链接，把对应真实文件／目录 rename 回原位置。恢复全部时依清单逐项操作，不递归删除 `runs/` 或 `runtime/`。
+
+重型数据继续由原有 `runs/`、`runtime/` 忽略规则覆盖：它们在 `archive/20261012/` 内仍使用这些目录名；未新增忽略规则。版本管理仅新增说明、迁移清单和盘点统计。

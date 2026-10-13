@@ -1,0 +1,170 @@
+{
+  "branch_identities": {
+    "control": {
+      "dataset": "/home/lc/下载/splendor/artifacts/entity_attention_r43_policy_surprise_s4096_20261013/dataset.json",
+      "digest": "479dfcf8413c599cff15f171ccebd2a002000ca0aac596aa929e9f3fd7cb675a",
+      "fixed_pool_games": 4000,
+      "training": "joint_same_batch_original_AdamW_clip1"
+    },
+    "surprise": {
+      "dataset": "/home/lc/下载/splendor/artifacts/entity_attention_r43_policy_surprise_s4096_20261013/dataset.json",
+      "digest": "381344f4c6c0b139fdc67a57e6591228852757fafa4f10533476d1dae693c2dd",
+      "fixed_pool_games": 4000,
+      "policy_surprise_weighting": {
+        "fraction": 0.5
+      },
+      "training": "joint_same_batch_original_AdamW_clip1"
+    }
+  },
+  "config": {
+    "branches": {
+      "control": null,
+      "surprise": {
+        "fraction": 0.5
+      }
+    },
+    "cache_bytes": 8589934592,
+    "experiment": "entity_attention_r43_policy_surprise_s4096_20261013",
+    "fitting_steps": [
+      0,
+      100,
+      250,
+      500,
+      1000
+    ],
+    "greedy_reference": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/evaluation/greedy_vs_start.json",
+    "initial_checkpoint": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+    "initial_checkpoint_sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14",
+    "scope": "One offline round from original R43, fixed existing 4000 S4096/N1 games, original whole-game split. Same 256 positions for both heads and both branches; original optimizer and RNG; all learner hyperparameters unchanged. No collection, relabeling or value architecture change. Fixed fitting and 200-pair greedy DEV panel, no search arena.",
+    "source_round_indices": [
+      43,
+      44,
+      45,
+      46
+    ],
+    "source_snapshot": "runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-003/replay_snapshot.json",
+    "source_snapshot_sha256": "2a2385159253eff1c0dcb97f7375fe89b8fa5238ef58926c4e07628c90980764",
+    "source_train_references": "runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-003/fitting/train_references.json",
+    "updates": 1000
+  },
+  "config_identity": {
+    "path": "configs/entity_attention_v1/r43_policy_surprise_s4096_fixed4k_20261013.json",
+    "sha256": "905b788501c554032cf5bcd4e07ee10e9ff4d242e76f5de69e0c59116f31b9ba"
+  },
+  "dataset": {
+    "path": "artifacts/entity_attention_r43_policy_surprise_s4096_20261013/dataset.json",
+    "sha256": "f4c283f6f9f07ce4d623fb9ac5d4c4ed084d784a7e47a3734995effddb65e2b4"
+  },
+  "experiment_round_index": 44,
+  "generations": [
+    {
+      "absolute_generation": 44,
+      "manifest": {
+        "path": "runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-000/selfplay/manifest.json",
+        "sha256": "bba56c65eb835d43ceff68d7fba2187c08125443202a36ecf7dbff6ff8cd8d14"
+      },
+      "positions": {
+        "train": 74509,
+        "validation": 7036
+      },
+      "splits": {
+        "train": 914,
+        "validation": 86
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_r43_s4096_p2k_v6k_20261013/checkpoints/fork_initial.pt",
+        "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+      }
+    },
+    {
+      "absolute_generation": 45,
+      "manifest": {
+        "path": "runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-001/selfplay/manifest.json",
+        "sha256": "abaea552860e6a6279ae456b4d92c6931a0ed065bc7b34db4b6d486931fc3de9"
+      },
+      "positions": {
+        "train": 72810,
+        "validation": 8225
+      },
+      "splits": {
+        "train": 899,
+        "validation": 101
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-000/checkpoints/final.pt",
+        "sha256": "e3818cfa789f65672b21f71045f99f0d65b1405c29efc8d4cf42a909be772f30"
+      }
+    },
+    {
+      "absolute_generation": 46,
+      "manifest": {
+        "path": "runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-002/selfplay/manifest.json",
+        "sha256": "8e1d22d0009039fc0898f7c8323855cee1a7546b90b9ed094344f7feed4bf829"
+      },
+      "positions": {
+        "train": 73041,
+        "validation": 8552
+      },
+      "splits": {
+        "train": 895,
+        "validation": 105
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-001/checkpoints/final.pt",
+        "sha256": "2ef6ec2040d8dc2f9ca75c9aa47644fabf99a2c0a876abf8676fa1c9ed4c23e0"
+      }
+    },
+    {
+      "absolute_generation": 47,
+      "manifest": {
+        "path": "runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-003/selfplay/manifest.json",
+        "sha256": "74c6f47e2d615ba15489bd82d9e2206031a2bb2103880b744757b1c7b54b7b65"
+      },
+      "positions": {
+        "train": 73950,
+        "validation": 7974
+      },
+      "splits": {
+        "train": 902,
+        "validation": 98
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-002/checkpoints/final.pt",
+        "sha256": "8be646b8a1b928df335930f6713177799f4f2ffb0966423e74a17ff02edbef74"
+      }
+    }
+  ],
+  "greedy_reference": {
+    "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/evaluation/greedy_vs_start.json",
+    "sha256": "cfca4837ff43ab772b5a498bc03f8f84af0d18efeffbc59bcfddbdd1c8457b13"
+  },
+  "initial_round_index": 43,
+  "initial_sampling_rng": {
+    "algorithm": "splitmix64-v1",
+    "draws": 18661888,
+    "state": 1443343310966971184
+  },
+  "initial_total_step": 72898,
+  "learner": {
+    "batch_size": 256,
+    "checkpoint_every_steps": 50,
+    "device": "cuda",
+    "history_batch_size": 128,
+    "learning_rate": 2e-05,
+    "max_grad_norm": 1.0,
+    "max_steps_per_round": null,
+    "policy_loss_weight": 1.0,
+    "steps_per_new_position": 4.0,
+    "validation_batch_size": 256,
+    "value_loss_weight": 1.0,
+    "weight_decay": 0.0001
+  },
+  "runner": {
+    "path": "artifacts/entity_attention_r43_policy_surprise_s4096_20261013/run.py",
+    "sha256": "c8e57234bbabe2a661f6155bdf680d568894e7d0e09380fee8f775d15faf3396"
+  },
+  "train_references_source": {
+    "path": "runs/entity_attention_r43_s4096_p2k_v6k_20261013/rounds/round-003/fitting/train_references.json",
+    "sha256": "e2681a8dae71da8cf261ebaf3a0cd43f5e8efd86ced3787a4ca0acdae112623e"
+  }
+}

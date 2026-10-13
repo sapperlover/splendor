@@ -169,7 +169,9 @@ def test_real_greedy_panel_resumes(source, tmp_path):
     assert resumed['pairs'] == first['pairs']
 
 
-def test_online_forever_inherits_window_resumes_lr_and_unconditionally_upgrades(tmp_path, source, monkeypatch):
+@pytest.mark.parametrize('policy_games', [None, 2])
+def test_online_forever_inherits_window_resumes_lr_and_unconditionally_upgrades(tmp_path, source, monkeypatch,
+                                                                             policy_games):
     torch.set_num_threads(1)
     old_plan, parent_cfg, _ = setup_plan(tmp_path, source)
     split_base = next(seed for seed in range(30710000, 30720000) if all(
@@ -194,6 +196,7 @@ def test_online_forever_inherits_window_resumes_lr_and_unconditionally_upgrades(
     source_payload = load_alphazero_checkpoint(parent_final)
     config = replace(parent_cfg, run_id='online-forever', online_only=True,
         initialization=None, mix_schedule=(), learning_rate_override=2e-5,
+        policy_replay_max_games=policy_games,
         # Old source paths must not be consulted, even for checks or validation.
         offline=replace(parent_cfg.offline, source_run='unused-no-offline-source',
                         source_artifacts='unused-no-offline-artifacts'))
@@ -259,7 +262,26 @@ def test_online_forever_inherits_window_resumes_lr_and_unconditionally_upgrades(
             assert point['offline_fixed'] is None
             assert f'g{local+4:03d}/validation/all' in point['online_validation_full']['metrics']
         usage = read_json(stage / 'source_usage.json')
-        assert sum(g['actual_draws'] for g in usage['online_by_generation']) == 8
+        if policy_games is None:
+            assert sum(g['actual_draws'] for g in usage['online_by_generation']) == 8
+        else:
+            pools = snap['joint_head_pools']
+            assert pools['mode'] == 'joint_separate_batches'
+            assert pools['policy_replay_max_games'] == 2 and pools['value_replay_max_games'] == 4
+            assert [g['round_index'] for g in pools['generations'] if g['policy_expected_fraction']] == [local+3]
+            assert usage['policy']['draws'] == usage['value']['draws'] == 8
+            draws = usage['joint_head_pools']['actual_draws_by_head_round']
+            assert draws[f'policy_round_{local+3}'] == 8
+            assert sum(n for k, n in draws.items() if k.startswith('value_round_')) == 8
+            assert sum(usage['online_replacement']['actual_draws'].values()) == 16
+            import json
+            records = [json.loads(line) for line in (stage / 'training_metrics.jsonl').read_text().splitlines()]
+            steps = [row for row in records if row['event'] == 'train_step']
+            assert all(row['training_mode'] == 'joint_separate_batches' for row in steps)
+            assert all(row['policy_batch_size'] == row['value_batch_size'] == 4 for row in steps)
+            assert all('policy_grad_norm' not in row and 'value_grad_norm' not in row for row in steps)
+            for head in ('policy', 'value'):
+                assert all(read_json(p)['batch_size'] == 4 for p in (stage / 'usage' / head).glob('*.json'))
     final = load_alphazero_checkpoint(root / 'rounds/round-002/checkpoints/final.pt')
     assert final.total_train_step == source_payload.total_train_step+6
     assert final.learner_config['learning_rate'] == 2e-5

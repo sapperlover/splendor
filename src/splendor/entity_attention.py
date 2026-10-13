@@ -151,6 +151,44 @@ class EntityAttention(ActorCritic):
 
 
 @dataclass(frozen=True, slots=True)
+class EntityAttentionAuxConfig:
+    architecture: str = "entity_attention_aux_v1"
+    feature_schema_version: str = FEATURE_SCHEMA_VERSION
+    hidden: int = 128
+    heads: int = 4
+    layers: int = 2
+    ffn_hidden: int = 512
+    dropout: float = 0.0
+
+    def __post_init__(self):
+        if self.architecture != "entity_attention_aux_v1":
+            raise ValueError("invalid auxiliary attention architecture")
+        EntityAttentionConfig(feature_schema_version=self.feature_schema_version,
+                              hidden=self.hidden, heads=self.heads, layers=self.layers,
+                              ffn_hidden=self.ffn_hidden, dropout=self.dropout)
+
+
+class EntityAttentionAux(EntityAttention):
+    """Two training heads; search still consumes only policy and win/loss value."""
+
+    def __init__(self, config: EntityAttentionAuxConfig | None = None):
+        config = config or EntityAttentionAuxConfig()
+        super().__init__(EntityAttentionConfig(feature_schema_version=config.feature_schema_version,
+                                              hidden=config.hidden, heads=config.heads, layers=config.layers,
+                                              ffn_hidden=config.ffn_hidden, dropout=config.dropout))
+        self.config = config
+        self.score_head = GlobalValueHead(config.hidden)
+        self.remaining_turns_head = GlobalValueHead(config.hidden)
+
+    def forward_with_auxiliary(self, batch):
+        prepared = self._prepare(batch)
+        state = self.encode_state(prepared)
+        return (self._actor_logits(prepared, state), self.critic(state).squeeze(-1),
+                self.score_head(state).squeeze(-1),
+                F.softplus(self.remaining_turns_head(state).squeeze(-1)))
+
+
+@dataclass(frozen=True, slots=True)
 class EntityAttentionPolicyValueConfig:
     """Inference-only composition of two unchanged entity_attention_v1 models."""
 

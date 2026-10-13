@@ -17,6 +17,7 @@ from splendor.hybrid_train import (HybridConfig, SplitTrainingConfig, draw_mixed
 from splendor.mcts_policy import MCTSConfig
 from splendor.offline_train import OfflineConfig
 from splendor.rng import DeterministicRng
+from splendor.policy_surprise import PolicySurpriseConfig
 from splendor.selfplay import derive_seed
 from splendor.selfplay_fast import ExecutionConfig, FastSelfPlayConfig, generate
 
@@ -30,6 +31,18 @@ def test_formal_schedule_and_execution():
     assert execution.compile_mode == 'native-cudagraph'
     assert execution.batch_buckets == [64, 256, 500] or tuple(execution.batch_buckets) == (64, 256, 500)
     assert config.to_dict() == HybridConfig.from_dict(config.to_dict()).to_dict()
+
+
+def test_policy_surprise_config_roundtrip_and_old_config_unchanged():
+    raw = read_json(Path('configs/entity_attention_v1/hybrid_r9_online_lr2e5_1000_forever_20261011.json'))
+    config = HybridConfig.from_dict(raw)
+    assert 'policy_surprise_weighting' not in config.to_dict()
+    assert HybridConfig.from_dict(config.to_dict()) == config
+    weighted = replace(config, policy_surprise_weighting=PolicySurpriseConfig(.5))
+    assert HybridConfig.from_dict(weighted.to_dict()) == weighted
+    assert weighted.to_dict()['policy_surprise_weighting'] == {'fraction': .5}
+    with pytest.raises(ValueError, match='joint online-only'):
+        replace(weighted, online_only=False, policy_replay_max_games=None)
 
 
 def test_formal_fork_configs_and_replacement_schedule():
@@ -72,6 +85,44 @@ def test_same_game_numbers_are_isolated_and_zero_pool_does_not_draw(monkeypatch)
     for _ in range(4):
         pools[1].sample(b)
     assert a.snapshot() == b.snapshot()
+
+
+def test_joint_head_windows_keep_value_stream_and_whole_game_holdout(monkeypatch):
+    monkeypatch.setattr(alphazero_replay, 'load_game',
+                        lambda path: ({'value_targets': np.zeros(8)}, {'run_id': str(path)}))
+    games = [ReplayGame(r, f'teacher-{r}', gid, 'validation' if gid else 'train', 8, 8,
+                        Path(f'{r}-{gid}')) for r in range(3) for gid in range(2)]
+    index = ReplayIndex(games)
+    policy = hybrid_train.joint_policy_pool(index, 2)
+    value = PositionPool(index.split_games('train'), index.cache, 'value')
+    assert [(g.round_index, g.game_id) for g in policy.games] == [(2, 0)]
+    rng, original = DeterministicRng(51), DeterministicRng(51)
+    state = rng.snapshot()
+    drawn = hybrid_train.draw_joint_head_batch(policy, value, rng, 64,
+                                               inherited_run_ids={'teacher-0', 'teacher-1'})
+    canonical = [value.sample(original)[1] for _ in range(64)]
+    assert drawn.references[64:] == tuple(canonical)
+    assert rng.snapshot() == original.snapshot()
+    assert {r.round_index for r in drawn.references[:64]} == {2}
+    assert all(r.game_id == 0 for r in drawn.references)
+    assert len(drawn.samples) == len(drawn.value_samples) == 64
+    assert sum(v for k, v in drawn.source_positions.items() if k.startswith('policy_round_')) == 64
+    assert sum(v for k, v in drawn.source_positions.items() if k.startswith('value_round_')) == 64
+    assert drawn.source_positions['inherited_online'] + drawn.source_positions['branch_online'] == 128
+    restored = hybrid_train.draw_joint_head_batch(policy, value, DeterministicRng.restore(state), 64)
+    assert drawn.references == restored.references
+    equal = hybrid_train.draw_joint_head_batch(value, value, DeterministicRng(51), 64)
+    assert equal.references[:64] == equal.references[64:]
+    raw = read_json(Path('configs/entity_attention_v1/hybrid_r9_online_lr2e5_1000_forever_20261011.json'))
+    config = HybridConfig.from_dict(raw)
+    assert 'policy_replay_max_games' not in config.to_dict()
+    narrow = replace(config, policy_replay_max_games=2000)
+    assert HybridConfig.from_dict(narrow.to_dict()) == narrow
+    for count in (0, 6001, True):
+        with pytest.raises(ValueError, match='1..replay_max_games'):
+            replace(config, policy_replay_max_games=count)
+    with pytest.raises(ValueError, match='joint online-only'):
+        replace(narrow, online_only=False)
 
 
 @pytest.fixture(scope='module')
@@ -117,6 +168,29 @@ def small_config(source):
         seeds=LoopSeeds(collection=7700000, split=7701000, sampling=offline.sampling_seed),
         new_games_per_round=1, updates_per_round=2, replay_max_games=2,
         online_validation_positions=0, mix_schedule=((1, 3), (2, 2)), evaluation_every_rounds=0)
+
+
+def test_online_surprise_fork_calls_weighted_driver_and_resumes(tmp_path, source):
+    parent_config = small_config(source)
+    parent = tmp_path / 'surprise-parent'
+    run_hybrid(parent_config, parent, online_rounds=1)
+    config = replace(parent_config, run_id='surprise-child', online_only=True, mix_schedule=(),
+                     policy_surprise_weighting=PolicySurpriseConfig(.5))
+    full, partial = tmp_path / 'surprise-full', tmp_path / 'surprise-resumed'
+    run_hybrid(config, full, fork_from=parent, online_rounds=1)
+    run_hybrid(config, partial, fork_from=parent, online_rounds=1, max_steps_this_session=1)
+    state = run_hybrid(config, partial, resume=True, online_rounds=1)
+    a = load_alphazero_checkpoint(full / 'rounds/round-000/checkpoints/final.pt')
+    b = load_alphazero_checkpoint(state['latest_checkpoint']['path'])
+    assert a.replay_identity['policy_surprise_weighting'] == {'fraction': .5}
+    assert a.sampling_rng_state == b.sampling_rng_state
+    for key in a.model_state_dict:
+        torch.testing.assert_close(a.model_state_dict[key], b.model_state_dict[key], rtol=0, atol=0)
+    snapshot = read_json(partial / 'rounds/round-000/replay_snapshot.json')
+    assert snapshot['policy_surprise_weighting'] == {'fraction': .5}
+    import json
+    rows = [json.loads(line) for line in (partial / 'rounds/round-000/training_metrics.jsonl').read_text().splitlines()]
+    assert sum('policy_surprise_weighting' in row for row in rows) == 2
 
 
 def test_continuous_resume_optimizer_rng_and_latest_teacher(tmp_path, source, monkeypatch):
