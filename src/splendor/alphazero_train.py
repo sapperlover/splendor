@@ -429,6 +429,8 @@ class AlphazeroLearner:
         if value_auxiliary is not None:
             if value_batch is not None:
                 raise ValueError("auxiliary offline fitting requires one shared minibatch")
+            if self.model.config.predict_score != (value_auxiliary.score_loss_weight > 0):
+                raise ValueError("score head and auxiliary loss configuration disagree")
             logits, values, score_prediction, turns_prediction = self.model.forward_with_auxiliary(batch.decisions)
         else:
             logits, values = self.model(batch.decisions)
@@ -457,13 +459,15 @@ class AlphazeroLearner:
                 raise ValueError("auxiliary targets must match the shared minibatch")
             weight = tensors["value_weights"]
             denominator = weight.sum().clamp_min(_EPS)
-            score_loss = ((score_prediction - score_target).square() * weight).sum() / denominator
             turns_loss = ((turns_prediction - turns_target).square() * weight).sum() / denominator
-            total = total + value_auxiliary.score_loss_weight * score_loss + value_auxiliary.turns_loss_weight * turns_loss
-            auxiliary_metrics = {"score_loss": float(score_loss.detach()),
-                                 "remaining_turns_loss": float(turns_loss.detach()),
-                                 "score_mse_points": float(score_loss.detach()) * value_auxiliary.score_scale ** 2,
+            auxiliary_metrics = {"remaining_turns_loss": float(turns_loss.detach()),
                                  "remaining_turns_mse": float(turns_loss.detach()) * value_auxiliary.turns_scale ** 2}
+            if value_auxiliary.score_loss_weight > 0:
+                score_loss = ((score_prediction - score_target).square() * weight).sum() / denominator
+                total = total + value_auxiliary.score_loss_weight * score_loss
+                auxiliary_metrics.update(score_loss=float(score_loss.detach()),
+                    score_mse_points=float(score_loss.detach()) * value_auxiliary.score_scale ** 2)
+            total = total + value_auxiliary.turns_loss_weight * turns_loss
         self.optimizer.zero_grad(set_to_none=True)
         finite = (
             torch.isfinite(logits).all()
@@ -716,6 +720,7 @@ def run_training_round(
     reference_writer: Any = None,
     checkpoint_callback: Callable[[AlphazeroLearner, Path], None] | None = None,
     max_steps_this_session: int | None = None,
+    checkpoint_steps: Sequence[int] = (),
     batch_drawer: Callable[[DeterministicRng], DrawnBatch] | None = None,
     split_grad_norms: tuple[float, float] | None = None,
     joint_separate_batches: bool = False,
@@ -806,7 +811,8 @@ def run_training_round(
         _append_jsonl(metrics_path, record)
         if reference_writer is not None:
             reference_writer.record_step(record)
-        if learner.round_train_step % learner.config.checkpoint_every_steps == 0 or learner.round_train_step == session_target:
+        if (learner.round_train_step % learner.config.checkpoint_every_steps == 0
+                or learner.round_train_step == session_target or learner.round_train_step in checkpoint_steps):
             tick = time.perf_counter()
             if reference_writer is not None:
                 reference_writer.flush()

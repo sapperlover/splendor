@@ -1,0 +1,77 @@
+{
+  "absolute_round": 43,
+  "difference_bootstrap_seed": 36340000,
+  "experiment": "entity_attention_r43_search_variants_arena_20261014",
+  "global_step": 72898,
+  "model": {
+    "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+    "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+  },
+  "panels": [
+    {
+      "backend": "native",
+      "budget": 1024,
+      "chance_widening": null,
+      "config": {
+        "path": "artifacts/entity_attention_r43_search_variants_arena_20261014/configs/S1024_vs_greedy.json",
+        "sha256": "3ba97bd11ba9d1c582a80925609ad216b79aa8f7548e955736d280df60c5e6d4"
+      },
+      "id": "S1024_vs_greedy",
+      "label": "确定化 S1024",
+      "output": "artifacts/entity_attention_r43_search_variants_arena_20261014/panels/S1024_vs_greedy.json",
+      "pairs": 500
+    },
+    {
+      "backend": "native",
+      "budget": 4096,
+      "chance_widening": null,
+      "config": {
+        "path": "artifacts/entity_attention_r43_search_variants_arena_20261014/configs/S4096_vs_greedy.json",
+        "sha256": "5cccad69344dded34b5000fd0fb23734446a370165f86d8d49f3c30ece871b49"
+      },
+      "id": "S4096_vs_greedy",
+      "label": "确定化 S4096",
+      "output": "artifacts/entity_attention_r43_search_variants_arena_20261014/panels/S4096_vs_greedy.json",
+      "pairs": 500
+    },
+    {
+      "backend": "native_chance",
+      "budget": 1024,
+      "chance_widening": null,
+      "config": {
+        "path": "artifacts/entity_attention_r43_search_variants_arena_20261014/configs/S1024_chance_vs_greedy.json",
+        "sha256": "dd8d2214455dab94274fe64a2bebb8f13536b7aa6047ea39798a69a87fd2b4c7"
+      },
+      "id": "S1024_chance_vs_greedy",
+      "label": "随机节点 S1024",
+      "output": "artifacts/entity_attention_r43_search_variants_arena_20261014/panels/S1024_chance_vs_greedy.json",
+      "pairs": 500
+    },
+    {
+      "backend": "native_chance",
+      "budget": 1024,
+      "chance_widening": {
+        "alpha": 0.5,
+        "k": 0.25
+      },
+      "config": {
+        "path": "artifacts/entity_attention_r43_search_variants_arena_20261014/configs/S1024_cpw_vs_greedy.json",
+        "sha256": "db0256f23aef62718b6f90ec19cfd460337d70e3d2bae18c52312600afba2779"
+      },
+      "id": "S1024_cpw_vs_greedy",
+      "label": "CPW S1024",
+      "output": "artifacts/entity_attention_r43_search_variants_arena_20261014/panels/S1024_cpw_vs_greedy.json",
+      "pairs": 500
+    }
+  ],
+  "runner": {
+    "path": "artifacts/entity_attention_r43_search_variants_arena_20261014/run.py",
+    "sha256": "a4bf2c8d20e0ed27e0eb645960972842951b8b05c3ba0a1d2342ab209d3ccde7"
+  },
+  "scope": "Four serial 500-pair seat-swapped arenas: native S1024, native S4096, native_chance S1024 without widening, native_chance S1024 with CPW k0.25/alpha0.5, all versus greedy using the original R43 complete network. Shared opening/policy/search seeds match previous S128/S256/S512 panels. N1 is one fixed world for native and one shared statistics pool with per-simulation sampling for native_chance. Draws half score; 10000 whole-pair bootstrap resamples, unadjusted 95% intervals. Cross-panel differences compare scores versus common greedy, not direct search-versus-search games.",
+  "settings": "N1, c_puct1.5, no root noise, native_batched/CUDA compiled, active100, max_batch64; greedy argmax; sequential subprocesses",
+  "template": {
+    "path": "artifacts/entity_attention_r43_low_search_budget_arena_20261014/configs/S128_vs_greedy.json",
+    "sha256": "3c1710fa08472e91427e244071ae709c367db8d7f43f31ab3f5d2af53ff81ead"
+  }
+}

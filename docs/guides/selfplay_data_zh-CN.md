@@ -1,8 +1,14 @@
 # MCTS 自对弈数据与恢复
 
+2026-10-21新增[相同96根的精确推理输入复用诊断](../../artifacts/search_input_cache_rate_20261021/results.md)：每组两个seed，S1024N1／S256N4／S1024N4（总预算1024／1024／4096）及随机节点总1024、CPW关闭的单次搜索内潜在命中率为14.62%／19.20%／20.22%／2.69%。统计完整FP32输入与mask，排除padding、按根／seed／方法独立空缓存；N4总比例包含同批在途去重潜力，普通已完成结果缓存的命中率另列。没有实施缓存或测速，也未测跨走子复用，不等同花砖跨走子memo命中率。
+
 旧θ5的[记录字段协议](../archive/next_az_record_fields_zh-CN.md)说明原NPZ／trace、逐局SHA、同集诊断引用及抽样覆盖计数；该源run后续十轮完成。额外全量checked replay的离线诊断成本单列；阶段划分依具体协议，不混用完成回合和公开分数阈值。
 
-`selfplay.py` 是历史 v1 采集入口；当前批量/native 采集使用 `selfplay_fast.py`，输出 `mcts-selfplay-v2`。`SelfPlayDataset` 可读取两种格式。双方使用同一冻结教师、独立树和种子；完整正式终局后才提交一局 NPZ。
+`selfplay.py` 是历史 v1 采集入口；当前批量/native 采集使用 `selfplay_fast.py`，输出 `mcts-selfplay-v2`。默认数据schema仍为v2；开启[预算随机化、Forced Playouts / Policy Target Pruning](search_training_zh-CN.md)时写v3，`SelfPlayDataset`和跨代replay均兼容v1/v2/v3。双方使用同一冻结教师、独立树和种子；完整正式终局后才提交一局 NPZ。
+
+2026-10-21起，全部新采集统一采用[12张贵族规则池](../splendor_standard_rules_zh-CN.md)：经典10张加蓝绿黑333、红白44，双人局仍抽3张。Python、native CPU、单owner CUDA和多worker CUDA均从同一默认目录开局，不单独维护贵族表。两种采集入口的manifest都把`catalog_fingerprint`纳入semantic fingerprint；新进程不允许在旧10张池的未完成目录中`--resume`。旧NPZ仍可作为明确标注来源的历史监督读取，不能改称12张池采集数据；格式可读不等于规则相同。模型贵族输入仍为3×17，无需扩容，后续采集使用新目录；已经启动的旧进程需退出后用新代码重新启动。
+
+下文固定预算、`policy_weight=searchable`及原始访问分布作为target的描述限定v1/v2。v3低预算步骤仅用于value，target可裁剪，字段与校验见[新增协议](search_training_zh-CN.md#数据与复核)。
 
 ## 冻结配置与随机性
 
@@ -23,9 +29,9 @@
 | `candidate_features` | `[C, action_dim]` float32 | 原合法候选顺序的完整编码，不保存或伪造 Action 对象 |
 | `policy_target`、`behavior_policy`、`root_network_prior`、`root_used_prior` | `[C]` float32 | 各样本按 offsets 切分；保留零访问候选 |
 | `root_visit_counts` | `[C]` int32 | 各世界访问计数的和 |
-| `simulation_budgets` | `[T,N]` int32 | 每样本各世界实际预算；单候选行全零 |
+| `simulation_budgets` | `[T,N]` int32 | 每样本各世界实际预算；单候选行全零；v3低预算可单独减少世界数，未用世界补零 |
 | `per_world_root_visit_counts` | `[N,C]` int32 | 每世界各根动作实际访问量，列与扁平候选对齐 |
-| `valid_world_count`、`simulations`、`max_tree_depth`、`transition_cap_hits` | `[T]` int8/int32 | 单候选 `valid_world_count=0`，不是 N 个执行过的零预算世界 |
+| `valid_world_count`、`simulations`、`max_tree_depth`、`transition_cap_hits` | `[T]` int8/int32 | 单候选 `valid_world_count=0`；v3可通过low_determinizations减少低预算世界数，实际计数小于N，均值只计有效世界 |
 | `player_id`、`decision_index`、`phase`、`completed_player_turns`、`chosen_candidate_index` | `[T]` int8/int32 | 真实座位、全局决策序号、阶段枚举索引、真实回合数及样本内候选索引 |
 | `temperature`、`sampling_seed`、`searchable` | `[T]` float32/uint64/bool | 走子设置与审计信息 |
 | `value_target`、`policy_weight`、`value_weight` | `[T]` int8/float32 | 正式终局 z 与后续监督权重 |

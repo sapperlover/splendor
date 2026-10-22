@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-20",
+  "scope": "User-requested single-slot search evaluation and analysis of existing rounds1-17; no new training or strength games",
+  "changed_configuration_fields": {
+    "search_evaluation.execution.pipeline_slots": {
+      "before": 2,
+      "after": 1
+    }
+  },
+  "search_pairs": 500,
+  "collection_pipeline_slots": 2,
+  "search_shared_slots_per_worker": 2,
+  "all_other_source_configuration_fields_unchanged": true,
+  "previous_config_sha256": "3ccea40783fd209c149a9277ac606a6e74c4fb0ccdc82341100c48544e8da32f",
+  "current_config_sha256": "870e6bb08448b449828e174ea5aeece6729c7b38af94a5a2a66be38a1ca1a2ba",
+  "resume_algorithm_identity_matches_initial_config": true,
+  "prepared_evaluations_preserve_their_original_configuration": true,
+  "regression": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python -m pytest -q tests/test_random_budget_iteration.py tests/test_evaluation_pool.py --junitxml=runtime/search_single_slot_learning_curves_20261020.xml",
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "analysis": {
+    "rounds": 17,
+    "checkpoints": 85,
+    "training_steps": 17000,
+    "result": "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/results.md",
+    "summary": "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/summary.json",
+    "analysis_script_sha256": "a892834e09e5af4ddbe86d24282291d4e58e07fd69eb97caa5e458cba93aea92",
+    "statistics_environment": "conda splendor; standard library only",
+    "plot_environment": "existing conda base Matplotlib; no dependency installation",
+    "latest6_mean_train_mse_delta": -0.0050052315791447866,
+    "latest6_mean_validation_mse_delta": 0.0002553512652715047
+  },
+  "previous_index_scope": "17 iterations completed; iteration 18 interrupted during collection. Future search panels use 500 pairs and the collector native CUDA pool with 12 search workers, 1000 active games, B500, pipeline 2 and model-isolated inference. No full S1024 panel launched; historical 200-pair panels unchanged. Resume preflight and finite CPU/GPU correctness checks passed.",
+  "previous_index_evidence_hashes": {
+    "artifacts/entity_attention_random_budget_iteration_20261019/README.md": "b580a35d6eda4d88cc706d49b35ff8481047991fa7fec86645d6c7ea7145cc35",
+    "artifacts/entity_attention_random_budget_iteration_20261019/preflight.json": "92063dff4334d2cb6324d573838c5beac0af9eb33270c01048e4dde4963aefb9",
+    "artifacts/entity_attention_random_budget_iteration_20261019/verification.json": "5fc07ffb09e6be2b99c59f0fcc4f2c7ea61ef4c2ac7b5763f6bc61c0e4a347b2",
+    "configs/entity_attention_v1/random_budget_37423_p6k_v24k_20261019.json": "3ccea40783fd209c149a9277ac606a6e74c4fb0ccdc82341100c48544e8da32f",
+    "artifacts/entity_attention_random_budget_iteration_20261019/execution_tuning_verification.json": "a0c726e2eb77d68ac7bdb88e2751fdec1d876ca7ddeeec78eda742112d75d76c",
+    "artifacts/entity_attention_random_budget_iteration_20261019/batch500_update.json": "e7df00077ea7bc250d704f4fa4fc9c2a818861c2e3e60aae5cc1370a7e5843a3",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_update.json": "fe68fc4bda77add227d774d880679ed41775e90fc123cd7f587b7d37dc81656b",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_regression.xml": "d93242fb7ee8a12f7407541c00fcc1594985ffd23cab88f07edc3a1749aaee88",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_verification.json": "a871c719dda9f0088b1414b9a70149da43da7ceb66a9000e3dbcb82ab1812b86",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_summary.json": "c491951eaf9f462e2d18729daa7a956115aa65deb5cc4a9b0288e2473c3bf3b9",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_config.json": "903e31f6196624d143ac2252fad9e1afd497078e5e5c78a0267987dea9904796",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_games.json": "5f9398918a40bd8e9ed76787d89295bed28705965aaf4581fc4e0bf0dd5e46bf",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_smoke.py": "efa380ae56b1e66cbb3fb9f908d58f161e94783f802ea842c86ad28c1d4811a3"
+  }
+}

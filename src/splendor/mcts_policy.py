@@ -24,6 +24,7 @@ from .features import (
 )
 from .result import TerminalResult
 from .search_inference import FrozenSearchInference
+from .search_training import prune_policy_counts
 from .search_policy import _request_seed, _request_public_word, _seed_from_public_word, determinize_request
 
 
@@ -37,6 +38,8 @@ class MCTSConfig:
     max_simulation_transitions: int = 512
     root_noise_fraction: float = 0.25
     dirichlet_alpha: float = 0.3
+    forced_playouts: float = 0.0
+    policy_target_pruning: bool = False
 
     def __post_init__(self) -> None:
         for name in ("simulations", "determinizations", "max_simulation_transitions"):
@@ -48,7 +51,7 @@ class MCTSConfig:
             raise ValueError("seed must be an integer")
         if type(self.fold_forced_phases) is not bool:
             raise ValueError("fold_forced_phases must be bool")
-        for name in ("c_puct", "root_noise_fraction", "dirichlet_alpha"):
+        for name in ("c_puct", "root_noise_fraction", "dirichlet_alpha", "forced_playouts"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
                 raise ValueError(f"{name} must be finite")
@@ -56,6 +59,10 @@ class MCTSConfig:
             raise ValueError("c_puct and dirichlet_alpha must be positive")
         if not 0 <= self.root_noise_fraction <= 1:
             raise ValueError("root_noise_fraction must be in [0, 1]")
+        if self.forced_playouts < 0 or type(self.policy_target_pruning) is not bool:
+            raise ValueError("forced_playouts must be nonnegative and policy_target_pruning must be bool")
+        if self.policy_target_pruning and self.forced_playouts == 0:
+            raise ValueError("policy_target_pruning requires forced_playouts > 0")
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +79,9 @@ class MCTSSearchResult:
     simulations: int
     max_tree_depth: int
     transition_cap_hits: int
+    per_world_policy_target_counts: tuple[tuple[int, ...], ...] = ()
+    per_world_root_value_sums: tuple[tuple[float, ...], ...] = ()
+    per_world_forced_playouts: tuple[tuple[int, ...], ...] = ()
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -108,6 +118,7 @@ class MCTSStats:
 class _Edge:
     visits: int = 0
     value_sum: float = 0.0
+    forced_playouts: int = 0
     child: _Node | None = None
     terminal: TerminalResult | None = None
     actions: tuple[Action, ...] = ()
@@ -209,15 +220,20 @@ class PUCTSearchPolicy:
         self.stats.model_batches += 1
         return max(-1.0, min(1.0, value))
 
-    def _select(self, node: _Node, root_player: int) -> int:
+    def _select(self, node: _Node, root_player: int, *, is_root: bool = False) -> int:
         total = sum(edge.visits for edge in node.edges)
         sign = 1 if node.engine.current_player == root_player else -1
         def score(index: int) -> tuple[float, float, int]:
             edge = node.edges[index]
             q = edge.value_sum / edge.visits if edge.visits else 0.0
             u = self.config.c_puct * node.prior[index] * math.sqrt(1 + total) / (1 + edge.visits)
-            return (sign * q + u, node.prior[index], -index)
-        return max(range(len(node.edges)), key=score)
+            forced = (is_root and edge.visits > 0 and edge.visits <
+                      math.sqrt(self.config.forced_playouts * node.prior[index] * total))
+            return (math.inf if forced else sign * q + u, node.prior[index], -index)
+        index = max(range(len(node.edges)), key=score)
+        if score(index)[0] == math.inf:
+            node.edges[index].forced_playouts += 1
+        return index
 
     def start_job(
         self, request: DecisionRequest, *, add_root_noise: bool = False,
@@ -432,7 +448,7 @@ class MCTSSearchJob:
             path: list[_Edge] = []
             transitions = 0
             while True:
-                index = self.policy._select(node, root_player)
+                index = self.policy._select(node, root_player, is_root=node is world.root)
                 edge = node.edges[index]
                 path.append(edge)
                 depth = len(path)
@@ -528,11 +544,19 @@ class MCTSSearchJob:
     def _finish(self) -> None:
         size = len(self.request.legal_actions)
         rows = tuple(tuple(edge.visits for edge in world.root.edges) for world in self._worlds)
-        target = _mean_world_visits(rows, self.budgets)
+        values = tuple(tuple(edge.value_sum for edge in world.root.edges) for world in self._worlds)
+        forced = tuple(tuple(edge.forced_playouts for edge in world.root.edges) for world in self._worlds)
+        target_rows = rows
+        if self.policy.config.policy_target_pruning:
+            target_rows = tuple(prune_policy_counts(row, value, self.used_prior,
+                c_puct=self.policy.config.c_puct, forced_playouts=self.policy.config.forced_playouts)
+                for row, value in zip(rows, values))
+        target = _mean_world_visits(target_rows, tuple(map(sum, target_rows)))
+        raw_target = _mean_world_visits(rows, self.budgets)
         counts = tuple(sum(row[i] for row in rows) for i in range(size))
-        behavior = _temperature_policy(target, self.temperature)
+        behavior = _temperature_policy(raw_target, self.temperature)
         if self.temperature == 0:
-            chosen = max(range(size), key=lambda i: (target[i], self.network_prior[i], -i))
+            chosen = max(range(size), key=lambda i: (raw_target[i], self.network_prior[i], -i))
             behavior = tuple(float(i == chosen) for i in range(size))
         else:
             rng = random.Random(_seed_from_public_word(self.public_word, self.random_seed, 0x53414D50))
@@ -549,5 +573,6 @@ class MCTSSearchJob:
         result = MCTSSearchResult(chosen, True, self.network_prior, self.used_prior,
                                   self.budgets, rows, counts, target, behavior,
                                   self.policy.config.simulations, self._max_depth,
-                                  self.policy.stats.transition_cap_hits - self._cap_before)
+                                  self.policy.stats.transition_cap_hits - self._cap_before,
+                                  target_rows, values, forced)
         self._complete(result)

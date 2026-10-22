@@ -1,0 +1,57 @@
+{
+  "capacity": {
+    "auxiliary_parameters": 3761156,
+    "by_module": {
+      "action_encoder": 21248,
+      "actor": 66561,
+      "blocks": 3159040,
+      "card_encoder": 7680,
+      "context_encoder": 30976,
+      "critic": 66561,
+      "cross_attention": 263168,
+      "memory_norm": 512,
+      "noble_encoder": 4608,
+      "owner_embedding": 768,
+      "player_encoder": 3840,
+      "query_norm": 512,
+      "tier_embedding": 1024,
+      "type_embedding": 1536
+    },
+    "fp32_weights_bytes": 14512136,
+    "legacy_parameters": 532738,
+    "model_config": {
+      "architecture": "entity_attention_v1",
+      "dropout": 0.0,
+      "feature_schema_version": "splendor-observation-action-v1",
+      "ffn_hidden": 1024,
+      "heads": 8,
+      "hidden": 256,
+      "layers": 4
+    },
+    "parameters": 3628034
+  },
+  "commands": [
+    "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q tests/test_entity_attention.py tests/test_value_auxiliary.py --junitxml=artifacts/entity_attention_256x4_20261014/tests.xml",
+    "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/entity_attention_256x4_20261014/validate.py --device cpu",
+    "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TORCHINDUCTOR_COMPILE_THREADS=1 python artifacts/entity_attention_256x4_20261014/validate.py --device cuda"
+  ],
+  "cpu_resume_exact": true,
+  "cuda_compile_failure_fallbacks": 0,
+  "cuda_compiled_calls": {
+    "policy_value:32": 10,
+    "value_only": 1
+  },
+  "fp32_weights_mib": 13.839851379394531,
+  "native_search_roots_per_device": 3,
+  "parameter_ratio": 6.81016559734804,
+  "scope": "256x4 capacity and finite correctness validation only; no formal training, full games or strength claim.",
+  "simulations_per_searchable_root": 8,
+  "status": "passed",
+  "tested_source_files_still_match": true,
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 22
+  }
+}

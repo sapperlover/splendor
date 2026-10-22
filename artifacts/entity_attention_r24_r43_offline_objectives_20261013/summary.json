@@ -241,72 +241,79 @@
   },
   "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python artifacts/entity_attention_r24_r43_offline_objectives_20261013/analyze.py",
   "greedy": {
+    "additional_pairs": 800,
     "auxiliary_minus_psw_against_r43": {
       "confidence": 0.95,
-      "estimate": 0.00125,
-      "lower": -0.05625,
-      "pair_count": 200,
+      "estimate": 0.0255,
+      "lower": -0.0005,
+      "pair_count": 1000,
       "resamples": 10000,
       "seed": 36230000,
-      "upper": 0.0575
+      "upper": 0.052
     },
+    "original_pairs_reused": 200,
     "panels": {
       "policy_surprise": {
-        "a_losses": 199,
-        "a_wins": 199,
-        "completed_pairs": 200,
-        "draws": 2,
-        "elapsed_seconds_this_invocation": 17.615925555001013,
+        "a_losses": 963,
+        "a_wins": 1017,
+        "completed_pairs": 1000,
+        "draws": 20,
         "engineering_truncations": 0,
+        "evaluation_seconds_parts_sum": 92.4389917510016,
         "exceptions": 0,
         "illegal_actions": 0,
         "invariant_failures": 0,
         "paired_bootstrap": {
           "confidence": 0.95,
-          "estimate": 0.5,
-          "lower": 0.45,
-          "pair_count": 200,
+          "estimate": 0.5135,
+          "lower": 0.49225,
+          "pair_count": 1000,
           "resamples": 10000,
           "seed": 36220000,
-          "upper": 0.54875
+          "upper": 0.5345
         },
         "passed": true,
         "policy_cycle_draws": 0,
-        "valid_games": 400,
-        "win_rate_score": 0.5
+        "valid_games": 2000,
+        "win_rate_score": 0.5135
       },
       "value_auxiliary": {
-        "a_losses": 195,
-        "a_wins": 196,
-        "completed_pairs": 200,
-        "draws": 9,
-        "elapsed_seconds_this_invocation": 17.826266611000392,
+        "a_losses": 910,
+        "a_wins": 1066,
+        "completed_pairs": 1000,
+        "draws": 24,
         "engineering_truncations": 0,
+        "evaluation_seconds_parts_sum": 93.64412217500103,
         "exceptions": 0,
         "illegal_actions": 0,
         "invariant_failures": 0,
         "paired_bootstrap": {
           "confidence": 0.95,
-          "estimate": 0.50125,
-          "lower": 0.45125,
-          "pair_count": 200,
+          "estimate": 0.539,
+          "lower": 0.51675,
+          "pair_count": 1000,
           "resamples": 10000,
           "seed": 36220000,
-          "upper": 0.55125
+          "upper": 0.56075
         },
         "passed": true,
-        "policy_cycle_draws": 0,
-        "valid_games": 400,
-        "win_rate_score": 0.50125
+        "policy_cycle_draws": 1,
+        "valid_games": 2000,
+        "win_rate_score": 0.539
       }
     },
-    "scope": "one final checkpoint per branch, one shared fresh 200-pair panel; difference is not a direct head-to-head",
+    "scope": "1000 pairs per final checkpoint, reusing the previously inspected 200-pair prefix; not an independent confirmation",
     "status": "complete"
   },
   "matched_sampling_ledger_sha256": [
     "171cebcfb13d595a46e0b11b1d08ddcc605857bdca039a741edb0b3ab3abd8e3"
   ],
   "same_fixed_validation": true,
-  "scope": "single training seed; no ordinary same-budget control and no search arena",
-  "status": "training_and_greedy_complete"
+  "scope": "Original 2026-10-13 experiment: single training seed; no ordinary same-budget control within that experiment and no search arena. Separate 2026-10-19 ordinary/turns-only follow-up is complete; see followup, without changing original numerical results.",
+  "status": "training_and_greedy_complete",
+  "followup": {
+    "reviewed_on": "2026-10-19",
+    "report": "artifacts/entity_attention_r24_r43_aux_ablation_20261019/results.md",
+    "scope": "Old dual minus plain greedy +0.050pp,95%CI[-0.900,+1.025]pp; no confirmed auxiliary-head incremental benefit. Separate follow-up, old dual not retrained and no old-dual search panel added."
+  }
 }

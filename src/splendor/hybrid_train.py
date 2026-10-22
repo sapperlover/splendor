@@ -193,6 +193,7 @@ class HybridConfig:
 
     def to_dict(self):
         values = {"protocol": PROTOCOL, **asdict(self)}
+        values["selfplay"] = self.selfplay.to_dict()
         if not self.online_only:
             del values["online_only"]
         # Preserve the frozen representation of existing joint runs.

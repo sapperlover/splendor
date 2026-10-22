@@ -114,8 +114,25 @@ def panel(template, checkpoint, opponent, output, *, opponent_name="P4V4"):
     raw["policy_a"]["checkpoint"] = str(Path(checkpoint).resolve())
     raw["policy_b"]["checkpoint"] = str(Path(opponent).resolve())
     raw["policy_b"]["name"] = opponent_name
-    write_json(output.with_name(output.stem + "_config.json"), raw)
-    result = run_fixed_evaluation(FixedEvaluationConfig.from_dict(raw), output,
+    config_path = output.with_name(output.stem + "_config.json")
+    config = FixedEvaluationConfig.from_dict(raw)
+    if config_path.exists():
+        frozen = FixedEvaluationConfig.from_dict(read_json(config_path))
+        def protocol(value):
+            value = value.to_dict()
+            value.pop("execution", None)
+            value.pop("game_seeds")
+            for name in ("policy_a", "policy_b"):
+                value[name].pop("inference", None)
+            return value
+        shared = min(len(frozen.game_seeds), len(config.game_seeds))
+        if (protocol(config) != protocol(frozen)
+                or config.game_seeds[:shared] != frozen.game_seeds[:shared]):
+            raise ValueError("prepared evaluation protocol/checkpoint changed")
+        config = frozen
+    else:
+        write_json(config_path, raw)
+    result = run_fixed_evaluation(config, output,
         resume=output.exists() or Path(str(output) + ".games").exists(), require_scored_pairs=True)
     if not result.summary["passed"]:
         raise RuntimeError(f"evaluation engineering failure: {output}")

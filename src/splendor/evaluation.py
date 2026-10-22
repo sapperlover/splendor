@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import multiprocessing as mp
@@ -15,6 +16,7 @@ from statistics import median
 from typing import Any, Mapping
 
 from .contracts import Policy
+from .catalog import load_default_catalog
 from .heuristic_policy import DevelopmentPolicy, ScorePolicy
 from .random_policy import RandomPolicy
 from .runner import MatchOutcome, MatchResult, RunStatus, run_match
@@ -305,8 +307,13 @@ class FixedEvaluationConfig:
         if self.bootstrap_resamples < 0:
             raise ValueError("bootstrap_resamples cannot be negative")
         if self.execution is not None:
-            from .evaluation_batch import BatchEvaluationConfig
-            BatchEvaluationConfig(**self.execution)
+            pooled = self.execution.get("backend") == "native_cuda_pool"
+            if pooled:
+                from .evaluation_pool import validate_pool_evaluation
+                validate_pool_evaluation(self)
+            else:
+                from .evaluation_batch import BatchEvaluationConfig
+                BatchEvaluationConfig(**self.execution)
             if self.workers != 1:
                 raise ValueError("batched evaluation has one inference owner; workers must be 1")
             for spec in (self.policy_a, self.policy_b):
@@ -593,6 +600,8 @@ class EvaluationGameStore:
             raise ValueError(
                 f"{self.root} has game logs without an evaluation manifest"
             )
+        if has_pair_logs and resume and allow_legacy_resume and "catalog_fingerprint" in expected_header:
+            raise ValueError("legacy evaluation logs have no frozen catalog fingerprint")
         if has_data and resume and not (has_pair_logs and allow_legacy_resume):
             raise ValueError(f"{self.root} cannot be resumed without its manifest")
         self.header = expected_header
@@ -871,6 +880,8 @@ def _append_game_log(task: _ParallelPairTask, record: dict[str, object]) -> None
     path = directory / f"pair-{task.pair_id:07d}.jsonl"
     line = json.dumps(record, sort_keys=True)
     with path.open("a", encoding="utf-8") as handle:
+        # Pool workers can finish the two seats of one pair concurrently.
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
         handle.write(line + "\n")
         handle.flush()
         os.fsync(handle.fileno())
@@ -1273,6 +1284,7 @@ def _evaluation_summary_from_records(
     )
     return {
         "protocol": "fixed-paired-evaluation-v1",
+        "catalog_fingerprint": load_default_catalog().data_fingerprint,
         "config": config.to_dict(),
         "runtime": {"workers": config.workers, "device": config.device},
         "output": str(output_path.resolve()),
@@ -1384,6 +1396,7 @@ def run_fixed_evaluation(
         }
         manifest = {
             "protocol": "fixed-paired-evaluation-v1",
+            "catalog_fingerprint": load_default_catalog().data_fingerprint,
             "config": config.to_dict(),
             "checkpoint_identity": identities,
         }
@@ -1479,8 +1492,11 @@ def run_fixed_evaluation(
 
             try:
                 if config.execution is not None:
-                    from .evaluation_batch import evaluate_batched
-                    execution_stats.update(evaluate_batched(
+                    if config.execution.get("backend") == "native_cuda_pool":
+                        from .evaluation_pool import evaluate_pooled as evaluate_execution
+                    else:
+                        from .evaluation_batch import evaluate_batched as evaluate_execution
+                    execution_stats.update(evaluate_execution(
                         config, missing_ids, root,
                         failure_dir or output_path.parent / "failures" / output_path.stem,
                         on_pair))

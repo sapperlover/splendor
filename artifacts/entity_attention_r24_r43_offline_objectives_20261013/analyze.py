@@ -54,7 +54,7 @@ def main():
             "final_checkpoint_sha256": sha256(root / "checkpoints/final.pt"),
             "training_seconds": progress["training"]["training_seconds"]}
     assert ledger_hashes[0] == ledger_hashes[1]
-    greedy = read_json(HERE / "greedy_vs_r43/summary.json")
+    greedy = read_json(HERE / "greedy_vs_r43_1000pair/summary.json")
     result = {"status": "training_and_greedy_complete", "branches": branches, "greedy": greedy,
               "matched_sampling_ledger_sha256": ledger_hashes[0], "same_fixed_validation": True,
               "scope": "single training seed; no ordinary same-budget control and no search arena",
@@ -62,7 +62,7 @@ def main():
     write_json(HERE / "summary.json", result)
     psw, aux = branches["policy_surprise"], branches["value_auxiliary"]
     lines = ["# R24–43离线目标实验：训练与greedy结果", "",
-        "两组22681步离线训练完成；随后固定两个final分别对原R43做相同新开局的200pair greedy，每组400局。未确认greedy提升，也未测搜索棋力。完整抽样账本SHA相同，两个训练分支使用同一逐步抽样与4096个固定留出局面。", "",
+        "两组22681步离线训练完成；两个final分别对原R43扩至1000pair greedy，每组2000局，前200pair复用原始记录，各新增800pair。两组使用相同完整开局库，未测搜索棋力。完整抽样账本SHA相同，两个训练分支使用同一逐步抽样与4096个固定留出局面。", "",
         "## 同一4096个固定留出局面", "",
         "| 指标 | 起点R43 | PSW最终 | 双辅助最终 |", "| --- | ---: | ---: | ---: |"]
     for name, key in (("Policy CE", "policy_loss"), ("Policy KL", "policy_kl"), ("胜负Value MSE", "value_loss")):
@@ -85,9 +85,13 @@ def main():
         ci = p["paired_bootstrap"]
         lines.append(f"| {branch} | {p['a_wins']}／{p['draws']}／{p['a_losses']} | {p['win_rate_score']:.3%} | [{ci['lower']:.3%}, {ci['upper']:.3%}] |")
     diff = greedy["auxiliary_minus_psw_against_r43"]
-    lines += ["", f"辅助组减PSW对共同R43的得分差{diff['estimate']*100:+.3f}pp，95%配对区间[{diff['lower']*100:+.3f}, {diff['upper']*100:+.3f}]pp；这是对共同对手的得分差，不是候选直接互打。800局全部自然终局，零policy cycle draw和工程失败。",
-        "", "本面板没有检出两组相对R43的greedy提升。greedy不使用胜负value，因此不能用推理时value变差直接解释本次greedy无提升；policy KL下降也未在本面板体现为确认的选招收益。训练时共享encoder受value／辅助梯度影响仍可能相关，尚未独立消融。没有普通同预算训练对照，不能单独确认辅助目标或PSW相对普通训练的因果收益；也不能由200pair未显著宣布所有小收益为零。", "",
-        "[greedy逐pair原始结果、配置和恢复命令](greedy_vs_r43/results.md)，[机器可读训练与评测汇总](summary.json)。原始训练曲线、终点、full_validation和逐步账本位于对应runs目录；本次不修改原件。原verification.json的prepared状态是实现交付时的有限验证记录，不代表当前正式训练状态。", ""]
+    lines += ["", f"辅助组减PSW对共同R43的得分差{diff['estimate']*100:+.3f}pp，95%配对区间[{diff['lower']*100:+.3f}, {diff['upper']*100:+.3f}]pp；这是对共同对手的得分差，不是候选直接互打。", ""]
+    for branch, p in greedy["panels"].items():
+        ci = p["paired_bootstrap"]
+        finding = "得分区间高于50%" if ci["lower"] > .5 else "得分区间低于50%" if ci["upper"] < .5 else "得分区间包含50%，未确认相对R43的提升"
+        lines.append(f"- {branch}：{finding}。")
+    lines += ["", "greedy选招不使用胜负value。训练时共享encoder受value／辅助梯度影响仍可能相关，尚未独立消融。没有普通同预算训练对照，不能单独确认辅助目标或PSW相对普通训练的因果收益。扩样复用了已查看的前200pair，不能称为新的独立确认；区间未作顺序检验校正，未显著也不代表所有小收益为零。", "",
+        "[1000pair逐pair原始结果、配置和恢复命令](greedy_vs_r43_1000pair/results.md)，[原200pair记录](greedy_vs_r43/results.md)，[机器可读训练与评测汇总](summary.json)。原始训练曲线、终点、full_validation和逐步账本位于对应runs目录；本次不修改原件。原verification.json的prepared状态是实现交付时的有限验证记录，不代表当前正式训练状态。", ""]
     (HERE / "results.md").write_text("\n".join(lines))
     print({"status": result["status"], "same_training_draws": True, "greedy_scores": {b: p["win_rate_score"] for b, p in greedy["panels"].items()}})
 

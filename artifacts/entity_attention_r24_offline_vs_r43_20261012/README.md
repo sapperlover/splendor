@@ -1,5 +1,7 @@
 # 第24轮离线候选对第43轮的直接搜索评测
 
+2026-10-19核对：本面板已完成200/200pair、400局，得分51.250% [46.125%,56.375%]，passed=True，未确认超过R43，见[结果](results.md)。后续R43离线链路亦已完成。
+
 2026-10-12。用户指定比较原第24轮＋24388步完整checkpoint与原绝对第43轮完整checkpoint。双方S1024/N1、无根噪声，200pair／400局，互换先后手、和棋半分，10000次整pair bootstrap；使用35800000起的新开局，不复用此前R24离线DEV或确认开局。
 
 候选：`runs/entity_attention_r24_history_pool_20261012/checkpoints/step-000024388.pt`，SHA256 `deccdc296869a1ceff10b0a6394b9349938e7a26073aa7998130d563696eeeb2`。

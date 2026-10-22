@@ -1,6 +1,24 @@
 # 实体注意力模型与离线搜索经验学习
 
-2026-10-13新增[R24–43固定数据的PSW／value辅助目标离线入口](../../artifacts/entity_attention_r24_r43_offline_objectives_20261013/README.md)：两组从原R43继承参数与AdamW，同20000局和抽样预算，各22681步；分别启用50% policy surprise weighting、分差与剩余玩家回合两个辅助头。两组训练及各200pair greedy对原R43已完成，得分50.000%／50.125%，均未确认提升；详见[结果](../../artifacts/entity_attention_r24_r43_offline_objectives_20261013/results.md)。该入口是 `splendor.offline_objectives`，下文较早的 `splendor.offline_train` 不自动支持这些新目标。
+2026-10-21[attention128的同8万局对照](../../artifacts/entity_attention_128x2_offline_80k_20261021/README.md)已由用户启动并仍在运行；本次[存储清理](../../artifacts/checkpoint_storage_audit_20261021/README.md)没有中断或改变训练。命令`bash scripts/run_attention128_offline_20261021.sh`：128×2／4头／FFN512／583682参数，保留购买关系和value读取；除模型和独立输出路径外逐字段沿用MLP配置，固定4096引用和完整dataset相同。只训练＋完整留出KL+MSE选点，不自动对战。
+
+[当前实体MLP的8万局离线流程](../../artifacts/entity_set_mlp_256x4_offline_80k_20261021/README.md)已按用户要求停止，保留97000步，原270557步计划及自动面板未完成。七个节点内94695步完整留出KL+MSE最低（KL 0.530577、MSE 0.782832），value最佳在40584步；之后新授权的该候选对R20 greedy1000pair已完成，MLP得37.075%，95%配对区间[35.000%,39.175%]，无搜索对战。训练使用新分支第1–20轮80000局、lr1e-4、16GiB缓存，每5%固定4096子集和完整留出；`offline_mixed_budget`两头各256独立抽样、一次联合更新，policy只用高预算有效步，value全部预算，无辅助或PSW。历史训练来自10贵族池，本次greedy对战为12贵族。
+
+2026-10-21新增[实体汇总＋残差MLP](../../artifacts/entity_set_mlp_256x4_20261021/README.md)，架构`entity_set_mlp_v1`；[当前256×4预设](../../configs/entity_set_mlp_v1/model_256x4.json)含非线性动作旁路及状态×动作乘积，为855,682参数，原848,418参数属于已冻结初版。`offline_scratch`仍支持其共享minibatch的none/turns-only/dual配置。集合汇总后进入共享残差主干，动作直接读取原82维属性及目标牌关系；原输入schema不变，attention权重不能直接恢复到该模型。已完成有限训练/恢复/搜索正确性验证，未启动MLP正式训练；下方attention历史结论不自动适用于MLP。
+
+2026-10-19产物位置更新：7个离线run的非主要checkpoint、抽样账本和逐步指标共7.03GiB已集中到`archive/20261019/`，原路径保留相对链接；关键模型、验证曲线、选点和两份原始训练池留在原位。[清单、外置校验与恢复方法](../../artifacts/repository_archive_20261019/README.md)。只读复核可恢复挂载后访问；恢复训练前须按清单撤回该run的迁移，将账本／日志等恢复为原位真实文件，避免写入冻结归档。
+
+2026-10-19新增[新版128×2从零训练与对战流程](../../artifacts/entity_attention_128x2_relations_no_aux_r24_r43_20261019/README.md)：购买关系和value多实体读取开启，两个辅助头及PSW关闭，lr1e-4；R24–43原20000局、68041步、每5%固定4096＋完整留出评估，按KL＋胜负MSE最小选完整模型，再测1000pair greedy／200pair S1024。其余配置与256实验相同，`offline_scratch`现支持`value_auxiliary=null`，已有辅助配置保持兼容；正式训练与两组对战均完成，选37423步，greedy53.775%、搜索56.625%；限制见专题结果。
+
+2026-10-19实现[公开卡牌购买关系与value直接读取双方玩家/市场](../../artifacts/entity_attention_relations_20261019/README.md)：市场及双方明保留牌在模型内由旧输入派生8维公开关系，共享投影且不新增参数，盲保留不追加，历史NPZ可直接使用；主value与已启用辅助头读取全局、双方玩家及市场masked mean。新[128×2](../../configs/entity_attention_v1/model_relations_128x2.json)／[256×4](../../configs/entity_attention_v1/model_relations_256x4.json)预设显式启用，两项开关独立，可做结构消融；下文旧结构描述仍对应省略开关的历史默认。`offline_scratch.model_config`可使用新预设，旧checkpoint严格加载为原结构，不自动按新head续训；结构交付阶段未启动长训练，后续新版128训练见上方独立专题。
+
+2026-10-19新增[原小模型配方的无辅助／仅剩余回合辅助对照](../../artifacts/entity_attention_r24_r43_aux_ablation_20261019/README.md)：`splendor.offline_objectives`允许普通CE＋胜负MSE（两个可选目标均null），以及score_loss_weight0、turns_loss_weight0.25的单回合辅助。单回合checkpoint为`entity_attention_aux_v1`、`predict_score=false`，state_dict实际不包含分差头；旧双头配置省略该字段仍兼容。两组同原R43／AdamW／2万局／22681步，final各对R43测greedy1000pair与搜索200pair，两组训练及四个面板已完成；plain／turns-only的greedy为53.850%／53.150%，旧双辅助减plain的+0.050pp区间跨0，未确认辅助头额外收益；具体命令、抽样一致性与结果见专题。
+
+2026-10-15完成[R43小模型64根×16次独立续局的value信号诊断](../../artifacts/entity_attention_r43_value_signal_64_20261014/results.md)：单次MSE0.7555，结果方差估计0.6936，有限重复修正后的期望value误差0.0620。高方差监督与已学到的胜负信号并存，不能仅按单次终局MSE判定value没有进步，也不能把更平滑目标上的低MSE当成棋力提升；本次未修改离线训练标签或训练配置。采样器、历史教师和开局温度差异见专题README。
+
+2026-10-14交付[256×4双辅助头固定池训练与自动选点对战入口](../../artifacts/entity_attention_256x4_aux_r24_r43_20261014/README.md)：原R24–R43的20000局，PSW关闭，随机初始化及全新AdamW，双辅助各0.25；保持原优化参数，曝光12次／68041步，每5%保存并评估固定4096与完整留出，每1000步只保存恢复点。按完整留出KL＋胜负MSE最小选整个checkpoint，对原R43测1000pair greedy和200pair双方S1024。用户任务已运行至4.44万步附近后中断，终点与搜索面板尚未完成；旧0步派生汇总已于2026-10-19按最近保存44227步和中断记录修正；实际状态与来源见专题。
+
+2026-10-13完成[R24–43固定数据的PSW／value辅助目标离线训练](../../artifacts/entity_attention_r24_r43_offline_objectives_20261013/README.md)：两组原R43起点、同20000局各22681步；50% PSW与双辅助头分别训练。随后final对原R43各1000pair greedy，PSW得分51.350% [49.225%,53.450%]，双辅助53.900% [51.675%,56.075%]；详见[结果](../../artifacts/entity_attention_r24_r43_offline_objectives_20261013/results.md)。训练入口为 `splendor.offline_objectives`，greedy扩样使用专题中的独立命令；较早的 `splendor.offline_train` 不自动支持这些目标。
 
 2026-10-04实现并完成有限CPU/GPU验证；2026-10-06状态更新：`runs/entity_attention_offline`已完成12045步，用户完成1000步、5000步及final对PPO 5.5M的搜索/greedy共六个200局面板。S1024/N1搜索score分别为11.75%、41.25%、59.5%；greedy分别为38.5%、60%、61.75%。现在混合训练使用的theta_5000与这里5000步节点全部模型参数相同，但它比完整离线final在共同PPO锚点上的表现更弱。身份核对及原第9轮/当前第50轮补测见[强锚点报告](../../artifacts/entity_attention_strong_anchor_20261006/README.md)。这些是重复DEV面板，不是独立FINAL验收。
 
@@ -8,13 +26,31 @@
 
 ## 结构与兼容性
 
-新模型有 **532,738** 个可训练参数，旧 Deep-Sets 为 **302,626**。隐藏维度 128、4 heads、2 个 Pre-LayerNorm self-attention block，FFN 为 128→512→128，GELU、残差，attention 与 FFN dropout 均为 0。
+2026-10-14新增[256×4模型预设](../../configs/entity_attention_v1/model_256x4.json)，复用现有 `entity_attention_v1` 实现，尺寸由完整 `model_config` 保存；省略尺寸仍使用历史128×2默认。此前固定128×2的校验已开放为正整数尺寸、hidden须能被heads整除，dropout继续保持0。历史训练配置／checkpoint仍按其原尺寸解析；R43权重不能直接作为256×4的续训权重。
+
+| 结构 | hidden | heads | 状态编码层数 | FFN | 参数 |
+| --- | ---: | ---: | ---: | --- | ---: |
+| 历史默认 | 128 | 4 | 2 | 128→512→128 | 532,738 |
+| 256×4预设 | 256 | 8 | 4 | 256→1024→256 | 3,628,034 |
+| 256×4＋双辅助头 | 256 | 8 | 4 | 同上 | 3,761,156 |
+
+新主网络为原来的6.810倍参数，FP32参数本体13.840 MiB，不包含梯度、AdamW状态或激活。每头32维，四个 Pre-LayerNorm self-attention block 加一个策略 cross-attention；GELU、残差、attention与FFN dropout均为0。新增预设是 `model_config` 片段，使用时嵌入新训练配置的 `model_config`；它不是完整的离线训练CLI配置。例如通过现有工厂构建：
+
+```python
+import json
+from splendor.actor_critic import build_actor_critic
+
+with open("configs/entity_attention_v1/model_256x4.json") as source:
+    model = build_actor_critic(json.load(source))
+```
+
+有限验证已完成：22项相关CPU测试、真实归档4样本的AZ训练／checkpoint恢复、CPU后续更新逐位一致、CUDA eager/compiled前向一致，以及开／中／后期三个S8/N1原生批量搜索根。[结构与验证报告](../../artifacts/entity_attention_256x4_20261014/README.md)保存参数分项、命令与原始产物；这不是正式训练、棋力或大batch吞吐结论。
 
 状态共 25 个 token：1 个全局、2 个玩家、12 张市场牌、双方各 3 张保留牌、3 个贵族、1 张 pending card。已有 148 维全局特征拆为双方各 14 维玩家数值和其余 120 维上下文，包含全部 public_purchased 字段。卡牌、贵族与动作仍使用原 29/17/82 维输入；特征版本和规则版本不变，不读取牌堆或对手暗牌。
 
 角色 embedding 表示类型、归属和市场层级，同角色集合没有槽位位置参数。无效实体在编码前及 block 后排除；对手盲保留是有效 unknown 实体。候选动作各自作为 query，经一次 cross-attention 读取共享状态，保留 query 残差，再输出 logit。候选互不做 attention。独立 critic 从交互后的全局 token 输出当前行动者视角的无界 value，不读取候选；一次完整前向只编码一次状态。
 
-`build_actor_critic` 是 frozen loader、纯权重 loader 和 AZ checkpoint 的架构分派入口。缺少 architecture 的已知旧格式按 Deep-Sets 构建，未知架构报错；两种模型均严格加载 state_dict。新 checkpoint 保存完整结构配置，沿用 AZ 协议。PPO 训练恢复仍遵循原 PPO 契约。
+`build_actor_critic` 是 frozen loader、纯权重 loader 和 AZ checkpoint 的架构分派入口。缺少 architecture 的已知旧格式按 Deep-Sets 构建，未知架构报错；各模型均严格加载 state_dict。新 checkpoint 保存完整结构配置，沿用 AZ 协议。辅助头升级也保留指定的hidden／heads／layers／FFN。PPO训练恢复仍遵循原PPO契约；已有 `entity_attention_policy_value_v1` 双网络组合结构仍固定构造历史128×2分支，不会自动适配本次大模型。
 
 新结构要求 `actor_projection=false`，启用时启动报错；旧结构继续允许 `true`。现有 eager、compiled 和 reused native 传输复用同一模型接口，FP32、候选档位 [16,32,48,64]、编译失败即报错。混合评测按模型和推理配置分开路由，新旧双方可使用不同 projection。
 

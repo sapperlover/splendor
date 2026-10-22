@@ -1,0 +1,17 @@
+{
+  "protocol": "checkpoint-ema-rounds17-19-v1",
+  "source_run": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019",
+  "source_config": "configs/entity_attention_v1/random_budget_37423_p6k_v24k_20261019.json",
+  "warmup_first_iteration": 12,
+  "target_iterations": [17, 18, 19],
+  "half_life_steps": [250, 500, 1000],
+  "checkpoint_interval": 50,
+  "updates_per_iteration": 1000,
+  "validation_device": "cpu",
+  "validation_batch_size": 256,
+  "selection": "minimum equal-round mean of paired delta(policy_KL + value_MSE); exact ties choose shorter half-life",
+  "bootstrap_resamples": 4000,
+  "bootstrap_seed": 39530000,
+  "greedy": {"pairs": 1000, "seed_start": 39500000, "policy_seed_base": 39510000, "bootstrap_seed": 39520000},
+  "search": {"pairs": 500, "seed_start": 39600000, "policy_seed_base": 39610000, "bootstrap_seed": 39620000}
+}

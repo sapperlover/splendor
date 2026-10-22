@@ -1,0 +1,66 @@
+--- src/splendor/native_search.cpp
++++ runtime/probe/native_search_probe.cpp
+@@ -573,6 +573,7 @@
+ struct World {
+     int budget=0,completed=0;
+     std::vector<Node> nodes;
++    std::vector<std::vector<Action>> debug_branches;
+     bool has_leaf=false;Leaf leaf;
+     std::unordered_map<std::string,int> information_nodes;
+ };
+@@ -938,6 +939,7 @@
+         Leaf leaf=std::move(w.leaf);w.has_leaf=false;
+         if(!leaf.cap) {
+             int child=int(w.nodes.size());w.nodes.emplace_back(std::move(leaf.state),std::move(leaf.actions),std::move(prior));
++            w.debug_branches.push_back(leaf.branch);
+             if(stochastic)w.information_nodes.emplace(std::move(leaf.information_key),child);
+             else {auto [parent,edge]=leaf.path.back();w.nodes[parent].edges[edge].child=child;}
+             ++expanded;
+@@ -1030,6 +1032,7 @@
+             auto root=decide(s,catalog);
+             if(root!=root_actions)throw std::invalid_argument("sampled world root candidates differ");
+             w.nodes.emplace_back(std::move(s),root,used_prior);
++            w.debug_branches.emplace_back();
+             if(stochastic)w.information_nodes.emplace(information_signature(root_state,catalog,root_state.actor),0);
+         }
+         py::gil_scoped_release release;
+@@ -1108,6 +1111,31 @@
+         }
+         return out;
+     }
++
++    py::list debug_early_nodes() const {
++        if(!finished)throw std::logic_error("export only after search finishes");
++        py::list rows;
++        for(size_t world=0;world<worlds.size();++world) {
++            const auto& w=worlds[world];
++            for(size_t node=0;node<w.nodes.size();++node) {
++                const auto& n=w.nodes[node];const auto& s=n.state;
++                if(s.phase!=0 || s.turns[0]>root_state.turns[0]+1 || s.turns[1]>root_state.turns[1]+1)continue;
++                py::dict row;row["world"]=world;row["node"]=node;
++                row["state"]=state_snapshot(s);row["prior"]=n.prior;
++                py::list branch,actions;std::vector<int> visits,children;std::vector<double> values;
++                for(const auto& a:w.debug_branches.at(node))branch.append(py::make_tuple(a.type,a.id,a.tier,a.tokens));
++                for(size_t i=0;i<n.actions.size();++i) {
++                    const auto& a=n.actions[i];const auto& e=n.edges[i];
++                    actions.append(py::make_tuple(a.type,a.id,a.tier,a.tokens));
++                    visits.push_back(e.visits);values.push_back(e.value_sum);children.push_back(e.child);
++                }
++                row["branch"]=branch;row["actions"]=actions;row["visits"]=visits;
++                row["value_sums_root_actor"]=values;row["children"]=children;rows.append(row);
++            }
++        }
++        return rows;
++    }
++
+     py::dict debug_leaf_state(int world) const {
+         if(!worlds.at(world).has_leaf)throw std::logic_error("no pending search leaf");
+         return state_snapshot(worlds.at(world).leaf.state);
+@@ -1528,6 +1556,7 @@
+         .def("result",&SearchJob::result)
+         .def("stats",&SearchJob::stats)
+         .def("chance_diagnostics",&SearchJob::chance_diagnostics)
++        .def("debug_early_nodes",&SearchJob::debug_early_nodes)
+         .def("debug_leaf_state",&SearchJob::debug_leaf_state)
+         .def("failure_context",&SearchJob::failure_context)
+         .def("pending_width",&SearchJob::pending_width)

@@ -1,0 +1,49 @@
+{
+  "raw_snapshots_preserved": true,
+  "reason": "BGA DOM animations update scores and replacement cards after the move counter changes.",
+  "corrections": [
+    {
+      "move": 53,
+      "field": "players[1].score",
+      "raw": 7,
+      "settled": 11,
+      "evidence": [
+        "recheck_after_move_53.json: opposite player perspective, bank/tokens/bonuses/market/decks agree",
+        "raw move 54 opponent score 11"
+      ],
+      "recheck_note": "BGA move counter was blank while interface showed updating; the sought position was after 53, and the board state was cross-checked."
+    },
+    {
+      "move": 54,
+      "field": "players[0].score",
+      "raw": 12,
+      "settled": 14,
+      "evidence": [
+        "raw move 55 score 14",
+        "move 55 belongs to the other player",
+        "move 54 log awards 3 points"
+      ]
+    },
+    {
+      "move": 54,
+      "field": "market tier 3 replacement",
+      "raw": "not yet rendered",
+      "settled_bga_card_id": 89,
+      "evidence": [
+        "raw move 55 card 89",
+        "move 55 only buys a tier 1 card; tier 3 is unchanged"
+      ]
+    },
+    {
+      "move": 55,
+      "field": "market tier 1 replacement",
+      "raw": "not yet rendered",
+      "settled_bga_card_id": 38,
+      "evidence": [
+        "raw move 56 card 38",
+        "move 56 only buys a tier 2 card; tier 1 is unchanged"
+      ]
+    }
+  ],
+  "bonus_counter_note": "Captures 2–15 used an unchanging UI data-count attribute. Their bonus arrays are not used as evidence; bonuses are reconstructed from exact bought cards. From move 16 onwards the displayed numeric bonus is read."
+}

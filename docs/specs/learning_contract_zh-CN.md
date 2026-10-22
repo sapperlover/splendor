@@ -1,6 +1,20 @@
 # Actor–Critic、学习环境与 PPO 契约
 
+2026-10-22新建MLP动作cross模块的type／owner／tier embedding各std0.05（初始化后原位缩放，不额外消耗RNG）。仅改变新建权重的初始分布，906434参数、模型配置字段、旧checkpoint严格恢复及已存权重均不变；不会在加载后再次缩放。对应离线配置及验证见[角色标定](../../artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md)，正式训练按用户要求未启动。
+
 模型只消费 [数值特征](feature_schema_zh-CN.md)，不接收 `GameState`、执行 handle、种子或隐藏牌。本文区分纯权重、PPO 训练 checkpoint；AlphaZero checkpoint 和损失见 [AZ 指南](../guides/alphazero_zh-CN.md)。下表为默认模型和基础 `PPOConfig`，具体训练参数由冻结 run config 决定。
+
+2026-10-21新增可选`entity_set_mlp_v1`／`entity_set_mlp_aux_v1`，见[结构与兼容性](../../artifacts/entity_set_mlp_256x4_20261021/README.md)：按区域汇总实体后用残差MLP编码，候选评分直接读取目标牌/贵族属性，外部29/17/148/82维schema及原policy/value目标不变。纯权重与AZ checkpoint保存完整配置并严格分派；本任务未改变默认旧模型、PPO恢复契约或attention专用分头训练入口。
+
+2026-10-22当前MLP模型片段新增`action_cross_hidden=64, action_cross_heads=2`，一层动作→实体cross-attention；原直连、非线性旁路和乘积保留，906,434参数。Query同时读动作及共享z，K/V来自复用的未汇总牌／贵族编码及语义角色；value-only不执行新增分支。开启时内部state是`EntitySetMLPState(shared,cards,nobles)`，critic／辅助头提取shared，外部前向、标签和数据schema保持不变；原头参数键未增加包装前缀。新字段省略为0／2，严格恢复旧结构；当前新结构不能直接严格恢复旧权重／AdamW。范围、独立开关、风险及工程证据见[cross升级](../../artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/README.md)。
+
+2026-10-21动作头升级：当时MLP预设显式启用`action_bottleneck=32`与`multiplicative_interaction=true`，原90维动作直连上叠加90→32→128非线性分支，再以128维状态／动作逐元素乘积融合，逐通道可学习系数初始化为1；参数855,682。省略新字段保持初版结构（0／false，848,418参数），旧纯权重／AZ配置继续严格加载；启用新结构不能直接严格恢复旧结构的权重或AdamW。联合训练、可选辅助头和投影推理均执行新分支，value-only不执行动作头。公式与独立验证见[动作头升级](../../artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/README.md)。
+
+2026-10-19新增[AZ搜索训练数据v3](../guides/search_training_zh-CN.md)：可按决策随机降低预算，低预算 `policy_weight=0,value_weight=1`；根Forced Playouts与Policy Target Pruning分离原始走子分布和训练目标。v3保存预算标记、原始/裁剪计数、Q累积和及实际强制次数，支持复算；v1/v2继续读取。模型输入、AZ损失归一化、checkpoint结构和PPO行为不变。
+
+2026-10-22预算配置增加可选`low_determinizations`，默认省略沿用高预算世界数；低预算可使用更少世界，数组按高预算N分配并补零，按实际有效世界数校验及取均值。在线`random_budget_iteration`增加可选`continuation_state`（path／SHA），从已完成轮界完整继承轮号、AdamW/RNG及上一活动池；普通旧配置省略字段，序列化与恢复身份不变。规则切换另设冻结12贵族分支，旧10贵族历史标签不改写，见[R20续跑](../../artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md)。
+
+2026-10-21新增`offline_mixed_budget`固定池从零训练入口：沿用scratch的百分比留出／完整checkpoint选点，复用在线`PolicyPool`抽取正policy权重的高预算步，value从全部预算步抽样。各组成完整batch，共享encoder、一次联合反传／全局裁剪／AdamW；不使用attention专用detach分头更新。独立保存两头引用账本及恢复RNG。该入口不支持辅助目标，旧scratch的共享minibatch／辅助配置和冻结身份不变。当前[8万局流程](../../artifacts/entity_set_mlp_256x4_offline_80k_20261021/README.md)的12次曝光按value位置计，不能解释为两头各12次。
 
 ## 模型与权重
 
@@ -47,7 +61,17 @@ values: [B]
 
 ### Entity attention v1
 
-`EntityAttentionConfig` 固定 architecture=`entity_attention_v1`、hidden128、heads4、layers2、FFN512、dropout0；共532,738参数。沿用相同输入 schema，将全部全局字段分为双方各14维玩家块和120维上下文，并与市场、保留、贵族、pending 组成25个实体。两层 Pre-LN 残差 self-attention 后，每个候选独立做一层 cross-attention，保留 query 残差；critic 独立读取全局 token，无界输出。角色 embedding 无任意槽位位置，同角色集合置换不变、候选置换等变，unknown 不与 padding 混同。完整前向共享一次状态编码，value-only 不依赖候选。结构及配置见 [专题](../guides/entity_attention_offline_zh-CN.md)。
+2026-10-19：随机初始化离线入口`ScratchOfflineConfig.value_auxiliary`接受null，表示基础policy＋胜负value网络，不注册分差或剩余回合头，保持主网初始化seed后的Torch RNG和全新AdamW；非null仍沿用旧辅助升级与初始化行为。百分比完整留出、checkpoint恢复及按KL＋MSE选点协议不变。[128×2无辅助配置与执行](../../artifacts/entity_attention_128x2_relations_no_aux_r24_r43_20261019/README.md)。
+
+2026-10-19新增两个独立可选结构开关：`market_relations`（bool，默认false）与`value_readout`（`global`或`global_players_market`，默认前者）。关系开关启用时，从原schema的公开资源派生市场卡及双方明保留已知牌的8维关系：对手各色普通筹码缺口5维、黄金后未覆盖缺口1维，以及双方可购买标志2维；己方两种缺口已存在，不重复追加总缺口或双方差值。使用原归一化尺度，整数还原后round再判断对手可购买阈值。明牌由source_market且known筛选；己方已知盲牌、对手未知盲牌及padding均不追加关系。市场和明保留token共用8→hidden无偏置投影，参数量不变，NPZ、候选82维及原生传输不变。己方/对手始终相对于当前行动者，可购买标志仅表达资源，不覆盖保留牌归属规则。
+
+`global_players_market`读取交互后的全局、己方玩家、对手玩家、有效12张市场卡的masked mean（空集为0），拼接4H后经LN→Linear(4H,H)→GELU→Linear(H,1)。胜负value、已启用的分差与剩余回合头均各自独立采用此读取方式；剩余回合仍softplus，搜索只消费胜负value。25token的顺序及集合语义不变。两项开关随完整model_config保存，省略维持旧结构和严格加载；新预设见[128×2](../../configs/entity_attention_v1/model_relations_128x2.json)／[256×4](../../configs/entity_attention_v1/model_relations_256x4.json)，[有限验证](../../artifacts/entity_attention_relations_20261019/README.md)。下文全局token critic和参数量描述对应旧默认开关。
+
+2026-10-19：`entity_attention_aux_v1`新增可选`predict_score`（省略为true，保留历史双头）。false时仅保留`remaining_turns_head`，`forward_with_auxiliary`的分差项为None，实际state_dict没有分差头；基础policy／胜负value及其搜索接口不变。离线`ValueAuxiliaryConfig.score_loss_weight=0`对应此单回合头，回合权重与两个尺度仍须为正。普通无辅助离线配置允许PSW和value_auxiliary均为空；两种可选目标同时非空仍拒绝。完整对照与兼容验证见[专题](../../artifacts/entity_attention_r24_r43_aux_ablation_20261019/README.md)。
+
+`EntityAttentionConfig` 使用 architecture=`entity_attention_v1`；2026-10-14起 hidden、heads、layers、ffn_hidden 可配置，必须为正整数且 hidden 能被 heads 整除，dropout 保持0。省略尺寸仍使用历史默认 hidden128、heads4、layers2、FFN512，共532,738参数。[256×4预设](../../configs/entity_attention_v1/model_256x4.json) 为 hidden256、heads8、layers4、FFN1024，共3,628,034参数。checkpoint 保存完整尺寸配置；不同尺寸的权重不能互相严格加载。
+
+沿用相同输入 schema，将全部全局字段分为双方各14维玩家块和120维上下文，并与市场、保留、贵族、pending 组成25个实体。指定层数的 Pre-LN 残差 self-attention 后，每个候选独立做一层 cross-attention，保留 query 残差；critic 独立读取全局 token，无界输出。角色 embedding 无任意槽位位置，同角色集合置换不变、候选置换等变，unknown 不与 padding 混同。完整前向共享一次状态编码，value-only 不依赖候选。`EntityAttentionAuxConfig` 沿用同一尺寸校验，256×4加分差／剩余回合两辅助头后为3,761,156参数。结构、兼容性及有限验证见 [专题](../guides/entity_attention_offline_zh-CN.md)。
 
 `build_actor_critic` 按模型配置分派。无 architecture 的旧格式构建 Deep-Sets，明确的 `deep_sets_v1` 同样可读；未知名称报错。新结构保存完整配置，pure weights、AZ build_model 和 frozen loader 均严格加载对应 state_dict。新结构推理必须 `actor_projection=false`，旧结构保留投影优化；混合架构评测分别路由。原 PPO 状态恢复机制仍只适用于原 PPO 训练格式。
 

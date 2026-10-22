@@ -1,38 +1,49 @@
 # 实验导航
 
-2026-10-13完成[R24–43固定数据：PSW与value双辅助目标离线及greedy结果](entity_attention_r24_r43_offline_objectives_20261013/results.md)：两组各22681步、同抽样；final对原R43各200pair greedy得分50.000%／50.125%，未确认提升。800局全部自然终局；辅助标签能学进去，胜负value留出后期回升；未测搜索棋力。
+2026-10-19核对。机器可读身份、适用范围及当前证据SHA见[experiment_index.json](experiment_index.json)。完成训练、完成评测、确认收益分别解释；历史报告中的准备日期不代表当前状态。
 
-2026-10-13完成[R43固定4k S4096：Policy Surprise Weighting](entity_attention_r43_policy_surprise_s4096_20261013/README.md)：各1000步同抽样，加权留出KL改善、普通KL差于对照；greedy 81.625%对80.875%，未确认棋力收益。[结果与逐局配对统计](entity_attention_r43_policy_surprise_s4096_20261013/results.md)、配置／命令／源码身份及原始诊断已保存。
+| 近期实验 | 已保存结果与限制 |
+| --- | --- |
+| Cross64 MLP 54112步对R20 greedy1000pair | [完成结果与核验](entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md)：完整留出KL＋MSE预选54112步，858胜／13和／1129负，得分43.225% [41.075%,45.325%]；2000局、12贵族池、无搜索，支持本候选greedy弱于R20 |
+| Cross64 MLP角色std0.05＋8万局离线训练 | [配置、命令与验证](entity_set_mlp_cross64_role005_offline_80k_20261022/README.md)：906434参数，同旧MLP数据、种子、lr1e-4、16GiB及270557步／5%留出。用户后来启动，现已中断，保存81168步；六节点联合最低54112步0.472901／0.772611，value最低40584步0.769011，后续回升；原预算及自动对战流程未完成 |
+| R20继承续跑：S256N4＋12贵族 | [配置、启动与验证](entity_attention_r20_s256n4_noble12_iteration_20261022/README.md)：继承raw R20状态与24k池，25%高预算总1024／4世界，75%低预算总128／1世界，每轮4k局及1000步，连续运行；旧第21轮2591局残留已删除 |
+| Checkpoint去重与T7外置 | [完成清单与恢复](repository_archive_20261021/README.md)：161个副本去重、1885个冷模型已校验外置至`archive-20261021.tar.zst`，包10.80GB，本阶段释放12.85GB；当前训练及关键模型保留，冷模型使用前需解压 |
+| Checkpoint占用分级与首次清理 | [冻结审计记录](checkpoint_storage_audit_20261021/README.md)：先删5组编译缓存及96个MLP普通恢复点，共3.4335GB；之后的新授权去重／外置见上一行，原审计不改写 |
+| Attention128 94695步对R20 greedy1000pair | [结果与核验](entity_attention_128x2_94695_vs_r20_greedy_20261021/README.md)：54.400%，95%配对区间[52.299%,56.525%]，1078胜／20和／902负；当前12贵族池，未测搜索 |
+| Attention128同8万局离线训练 | [配置与命令](entity_attention_128x2_offline_80k_20261021/README.md)：最近提交135279步，日志KeyboardInterrupt退出，未自动恢复；583682参数、128×2／4头／FFN512，其余数据／抽样／种子／lr1e-4／270557步／5%留出与MLP相同，本次未改配置或中断进程 |
+| MLP 94695步对R20 greedy1000pair | [原始结果与核验](entity_set_mlp_94695_vs_r20_greedy_20261021/README.md)：已完成2000局，MLP得37.075%，95%配对区间[35.000%,39.175%]，736胜／11和／1253负，12贵族池 |
+| 当前完整实体MLP的8万局离线训练 | [脚本、停止记录与指标](entity_set_mlp_256x4_offline_80k_20261021/README.md)：仍停止并保留97000步；七个已评估节点中94695步KL/MSE为0.530577/0.782832、联合最低；原自动面板未启动，新授权greedy独立保存，无搜索对战 |
+| 实体汇总256宽×4残差块MLP | [64维／2头动作cross-attention](entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/README.md)：当前906,434参数，读取25个未汇总实体，保留动作直连及非线性／乘积独立开关，value-only跳过新增分支；197项通过、1项CUDA跳过，CPU编译／原生短验证通过。原855,682／848,418参数记录及8万局训练保留原身份，无新正式训练／棋力结论 |
+| 第20轮S1024N1对同模型Greedy | [同开局N1/N4对照](entity_attention_r20_s1024n1_vs_greedy_20261021/README.md)：1000pair、当前12贵族池，与S256N4面板共用全部开局及策略seed；12 worker/B500/单槽，完成后自动输出两组共同Greedy得分的配对差区间；不是N4对N1直接对战 |
+| 四种搜索的输入缓存潜力 | [96相同基准根×2seed完成结果](search_input_cache_rate_20261021/results.md)：S1024N1／S256N4／S1024N4（总1024／1024／4096）及随机节点总1024为14.62%／19.20%／20.22%／2.69%；仅单次搜索内精确输入复用，不启用缓存、不测速、不含跨走子 |
+| 第20轮S256N4对同模型Greedy | [配置及12 worker入口](entity_attention_r20_s256n4_vs_greedy_20261021/README.md)：1000 pair／2000局，256×4=总1024模拟，当前12贵族规则；12 worker、1000活跃/B500、owner单槽，greedy批量根前向且零模拟；运行状态见runtime/live.json，结束自动保存配对区间与逐局预算核验 |
+| 第20轮128固定局面搜索稳定性 | [脚本与口径](entity_attention_r20_search_stability_128_20261021/README.md)：96个分阶段基础根＋32个独立预筛分歧根，7种候选及两个高预算参考各8 seed；S×N为总预算，比较JS、漏搜、Top-k、重要性与参考一致/分歧分组。后台状态见该实验runtime/live.json，完成后自动汇总，不是棋力或真实最优性结论 |
+| 12张贵族规则池修正 | [规则与验证](noble_pool_bga12_20261021/README.md)：新增蓝绿黑333、红白44，双人从12张抽3张；Python/native/BGA/采集/评测统一，manifest冻结牌池指纹；180项通过、3项CUDA条件跳过，另4局真实模型CPU/GPU采集及checked重放通过 |
+| 第20轮纯随机节点S128对同模型Greedy | [配置与运行入口](entity_attention_r20_chance_s128_vs_greedy_20261021/README.md)：1000 pair／2000局，native_chance逐模拟重采、CPW关闭；双方为BGA分析所用R20原模型。完成后自动输出配对区间和逐局预算核验，运行状态见该实验runtime/live.json；不修改在线教师 |
+| BGA #934713322第18步提前计划诊断 | [恢复与条件节点](bga_934713322_move18_plan_20261021/README.md)：第18步V逐位恢复；原N1/seed0盲保留645/1024，假想下一手买023，买061为0访问；S16384同样。24根均未展开真实第20步完整信息集，不能把未覆盖当作提前拒绝061 |
+| BGA #934713322买061单步分析 | [完整结果](bga_934713322_move20_061_20261021/README.md)：精确复现S1024/N1的607／255／52访问量；同一根3档预算×4种方式×3种子，061并非始终首选。S16384随机节点3/3选买，native N1/N4及CPW均0/3选买；单局面描述，不代表真实行动损失或方法棋力 |
+| BGA #927500015逐步模型分析 | [全部统计](bga_927500015_r20_analysis_20261020/statistics/results.md)：第20轮原模型8组×3种子、1824次根搜索全部完成；56主行动一致25–29步、实际平均访问份额33.95%–43.89%；Q差受低访问影响，不是已验证的人类失误或棋力差 |
+| 第17–19轮EMA回溯 | [完整结果](entity_attention_ema_17_19_20261020/results.md)：H1000获选；第19轮EMA对同轮raw，greedy1000pair得49.70%，搜索500pair得48.45%，两组区间均跨50%；留出小幅改善，未确认棋力收益 |
+| 搜索训练新功能工程验证 | [预算随机化、Forced Playouts与Policy Target Pruning](search_training_20261019/README.md)：183项通过、5项CUDA条件跳过；新版128两局完整CPU循环及混合/低预算训练恢复验证，不是棋力实验 |
+| 新版128×2无辅助从零训练 | [结果](entity_attention_128x2_relations_no_aux_r24_r43_20261019/results.md)：68041步、选37423，greedy1000pair为53.775%，S1024搜索200pair为56.625% [51.750%,61.375%]；未隔离各结构／日程改动贡献 |
+| 新版128×2的30619步补测 | [1000pair greedy对R43](entity_attention_128x2_relations_no_aux_r24_r43_20261019/greedy_step30619/results.md)：47.775% [45.600%,49.925%]；同开局对共同R43的得分比37423步低6.000pp，配对差区间[−8.950,−2.925]pp；未测该节点搜索棋力 |
+| 小模型辅助消融 | [结果](entity_attention_r24_r43_aux_ablation_20261019/results.md)：两组22681步及四组面板均完成；旧双辅助减plain的greedy差+0.050pp、区间跨0，未确认辅助头额外收益 |
+| R24–43原PSW／双辅助 | [原结果与后续对照](entity_attention_r24_r43_offline_objectives_20261013/results.md)：各1000pair greedy，历史结果保留；普通训练对照已在10/19独立专题完成，原双辅助仍未测搜索 |
+| R43历史池离线 | [结果](entity_attention_r43_history_pool_20261012/results.md)：48776步及全部2300pair完成，＋24388步独立确认50.50% [47.35%,53.70%]，未确认超过原R43 |
+| R24离线候选对R43 | [结果](entity_attention_r24_offline_vs_r43_20261012/results.md)：200pair、51.250% [46.125%,56.375%]，未确认超过R43；[原R24实验](entity_attention_r24_history_pool_20261012/results.md)对原R24的小幅收益仍限定原对手 |
+| 256×4从零训练 | [中断说明](entity_attention_256x4_aux_r24_r43_20261014/README.md)：最近保存44227步，终点／搜索未完成；[34021步greedy](entity_attention_256x4_aux_r24_r43_early34021_20261014/results.md)45.45%；[结构验证](entity_attention_256x4_20261014/README.md)及[1024局面容量测试](entity_attention_capacity_1024_20261014/results.md)分别解释 |
+| R43低预算／高预算／随机节点／CPW | [S128–512三组](entity_attention_r43_low_search_budget_arena_20261014/results.md)及[S1024／S4096／chance／CPW四组](entity_attention_r43_search_variants_arena_20261014/results.md)均完成，各500pair；未证明相应采集预算的训练收益 |
+| R43终局信号与动作排序 | [64根×16终局信号](entity_attention_r43_value_signal_64_20261014/results.md)、[Greedy配对排序](entity_attention_r43_action_ranking_64_20261015/results.md)已完成；[S1024续局分支](entity_attention_r43_action_ranking_64_s1024_20261015/README.md)用户停止，保留部分结果，不作完整排序结论 |
+| 公开购买关系与value多实体读取 | [结构与兼容性](entity_attention_relations_20261019/README.md)含市场／双方明保留牌、独立开关及有限验证；新版128训练结果属于上方独立专题 |
+| R43起点S4096、policy2k/value6k | [会话与后续配置](entity_attention_r43_s4096_p2k_v6k_20261013/README.md)：已完成R44–R47，8小时会话到时停止；后续policy6k配置仅准备 |
+| 较早在线研究 | [P4九轮完整报告](../docs/reports/entity_attention_p4_pool_iteration_20261010_zh-CN.md)、[在线主线截至R43](entity_attention_r9_online_lr2e5_1000_forever_20261011/results.md)、[M4整合报告](../docs/reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md)，分别保留分支与版本范围 |
+| 产物集中与旧归档 | [本次7.03GiB／361文件](repository_archive_20261019/README.md)、[冷产物登记](../archive/README.md)；[旧45来源／721入口结论索引](repository_archive_20261012/conclusions.md)继续保留，旧真实归档已由用户外置、当前未挂载 |
 
-2026-10-13新增 [R43 起点 S4096/N1、policy 2k／value 6k 连续自迭代](entity_attention_r43_s4096_p2k_v6k_20261013/README.md)：每轮仍 1000 局／1000 步、lr2e-5、每头 B256，保持联合更新；本次会话上限 8 小时。小池此前仅改善部分 Train 拟合，本分支尚无收益结论。
-
-2026-10-12完成[本地实验归档与全量采样盘点](repository_archive_20261012/README.md)：约14.8GiB集中到仓库`archive/20261012/`；旧路径保留相对链接，当前4.3万局池与旧2.9万局池的原始数据未迁移。覆盖早期AZ、旧DeepSets教师、S512/N2及测速／验证采样，含逐项清单和恢复方法。
-
-归档文档核对见[全部45来源／721入口的结论索引](repository_archive_20261012/conclusions.md)。已补齐[旧θ5十轮完成报告](../docs/reports/az_theta5_10x1000_zh-CN.md)，更正“正式未启动”：训练及常规评测已完成，但终点对PPO追加面板仅100/200pair。早期smoke与临时校准器见[工程输出说明](../docs/reports/archived_engineering_experiments_20261012_zh-CN.md)。
-
-2026-10-12完成[第24轮模型：4.3万局历史池离线流程](entity_attention_r24_history_pool_20261012/README.md)：追加48776步、10组面板共2300pair；选中＋24388步，对原R24独立500pair为54.00% [50.80%,57.10%]。policy留出KL持续下降，value留出MSE先降后升；未由此证明超过R43。
-
-随后已启动[R24离线候选直接对R43](entity_attention_r24_offline_vs_r43_20261012/README.md)及[R43同池离线链路](entity_attention_r43_history_pool_20261012/README.md)：前置200pair，然后从R43沿用同一固定池、训练参数与诊断节点，追加48776步；各训练节点对原R43的评测日程与原实验相同。新结果须以完成面板为准。
-
-2026-10-09整理。机器可读身份、范围和证据SHA见[experiment_index.json](experiment_index.json)。有效记录不等于已证明棋力提升；未完成实验中可能有有效的已完成子结果。
-
-较早M4与固定数据诊断见[M4整合报告](../docs/reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md)，操作入口见[docs导航](../docs/index.md)。
-
-2026-10-10完成[P4起点九轮自迭代](../docs/reports/entity_attention_p4_pool_iteration_20261010_zh-CN.md)：终点S1024/N1对P4／同预算旧池对照／P12＋V4得分58.750%／61.625%／58.125%，各200pair、区间均高于50%；含完整拟合矩阵、value阶段数据、资源口径和纯CPU复算证据，限定单seed与固定DEV。
-
-2026-10-10新增[大池分支组合与greedy对战队列](entity_attention_recent_pool_crossplay_20261010/README.md)：三组搜索＋十组greedy，各200pair；[结果与进度](entity_attention_recent_pool_crossplay_20261010/results.md)和机器索引状态自动更新。未完成组不作为棋力证据。
-
-2026-10-11新增[固定原第30轮完整value的三个policy对照＋第24轮对第30轮](entity_attention_r30_fixed_value_arena_20261011/README.md)：四组S1024/N1各200pair串行；[结果与进度](entity_attention_r30_fixed_value_arena_20261011/results.md)和机器索引随整组完成自动更新。
-
-2026-10-11新增[原第30轮搜索预算对照](entity_attention_r30_search_budget_arena_20261011/README.md)：S1024/N1对无搜索greedy，随后S4096/N1对S1024/N1，各200pair；[结果与进度](entity_attention_r30_search_budget_arena_20261011/results.md)和机器索引随整组完成自动更新。
-
-2026-10-11新增[第30轮对第24轮的1000pair greedy直接对战](entity_attention_r30_r24_greedy_1000pair_20261011/README.md)：原配置完整网络、双方无搜索、交换先后手共2000局；[结果](entity_attention_r30_r24_greedy_1000pair_20261011/results.md)与机器索引自动更新。
-
-2026-10-11新增[第29轮终点：policy缩池／value扩池BCD](entity_attention_r30_head_pools_20261011/README.md)：使用截至第30轮的已有在线数据，B=3k/6k、C=6k/9k、D=3k/9k；各1000步联合训练、共同逐代留出指标及对P4V4的200pair greedy，无新采集或搜索对战。[结果与进度](entity_attention_r30_head_pools_20261011/results.md)与机器索引随链路完成更新。
-
-新增[原第30轮policy与无根噪声S1024的一致性](entity_attention_r30_search_alignment_20261011/README.md)：124局完整留出、8283个有效policy局面，当前完整网络重新搜索两个独立N1世界seed；测Top-1一致率、访问KL和搜索自身随机差异，含前中期／后期划分。[结果](entity_attention_r30_search_alignment_20261011/results.md)完成后自动写入，不作棋力提升证明。
+更完整的按用途入口见[docs导航](../docs/index.md)。报告与原始统计保留原实验身份，本次没有重跑训练或评测。
 
 ## 未完成实验／确认
+
+2026-10-20：[37423步起点混合预算持续迭代](entity_attention_random_budget_iteration_20261019/README.md)在本次EMA启动前已完成20轮、第21轮采集已开始；搜索为500pair、B500、12 worker／1000活跃局及owner单槽，采集仍双槽，保留旧200pair结果。 已汇总[17轮85个节点的学习轨迹](entity_attention_random_budget_iteration_20261019/learning_curves_20261020/results.md)，并完成[6–11／12–17轮共60节点全量固定留出回补](entity_attention_random_budget_iteration_20261019/fixed_holdouts_20261020/results.md)：前组value确认改善，后组改善被第17轮末尾反复抵消；固定旧teacher的policy KL持平／增加，非棋力评测。EMA另在上方独立专题运行，不改变在线teacher。
 
 | 实验身份 | 阅读入口 |
 | --- | --- |

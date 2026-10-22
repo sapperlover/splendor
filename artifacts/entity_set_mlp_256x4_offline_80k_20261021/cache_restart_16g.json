@@ -1,0 +1,247 @@
+{
+  "date": "2026-10-21",
+  "reason": "User explicitly requested deleting the interrupted 8-GiB-cache training and preparing a fresh start with a larger cache; no training launch authorized in this task.",
+  "old_config": {
+    "auxiliary_initialization_seed": 36100000,
+    "cache_mib": 8192,
+    "draw_exposures": 12.0,
+    "expected_games_per_round": 4000,
+    "first_round": 44,
+    "initialization_seed": 43100000,
+    "last_round": 63,
+    "learner": {
+      "batch_size": 256,
+      "checkpoint_every_steps": 1000,
+      "device": "cuda",
+      "history_batch_size": 128,
+      "learning_rate": 0.0001,
+      "max_grad_norm": 1.0,
+      "max_steps_per_round": null,
+      "policy_loss_weight": 1.0,
+      "steps_per_new_position": 4.0,
+      "validation_batch_size": 256,
+      "value_loss_weight": 1.0,
+      "weight_decay": 0.0001
+    },
+    "manifest": "/home/lc/下载/splendor/runs/entity_set_mlp_256x4_offline_80k_20261021/inputs/pool_games.jsonl",
+    "manifest_sha256": "1be97736d1b5af7ff8312642b56ae23f4c07036816d1a59cdc3b6469a6662c5a",
+    "model_config": {
+      "action_bottleneck": 32,
+      "actor_hidden": 128,
+      "architecture": "entity_set_mlp_v1",
+      "card_hidden": 64,
+      "critic_hidden": 128,
+      "market_relations": true,
+      "multiplicative_interaction": true,
+      "noble_hidden": 32,
+      "residual_blocks": 4,
+      "state_hidden": 256
+    },
+    "policy_surprise_weighting": null,
+    "sampling_protocol": "policy-high-value-all-v1",
+    "sampling_seed": 43110000,
+    "validation_percent_step": 5,
+    "validation_positions": 4096,
+    "validation_seed": 43120000,
+    "value_auxiliary": null
+  },
+  "old_plan_sha256": "ac54f9f8e13043bfdee133d3e0a344f3d2e4ed2c6652ca730fe59e5c56ecf22c",
+  "old_source_identity_sha256": "af012c966b651fb972bc3fe7294c967fecc706ac4a3ecc5ec9ff426f1835fbf8",
+  "old_execution": {
+    "sessions": [
+      {
+        "command": [
+          "/home/lc/anaconda3/envs/splendor/bin/python",
+          "artifacts/entity_set_mlp_256x4_offline_80k_20261021/run.py",
+          "run"
+        ],
+        "end_unix": 1792580765.6716821,
+        "environment": {
+          "compile_cache": {
+            "path": "default /tmp/torchinductor_<user>",
+            "warm_state": "unknown; compilation hit/miss counters in owner status are authoritative"
+          },
+          "cpu_count": 16,
+          "cpu_model": "13th Gen Intel(R) Core(TM) i5-13500H",
+          "cuda_available": true,
+          "executable": "/home/lc/anaconda3/envs/splendor/bin/python",
+          "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU, GPU-328e3c53-3afb-333f-7325-d411dd30f366, 580.178.04, 6141",
+          "meminfo": "MemTotal:       32597824 kB\nMemFree:         6970984 kB\nMemAvailable:   14368716 kB\nBuffers:          381152 kB\nCached:          7684968 kB\nSwapCached:            0 kB\nActive:         14626512 kB\nInactive:        9022528 kB\nActive(anon):   12797240 kB\nInactive(anon):  3531612 kB\nActive(file):    1829272 kB\nInactive(file):  5490916 kB\nUnevictable:       16448 kB\nMlocked:             324 kB\nSwapTotal:             0 kB\nSwapFree:              0 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:              4136 kB\nWriteback:            40 kB\nAnonPages:      15599780 kB\nMapped:          2514012 kB\nShmem:            745488 kB\nKReclaimable:     659920 kB\nSlab:            1044972 kB\nSReclaimable:     659920 kB\nSUnreclaim:       385052 kB\nKernelStack:       49784 kB\nPageTables:       207624 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    16298912 kB\nCommitted_AS:   63457500 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      253276 kB\nVmallocChunk:          0 kB\nPercpu:            19200 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:    10240 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:     1554688 kB\nDirectMap2M:    30685184 kB\nDirectMap1G:     1048576 kB\n",
+          "performance_environment": {
+            "CONDA_DEFAULT_ENV": "splendor",
+            "MKL_NUM_THREADS": "1",
+            "OMP_NUM_THREADS": "1",
+            "PYTHONPATH": "src"
+          },
+          "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+          "python": "3.12.14 (main, Sep  2 2026, 23:27:36) [GCC 15.3.0]",
+          "torch": "2.14.0+cu130",
+          "torch_cuda": "13.0",
+          "torch_threads": 1
+        },
+        "source": {
+          "path": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/source.json",
+          "sha256": "af012c966b651fb972bc3fe7294c967fecc706ac4a3ecc5ec9ff426f1835fbf8"
+        },
+        "start_unix": 1792579567.3843522,
+        "status": "interrupted"
+      }
+    ]
+  },
+  "old_preparation_validation": {
+    "date": "2026-10-21",
+    "status": "prepared_not_started",
+    "scope": "Finite CPU unit/integration checks and full 80000-game input preparation only; no formal training, arena or GPU workload launched.",
+    "pytest": {
+      "tests": 74,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "steps_target": 270557,
+    "validation_steps": [
+      13528,
+      27056,
+      40584,
+      54112,
+      67640,
+      81168,
+      94695,
+      108223,
+      121751,
+      135279,
+      148807,
+      162335,
+      175863,
+      189390,
+      202918,
+      216446,
+      229974,
+      243502,
+      257030,
+      270557
+    ],
+    "splits": {
+      "train": {
+        "games": 71989,
+        "policy_positions": 1206369,
+        "positions": 5771871
+      },
+      "validation": {
+        "games": 8011,
+        "policy_positions": 134304,
+        "positions": 641723
+      }
+    },
+    "fixed_validation": {
+      "positions": 4096,
+      "digest": "4a4d5b8662e92fc042744e3aa2287be26c2d4e3fb87d180e42ce5e36170a032c",
+      "whole_game_validation_only": true,
+      "composition_by_round": {
+        "43": 205,
+        "44": 205,
+        "45": 205,
+        "46": 205,
+        "47": 205,
+        "48": 205,
+        "49": 205,
+        "50": 205,
+        "51": 205,
+        "52": 205,
+        "53": 205,
+        "54": 205,
+        "55": 205,
+        "56": 205,
+        "57": 205,
+        "58": 205,
+        "59": 204,
+        "60": 204,
+        "61": 204,
+        "62": 204
+      }
+    },
+    "manifest_sha256": "1be97736d1b5af7ff8312642b56ae23f4c07036816d1a59cdc3b6469a6662c5a",
+    "dataset_digest": "d648af9581daac92ebcf768d0e715b0c13921d80cd7a026de752d2d0cb0d51df",
+    "checkpoint_created": false,
+    "commands": [
+      "bash -n scripts/run_entity_set_mlp_offline_20261021.sh",
+      "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -o addopts= -q tests/test_offline_mixed_budget.py tests/test_offline_scratch.py tests/test_entity_set_mlp.py tests/test_entity_set_mlp_training.py tests/test_random_budget_iteration.py --junitxml=artifacts/entity_set_mlp_256x4_offline_80k_20261021/tests.xml",
+      "bash scripts/run_entity_set_mlp_offline_20261021.sh prepare",
+      "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -u -m splendor.offline_mixed_budget --config configs/entity_set_mlp_v1/offline_80k_lr1e4_20261021.json --output runs/entity_set_mlp_256x4_offline_80k_20261021 --prepare-only"
+    ],
+    "source_files": {
+      "src/splendor/offline_mixed_budget.py": "18f08c3877903883a62c17b068705940a744625df15290971236fa402f29a455",
+      "src/splendor/offline_objectives.py": "e89eedde349b1cd16749ec7dddb2c5a90c15a9518a46af84fbb5fabd6d745a32",
+      "src/splendor/offline_scratch.py": "ecc260d070dd9c96f629a3dc764916be063d605a036f72fb5280bc261ed6dd23",
+      "src/splendor/entity_set_mlp.py": "b58301b0bf94eeb79ccf5d35978423abb2e7e91ca71c3a2788f005eaaf99e620",
+      "tests/test_offline_mixed_budget.py": "293ce268634a218d23f6e9c35c0195f9bc24af4b09f516698a156acac21361ef",
+      "scripts/run_entity_set_mlp_offline_20261021.sh": "f1dfaf9eaa612cabd424b8b84c4a47e563c769a420759d2b5816e0cbfd131fdc",
+      "configs/entity_set_mlp_v1/offline_80k_lr1e4_20261021.json": "c87676914712e949a908eee2957a7dfd4162156f7d6c93a90768286cfecd7102",
+      "artifacts/entity_set_mlp_256x4_offline_80k_20261021/run.py": "b4c584a58959fcefa68f767339a4885d823ba9ed84507c889c25ed870cc8abba"
+    }
+  },
+  "old_training": {
+    "last_logged_step": 659,
+    "last_committed_step": 0,
+    "recent_100_mean_seconds": {
+      "draw_load": 1.4142469929997605,
+      "collate": 0.02499546718056081,
+      "update_host": 0.01636861831997521
+    },
+    "last_cache_stats": {
+      "cache_bytes": 8589877490,
+      "capacity_bytes": 8589934592,
+      "decode_count": 132569,
+      "decoded_bytes": 23263685438,
+      "encode_seconds": 598.8505436846244,
+      "entries": 48867,
+      "hits": 208935,
+      "load_seconds": 516.3136343402293,
+      "misses": 132569,
+      "peak_cache_bytes": 8589934586,
+      "peak_entries": 48900,
+      "raw_decoded_bytes": 90920607460,
+      "storage": "lossless-float32-dictionary-v1"
+    }
+  },
+  "new_cache_mib": 16384,
+  "deleted": [
+    {
+      "path": "runs/entity_set_mlp_256x4_offline_80k_20261021",
+      "files": 121,
+      "bytes": 83249267
+    },
+    {
+      "path": "runtime/entity_set_mlp_256x4_offline_80k_20261021",
+      "files": 170,
+      "bytes": 4693195
+    },
+    {
+      "path": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/plan.json",
+      "files": 1,
+      "bytes": 25377
+    },
+    {
+      "path": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/source.json",
+      "files": 1,
+      "bytes": 29233
+    },
+    {
+      "path": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/execution.json",
+      "files": 1,
+      "bytes": 3059
+    },
+    {
+      "path": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/summary.json",
+      "files": 1,
+      "bytes": 1287
+    },
+    {
+      "path": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/results.md",
+      "files": 1,
+      "bytes": 699
+    }
+  ],
+  "source_games_preserved": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019",
+  "reset_complete": true
+}

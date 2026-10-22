@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <numeric>
 #include <memory>
 #include <map>
@@ -77,8 +78,10 @@ struct Catalog {
             Noble n; n.id=py::str(item.attr("noble_id")); n.points=py::cast<int>(item.attr("points")); n.req=gem_vector(item.attr("requirement"));
             noble_ids.emplace(n.id,int(nobles.size())); nobles.push_back(n);
         }
-        if(cards.size()!=90 || nobles.size()!=10)throw std::invalid_argument("native feature schema requires 90 cards and 10 nobles");
+        if(cards.size()!=90)throw std::invalid_argument("native feature schema requires 90 cards");
         py::object c=source.attr("constants");
+        if(nobles.size()<py::cast<size_t>(c.attr("nobles_in_play")))
+            throw std::invalid_argument("noble catalog is smaller than the setup selection");
         max_reserved=py::cast<int>(c.attr("max_reserved_cards"));
         max_tokens=py::cast<int>(c.attr("max_tokens_at_turn_end"));
         prestige=py::cast<int>(c.attr("end_game_prestige"));
@@ -550,6 +553,7 @@ static py::dict encode(const State& s,const std::vector<Action>& acts,const Cata
     return out;
 }
 struct Edge {
+    int forced_playouts=0;
     int visits=0,child=-1,terminal=-2;double value_sum=0;
     std::vector<Action> branch;
     // Sampled outcomes aggregate into this decision edge's N/W, never maximize over chance.
@@ -653,8 +657,8 @@ static int apply_chance_folded(State& s,const Action& first,const Catalog& c,boo
 static py::dict state_snapshot(const State& state);
 struct SearchConfig {
     int simulations=256,determinizations=2,max_transitions=512;
-    double c_puct=1.5,root_noise_fraction=.25,dirichlet_alpha=.3;
-    bool fold=true;
+    double c_puct=1.5,root_noise_fraction=.25,dirichlet_alpha=.3,forced_playouts=0;
+    bool fold=true,policy_target_pruning=false;
     SearchConfig(py::object config) {
         simulations=py::cast<int>(config.attr("simulations"));
         determinizations=py::cast<int>(config.attr("determinizations"));
@@ -663,6 +667,8 @@ struct SearchConfig {
         root_noise_fraction=py::cast<double>(config.attr("root_noise_fraction"));
         dirichlet_alpha=py::cast<double>(config.attr("dirichlet_alpha"));
         fold=py::cast<bool>(config.attr("fold_forced_phases"));
+        forced_playouts=py::cast<double>(config.attr("forced_playouts"));
+        policy_target_pruning=py::cast<bool>(config.attr("policy_target_pruning"));
     }
 };
 class SearchJob {
@@ -674,7 +680,7 @@ class SearchJob {
     std::vector<double> network_prior,used_prior;
     uint64_t public_word,base_seed,sampling_seed;
     bool noise,root_pending=true,finished=false,root_exported=false;
-    bool stochastic=false;
+    bool stochastic=false,root_only=false;
     double chance_pw_k=0,chance_pw_alpha=.5;
     int root_samples=0,chance_draws=0,information_hits=0;
     int chance_pw_fresh=0,chance_pw_reused=0;
@@ -685,7 +691,8 @@ class SearchJob {
     int chosen=0,current_world=-1,current_simulation=-1;
     std::vector<Action> current_branch;Action current_attempted;bool has_attempted=false;
     std::vector<double> target,behavior;
-    std::vector<std::vector<int>> rows;
+    std::vector<std::vector<int>> rows,target_rows,forced_rows;
+    std::vector<std::vector<double>> value_rows;
     std::vector<int> counts,budgets;
     static std::vector<double> softmax(const std::vector<double>& logits) {
         if(logits.empty())throw std::invalid_argument("empty network logits");
@@ -698,7 +705,7 @@ class SearchJob {
         for(auto [node,edge]:path){Edge& e=w.nodes[node].edges[edge];++e.visits;e.value_sum+=value;}
         ++w.completed;tree_depth_sum+=path.size();max_depth=std::max(max_depth,int(path.size()));
     }
-    int select(const Node& n,int root_actor) const {
+    int select(Node& n,int root_actor,bool is_root) const {
         int total=0;for(auto& e:n.edges)total+=e.visits;
         int sign=n.state.actor==root_actor?1:-1;
         int best=0;double best_score=-1e300,best_prior=-1;
@@ -706,10 +713,13 @@ class SearchJob {
         for(size_t i=0;i<n.edges.size();++i) {
             const Edge& e=n.edges[i];double q=e.visits?e.value_sum/e.visits:0;
             double s=sign*q+factor*n.prior[i]/(1+e.visits);
+            if(is_root && e.visits>0 && e.visits<std::sqrt(cfg.forced_playouts*n.prior[i]*total))
+                s=std::numeric_limits<double>::infinity();
             if(s>best_score || (s==best_score && n.prior[i]>best_prior)) {
                 best=int(i);best_score=s;best_prior=n.prior[i];
             }
         }
+        if(std::isinf(best_score))++n.edges[best].forced_playouts;
         return best;
     }
     void advance(int index) {
@@ -722,7 +732,7 @@ class SearchJob {
             int node_index=0;std::vector<Action> branch;
             for(;;) {
                 // No node or edge reference survives a node-pool insertion.
-                int edge_index=select(w.nodes[node_index],root_actor);
+                int edge_index=select(w.nodes[node_index],root_actor,node_index==0);
                 path.emplace_back(node_index,edge_index);
                 Edge& e=w.nodes[node_index].edges[edge_index];
                 if(e.child>=0 || e.terminal>=-1) {
@@ -766,7 +776,7 @@ class SearchJob {
             std::vector<std::pair<int,int>> path;std::vector<Action> branch;
             int node_index=0,steps=0;
             for(;;) {
-                int edge_index=select(w.nodes[node_index],root_actor);
+                int edge_index=select(w.nodes[node_index],root_actor,node_index==0);
                 path.emplace_back(node_index,edge_index);
                 Action action=w.nodes[node_index].actions[edge_index];int observer=state.actor;
                 if(chance_pw_k>0) {
@@ -810,18 +820,43 @@ class SearchJob {
     void finish() {
         if(finished)return;
         int width=int(root_actions.size());rows.clear();counts.assign(width,0);target.assign(width,0);
+        std::vector<double> raw_target(width,0);
         for(auto& w:worlds) {
-            std::vector<int> row;
-            for(int i=0;i<width;++i){int v=w.nodes[0].edges[i].visits;row.push_back(v);counts[i]+=v;target[i]+=double(v)/w.budget/worlds.size();}
+            std::vector<int> row,forced;std::vector<double> values;
+            for(int i=0;i<width;++i){
+                const auto& e=w.nodes[0].edges[i];int v=e.visits;
+                row.push_back(v);forced.push_back(e.forced_playouts);values.push_back(e.value_sum);
+                counts[i]+=v;raw_target[i]+=double(v)/w.budget/worlds.size();
+            }
             rows.push_back(row);
+            value_rows.push_back(values);forced_rows.push_back(forced);
+            if(cfg.policy_target_pruning) {
+                int best=0;
+                for(int i=1;i<width;++i)
+                    if(row[i]>row[best] || (row[i]==row[best] && used_prior[i]>used_prior[best]))best=i;
+                double factor=cfg.c_puct*std::sqrt(1+w.budget);
+                double threshold=values[best]/row[best]+factor*used_prior[best]/(1+row[best]);
+                for(int i=0;i<width;++i)if(i!=best && row[i]>0) {
+                    int lo=std::max(0,row[i]-int(std::floor(std::sqrt(cfg.forced_playouts*used_prior[i]*w.budget))));
+                    int hi=row[i];double q=values[i]/row[i];
+                    while(lo<hi){
+                        int mid=lo+(hi-lo)/2;
+                        if(q+factor*used_prior[i]/(1+mid)<threshold)hi=mid;else lo=mid+1;
+                    }
+                    row[i]=lo<=1?0:lo;
+                }
+            }
+            target_rows.push_back(row);
+            int retained=std::accumulate(row.begin(),row.end(),0);
+            for(int i=0;i<width;++i)target[i]+=double(row[i])/retained/worlds.size();
         }
-        behavior=target;
+        behavior=raw_target;
         if(temperature==0) {
-            chosen=0;for(int i=1;i<width;++i)if(target[i]>target[chosen] || (target[i]==target[chosen] && network_prior[i]>network_prior[chosen]))chosen=i;
+            chosen=0;for(int i=1;i<width;++i)if(raw_target[i]>raw_target[chosen] || (raw_target[i]==raw_target[chosen] && network_prior[i]>network_prior[chosen]))chosen=i;
             std::fill(behavior.begin(),behavior.end(),0);behavior[chosen]=1;
         } else {
-            double peak=*std::max_element(target.begin(),target.end());double sum=0;
-            for(int i=0;i<width;++i){behavior[i]=target[i]>0?std::exp((std::log(target[i])-std::log(peak))/temperature):0;sum+=behavior[i];}
+            double peak=*std::max_element(raw_target.begin(),raw_target.end());double sum=0;
+            for(int i=0;i<width;++i){behavior[i]=raw_target[i]>0?std::exp((std::log(raw_target[i])-std::log(peak))/temperature):0;sum+=behavior[i];}
             for(double& x:behavior)x/=sum;
             uint64_t state=derived_seed(public_word,sampling_seed,0x53414D50);
             double draw=(splitmix_step(state)>>11)*0x1.0p-53;
@@ -832,9 +867,11 @@ class SearchJob {
     }
 public:
     SearchJob(const Catalog& catalog_,py::object request,py::object config,uint64_t word,uint64_t seed,bool noise_,double temp,bool stochastic_=false,
-              double chance_pw_k_=0,double chance_pw_alpha_=.5):
+              double chance_pw_k_=0,double chance_pw_alpha_=.5,bool root_only_=false):
         catalog(catalog_),cfg(config),public_word(word),base_seed(PyLong_AsUnsignedLongLongMask(config.attr("seed").ptr())),
-        sampling_seed(seed),noise(noise_),stochastic(stochastic_),chance_pw_k(chance_pw_k_),chance_pw_alpha(chance_pw_alpha_),temperature(temp) {
+        sampling_seed(seed),noise(noise_),stochastic(stochastic_),root_only(root_only_),chance_pw_k(chance_pw_k_),chance_pw_alpha(chance_pw_alpha_),temperature(temp) {
+        if(root_only && (noise || temperature!=0 || stochastic || chance_pw_k>0))
+            throw std::invalid_argument("greedy root inference requires no noise, temperature or chance search");
         if(stochastic && cfg.determinizations!=1)throw std::invalid_argument("sampled chance search requires determinizations=1 (one shared statistics pool)");
         if(!std::isfinite(chance_pw_k) || chance_pw_k<0 || !std::isfinite(chance_pw_alpha) || chance_pw_alpha<=0 || chance_pw_alpha>=1)
             throw std::invalid_argument("chance widening requires finite k>=0 and 0<alpha<1");
@@ -877,6 +914,11 @@ public:
             if(!root_pending)throw std::logic_error("root request already resolved");
             if(logits.size()!=root_actions.size())throw std::invalid_argument("root logits width mismatch");
             network_prior=softmax(logits);used_prior=network_prior;
+            if(root_only) {
+                chosen=int(std::max_element(logits.begin(),logits.end())-logits.begin());
+                counts.assign(logits.size(),0);target=network_prior;behavior.assign(logits.size(),0);
+                behavior[chosen]=1;root_pending=false;finished=true;return;
+            }
             if(noise) {
                 std::mt19937_64 rng(derived_seed(public_word,sampling_seed,0x4E4F4953));
                 std::vector<double> eta(network_prior.size());double sum=0;
@@ -1030,6 +1072,9 @@ public:
         out["policy_target"]=target;out["behavior_policy"]=behavior;
         out["simulations"]=int(worlds.empty()?0:cfg.simulations);
         out["max_tree_depth"]=max_depth;out["transition_cap_hits"]=cap_hits;
+        out["per_world_policy_target_counts"]=target_rows;
+        out["per_world_root_value_sums"]=value_rows;
+        out["per_world_forced_playouts"]=forced_rows;
         return out;
     }
     py::dict stats() const {
@@ -1479,10 +1524,10 @@ PYBIND11_MODULE(_native_search,m) {
         .def("submit",&NativeBatch::submit)
         .def("submit_fused",&NativeBatch::submit_fused);
     py::class_<SearchJob,std::shared_ptr<SearchJob>>(m,"SearchJob")
-        .def(py::init<const Catalog&,py::object,py::object,uint64_t,uint64_t,bool,double,bool,double,double>(),
+        .def(py::init<const Catalog&,py::object,py::object,uint64_t,uint64_t,bool,double,bool,double,double,bool>(),
              py::arg("catalog"),py::arg("request"),py::arg("config"),py::arg("public_word"),
              py::arg("sampling_seed"),py::arg("add_root_noise"),py::arg("temperature"),py::arg("stochastic")=false,
-             py::arg("chance_pw_k")=0.,py::arg("chance_pw_alpha")=.5,
+             py::arg("chance_pw_k")=0.,py::arg("chance_pw_alpha")=.5,py::arg("root_only")=false,
              py::keep_alive<1,2>())
         .def("done",&SearchJob::done)
         .def("pending",&SearchJob::pending)

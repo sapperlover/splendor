@@ -1,0 +1,86 @@
+{
+  "scope": "Finite cross-attention architecture/training/restore/compiled native-search correctness only. No formal training, ablation, strength or throughput conclusion.",
+  "date": "2026-10-22",
+  "passed": true,
+  "parameters": 906434,
+  "tests": {
+    "passed": 197,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0
+  },
+  "gpu_validation": {
+    "performed": false,
+    "reason": "torch.cuda.is_available() is false"
+  },
+  "cpu_compile": {
+    "compile_failure_fallbacks": 0,
+    "compile_failures": [],
+    "compile_seconds": {
+      "policy_only:32": 12.024565728999733,
+      "policy_value:16": 10.928362273998573,
+      "policy_value:32": 22.092636343000777,
+      "value_only": 6.515060181998706
+    },
+    "compiled_calls": {
+      "policy_only:32": 1,
+      "policy_value:16": 1,
+      "policy_value:32": 11,
+      "value_only": 1
+    },
+    "disabled_graphs": {},
+    "dynamo_delta": {
+      "calls_captured": 2504,
+      "unique_graphs": 5
+    },
+    "eager_fallbacks": 0,
+    "effective_mode": {
+      "policy_only:32": "compiled",
+      "policy_value:16": "compiled",
+      "policy_value:32": "compiled",
+      "value_only": "compiled"
+    }
+  },
+  "new_parameter_updates": {
+    "action_cross.key.weight": 2.0001083612442017e-05,
+    "action_cross.output.weight": 2.0001083612442017e-05,
+    "action_cross.query_action.weight": 2.0001083612442017e-05,
+    "action_cross.query_state.weight": 2.0001083612442017e-05,
+    "action_cross.value.weight": 2.0001083612442017e-05,
+    "action_nonlinear.0.weight": 2.0001083612442017e-05,
+    "action_nonlinear.2.weight": 2.0001083612442017e-05,
+    "interaction_scale": 2.002716064453125e-05
+  },
+  "source_sha256": "127e5a3577702d632cd8056520fb82e6bce182747e3df37664206db03cecf47b",
+  "git_head": "2394c1623839d1e5f14cfeb845f44bbef01c5419",
+  "evidence_sha256": {
+    "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/README.md": "c0cc23e0f86b09b69304e3a16e7d3d2be1bda43509d9951baa848dd4b0c28012",
+    "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/capacity.json": "b4a42d9980bbc605fe321198820eace6b67b394ad18df2e76a072ec242fcdaf1",
+    "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/cpu_validation.json": "8eb83d985f683356677ef0ea2746007842367adf7fe732fc41880f3e4e417384",
+    "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/tests.xml": "bc04794b7958aa0cd63f1e53397a32598869147c53cb717c63aef14026a51ef4",
+    "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/validate.py": "4fe4a54486611ccf9d2de94755b857af3e8087e708aa1bb31ab388c4760dbccb",
+    "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/cost_estimate.json": "cd9e03360ef88f544dcb45ef83bd964e1d1be3861708bbe99e18bd247fd59628",
+    "src/splendor/entity_set_mlp.py": "ec4c5f2a98d2470723c7fa236fbf07403d00b7a4b072850476917daa97666324",
+    "tests/test_entity_set_mlp.py": "646b8121af104a442beb6153df7773d52358e3826f420955f43dbc3fbf3f6566",
+    "tests/test_entity_set_mlp_training.py": "44915010c330b74246bef8db1c4737c76e6cd07f74bff18967c4462ea03a714b",
+    "tests/test_offline_mixed_budget.py": "12a8aa78882af837a05768cda20abc987dcd4f3bad15e3696257b496184b4a37",
+    "configs/entity_set_mlp_v1/model_256x4.json": "8d88af1b758092357c45a4daa29ab89b08d2cfdfe3075c165e0f013924160e4c",
+    "configs/entity_set_mlp_v1/README.md": "b83240e40cd41938b8877b256376af26ab976766eb7be0599615d6a793029343"
+  },
+  "existing_unrelated_index_mismatches": [
+    {
+      "entry": "entity-attention-128x2-offline-80k-2026-10-21",
+      "path": "artifacts/entity_attention_128x2_offline_80k_20261021/summary.json",
+      "index_sha256": "c2f5864d1ce978fffbcd0dcde0ef204021fc44ab077976def17a15ddeffa6fb3",
+      "current_sha256": "4dd9c1a462b9661273d5fca9a62422e1680f4bf29cd9b1c84aed254a689add20",
+      "disposition": "File and this index hash not modified by this task; reported without rewriting prior experiment records."
+    },
+    {
+      "entry": "entity-set-mlp-offline-80k-2026-10-21",
+      "path": "artifacts/checkpoint_storage_audit_20261021/README.md",
+      "index_sha256": "8e584da94c3dd88c6215e7d9a4df3e69e4a899e6c3bed29cc10c505f2d8b12bb",
+      "current_sha256": "d6d713e7e65f080a1ebaf4f0100d0faee8ba435a45e0551fd1c1997750901765",
+      "disposition": "File and this index hash not modified by this task; reported without rewriting prior experiment records."
+    }
+  ]
+}

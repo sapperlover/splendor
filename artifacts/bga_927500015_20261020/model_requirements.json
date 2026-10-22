@@ -1,0 +1,147 @@
+{
+  "repository": "/home/lc/下载/splendor",
+  "git_head": "2394c1623839d1e5f14cfeb845f44bbef01c5419",
+  "working_tree_dirty": true,
+  "feature_schema": "splendor-observation-action-v1",
+  "ruleset_id": "splendor-base-two-player-v2-forced-skip",
+  "input": "DecisionRequest(observation, legal_actions)",
+  "contracts": {
+    "CardView": [
+      "card_id",
+      "tier",
+      "bonus",
+      "points",
+      "cost"
+    ],
+    "NobleView": [
+      "noble_id",
+      "points",
+      "requirement"
+    ],
+    "PublicReservedCard": [
+      "tier",
+      "source",
+      "card"
+    ],
+    "PlayerPublicState": [
+      "tokens",
+      "bonuses",
+      "score",
+      "purchased_card_ids",
+      "noble_ids",
+      "reserved_cards"
+    ],
+    "PlayerPrivateState": [
+      "blind_reserved_cards"
+    ],
+    "PendingObservation": [
+      "main_action",
+      "payment_target",
+      "tokens_to_return",
+      "eligible_nobles"
+    ],
+    "MarketView": [
+      "tier_one",
+      "tier_two",
+      "tier_three"
+    ],
+    "Observation": [
+      "phase",
+      "self_is_first_player",
+      "supply",
+      "deck_counts",
+      "market",
+      "nobles_in_play",
+      "self_public",
+      "self_private",
+      "opponent_public",
+      "public_purchased",
+      "own_completed_turns",
+      "opponent_completed_turns",
+      "consecutive_forced_skips",
+      "final_round_triggered",
+      "final_round_triggered_by_self",
+      "pending",
+      "result"
+    ],
+    "DecisionRequest": [
+      "observation",
+      "legal_actions"
+    ]
+  },
+  "colors": [
+    "white",
+    "blue",
+    "green",
+    "red",
+    "black",
+    "gold"
+  ],
+  "phases": [
+    "MAIN_ACTION",
+    "PAYMENT",
+    "RETURN_TOKENS",
+    "CHOOSE_NOBLE"
+  ],
+  "action_types": [
+    "TakeDistinct",
+    "TakePair",
+    "ReserveMarket",
+    "ReserveDeck",
+    "BuyMarket",
+    "BuyReserved",
+    "Pay",
+    "ReturnTokens",
+    "ClaimNoble"
+  ],
+  "feature_dimensions": {
+    "global": 148,
+    "card": 29,
+    "noble": 17,
+    "action": 82
+  },
+  "legal_actions": "Must be enumerated by the existing rules engine; do not infer from the human action alone",
+  "card_mapping_key": [
+    "tier",
+    "bonus",
+    "points",
+    "cost.white",
+    "cost.blue",
+    "cost.green",
+    "cost.red",
+    "cost.black"
+  ],
+  "noble_mapping_key": [
+    "points",
+    "requirement.white",
+    "requirement.blue",
+    "requirement.green",
+    "requirement.red",
+    "requirement.black"
+  ],
+  "hidden_information": {
+    "deck_order_and_rng": "Not required by the model; unavailable from normal public replay",
+    "own_blind_reserved_cards": "Required for the acting player; assess actual replay visibility before exporting",
+    "opponent_blind_reserved_cards": "Keep card identity hidden in the acting player observation",
+    "future_reveals": "May be retained in raw archive, but must not leak into earlier model observations"
+  },
+  "training": "Observed human action and result can support imitation/outcome datasets; no MCTS visit distribution is present in a BGA game",
+  "native_replay_compatibility": "Existing replay is seed/RNG based. Do not invent a local seed for the BGA game or claim its action list is directly loadable as compact-action-trace-v2.",
+  "sources_sha256": {
+    "src/splendor/contracts.py": "f613f0b814cf5b3ee01dfa63236346b4c43de307e2ea3220c950e77d06d254f4",
+    "src/splendor/actions.py": "f3bcd17deec8aeab81f38a457d7a516b69fed4ce6e09cc46b24a1a87edb93877",
+    "src/splendor/observation.py": "866348f21a62e66d73e5c0bf93a571d65d7a9f8bff1f6336e5c4ccd86d9b1c30",
+    "src/splendor/compact_trace.py": "74a287c8eb4df9ee9046ea44a3610baa4bcccca2d8b0f684fdb0cc76066b7172",
+    "src/splendor/replay.py": "0087bf78b852a59885c207f5b81d47aed1fb842330a4b072a6e17f90040df4da",
+    "docs/specs/feature_schema_zh-CN.md": "91ebf747eb2965740798e870da745f767d2547afcf5d6436194ef02020b0026a",
+    "docs/specs/engine_contract_zh-CN.md": "b6d25ab19e02e23cb590793d8c91b1eaa1177f944ec5a2af6c9d3c7854dff02a"
+  },
+  "serialized_phase_values": [
+    "main_action",
+    "payment",
+    "return_tokens",
+    "choose_noble"
+  ],
+  "delivery_status": "88 DecisionRequest round-trips and feature encodings passed; full existing GameEngine API replay passed",
+  "synthetic_deck_completion": "Only used by rule reconstruction. Complete unseen order and source RNG are not known; they do not enter model_decisions.jsonl or model_features.npz."
+}

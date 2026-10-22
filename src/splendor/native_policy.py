@@ -89,6 +89,8 @@ class NativeSearchJob:
         self.public_word = _request_public_word(request) if len(request.legal_actions) > 1 else 0
         widening = policy.chance_widening
         kwargs = {} if widening is None else {"chance_pw_k": widening.k, "chance_pw_alpha": widening.alpha}
+        if policy.root_only:
+            kwargs["root_only"] = True
         self._core = _extension().SearchJob(
             policy.native_catalog, request, policy.config, self.public_word,
             self.sampling_seed & ((1 << 64) - 1), add_root_noise, temperature, policy.stochastic,
@@ -102,7 +104,8 @@ class NativeSearchJob:
             policy.stats.single_candidate_decisions += 1
             self._collect_result()
         else:
-            policy.stats.searchable_decisions += 1
+            if not policy.root_only:
+                policy.stats.searchable_decisions += 1
             policy._active_jobs.add(self)
 
     @property
@@ -519,6 +522,7 @@ class NativeBatchRunner:
 
 class NativePUCTSearchPolicy:
     stochastic = False
+    root_only = False
     chance_widening: ChanceWideningConfig | None = None
 
     def __init__(self, model, *, config: MCTSConfig | None = None,
@@ -567,6 +571,18 @@ class NativePUCTSearchPolicy:
 
     def choose(self, request: DecisionRequest):
         return request.legal_actions[self.search(request).chosen_candidate_index]
+
+
+class NativeGreedyPolicy(NativePUCTSearchPolicy):
+    """One root forward through native batches; argmax logits, zero simulations."""
+
+    root_only = True
+
+    def __init__(self, model, **kwargs) -> None:
+        # The native batch job shares the transport descriptor with search jobs.
+        # No worlds/budgets are instantiated for this policy.
+        super().__init__(model, config=MCTSConfig(simulations=1, determinizations=1,
+                         root_noise_fraction=0.), **kwargs)
 
 
 class NativeChancePUCTSearchPolicy(NativePUCTSearchPolicy):

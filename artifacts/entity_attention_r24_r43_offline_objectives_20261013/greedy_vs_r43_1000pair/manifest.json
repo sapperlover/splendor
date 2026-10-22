@@ -1,0 +1,77 @@
+{
+  "additional_games": 3200,
+  "additional_pairs": 800,
+  "additional_seed_range": [
+    36200200,
+    36200999
+  ],
+  "combined_bootstrap_seed": 36220000,
+  "commands": [
+    [
+      "/home/lc/anaconda3/envs/splendor/bin/python",
+      "-u",
+      "-m",
+      "splendor.evaluation",
+      "--config",
+      "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43_1000pair/policy_surprise_extension_config.json",
+      "--output",
+      "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43_1000pair/policy_surprise_extension.json",
+      "--progress-every",
+      "50",
+      "--summary-every",
+      "50"
+    ],
+    [
+      "/home/lc/anaconda3/envs/splendor/bin/python",
+      "-u",
+      "-m",
+      "splendor.evaluation",
+      "--config",
+      "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43_1000pair/value_auxiliary_extension_config.json",
+      "--output",
+      "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43_1000pair/value_auxiliary_extension.json",
+      "--progress-every",
+      "50",
+      "--summary-every",
+      "50"
+    ]
+  ],
+  "difference_bootstrap_seed": 36230000,
+  "game_seed_range": [
+    36200000,
+    36200999
+  ],
+  "inputs": {
+    "policy_surprise": {
+      "checkpoint_identity": {
+        "policy_a": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_r24_r43_policy_surprise_offline_20261013/checkpoints/final.pt",
+          "sha256": "63fa248d81b1e9aecdf1e68c6271cd4c52e83a6bfab1bb899b3fa4386c9e184d"
+        },
+        "policy_b": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+          "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+        }
+      },
+      "prefix": "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43/policy_surprise.json",
+      "prefix_sha256": "81016e5d2654ddcf2f9e25fa7b878105add5bd70321a190df9e41db3ee4f9800"
+    },
+    "value_auxiliary": {
+      "checkpoint_identity": {
+        "policy_a": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_r24_r43_value_auxiliary_offline_20261013/checkpoints/final.pt",
+          "sha256": "f832374da5721ef0567ee4538bd75b15c68085c54a623415c79c87bf7c45a895"
+        },
+        "policy_b": {
+          "path": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+          "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+        }
+      },
+      "prefix": "/home/lc/下载/splendor/artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43/value_auxiliary.json",
+      "prefix_sha256": "0a45d3930882f24ac71230a8bb5138ea544812f909741846ac7440c45145c185"
+    }
+  },
+  "original_pairs": 200,
+  "total_games": 4000,
+  "total_pairs_per_branch": 1000
+}

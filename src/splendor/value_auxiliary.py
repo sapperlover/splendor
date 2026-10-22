@@ -8,6 +8,7 @@ from dataclasses import asdict, dataclass
 import numpy as np
 
 from .entity_attention import EntityAttention, EntityAttentionAux, EntityAttentionAuxConfig
+from .entity_set_mlp import EntitySetMLP, EntitySetMLPAux, EntitySetMLPAuxConfig
 
 
 @dataclass(frozen=True)
@@ -19,8 +20,10 @@ class ValueAuxiliaryConfig:
 
     def __post_init__(self):
         for name, value in asdict(self).items():
-            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
-                raise ValueError(f"{name} must be finite and positive")
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value) or value < 0
+                    or (name != "score_loss_weight" and value == 0)):
+                raise ValueError(f"{name} must be finite and positive (score_loss_weight may be zero)")
 
 
 def auxiliary_targets(samples, config: ValueAuxiliaryConfig):
@@ -42,12 +45,16 @@ def auxiliary_targets(samples, config: ValueAuxiliaryConfig):
     return np.asarray(scores, dtype=np.float32), np.asarray(turns, dtype=np.float32)
 
 
-def add_auxiliary_heads(base: EntityAttention):
+def add_auxiliary_heads(base: EntityAttention | EntitySetMLP, *, predict_score: bool = True):
     """Explicitly upgrade a base model, preserving every existing parameter."""
-    if type(base) is not EntityAttention:
-        raise ValueError("auxiliary warm start requires entity_attention_v1")
-    config = asdict(base.config) | {"architecture": "entity_attention_aux_v1"}
-    model = EntityAttentionAux(EntityAttentionAuxConfig(**config))
+    if type(base) is EntityAttention:
+        config = asdict(base.config) | {"architecture": "entity_attention_aux_v1", "predict_score": predict_score}
+        model = EntityAttentionAux(EntityAttentionAuxConfig(**config))
+    elif type(base) is EntitySetMLP:
+        config = asdict(base.config) | {"architecture": "entity_set_mlp_aux_v1", "predict_score": predict_score}
+        model = EntitySetMLPAux(EntitySetMLPAuxConfig(**config))
+    else:
+        raise ValueError("auxiliary warm start requires base entity_attention_v1 or entity_set_mlp_v1")
     state = model.state_dict()
     state.update(base.state_dict())
     model.load_state_dict(state, strict=True)

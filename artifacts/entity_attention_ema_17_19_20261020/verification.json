@@ -1,0 +1,127 @@
+{
+  "date": "2026-10-20",
+  "scope": "finite implementation checks; not a completed EMA strength result",
+  "regression": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "junit": "tests.xml"
+  },
+  "smoke": {
+    "models": [
+      {
+        "half_life_steps": null,
+        "metric_differences": {
+          "policy_ce": 2.412070898571983e-08,
+          "policy_kl": 2.4120709096742132e-08,
+          "value_mse": 2.6119385099221404e-08
+        },
+        "native_s2_roots": 3,
+        "positions": 64
+      },
+      {
+        "half_life_steps": 250,
+        "metric_differences": {
+          "policy_ce": 4.0164195524994284e-08,
+          "policy_kl": 4.0164195636016586e-08,
+          "value_mse": -3.5032063694373505e-08
+        },
+        "native_s2_roots": 3,
+        "positions": 64
+      },
+      {
+        "half_life_steps": 500,
+        "metric_differences": {
+          "policy_ce": -3.9612586988369e-08,
+          "policy_kl": -3.96125868773467e-08,
+          "value_mse": -4.035579903582942e-08
+        },
+        "native_s2_roots": 3,
+        "positions": 64
+      },
+      {
+        "half_life_steps": 1000,
+        "metric_differences": {
+          "policy_ce": -1.7232650861842558e-08,
+          "policy_kl": -1.7232650750820255e-08,
+          "value_mse": 5.089355470389023e-08
+        },
+        "native_s2_roots": 3,
+        "positions": 64
+      }
+    ],
+    "passed": true,
+    "plan_digest": "76d3b2e82abe47eede5c0b26cd3714118c744a5494e4fd2e2114b314e7f0ddab",
+    "runner_sha256": "4f4fbead3a4b708fe5033e8b00cc6c7101c75468aac7b80ff365d0d108e6784c",
+    "scope": "Engineering only;64 real validation samples per model and3 native S2 roots; no optimizer updates or strength games",
+    "smoke_sha256": "4a9c7eb4281806d5411cc5de90b30805d092e02310d12d82614844611c9b3000",
+    "validation_reference_digest": "3e30b759d92f964bc7a094101f663506edc01f5e276d845d7cd7b62a2b94985b"
+  },
+  "plan_digest": "76d3b2e82abe47eede5c0b26cd3714118c744a5494e4fd2e2114b314e7f0ddab",
+  "ema_checkpoints": 9,
+  "source50step_checkpoints": 160,
+  "validation_positions_per_round": [
+    2048,
+    2048,
+    2048
+  ],
+  "source_validation_splits_verified": true,
+  "checkpoint_boundaries_verified": true,
+  "raw_endpoints_match_original_validation_file_hash": true,
+  "raw_final_alias_parameter_hash_verified": true,
+  "evaluation_only_export_without_optimizer": true,
+  "selection_criterion": "one common half-life, mean over rounds of paired delta(KL+MSE)",
+  "not_started_by_smoke": [
+    "training",
+    "selfplay",
+    "formal_greedy_arena",
+    "formal_search_arena"
+  ],
+  "related_experiment_index_before": {
+    "entity-attention-random-budget-iteration-2026-10-19": {
+      "scope": "17 iterations completed, iteration18 interrupted. Search panels500pairs/owner pipeline1; collection pipeline2. Fixed full validation cohorts evaluated60checkpoint points: iterations6-11 on data1-6 show value MSE improvement and flat historical policy KL; iterations12-17 on data6-11 have worse historical KL and no confirmed net MSE change, with improvements through iteration16 and a late iteration17 bias/MSE reversal. Historical targets do not establish current playing strength or isolate data volume as the cause. No new training or formal arena.",
+      "evidence_hashes": {
+        "artifacts/entity_attention_random_budget_iteration_20261019/README.md": "1bcbb62b1013a5be80115306558affb57cf7a58cdf0620fa4862549851164996",
+        "artifacts/entity_attention_random_budget_iteration_20261019/preflight.json": "92063dff4334d2cb6324d573838c5beac0af9eb33270c01048e4dde4963aefb9",
+        "artifacts/entity_attention_random_budget_iteration_20261019/verification.json": "5fc07ffb09e6be2b99c59f0fcc4f2c7ea61ef4c2ac7b5763f6bc61c0e4a347b2",
+        "configs/entity_attention_v1/random_budget_37423_p6k_v24k_20261019.json": "870e6bb08448b449828e174ea5aeece6729c7b38af94a5a2a66be38a1ca1a2ba",
+        "artifacts/entity_attention_random_budget_iteration_20261019/execution_tuning_verification.json": "a0c726e2eb77d68ac7bdb88e2751fdec1d876ca7ddeeec78eda742112d75d76c",
+        "artifacts/entity_attention_random_budget_iteration_20261019/batch500_update.json": "e7df00077ea7bc250d704f4fa4fc9c2a818861c2e3e60aae5cc1370a7e5843a3",
+        "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_update.json": "fe68fc4bda77add227d774d880679ed41775e90fc123cd7f587b7d37dc81656b",
+        "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_regression.xml": "d93242fb7ee8a12f7407541c00fcc1594985ffd23cab88f07edc3a1749aaee88",
+        "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_verification.json": "a871c719dda9f0088b1414b9a70149da43da7ceb66a9000e3dbcb82ab1812b86",
+        "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_summary.json": "c491951eaf9f462e2d18729daa7a956115aa65deb5cc4a9b0288e2473c3bf3b9",
+        "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_config.json": "903e31f6196624d143ac2252fad9e1afd497078e5e5c78a0267987dea9904796",
+        "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_games.json": "5f9398918a40bd8e9ed76787d89295bed28705965aaf4581fc4e0bf0dd5e46bf",
+        "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_smoke.py": "778ae563218822c96c2c14fe1c5679b994a57edbb38a48ff665b4dda18240340",
+        "artifacts/entity_attention_random_budget_iteration_20261019/search_single_slot_update.json": "f27c5e82f8cb46cc7e3fbc1da4963ee5f6812593ad0166a41a05d2b2a1d98709",
+        "artifacts/entity_attention_random_budget_iteration_20261019/search_single_slot_regression.xml": "e4c9c6d5ad91e1db6e5f6e76be3338a6bf676d9777e0c835f37dd21e5fb5332f",
+        "artifacts/entity_attention_random_budget_iteration_20261019/analyze_learning_curves.py": "a892834e09e5af4ddbe86d24282291d4e58e07fd69eb97caa5e458cba93aea92",
+        "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/results.md": "277ac0ba42dc78041dc25f32f82c6d853092053135aea69e6594ddba8c74bb36",
+        "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/round_summary.csv": "027b81b33443fa6b5ef871df68ef41948b19e1a6c4d1ed0e4ffec55d943bda94",
+        "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/summary.json": "c879f90e3ba41b4a3185f1c19494b9a300147af67979faf66059acd54bcdee41",
+        "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/validation_by_step.csv": "eba9aa9c7db824ddf61980bac940d1a1a6149296d90afd6c5e4bb002278a2b89",
+        "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/within_round_changes.png": "fb7f9fc7f07af80be886b633ac90d2f0a7ca840c0f51b232220b50cc1002ce0d",
+        "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/within_round_changes.svg": "8d6c83ec4c5bf7e606559469a28600d8a011519e5ec0bbaf01c4c7ef0a9cec8c",
+        "artifacts/entity_attention_random_budget_iteration_20261019/evaluate_fixed_holdouts.py": "73b42f93d7ea56216cca8b57e4fd9ecb0694384e48660745d08a82caff9d32f2",
+        "artifacts/entity_attention_random_budget_iteration_20261019/summarize_fixed_holdouts.py": "0cb6989499caae2cc655a669993a879efd7aecebd4d67211972685dd90c95f8d",
+        "artifacts/entity_attention_random_budget_iteration_20261019/fixed_holdouts_20261020/results.md": "18f67a81960200fba700b0df9596428b05b2a9417a79b464d8472d814ad95513",
+        "artifacts/entity_attention_random_budget_iteration_20261019/fixed_holdouts_20261020/summary.json": "ffc028b6e75f0951520a63775bd0fc0c1293ff0f25567963bd729ea1d7ebb24d",
+        "artifacts/entity_attention_random_budget_iteration_20261019/fixed_holdouts_20261020/checkpoints.csv": "4aae12326ee8676483812bd3e001b6536305316319cd5ed18603bb4337212335",
+        "artifacts/entity_attention_random_budget_iteration_20261019/fixed_holdouts_20261020/round_changes.csv": "ee1181e08d7c3106f554c705f4bd5519be98cc2cebb15a85ec884ec345ae16fd",
+        "artifacts/entity_attention_random_budget_iteration_20261019/fixed_holdouts_20261020/fixed_curves.png": "5cf44139ec3a63e3d5ef738c479b05ff6ee453afe98059602a2ed500cb090445",
+        "artifacts/entity_attention_random_budget_iteration_20261019/fixed_holdouts_20261020/fixed_curves.svg": "7b136607fc593939e931975d7bdbfef1add62b3d99e0a6046e8cdb4e87e39fbe",
+        "artifacts/entity_attention_random_budget_iteration_20261019/fixed_holdouts_20261020/raw_manifest.json": "204cb9a274af931b7a6e320301353e17aeccd4bcd68fda5c79553cf12725f8e7",
+        "artifacts/entity_attention_random_budget_iteration_20261019/fixed_holdouts_20261020/verification.json": "152d9a1652543e625f0c459b3d3f06c6aae481738086ac769bd46a02322ca9f9"
+      }
+    }
+  },
+  "startup": {
+    "checked_utc": "2026-10-20T09:12:51.240067+00:00",
+    "launcher_alive": true,
+    "launcher_pid": 440249,
+    "stage": "greedy",
+    "check_count": 1,
+    "continuous_polling": false
+  }
+}

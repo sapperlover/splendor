@@ -12,6 +12,18 @@
 
 `passed=true` 表示评测工程完成，不表示棋力提升。未完成、异常、工程截断结果不能用于完整面板排名。确定性 policy-cycle 判平属于评测裁决，不是引擎正式终局；只用于固定确定性策略，不自动用于有根噪声/温度采样的采集。DEV 与 FINAL 的区别由预留和选模使用方式决定，单独种子域不自动成为无偏 FINAL 验收。
 
+## 搜索评测规模与采集执行器（2026-10-20）
+
+新正式面板默认：greedy 1000 pair，含搜索至少500 pair（1000局）；历史已冻结面板保留原规模。搜索双方仍按评测协议全程使用指定预算（当前持续迭代为S1024/N1），无根噪声、温度0、固定种子、交换先手，并保留checked runner的终局、确定性循环判和及工程截断分类。采集的75%低预算、根噪声和温度采样不带入评测。
+
+`execution.backend="native_cuda_pool"`复用采集的`ExecutionConfig`与`multiworker_gpu.collect`：当前12个搜索worker、1000活跃局、GPU最大batch500、local microbatch64、每worker共享slots2、owner的pipeline_slots1、等待5ms、原candidate/batch buckets及native-cudagraph。可以复制`selfplay.execution`后将`pipeline_slots`设为1；采集仍保留2槽。真实对局由checked runner推进，`engine_mode=fast`不替换评测规则检查。单GPU owner加载双方模型；worker不加载模型，不创建CUDA上下文。每个请求携带checkpoint SHA，只与同模型、同policy/value类型及宽度类别的请求合批，transfer/图缓存也按模型隔离；每行只推理当前行动方。
+
+该后端支持native或native_chance MCTS与`greedy_checkpoint`任意配对。2026-10-21新增`NativeGreedyPolicy`通过root-only native作业共享GPU owner：只前向根logit并argmax（并列取最小候选下标），不创建搜索世界、不展开树，模拟/确定化/搜索状态转移计数均为0；可与同模型搜索根合批，统计包含greedy前向。已有`native_batched`仍使用其原eager greedy执行路径。`device=cpu`提供共享布局的显式CPU复核路径；native-cudagraph正式配置使用CUDA。pool的推理配置由`execution`统一确定；`policy_a/b.inference`若显式指定，必须与之相符，冲突会报错。worker并发写pair日志加文件锁；完整pair支持直接恢复，部分pair沿用现有归档后重跑规则。工程与实际模型验证、正式S256N4对greedy面板见[实验记录](../../artifacts/entity_attention_r20_s256n4_vs_greedy_20261021/README.md)。
+
+结果`execution_stats`记录聚合与逐模型推理行数、物理batch/平均batch、编译/图捕获、GPU峰值显存、worker供给、owner等待/整理/流水线重叠、逐局模拟数等。rule/sidecar时间是多worker累计时间，不能直接除以墙钟当成独占占比。双模型分流仍会拆分供给，也多占图缓存显存；仅短验证通过不能宣称达到采集吞吐。
+
+持续迭代允许调整**搜索评测的pair数及推理执行参数**，不改变训练、采集和搜索协议。每轮边界重读源配置；已经准备的面板沿用自己的`*_config.json`，新面板采用新500 pair配置。恢复仍用原脚本，不改顶层初始配置或历史结果，也不自动补跑旧200 pair。
+
 ## 可执行入口
 
 ```bash
@@ -33,6 +45,8 @@ conda run -n splendor env PYTHONPATH=src python scripts/run_mcts_50pair_sweep.py
 实际 sweep 状态见 [结果报告](../reports/mcts_sweep_zh-CN.md)。AZ 扩展面板入口为 `scripts/run_az_generation_evals.py`；默认 θ1–θ4，θ1–θ5 要显式传 `--rounds 1 2 3 4 5`。summary 默认纳管，生成配置和 sidecar 忽略，见 [AZ 指南](alphazero_zh-CN.md)。
 
 新实验使用新输出目录；恢复既有实验必须保持冻结配置和 checkpoint 身份。5C Quick/Formal/Promotion/FINAL 的种子域与晋升阈值见 [PPO 实验协议](../specs/ppo_training_protocol_zh-CN.md)。
+
+2026-10-21起，默认评测使用完整12张贵族池（新增蓝绿黑333、红白44，双人仍抽3张）。固定配对manifest和summary额外保存`catalog_fingerprint`，恢复时必须匹配；即使checkpoint、开局seed和搜索参数相同，也不能把旧10张池的pair与新12张池拼接。此前已完成面板保留原规则身份，使用旧代码与对应数据复现；新规则正式对战另开输出目录。
 
 单 worker 的有限 native 时间归因入口为 [`profile_speed_pipeline.py evaluation`](../../scripts/profile_speed_pipeline.py)，示例、计时边界及既有结果见 [分项报告](../reports/pipeline_profile_zh-CN.md)。它调用同一个固定配对 runner，保留 sidecar 和状态语义；不是新增跨局批量评测，也不能用 1 pair 宣称棋力或完整面板吞吐。
 

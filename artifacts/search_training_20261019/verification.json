@@ -1,0 +1,33 @@
+{
+  "git_head": "2394c1623839d1e5f14cfeb845f44bbef01c5419",
+  "git_dirty": true,
+  "implementation_sha256": {
+    "src/splendor/search_training.py": "da9cb421d6337242a4cbecbaf7d0e56af3f905a52acd9f281c2166acdf323a27",
+    "src/splendor/mcts_policy.py": "f962837c6ac4b2298561150304230b7b07ceefcdb8bef3a61fec459ea8f1e847",
+    "src/splendor/native_search.cpp": "a1fea4c3f6528ec5527d9993db352177a269da2a3d3788c8a4d204d7f91552a8",
+    "src/splendor/selfplay_fast.py": "77912c4333cec9b49f25bd4e8e8c45c8d825d1ed435b669f385ab6d4421d0fbc",
+    "src/splendor/selfplay_data.py": "1b16f33949a73718c8cd91ecf9e9a077e1f785729e55319e7012e15052347d02",
+    "src/splendor/alphazero_loop.py": "1f7fda7440ee8f63907a2bab0bc9e0630cbaa10585c4d334a008d3fcb7602fe2",
+    "src/splendor/alphazero_replay.py": "64ba6911320d85c31bd97bb16900c27d9cc0f6bfd7d395082fa8a2f327cf0506",
+    "src/splendor/hybrid_train.py": "353e0bf67e7214499e1a6a747455e90bd74bb40f5b5e6d1c5d92c9240dfca9ba",
+    "src/splendor/selfplay.py": "e5b8ec66671770f2c10f4c030c2bd3aab3d8b1047f9f8af56f8c293e4fd7d091",
+    "tests/test_search_training.py": "f14c6d1be08dc8dae5ace6354d72500a46f6e01a363df0388b64ae2dd0cd3020"
+  },
+  "native_extension_sha256": {
+    "src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so": "f59de200095ba9f651ff146f4b735cd4aac2ece589511f136fff0b79c43bfd72"
+  },
+  "teacher": {
+    "path": "/home/lc/下载/splendor/runs/entity_attention_128x2_relations_no_aux_r24_r43_20261019/checkpoints/step-000037423.pt",
+    "sha256": "87a7e70a1b6bd4b3b9d8af23ca3775b2776cb779e6a254b56e5748a6743eb5ca"
+  },
+  "loop_command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m splendor.alphazero_loop --config artifacts/search_training_20261019/smoke_loop.json --output runtime/search_training_20261019/cpu_loop --progress-format human",
+  "torch": "2.14.0+cu130",
+  "device": "cpu",
+  "tests": {
+    "collected": 188,
+    "passed": 183,
+    "skipped": 5,
+    "failed": 0,
+    "skips": "CUDA-dependent conditions"
+  }
+}

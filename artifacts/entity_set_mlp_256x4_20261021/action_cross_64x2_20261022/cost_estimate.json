@@ -1,0 +1,46 @@
+{
+  "scope": "Analytical dense forward MAC estimate, not a runtime benchmark.",
+  "assumptions": [
+    "one policy+value row",
+    "25 padded entity slots",
+    "reuse card/noble encoders",
+    "shared K/V and shared state half of query",
+    "single 64->128 output projection",
+    "exclude nonlinearities, normalization, masks, softmax, elementwise fusion and scheduling"
+  ],
+  "baseline": {
+    "fixed": 953504,
+    "per_candidate": 18624
+  },
+  "cross_delta": {
+    "fixed": 236800,
+    "per_candidate": 17152
+  },
+  "rows": [
+    {
+      "candidate_width": 16,
+      "baseline_MAC": 1251488,
+      "cross_MAC": 1762720,
+      "increase_percent": 40.84993224066072
+    },
+    {
+      "candidate_width": 32,
+      "baseline_MAC": 1549472,
+      "cross_MAC": 2335136,
+      "increase_percent": 50.70527250573098
+    },
+    {
+      "candidate_width": 48,
+      "baseline_MAC": 1847456,
+      "cross_MAC": 2907552,
+      "increase_percent": 57.38139365700726
+    },
+    {
+      "candidate_width": 64,
+      "baseline_MAC": 2145440,
+      "cross_MAC": 3479968,
+      "increase_percent": 62.20299798642703
+    }
+  ],
+  "value_only_extra_dense_MAC": 0
+}

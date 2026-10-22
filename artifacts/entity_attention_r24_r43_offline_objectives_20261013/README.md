@@ -1,6 +1,8 @@
 # R24–43 固定数据：PSW 与 value 辅助目标离线训练
 
-2026-10-13。两组各22681步训练完成，随后final对原R43各200pair greedy评测完成：得分50.000%／50.125%，95%区间均跨50%，**未确认greedy提升，未测搜索棋力**。详见[训练与棋力结果](results.md)。两组分别从原 R43 出发，使用完全相同的绝对第24–43轮历史采集数据、整局 split、均匀抽样流和更新预算。PSW 组只改变 policy 损失权重；辅助组使用普通 policy 监督，同时加入分差与剩余回合两个预测头。两项改进没有同时启用。
+2026-10-19后续证据：原数值结果继续保留；[普通训练／仅剩余回合辅助消融](../entity_attention_r24_r43_aux_ablation_20261019/results.md)已完成。旧双辅助减plain的共同对手greedy差+0.050pp [−0.900,+1.025]pp，未确认辅助头额外收益；该后续对照不回填为原10/13实验的一部分。
+
+2026-10-13。两组各22681步训练完成；final对原R43的greedy评测已从200pair扩至各1000pair，原记录保留、各新增800pair。PSW得分51.350% [49.225%,53.450%]，双辅助53.900% [51.675%,56.075%]；支持辅助组对R43的greedy提升，PSW尚未确认。未测搜索棋力，详见[训练与棋力结果](results.md)。两组原R43起点、同绝对R24–43的20000局、原split和相同逐步抽样；PSW只改policy权重，辅助组使用普通policy监督加两个辅助头，两项改进分别启用。
 
 ## 固定输入与训练设置
 
@@ -49,19 +51,28 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src \
 
 各输出目录的 `checkpoints/final.pt` 为训练终点；中间节点为 `checkpoints/step-XXXXXXXXX.pt`。`progress.json`记录训练完成状态，`validation_curve.jsonl`、`full_validation.json`、`training_metrics.jsonl`保留指标，`references/`保存逐步引用，`source/`保存每次调用的源码／命令身份，`dataset.json`保存全量冻结清单。重型产物在被忽略的runs目录；本目录保存准备摘要、有限验证、训练汇总及greedy逐pair原始结果。
 
-## 已完成的greedy对原R43
+## 已完成的1000pair greedy对原R43
 
-两组final使用同一200个新开局，每个开局交换先后手，各400局；纯greedy、CPU八worker，和棋半分，完整pair bootstrap 10000次。PSW为199胜2和199负、50.000% [45.000%,54.875%]；双辅助为196胜9和195负、50.125% [45.125%,55.125%]。800局全部自然终局，零工程失败与policy cycle draw。辅助减PSW对共同R43的得分差+0.125pp，95%区间[−5.625,+5.750]pp；不是候选直接互打。
+原200pair记录保留在 `greedy_vs_r43/`。按用户新标准，两组各补800pair，最终各1000pair／2000局，共4000局；同一完整开局库、交换先后手，纯greedy、CPU八worker，和棋半分，完整pair bootstrap 10000次。
 
-配置、模型SHA、种子、命令、逐pair结果及统计见[greedy报告](greedy_vs_r43/results.md)、[manifest](greedy_vs_r43/manifest.json)。运行／恢复同一面板，已完成部分直接跳过：
+| 候选 | 胜／和／负 | 得分率 | 95%配对区间 |
+| --- | ---: | ---: | --- |
+| PSW | 1017／20／963 | 51.350% | [49.225%,53.450%] |
+| 双辅助 | 1066／24／910 | 53.900% | [51.675%,56.075%] |
+
+辅助组对R43的区间高于50%，PSW尚未确认提升。辅助减PSW对共同R43的得分差+2.550pp，95%区间[−0.050,+5.200]pp；不是候选直接互打，也尚未确认候选之间的差异。3999局自然终局、1局policy cycle draw按现行规则计半分，零工程失败；剔除循环所在完整pair的敏感性检查仍支持辅助组对R43的提升。扩样复用已查看的前200pair，不能称为新的独立确认，区间未作顺序检验校正。
+
+[1000pair报告](greedy_vs_r43_1000pair/results.md)、[原200pair报告](greedy_vs_r43/results.md)、[扩样配置与原件身份](greedy_vs_r43_1000pair/manifest.json)、[合并与敏感性核对](greedy_vs_r43_1000pair/verification.json)。AGENTS.md已约定：以后纯greedy默认每组1000pair，含搜索策略的对战默认每组200pair，用户明确指定时覆盖默认值。
+
+恢复同一扩样面板，已完成的新增部分直接跳过：
 
 ```bash
 conda run --no-capture-output -n splendor env PYTHONPATH=src \
   OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
-  python -u artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43/run.py run
+  python -u artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43_1000pair/run.py run
 ```
 
-纯CPU重算已有训练与棋力汇总，不执行训练、搜索或对战：
+纯CPU重算已有训练与最新棋力汇总，不执行训练、搜索或对战：
 
 ```bash
 conda run --no-capture-output -n splendor env PYTHONPATH=src \
@@ -78,3 +89,7 @@ conda run -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
   tests/test_alphazero_training.py tests/test_policy_surprise.py \
   tests/test_pool_iteration.py tests/test_hybrid_training.py
 ```
+
+## 2026-10-19冷产物位置
+
+非主要checkpoint、逐步指标及抽样账本已集中到`archive/20261019/runs/`下相同run结构；关键模型与验证／选点文件留在原位置，原文件路径保留相对链接。见[逐文件迁移清单、保留策略及恢复说明](../repository_archive_20261019/README.md)。只读诊断可在恢复挂载后访问；精确续训前须按清单撤回该run的迁移，恢复原位真实账本／日志和权重，避免续训改写冻结归档。本次没有启动或恢复训练。

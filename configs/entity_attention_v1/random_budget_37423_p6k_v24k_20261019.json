@@ -1,0 +1,221 @@
+{
+  "protocol": "random-budget-iteration-v1",
+  "run_id": "entity_attention_37423_random_budget_p6k_v24k_20261019",
+  "initial_checkpoint": {
+    "path": "runs/entity_attention_128x2_relations_no_aux_r24_r43_20261019/checkpoints/step-000037423.pt",
+    "sha256": "87a7e70a1b6bd4b3b9d8af23ca3775b2776cb779e6a254b56e5748a6743eb5ca"
+  },
+  "history_manifest": {
+    "path": "artifacts/entity_attention_r24_history_pool_20261012/pool_games.jsonl",
+    "sha256": "99d7c8460d45206daa195d9bf0994b8935e148233833ec841a6e9d1dab611cfb"
+  },
+  "first_round": 24,
+  "last_round": 43,
+  "expected_games_per_round": 1000,
+  "new_games_per_round": 4000,
+  "replay_max_games": 24000,
+  "updates_per_round": 1000,
+  "historical_policy_fraction": 0.25,
+  "historical_policy_seed": 36950000,
+  "retention_seed": 36940000,
+  "cache_bytes": 8589934592,
+  "validation_positions": 2048,
+  "validation_seed": 36960000,
+  "validation_steps": [
+    0,
+    100,
+    250,
+    500,
+    1000
+  ],
+  "selfplay": {
+    "protocol": "mcts-selfplay-v2",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "seed": 36930000,
+      "simulations": 1024,
+      "forced_playouts": 0.0,
+      "policy_target_pruning": false
+    },
+    "execution": {
+      "active_games_per_worker": 1,
+      "actor_projection": false,
+      "backend": "native_cuda_pool",
+      "batch_interface": "native",
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "engine_mode": "fast",
+      "inference_mode": "compiled",
+      "local_microbatch": 64,
+      "max_batch_size": 500,
+      "max_batch_wait_ms": 5,
+      "native_transport": "reused",
+      "precision": "float32",
+      "search_workers": 12,
+      "shared_candidate_width": 256,
+      "shared_slots": 2,
+      "torch_threads": 1,
+      "total_active_games": 1000,
+      "workers": 1,
+      "batch_buckets": [
+        16,
+        32,
+        64,
+        128,
+        192,
+        256,
+        384,
+        500
+      ],
+      "compile_mode": "native-cudagraph",
+      "pipeline_slots": 2
+    },
+    "add_root_noise": true,
+    "temperature_schedule": {
+      "late_temperature": 0.0,
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0
+    },
+    "validation_fraction": 0.1,
+    "max_completed_turns": 400,
+    "budget_randomization": {
+      "low_simulations": 128,
+      "low_probability": 0.75
+    }
+  },
+  "learner": {
+    "device": "cuda",
+    "batch_size": 256,
+    "history_batch_size": 128,
+    "learning_rate": 2e-05,
+    "weight_decay": 0.0001,
+    "policy_loss_weight": 1.0,
+    "value_loss_weight": 1.0,
+    "max_grad_norm": 1.0,
+    "steps_per_new_position": 4.0,
+    "checkpoint_every_steps": 50,
+    "validation_batch_size": 256,
+    "max_steps_per_round": null
+  },
+  "seeds": {
+    "collection": 36900000,
+    "split": 36910000,
+    "sampling": 34410000
+  },
+  "greedy_evaluation": {
+    "adjudicate_deterministic_policy_cycles": true,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 37020000,
+    "device": "cpu",
+    "max_completed_turns": 400,
+    "pairs": 1000,
+    "policy_a": {
+      "checkpoint": "generated-at-runtime",
+      "kind": "greedy_checkpoint",
+      "name": "random_budget_candidate"
+    },
+    "policy_b": {
+      "checkpoint": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+      "kind": "greedy_checkpoint",
+      "name": "R43"
+    },
+    "policy_seed_base": 37010000,
+    "seed_start": 37000000,
+    "workers": 8
+  },
+  "search_evaluation": {
+    "policy_a": {
+      "kind": "mcts_checkpoint",
+      "name": "random_budget_candidate",
+      "checkpoint": "generated-at-runtime",
+      "search_backend": "native",
+      "search_config": {
+        "simulations": 1024,
+        "determinizations": 1,
+        "c_puct": 1.5,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "dirichlet_alpha": 0.3,
+        "seed": 37130000
+      }
+    },
+    "policy_b": {
+      "kind": "mcts_checkpoint",
+      "name": "R43",
+      "checkpoint": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+      "search_backend": "native",
+      "search_config": {
+        "simulations": 1024,
+        "determinizations": 1,
+        "c_puct": 1.5,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "dirichlet_alpha": 0.3,
+        "seed": 37130000
+      }
+    },
+    "device": "cuda",
+    "workers": 1,
+    "pairs": 500,
+    "seed_start": 37100000,
+    "policy_seed_base": 37110000,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 37120000,
+    "adjudicate_deterministic_policy_cycles": true,
+    "execution": {
+      "active_games_per_worker": 1,
+      "actor_projection": false,
+      "backend": "native_cuda_pool",
+      "batch_interface": "native",
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "engine_mode": "fast",
+      "inference_mode": "compiled",
+      "local_microbatch": 64,
+      "max_batch_size": 500,
+      "max_batch_wait_ms": 5,
+      "native_transport": "reused",
+      "precision": "float32",
+      "search_workers": 12,
+      "shared_candidate_width": 256,
+      "shared_slots": 2,
+      "torch_threads": 1,
+      "total_active_games": 1000,
+      "workers": 1,
+      "batch_buckets": [
+        16,
+        32,
+        64,
+        128,
+        192,
+        256,
+        384,
+        500
+      ],
+      "compile_mode": "native-cudagraph",
+      "pipeline_slots": 1
+    }
+  },
+  "search_evaluation_every_rounds": 3,
+  "evaluation_anchor": {
+    "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+    "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+  }
+}

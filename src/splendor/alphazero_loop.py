@@ -65,6 +65,7 @@ from .evaluation import (
 )
 from .mcts_policy import MCTSConfig
 from .selfplay import TemperatureSchedule, derive_seed
+from .search_training import SearchBudgetRandomization
 from .selfplay_fast import (
     ExecutionConfig, FastSelfPlayConfig, generate as generate_selfplay,
 )
@@ -179,11 +180,14 @@ class SelfPlaySection:
     validation_fraction: float
     max_completed_turns: int
     protocol: str = SELFPLAY_PROTOCOL
+    budget_randomization: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if self.protocol != SELFPLAY_PROTOCOL:
             raise ValueError("self-play protocol must be mcts-selfplay-v2")
-        MCTSConfig(**self.search_config)
+        search = MCTSConfig(**self.search_config)
+        if self.budget_randomization is not None:
+            SearchBudgetRandomization(**self.budget_randomization).validate_search(search.simulations, search.determinizations)
         ExecutionConfig(**self.execution)
         TemperatureSchedule(**self.temperature_schedule)
         if type(self.add_root_noise) is not bool:
@@ -194,7 +198,10 @@ class SelfPlaySection:
             raise ValueError("max_completed_turns must be a positive integer")
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        value = asdict(self)
+        if self.budget_randomization is None:
+            value.pop("budget_randomization")
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -676,6 +683,8 @@ class LoopRunner:
             validation_fraction=self.config.selfplay.validation_fraction,
             split_seed=self.config.seeds.split_for(round_index),
             max_completed_turns=self.config.selfplay.max_completed_turns,
+            budget_randomization=(None if self.config.selfplay.budget_randomization is None else
+                                  SearchBudgetRandomization(**self.config.selfplay.budget_randomization)),
         )
         summary_path = selfplay_dir / "summary.json"
         if summary_path.is_file():

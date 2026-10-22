@@ -61,8 +61,8 @@ class OfflineObjectiveConfig:
             raise ValueError("exposures and cache must be positive")
         if self.learner.max_steps_per_round is not None:
             raise ValueError("offline budget is determined by draw_exposures")
-        if (self.policy_surprise_weighting is None) == (self.value_auxiliary is None):
-            raise ValueError("select exactly one of policy surprise or value auxiliary fitting")
+        if self.policy_surprise_weighting is not None and self.value_auxiliary is not None:
+            raise ValueError("policy surprise and value auxiliary fitting are separate experiments")
         if not 0 < self.validation_positions <= 4096:
             raise ValueError("validation_positions must be in [1, 4096]")
         if self.policy_surprise_weighting is not None:
@@ -78,12 +78,19 @@ class OfflineObjectiveConfig:
 
 
 def freeze_inputs(config, output):
+    return freeze_history_inputs(config, output, initialization={
+        "initial_checkpoint": config.initial_checkpoint,
+        "initial_checkpoint_sha256": config.initial_checkpoint_sha256})
+
+
+def freeze_history_inputs(config, output, *, initialization):
     """Filter absolute generation IDs, retaining original whole-game splits."""
     frozen = asdict(config)
     output.mkdir(parents=True, exist_ok=True)
     if sha256(Path(config.manifest)) != config.manifest_sha256:
         raise ValueError("source historical manifest changed")
-    if sha256(Path(config.initial_checkpoint)) != config.initial_checkpoint_sha256:
+    if ("initial_checkpoint" in initialization and
+            sha256(Path(initialization["initial_checkpoint"])) != initialization["initial_checkpoint_sha256"]):
         raise ValueError("initial checkpoint changed")
     if (output / "config.json").exists():
         if read_json(output / "config.json") != frozen:
@@ -134,8 +141,7 @@ def freeze_inputs(config, output):
             "games": len(index.games), "splits": train_counts, "steps_target": steps,
             "draw_exposures": config.draw_exposures, "replay_identity": identity,
             "fixed_validation_digest": fixed["digest"],
-            "initial_checkpoint": config.initial_checkpoint,
-            "initial_checkpoint_sha256": config.initial_checkpoint_sha256}
+            **initialization}
     write_json(output / "plan.json", plan)
     return index, pool, identity, fixed, plan
 
@@ -145,7 +151,8 @@ def initialize_learner(config, identity, steps):
     base = payload.build_model()
     if config.value_auxiliary is not None:
         torch.manual_seed(config.auxiliary_initialization_seed)
-        model = add_auxiliary_heads(base)
+        auxiliary = ValueAuxiliaryConfig(**config.value_auxiliary)
+        model = add_auxiliary_heads(base, predict_score=auxiliary.score_loss_weight > 0)
     else:
         model = base
     learner = AlphazeroLearner(model, config.learner, sampling_rng=DeterministicRng(config.sampling_seed))
@@ -186,13 +193,14 @@ def evaluate(learner, index, fixed, auxiliary):
             else:
                 logits, values, score, turns = learner.model.forward_with_auxiliary(batch.decisions)
                 ys, yt = auxiliary_targets(samples, auxiliary)
-                es = score - torch.as_tensor(ys, device=learner.device)
                 et = turns - torch.as_tensor(yt, device=learner.device)
                 weight = tensors["value_weights"]
-                totals.update(score_sq_sum=float((es.square() * weight).sum()),
-                              turns_sq_sum=float((et.square() * weight).sum()),
-                              score_abs_sum=float((es.abs() * weight).sum()),
+                totals.update(turns_sq_sum=float((et.square() * weight).sum()),
                               turns_abs_sum=float((et.abs() * weight).sum()))
+                if auxiliary.score_loss_weight > 0:
+                    es = score - torch.as_tensor(ys, device=learner.device)
+                    totals.update(score_sq_sum=float((es.square() * weight).sum()),
+                                  score_abs_sum=float((es.abs() * weight).sum()))
             terms = alphazero_loss_sums(logits, values, **tensors)
             totals.update({k: float(getattr(terms, k)) for k in (
                 "policy_ce_sum", "policy_weight_sum", "value_sq_sum", "value_weight_sum", "entropy_sum")})
@@ -212,21 +220,33 @@ def evaluate(learner, index, fixed, auxiliary):
     result["total_loss"] = learner.config.policy_loss_weight * result["policy_loss"] + learner.config.value_loss_weight * result["value_loss"]
     if auxiliary is not None:
         n = totals["value_weight_sum"]
-        result.update(score_loss=totals["score_sq_sum"] / n, remaining_turns_loss=totals["turns_sq_sum"] / n,
-                      score_mae_points=totals["score_abs_sum"] / n * auxiliary.score_scale,
+        result.update(remaining_turns_loss=totals["turns_sq_sum"] / n,
                       remaining_turns_mae=totals["turns_abs_sum"] / n * auxiliary.turns_scale)
-        result["total_loss"] += auxiliary.score_loss_weight * result["score_loss"] + auxiliary.turns_loss_weight * result["remaining_turns_loss"]
+        if auxiliary.score_loss_weight > 0:
+            result.update(score_loss=totals["score_sq_sum"] / n,
+                          score_mae_points=totals["score_abs_sum"] / n * auxiliary.score_scale)
+            result["total_loss"] += auxiliary.score_loss_weight * result["score_loss"] + auxiliary.turns_loss_weight * result["remaining_turns_loss"]
+        else:
+            result["total_loss"] += auxiliary.turns_loss_weight * result["remaining_turns_loss"]
     return result
 
 
-def run(config, output, *, prepare_only=False, max_steps_this_session=None):
+def run(config, output, *, prepare_only=False, max_steps_this_session=None,
+        input_preparer=freeze_inputs, learner_initializer=initialize_learner,
+        validation_percent_step=None, batch_drawer_factory=None):
     output.mkdir(parents=True, exist_ok=True)
     with (output / ".lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        index, pool, identity, fixed, plan = freeze_inputs(config, output)
+        index, pool, identity, fixed, plan = input_preparer(config, output)
         print(json.dumps({k: plan[k] for k in ("absolute_rounds", "games", "splits", "steps_target")}, ensure_ascii=False), flush=True)
         if prepare_only:
             return plan
+        if batch_drawer_factory is not None and config.value_auxiliary is not None:
+            raise ValueError("separate offline batches do not support auxiliary targets")
+        batch_drawer = batch_drawer_factory(index, pool) if batch_drawer_factory is not None else None
+        evaluation_steps = (None if validation_percent_step is None else
+            tuple(sorted({math.ceil(plan["steps_target"] * p / 100)
+                          for p in range(validation_percent_step, 101, validation_percent_step)})))
         torch.set_num_threads(1)
         checkpoints = output / "checkpoints"
         checkpoints.mkdir(exist_ok=True)
@@ -236,7 +256,7 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None):
             learner = AlphazeroLearner.resume(latest, config.learner, replay_identity=identity,
                                               round_index=0, round_steps_target=plan["steps_target"])
         else:
-            learner = initialize_learner(config, identity, plan["steps_target"])
+            learner = learner_initializer(config, identity, plan["steps_target"])
             learner.save(latest)
         auxiliary = ValueAuxiliaryConfig(**config.value_auxiliary) if config.value_auxiliary is not None else None
         session = str(time.time_ns())
@@ -250,17 +270,37 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None):
 
         def validate(current, checkpoint):
             step = current.round_train_step
-            if any(point["step"] == step for point in curve):
+            # The callback runs after checkpoint commit, including recovery-only saves.
+            # Publish that boundary even if the session is interrupted before returning.
+            write_json(output / "progress.json", {"status": "incomplete", "step": step,
+                "steps_target": plan["steps_target"], "replay_identity": identity,
+                "checkpoint": str(checkpoint), "training": {"status": "checkpoint_committed"}})
+            if evaluation_steps is not None and step != 0 and step not in evaluation_steps:
                 return
-            metrics = evaluate(current, index, fixed, auxiliary)
-            point = {"step": step, "metrics": metrics, "checkpoint": str(checkpoint),
-                     "draw_exposure": step * config.learner.batch_size / len(pool)}
-            curve.append(point)
-            append_json(curve_path, point)
-            print(f"验证 step={step}/{plan['steps_target']} KL={metrics['policy_kl']:.6f} MSE={metrics['value_loss']:.6f}", flush=True)
+            if not any(point["step"] == step for point in curve):
+                metrics = evaluate(current, index, fixed, auxiliary)
+                point = {"step": step, "metrics": metrics, "checkpoint": str(checkpoint),
+                         "draw_exposure": step * config.learner.batch_size / len(pool)}
+                curve.append(point)
+                append_json(curve_path, point)
+                print(f"验证 step={step}/{plan['steps_target']} KL={metrics['policy_kl']:.6f} MSE={metrics['value_loss']:.6f}", flush=True)
+            full_path = output / "full_validation" / f"step-{step:09d}.json"
+            if evaluation_steps is not None and step in evaluation_steps and not full_path.exists():
+                tick = time.perf_counter()
+                metrics = evaluate(current, index, None, auxiliary)
+                write_json(full_path, {"step": step, "checkpoint": str(checkpoint),
+                    "checkpoint_sha256": sha256(checkpoint), "dataset_digest": read_json(output / "dataset.json")["digest"],
+                    "metrics": metrics, "seconds": time.perf_counter() - tick})
+                print(f"完整留出 step={step} KL={metrics['policy_kl']:.6f} MSE={metrics['value_loss']:.6f}", flush=True)
 
         validate(learner, latest)
-        writer = ReferenceWriter(output / "references", session, config.learner.batch_size, identity)
+        if batch_drawer is None:
+            writer = ReferenceWriter(output / "references", session, config.learner.batch_size, identity)
+        else:
+            from .hybrid_train import HybridReferenceWriter
+            writer = HybridReferenceWriter(output / "references", session,
+                {"policy": identity, "value": identity},
+                (config.learner.batch_size, config.learner.batch_size), ("policy", "value"))
         def progress(record):
             if record["round_train_step"] % 100 == 0:
                 print(f"训练 step={record['round_train_step']}/{plan['steps_target']} loss={record['total_loss']:.6f}", flush=True)
@@ -270,7 +310,9 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None):
                 validation_samples=[], validation_games=len(index.split_games("validation")),
                 checkpoint_dir=checkpoints, metrics_path=output / "training_metrics.jsonl",
                 checkpoint_callback=validate, reference_writer=writer, progress_callback=progress,
+                checkpoint_steps=() if evaluation_steps is None else evaluation_steps,
                 max_steps_this_session=max_steps_this_session,
+                batch_drawer=batch_drawer, joint_separate_batches=batch_drawer is not None,
                 policy_surprise_weighting=(PolicySurpriseConfig(**config.policy_surprise_weighting)
                                           if config.policy_surprise_weighting is not None else None),
                 value_auxiliary=auxiliary)
@@ -280,7 +322,10 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None):
         if completed:
             shutil.copyfile(checkpoints / f"step-{learner.round_train_step:09d}.pt", checkpoints / "final.pt")
             if not (output / "full_validation.json").exists():
-                write_json(output / "full_validation.json", evaluate(learner, index, None, auxiliary))
+                full_path = output / "full_validation" / f"step-{learner.round_train_step:09d}.json"
+                metrics = (read_json(full_path)["metrics"] if full_path.exists()
+                           else evaluate(learner, index, None, auxiliary))
+                write_json(output / "full_validation.json", metrics)
         write_json(output / "progress.json", {"status": "complete" if completed else "incomplete",
                                               "step": learner.round_train_step, "steps_target": plan["steps_target"],
                                               "replay_identity": identity, "training": result})

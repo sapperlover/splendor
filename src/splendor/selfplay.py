@@ -23,6 +23,7 @@ import numpy as np
 import torch
 
 from .contracts import DecisionRequest
+from .catalog import load_default_catalog
 from .features import FEATURE_SCHEMA_VERSION, PHASE_ORDER, encode_decision
 from .mcts_policy import MCTSConfig, PUCTSearchPolicy
 from .opponent_pool import load_frozen_actor_critic_checkpoint
@@ -100,6 +101,8 @@ class SelfPlayConfig:
             raise ValueError("seed and split_seed must be integers")
         if type(self.add_root_noise) is not bool:
             raise ValueError("add_root_noise must be bool")
+        if self.search_config.forced_playouts or self.search_config.policy_target_pruning:
+            raise ValueError("forced playouts/pruning collection requires selfplay_fast (v2 protocol)")
         if isinstance(self.validation_fraction, bool) or not isinstance(self.validation_fraction, (int, float)) or not math.isfinite(self.validation_fraction) or not 0 <= self.validation_fraction < 1:
             raise ValueError("validation_fraction must be finite and in [0, 1)")
         if self.device != "cpu":
@@ -199,6 +202,7 @@ def build_manifest(config: SelfPlayConfig) -> dict[str, Any]:
     }
     source = _source_identity()
     frozen = {"semantic_config": config.semantic_dict(), "checkpoint_identity": identity,
+              "catalog_fingerprint": load_default_catalog().data_fingerprint,
               "versions": versions, "implementation_sha256": source["implementation_sha256"]}
     fingerprint = hashlib.sha256(json.dumps(frozen, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     return {"protocol": PROTOCOL, "semantic_fingerprint": fingerprint,

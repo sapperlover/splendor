@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-20",
+  "scope": "User-requested full fixed validation inference only; no training, collection, search or strength games.",
+  "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python artifacts/entity_attention_random_budget_iteration_20261019/evaluate_fixed_holdouts.py --output runtime/random_budget_fixed_holdouts_20261020 --device cuda --batch-size 512",
+  "runtime": {
+    "checkpoints": 60,
+    "plan_digest": "dcb7bf5f496ef1aebe282f242a997e143def097cdb4598d9bae05d9cf300e0c6",
+    "seconds": 192.86267351599963,
+    "smoke": false
+  },
+  "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "forward": "FP32, TF32 disabled, batch512; eager value-only states plus positive-policy actions",
+  "plan_digest": "dcb7bf5f496ef1aebe282f242a997e143def097cdb4598d9bae05d9cf300e0c6",
+  "git_head": "2394c1623839d1e5f14cfeb845f44bbef01c5419",
+  "evaluation_script_sha256": "73b42f93d7ea56216cca8b57e4fd9ecb0694384e48660745d08a82caff9d32f2",
+  "summary_script_sha256": "0cb6989499caae2cc655a669993a879efd7aecebd4d67211972685dd90c95f8d",
+  "raw_retained_files_verified": 164,
+  "input_files_rehashed_unchanged": 4466,
+  "source_config_sha256_unchanged": "870e6bb08448b449828e174ea5aeece6729c7b38af94a5a2a66be38a1ca1a2ba",
+  "completed_iterations_unchanged": 17,
+  "unique_inference_runs_per_panel": [
+    25,
+    25
+  ],
+  "reference_verifications": {
+    "models06_11_data01_06": [
+      {
+        "differences": {
+          "policy_ce": -1.390775046239412e-07,
+          "policy_kl": -1.439198674679787e-07,
+          "value_mse": 6.660943907554895e-09
+        },
+        "policy_positions": 21,
+        "positions": 59,
+        "reference": "AlphazeroLearner.evaluate_samples, joint forward"
+      }
+    ],
+    "models12_17_data06_11": [
+      {
+        "differences": {
+          "policy_ce": 2.0783198517726476e-07,
+          "policy_kl": 2.061604839620479e-07,
+          "value_mse": -7.15041793553084e-08
+        },
+        "policy_positions": 19,
+        "positions": 59,
+        "reference": "AlphazeroLearner.evaluate_samples, joint forward"
+      }
+    ]
+  },
+  "bootstrap": {
+    "resamples": 4000,
+    "seed": 38620000,
+    "numpy_version": "2.5.3",
+    "method": "paired whole-game bootstrap, stratified by source iteration; percentile95%; conditional on these source teachers and one training trajectory"
+  },
+  "bootstrap_unit_checks": {
+    "stratum_game_counts_preserved": true,
+    "constant_paired_weighted_differences_and_ci_exact": true,
+    "seed": 123,
+    "resamples": 400,
+    "absolute_tolerance": 1e-12
+  },
+  "no_train_validation_overlap": "Checked every panel game against all17 saved Train replay snapshots, identified by(run_id,round_index,game_id).",
+  "smoke": "Both panels passed real CPU two-game checks; formal GPU first-checkpoint joint learner comparisons passed, max absolute difference2.079e-7.",
+  "outputs_verified": "60points, 50unique parameter/panel pairs; raw hashes, per-game populations, KL+MSE identities verified.",
+  "plot": "Existing base Matplotlib; PNG visually inspected, no dependency changes.",
+  "gpu_processes_after_evaluation": [],
+  "previous_index_scope": "17 iterations completed, iteration 18 interrupted. Future search panels use 500 pairs, native CUDA pool with 12 workers, 1000 active games, B500 and owner pipeline 1; collection remains pipeline 2. Existing 85 validation checkpoints and 17000 training steps summarized: modest policy gains, weaker recent value generalization; varying validation panels limit cross-round comparisons. No new training or formal arena launched.",
+  "previous_index_evidence_hashes": {
+    "artifacts/entity_attention_random_budget_iteration_20261019/README.md": "2905b1eea1c3ebc973ed5b6d79bbf2eb7063c19d249d36ecbf7a300c40a8a94c",
+    "artifacts/entity_attention_random_budget_iteration_20261019/preflight.json": "92063dff4334d2cb6324d573838c5beac0af9eb33270c01048e4dde4963aefb9",
+    "artifacts/entity_attention_random_budget_iteration_20261019/verification.json": "5fc07ffb09e6be2b99c59f0fcc4f2c7ea61ef4c2ac7b5763f6bc61c0e4a347b2",
+    "configs/entity_attention_v1/random_budget_37423_p6k_v24k_20261019.json": "870e6bb08448b449828e174ea5aeece6729c7b38af94a5a2a66be38a1ca1a2ba",
+    "artifacts/entity_attention_random_budget_iteration_20261019/execution_tuning_verification.json": "a0c726e2eb77d68ac7bdb88e2751fdec1d876ca7ddeeec78eda742112d75d76c",
+    "artifacts/entity_attention_random_budget_iteration_20261019/batch500_update.json": "e7df00077ea7bc250d704f4fa4fc9c2a818861c2e3e60aae5cc1370a7e5843a3",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_update.json": "fe68fc4bda77add227d774d880679ed41775e90fc123cd7f587b7d37dc81656b",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_regression.xml": "d93242fb7ee8a12f7407541c00fcc1594985ffd23cab88f07edc3a1749aaee88",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_verification.json": "a871c719dda9f0088b1414b9a70149da43da7ceb66a9000e3dbcb82ab1812b86",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_summary.json": "c491951eaf9f462e2d18729daa7a956115aa65deb5cc4a9b0288e2473c3bf3b9",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_config.json": "903e31f6196624d143ac2252fad9e1afd497078e5e5c78a0267987dea9904796",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_games.json": "5f9398918a40bd8e9ed76787d89295bed28705965aaf4581fc4e0bf0dd5e46bf",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_smoke.py": "778ae563218822c96c2c14fe1c5679b994a57edbb38a48ff665b4dda18240340",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_single_slot_update.json": "f27c5e82f8cb46cc7e3fbc1da4963ee5f6812593ad0166a41a05d2b2a1d98709",
+    "artifacts/entity_attention_random_budget_iteration_20261019/search_single_slot_regression.xml": "e4c9c6d5ad91e1db6e5f6e76be3338a6bf676d9777e0c835f37dd21e5fb5332f",
+    "artifacts/entity_attention_random_budget_iteration_20261019/analyze_learning_curves.py": "a892834e09e5af4ddbe86d24282291d4e58e07fd69eb97caa5e458cba93aea92",
+    "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/results.md": "277ac0ba42dc78041dc25f32f82c6d853092053135aea69e6594ddba8c74bb36",
+    "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/round_summary.csv": "027b81b33443fa6b5ef871df68ef41948b19e1a6c4d1ed0e4ffec55d943bda94",
+    "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/summary.json": "c879f90e3ba41b4a3185f1c19494b9a300147af67979faf66059acd54bcdee41",
+    "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/validation_by_step.csv": "eba9aa9c7db824ddf61980bac940d1a1a6149296d90afd6c5e4bb002278a2b89",
+    "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/within_round_changes.png": "fb7f9fc7f07af80be886b633ac90d2f0a7ca840c0f51b232220b50cc1002ce0d",
+    "artifacts/entity_attention_random_budget_iteration_20261019/learning_curves_20261020/within_round_changes.svg": "8d6c83ec4c5bf7e606559469a28600d8a011519e5ec0bbaf01c4c7ef0a9cec8c"
+  }
+}

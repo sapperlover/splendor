@@ -1,15 +1,39 @@
 from __future__ import annotations
 
+from collections import Counter
+
 from splendor.catalog import Catalog
+from splendor.engine import GameEngine
 from splendor.replay import REPLAY_SCHEMA_VERSION, RULESET_ID, new_replay
 from splendor.rng import DeterministicRng, RNG_ALGORITHM
 
 
 def test_normative_catalog_loads_with_stable_ids(catalog: Catalog) -> None:
     assert len(catalog.cards) == 90
-    assert len(catalog.nobles) == 10
+    assert len(catalog.nobles) == 12
     assert catalog.card("001").card_id == "001"
     assert len(catalog.data_fingerprint) == 64
+
+
+def test_bga_noble_pool_contains_each_requested_tile_once(catalog: Catalog) -> None:
+    requirements = Counter(tuple(n.requirement) for n in catalog.nobles)
+    assert requirements[(0, 3, 3, 0, 3)] == 1
+    assert requirements[(4, 0, 0, 4, 0)] == 1
+    assert tuple(catalog.noble('N11').requirement) == (0, 3, 3, 0, 3)
+    assert tuple(catalog.noble('N12').requirement) == (4, 0, 0, 4, 0)
+    assert all(n.points == 3 for n in catalog.nobles)
+    assert len(requirements) == 12
+
+
+def test_new_nobles_are_in_the_default_setup_draw(catalog: Catalog) -> None:
+    seen = set()
+    for seed in range(64):
+        state = GameEngine.new(seed, first_player=0, catalog=catalog)._debug_state()
+        assert len(state.nobles_in_play) == 3
+        assert len(state.nobles_out_of_game) == 9
+        assert len(set(state.nobles_in_play + state.nobles_out_of_game)) == 12
+        seen.update(state.nobles_in_play)
+    assert {'N11', 'N12'} <= seen
 
 
 def test_rng_snapshot_restores_exact_stream() -> None:

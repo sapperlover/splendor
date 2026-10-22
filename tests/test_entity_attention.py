@@ -1,4 +1,6 @@
 from dataclasses import asdict, replace
+import json
+from pathlib import Path
 
 import pytest
 import torch
@@ -18,6 +20,19 @@ from splendor.rng import DeterministicRng
 from splendor.rules import legal_actions
 from splendor.search_inference import FrozenSearchInference, InferenceConfig
 
+LARGE = json.loads((Path(__file__).resolve().parents[1] /
+                   'configs/entity_attention_v1/model_256x4.json').read_text())
+RELATIONS = {'market_relations': True, 'value_readout': 'global_players_market'}
+
+
+@pytest.fixture(params=[{'architecture': 'entity_attention_v1'}, LARGE,
+                        {'architecture': 'entity_attention_v1', **RELATIONS}, LARGE | RELATIONS,
+                        {'architecture': 'entity_attention_v1', 'market_relations': True},
+                        {'architecture': 'entity_attention_v1', 'value_readout': 'global_players_market'}],
+                ids=['128x2', '256x4', 'relations128x2', 'relations256x4', 'relations_only', 'readout_only'])
+def model(request):
+    return build_actor_critic(request.param).eval()
+
 
 @pytest.fixture(autouse=True, scope="module")
 def one_thread():
@@ -33,8 +48,7 @@ def batch(initial_state, catalog):
     return tensorize_batch(collate_encoded_decisions([encode_decision(request)]))
 
 
-def test_shape_state_only_and_candidate_permutation(batch):
-    model = EntityAttention().eval()
+def test_shape_state_only_and_candidate_permutation(batch, model):
     with torch.inference_mode():
         logits, value = model(batch)
         perm = torch.arange(logits.shape[1] - 1, -1, -1)
@@ -50,8 +64,7 @@ def test_shape_state_only_and_candidate_permutation(batch):
     assert value.shape == (1,)
 
 
-def test_set_permutations_and_padding_do_not_change_outputs(batch):
-    model = EntityAttention().eval()
+def test_set_permutations_and_padding_do_not_change_outputs(batch, model):
     # Populate both reserves so their permutations exercise real, nonempty entities.
     batch = replace(batch, self_reserved=batch.market_t1[:, :3], opponent_reserved=batch.market_t2[:, :3],
                     self_reserved_mask=batch.market_t1_mask[:, :3], opponent_reserved_mask=batch.market_t2_mask[:, :3])
@@ -72,8 +85,7 @@ def test_set_permutations_and_padding_do_not_change_outputs(batch):
     torch.testing.assert_close(reference[1], padding[1])
 
 
-def test_unknown_reserve_is_valid_and_all_global_fields_survive(batch):
-    model = EntityAttention().eval()
+def test_unknown_reserve_is_valid_and_all_global_fields_survive(batch, model):
     partition = model.self_indices + model.opponent_indices + model.context_indices
     assert sorted(partition) == list(range(batch.global_features.shape[1]))
     unknown = batch.opponent_reserved.clone()
@@ -89,8 +101,7 @@ def test_unknown_reserve_is_valid_and_all_global_fields_survive(batch):
         FrozenSearchInference(model, config=InferenceConfig(actor_projection=True))
 
 
-def test_new_and_legacy_checkpoint_dispatch_is_strict(tmp_path, batch):
-    model = EntityAttention().eval()
+def test_new_and_legacy_checkpoint_dispatch_is_strict(tmp_path, batch, model):
     learner = AlphazeroLearner(model, LearnerConfig(device='cpu'), sampling_rng=DeterministicRng(7))
     path = tmp_path / 'attention.pt'
     learner.save(path)
@@ -118,6 +129,44 @@ def test_new_and_legacy_checkpoint_dispatch_is_strict(tmp_path, batch):
     torch.save(payload, path)
     with pytest.raises(RuntimeError, match='Missing key'):
         load_frozen_actor_critic_checkpoint(path)
+
+
+@pytest.mark.parametrize('changes', [{'hidden': 255}, {'heads': 0}, {'layers': -1},
+                                    {'ffn_hidden': 1.5}, {'layers': True}, {'dropout': .1}])
+def test_attention_dimensions_fail_before_model_initialization(changes):
+    with pytest.raises(ValueError):
+        build_actor_critic(LARGE | changes)
+
+
+@pytest.mark.parametrize('options', [{}, RELATIONS], ids=['legacy', 'relations'])
+def test_large_auxiliary_upgrade_preserves_outputs_and_trains_all_shared_blocks(batch, tmp_path, options):
+    from splendor.value_auxiliary import add_auxiliary_heads
+
+    base = build_actor_critic(LARGE | options).eval()
+    auxiliary = add_auxiliary_heads(base).eval()
+    with torch.inference_mode():
+        expected = base(batch)
+        actual = auxiliary.forward_with_auxiliary(batch)
+    for left, right in zip(expected, actual[:2]):
+        torch.testing.assert_close(left, right, atol=0, rtol=0)
+    # Exercise a real backward/update through the wider/deeper shared encoder.
+    before = auxiliary.blocks[-1].attention.query.weight.detach().clone()
+    optimizer = torch.optim.AdamW(auxiliary.parameters(), lr=2e-5)
+    logits, value, score, turns = auxiliary.forward_with_auxiliary(batch)
+    loss = (logits[:, 0].square().mean() + (value-1).square().mean()
+            + .25 * score.square().mean() + .25 * (turns-1).square().mean())
+    loss.backward()
+    assert torch.isfinite(loss)
+    assert all(p.grad is not None and torch.isfinite(p.grad).all() for p in auxiliary.parameters())
+    optimizer.step()
+    assert not torch.equal(before, auxiliary.blocks[-1].attention.query.weight)
+    checkpoint = tmp_path / 'large_auxiliary.pt'
+    auxiliary.save_weights(checkpoint)
+    restored = ActorCritic.load_weights(checkpoint).eval()
+    assert asdict(restored.config) == asdict(auxiliary.config)
+    with torch.inference_mode():
+        for left, right in zip(auxiliary.forward_with_auxiliary(batch), restored.forward_with_auxiliary(batch)):
+            torch.testing.assert_close(left, right, atol=0, rtol=0)
 
 
 def test_offline_keeps_all_rounds_and_original_validation_split(tmp_path):

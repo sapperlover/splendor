@@ -2,6 +2,10 @@
 
 `native_search.cpp` 是 C++17/pybind11 后端，包含规则、数值编码、PUCT 树和状态推进。Python checked 引擎与 `features.py` 是差分参照。真实 native 采集由 `NativeMatchStepper` 推进；固定对战 runner 的真实对局仍为 Python，搜索世界可选择 native。搜索公开入口只使用 `DecisionRequest`，不读取真实暗牌。
 
+2026-10-21默认贵族目录扩为12张，新增N11蓝绿黑333、N12红白44；Python开局仍随机选3张，native使用同一目录及入场列表。C++不再把“目录恰好10张”当作特征约束：只有每局3个贵族槽、每牌17维属性是输入约束。规范表更新后必须重建扩展并重启调用进程；本次已原子替换本机扩展，旧运行中进程不会热切换。旧模型参数形状不变，原10张目录只用于显式的历史复现。
+
+同日新增`NativeGreedyPolicy`的root-only批处理作业，供12 worker评测复用采集GPU owner。根前向后直接按原始logit argmax结束，零模拟、不创建搜索世界；原搜索的`root_only`默认false，预算及搜索行为不变。与eager greedy的逐局对照及真实模型GPU核验见[S256N4对Greedy实验](../../artifacts/entity_attention_r20_s256n4_vs_greedy_20261021/README.md)。
+
 2026-10-07新增`NativeChancePUCTSearchPolicy`及评测`search_backend="native_chance"`，在simulation内按概率抽牌，按双方各自的信息历史共享决策Q/N。要求N=1作为共享统计池，已有`native`仍是独立确定化；模式、随机数与数据字段含义见[搜索指南](search_zh-CN.md#采样随机节点与信息历史-puctnative_chance)，冻结模型复测见[实验记录](../../artifacts/entity_attention_chance_search_20261007/README.md)。真实游戏牌堆语义不变。
 
 同日新增可选`ChanceWideningConfig`与策略JSON的`chance_widening`字段，限制真实抽牌事件的结果数随访问量增长。仅在`native_chance`启用，省略保持原行为，正式训练配置未切换。API、近似边界及短验证见[CPW说明](search_zh-CN.md#chance-progressive-widening可选)和[实验记录](../../artifacts/entity_attention_chance_pw_20261007/README.md)。

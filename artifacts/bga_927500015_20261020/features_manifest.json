@@ -1,0 +1,125 @@
+{
+  "format": "per-decision-numpy-arrays-v1",
+  "schema": "splendor-observation-action-v1",
+  "load": "numpy.load(\"model_features.npz\", allow_pickle=False)",
+  "array_key_pattern": "{decision_index:03d}/{feature_field}",
+  "labels": {
+    "labels/decision_index": "int64",
+    "labels/bga_move": "int64",
+    "labels/actor": "int64",
+    "labels/candidate_index": "int64",
+    "labels/outcome_value": "float32",
+    "labels/automatic": "bool"
+  },
+  "first_decision_arrays": {
+    "global_features": {
+      "shape": [
+        148
+      ],
+      "dtype": "float32"
+    },
+    "market_t1": {
+      "shape": [
+        4,
+        29
+      ],
+      "dtype": "float32"
+    },
+    "market_t1_mask": {
+      "shape": [
+        4
+      ],
+      "dtype": "bool"
+    },
+    "market_t2": {
+      "shape": [
+        4,
+        29
+      ],
+      "dtype": "float32"
+    },
+    "market_t2_mask": {
+      "shape": [
+        4
+      ],
+      "dtype": "bool"
+    },
+    "market_t3": {
+      "shape": [
+        4,
+        29
+      ],
+      "dtype": "float32"
+    },
+    "market_t3_mask": {
+      "shape": [
+        4
+      ],
+      "dtype": "bool"
+    },
+    "self_reserved": {
+      "shape": [
+        3,
+        29
+      ],
+      "dtype": "float32"
+    },
+    "self_reserved_mask": {
+      "shape": [
+        3
+      ],
+      "dtype": "bool"
+    },
+    "opponent_reserved": {
+      "shape": [
+        3,
+        29
+      ],
+      "dtype": "float32"
+    },
+    "opponent_reserved_mask": {
+      "shape": [
+        3
+      ],
+      "dtype": "bool"
+    },
+    "nobles": {
+      "shape": [
+        3,
+        17
+      ],
+      "dtype": "float32"
+    },
+    "nobles_mask": {
+      "shape": [
+        3
+      ],
+      "dtype": "bool"
+    },
+    "pending_card": {
+      "shape": [
+        29
+      ],
+      "dtype": "float32"
+    },
+    "pending_card_mask": {
+      "shape": [],
+      "dtype": "bool"
+    },
+    "candidate_features": {
+      "shape": [
+        30,
+        82
+      ],
+      "dtype": "float32"
+    },
+    "candidate_mask": {
+      "shape": [
+        30
+      ],
+      "dtype": "bool"
+    }
+  },
+  "ragged_candidates": "Each decision stores exactly its own legal candidate count.",
+  "sample_labels": "Human choices and final outcome only. No MCTS policy targets or teacher values."
+}

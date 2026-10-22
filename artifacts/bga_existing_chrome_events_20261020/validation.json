@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-20",
+  "table": 934687426,
+  "viewer_id": "100878205",
+  "attach_existing_chrome": true,
+  "url_argument_used": false,
+  "browser_was_not_closed": true,
+  "live_event_counts": {
+    "attach": 1,
+    "buyCard": 14,
+    "revealCard": 14,
+    "reserveCard": 7,
+    "update": 6,
+    "coins": 12
+  },
+  "live_event_rows": 54,
+  "pytest_passed": 72,
+  "source_sha256": {
+    "src/splendor/bga_live.py": "845727662814b4034ba859303bc51449fb27a4ff20b520f3da8ce6af0f6ee883",
+    "src/splendor/bga_watch.py": "b7020d254a8fff1819e7a98c293d8128f749fc7e0115fbf6b4aebae332c4f806",
+    "src/splendor/features.py": "8083891d25924191e3cec3c54838f02afeed85bb07dfc9d9d43044c8bf914c57",
+    "tests/test_bga_watch.py": "4c634e65235826b53b2abe9e4d1f97cfa3c5be241c0dd830ebc70aae59205478",
+    "tests/test_bga_live.py": "f8d41e16c41a3f8d4c454a68b74b0c8ca159958740cd1176731e1ed60ebbab06",
+    "pyproject.toml": "488a038873f2d07c8ee0418ce8f4c5335e74c936b106946c063690d47ef573b4",
+    "docs/guides/bga_advisor_zh-CN.md": "57c66e4cf0ab1249fe7dfdb6abc5d9babf15b18db7bf352c79f212905526c5e6"
+  },
+  "live_log_source_note": "Live action/reveal records were captured during implementation. Final merged code adds navigation handling, stale-rate invalidation and endpoint compatibility; regression tests cover those changes. No game action was submitted.",
+  "value_semantics": "(clip(V,-1,1)+1)/2; expected score with draws counted as half, not calibrated P(win)",
+  "limitations": [
+    "Separate discard/noble-selection phases wait for complete next main-action state.",
+    "Same action and reveal have separate lines using the completed post-animation board.",
+    "CDP reconnect does not establish BGA server connectivity."
+  ],
+  "submitted_action": false
+}

@@ -1,0 +1,519 @@
+{
+  "absolute_rounds": [
+    44,
+    63
+  ],
+  "cache_mib": 16384,
+  "catalog_files": {
+    "splendor_cards.csv": "e53d99cfb70517be6cf747f4bdc7961d3d27f3e1626fa3383e8bc185dc8d10e3",
+    "splendor_config.json": "98128f9629d692044fbe27d4005e6c380203764db2f9ed85405de8367e484e3f",
+    "splendor_nobles.csv": "32634495be8b44bc7c0efacec7465f47e36f15fd54196a5f327601acc8b974b3"
+  },
+  "catalog_fingerprint": "084574b026e41ad6e5c64dfe36d74fb84a7604f6a0b0eb0ab59227c32a7ff17b",
+  "config": {
+    "path": "configs/entity_set_mlp_v1/offline_80k_lr1e4_20261021.json",
+    "sha256": "3fcb43c66ecf3adc64212e44163a1c9ac33ff1e9a37e09b7f537089d9504b7f7"
+  },
+  "draw_exposures": 12.0,
+  "experiment": "entity_set_mlp_256x4_offline_80k_20261021",
+  "games": 80000,
+  "initialization": "random current 256x4 set-MLP, nonlinear action branch and multiplicative interaction; fresh AdamW",
+  "model_config": {
+    "action_bottleneck": 32,
+    "actor_hidden": 128,
+    "architecture": "entity_set_mlp_v1",
+    "card_hidden": 64,
+    "critic_hidden": 128,
+    "market_relations": true,
+    "multiplicative_interaction": true,
+    "noble_hidden": 32,
+    "residual_blocks": 4,
+    "state_hidden": 256
+  },
+  "model_implementation": {
+    "path": "src/splendor/entity_set_mlp.py",
+    "sha256": "b58301b0bf94eeb79ccf5d35978423abb2e7e91ca71c3a2788f005eaaf99e620"
+  },
+  "opponent": {
+    "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-019/checkpoints/final.pt",
+    "sha256": "fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd"
+  },
+  "panels": [
+    {
+      "id": "greedy_vs_R20",
+      "kind": "greedy",
+      "pairs": 1000,
+      "seed_start": 43200000
+    },
+    {
+      "id": "search_S1024N1_vs_R20",
+      "kind": "search",
+      "pairs": 500,
+      "seed_start": 43300000
+    }
+  ],
+  "parameters": 855682,
+  "preset": {
+    "path": "configs/entity_set_mlp_v1/model_256x4.json",
+    "sha256": "9019554f02fa691450f886b81a0706fb2cbe6e2e24fc5ec58810aab5487d9052"
+  },
+  "runner": {
+    "path": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/run.py",
+    "sha256": "42742c635e4d54bad834fecff89dcddbbc227c26a75d98e472feba3b5c13e08b"
+  },
+  "sampling": {
+    "policy": "256 positive-weight high-budget decisions",
+    "policy_exposure": 57.41410132389012,
+    "update": "one joint update, shared encoder, one global clip",
+    "value": "256 all-budget decisions",
+    "value_exposure": 12.00002425556635
+  },
+  "scope": "Prepared only until run; original archived targets and whole-game splits, no relabeling, no PSW or auxiliary heads. Historical games use the 10-noble pool; arenas use the frozen current 12-noble pool.",
+  "search_template": {
+    "path": "artifacts/entity_attention_r20_s1024n1_vs_greedy_20261021/config.json",
+    "sha256": "f98fbb7251ce114b449a5399d3bffa878a90ad0a7c54b17486da5710347a52eb"
+  },
+  "selection": "minimum full-holdout policy KL + win/loss value MSE over the 20 percentage checkpoints; ties earlier step",
+  "source_iterations": [
+    1,
+    20
+  ],
+  "source_rounds": [
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/collection_index.json",
+        "sha256": "f0a72948e121215d98cb43ffab7e828b2bd9aa86b4f5d76feb0d7edcdfdee435"
+      },
+      "iteration": 1,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/selfplay/manifest.json",
+        "sha256": "47734564d41b2ad1a31f32d870c18192d6119004726ee296979c2c6e24cc3909"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/selfplay/summary.json",
+        "sha256": "e85471497f3f76e73f55348ec2ebb3bfe0da7fe9f0877d91202c72af2666facc"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_128x2_relations_no_aux_r24_r43_20261019/checkpoints/step-000037423.pt",
+        "sha256": "87a7e70a1b6bd4b3b9d8af23ca3775b2776cb779e6a254b56e5748a6743eb5ca"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/collection_index.json",
+        "sha256": "1c2ee4fea42c38a59e60d22d857d2a203a1666552f3e253502f6db27e8de7cbd"
+      },
+      "iteration": 2,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/selfplay/manifest.json",
+        "sha256": "cd40230e0b75e97d643427617592bf35d17bc8c92c0cac7d442b36a50adca583"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/selfplay/summary.json",
+        "sha256": "3ac7e8079c3a5e6486be577e1bb29dc3494c8d0ecb6df16a974087e52ee5810f"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/checkpoints/final.pt",
+        "sha256": "18c84c7548c8b69d4909c45bd9a6578b7746c0f15f050df89f667a9568567a1b"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/collection_index.json",
+        "sha256": "c4faa1875e0fc71d842b6ce39327fb4b5be060cfe52871110acbe2318dfbe7d1"
+      },
+      "iteration": 3,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/selfplay/manifest.json",
+        "sha256": "df8f214f997a92db10881a9a94b4cbc22146c82d7d534acdf0ee86ca2571390a"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/selfplay/summary.json",
+        "sha256": "e30b5f179e9a347870b849a69945e756bc52b4c18349fbc09a99a0ee37dec092"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/checkpoints/final.pt",
+        "sha256": "9a4b3536a5d974d7a627735d7dd4d114cc27af09f813ef720e5cdfd898406c91"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/collection_index.json",
+        "sha256": "8197839570beaa80d53a2fa4b0e16a1693c7e27eeb6d04c8349deeaa8cc45717"
+      },
+      "iteration": 4,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/selfplay/manifest.json",
+        "sha256": "f969d8047727f6bd86106db8f05ed74865e820771f88ffea41c0bdf138cf2860"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/selfplay/summary.json",
+        "sha256": "c66e6929448b7f9d7f8463b49586cd53b897a43022741136918a2623ceb18412"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/checkpoints/final.pt",
+        "sha256": "5330a1615f85c5ca1c5363d2937a5c7d7b1fb816620e5a2938cfea0906078760"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/collection_index.json",
+        "sha256": "2c01d1b870d5b451a5ca37e5fc6f0498c1fc561eb6649dfd6f48dfba8e1fd82c"
+      },
+      "iteration": 5,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/selfplay/manifest.json",
+        "sha256": "7ef8a60053afeef86fc516f9dd9678c32fa68466d1fc2597ab57a85b2599ad39"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/selfplay/summary.json",
+        "sha256": "8887abe45fb51ad721432af453cc647c88f1067055b9ef7342a5c1d9bc9aa739"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/checkpoints/final.pt",
+        "sha256": "58ee1d994530dc36e75dcf4810b2473bcbcfddba8c56e4e1f09afcac4d891e9e"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/collection_index.json",
+        "sha256": "ab5a89275af1f9a4731efefba8cd06a712faffb3c9aad819025b4c00e6fe10b2"
+      },
+      "iteration": 6,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/selfplay/manifest.json",
+        "sha256": "631107c80bcef0da3fd45104e7669560288653bebd7736b90372b2815f18d8f2"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/selfplay/summary.json",
+        "sha256": "675b82b18a1baa27935c896baeabd82dfc464b4097ccdb07fe1424216431b8e1"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/checkpoints/final.pt",
+        "sha256": "8c97760987c21604df55f42dadf8cf5b4f9afbb03c6b3ab15c096b1f97914788"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/collection_index.json",
+        "sha256": "dc76c8ccd4618ccdc7684b66553732d6961ca97cf242d218a6ecbb05340a4e6d"
+      },
+      "iteration": 7,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/selfplay/manifest.json",
+        "sha256": "64ece3e415fa390d28263d079fb0f44453d9e97a9126a03fd5e71ecea5435e18"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/selfplay/summary.json",
+        "sha256": "d967ad4a41044749751a37e19a4006adb09616169be05d67f1d3685eb201f160"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/checkpoints/final.pt",
+        "sha256": "17b77044009b6529b551aca50ab9749a09b4dcdaa1ae49a8e125c4c9a920b8da"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/collection_index.json",
+        "sha256": "999de2341ab86ead86b4bf12e8fe50197071edd6bb52130b73c6bbd49c7ce724"
+      },
+      "iteration": 8,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/selfplay/manifest.json",
+        "sha256": "bb1969c9af6a00ed3e29c98757b152b612f513d3485650e195fd2ef06dbf4c2f"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/selfplay/summary.json",
+        "sha256": "4297e9762d35258489d4f39fb2615f9215ad1a627a575010789b5f748a3ac6c0"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/checkpoints/final.pt",
+        "sha256": "a288824180ecf0364bc2cba14a32f100111f5eba7ffb7c962e522b8ff61fdde5"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/collection_index.json",
+        "sha256": "5c7d40e324a434378982b97d7772c36bea4cd39ad6357f455e95413a4d19d560"
+      },
+      "iteration": 9,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/selfplay/manifest.json",
+        "sha256": "0220fb0e608001cb48a976b8c6c4cafae46469257ca569b3b2676cf1c3138203"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/selfplay/summary.json",
+        "sha256": "1448f57cf820fc240f52ba41aa3f0bebd97120437d5f8579c4067ebd5dacbd5f"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/checkpoints/final.pt",
+        "sha256": "3aaeadb065f7af3518d97cd71c3a1188fb57fbba97ab3713a7625831a09aed5d"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/collection_index.json",
+        "sha256": "8e7ed902bf6aab1c2d3b0c14c6a1ff549b906fb812855a2bcf733154660066a1"
+      },
+      "iteration": 10,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/selfplay/manifest.json",
+        "sha256": "eb8a998434394d458f5163036c8dd3b1aa83a329e0b2000f3b0d1c0ec831025c"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/selfplay/summary.json",
+        "sha256": "864b7be0dd8e1937bfb76ff5bda52ff571fdad6b73563022f49d7469e7371479"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/checkpoints/final.pt",
+        "sha256": "61add884011614f5adbf8585db62d2238f5435cd83f892f2c37a62de65fa4719"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/collection_index.json",
+        "sha256": "6baef6ac724d012576b100b66e7f544e9acddf330256f3c68a3b8cba6f8b4fbd"
+      },
+      "iteration": 11,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/selfplay/manifest.json",
+        "sha256": "250c9d67c772cd611fc88d87239f7c72ec464103851c3c80b27adf784b0c178e"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/selfplay/summary.json",
+        "sha256": "bfec72cd7a54c27770b637fd746c14a3530c3477b43d5d511a26221f08acbcd0"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/checkpoints/final.pt",
+        "sha256": "b44e0a12d0e57083bba1c3dfad92300f35cf4df547f2f3e249586e4a6a81b49e"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/collection_index.json",
+        "sha256": "8ca54a80d542e602af7e25983fdf74168a93b20449c6594f01cea93f586638e3"
+      },
+      "iteration": 12,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/selfplay/manifest.json",
+        "sha256": "f87f86c391f37dcfbd4aeaadcf63919d6d264798e255cc4744a41bf3f19efc72"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/selfplay/summary.json",
+        "sha256": "c667f45e44932d8801202ce9414792d9afbd8c5289db04253ce4811717ec4c96"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/checkpoints/final.pt",
+        "sha256": "7ba713be257c8fffec6221086900f3decdbc195a94601e7088fe9296b68ef3e7"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/collection_index.json",
+        "sha256": "f3b48804b3a9638b8f126bd52597672e2d3ec3f6678298de552dc15599897521"
+      },
+      "iteration": 13,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/selfplay/manifest.json",
+        "sha256": "dcba0ab533d829e4aa45297b2ba21744e056d67ac82269aa28edb4f1108cca9d"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/selfplay/summary.json",
+        "sha256": "f5330cdd0660a8ed019551df2b805f7f4b2294685eab14e1dd75b630897a40f9"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/checkpoints/final.pt",
+        "sha256": "798a79c01314a49f36b2a493625a80afa39b1bfa35508ed5ea3ca13dced0f3cf"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/collection_index.json",
+        "sha256": "e0a6b76f8eebe85a51e82382fd94c5deb53c1313854b3a7c6c23d6ce3dedd1bf"
+      },
+      "iteration": 14,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/selfplay/manifest.json",
+        "sha256": "d3b99339bab367cd60010b43386dc42cbfdb8f97e0ec5626bcb734fc21851cd8"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/selfplay/summary.json",
+        "sha256": "6db3483c631f7b88e6a784b13c45a48ff06341b962a909f36dddb685082c7dd8"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/checkpoints/final.pt",
+        "sha256": "529821301360dffac4406e8f27500b0fd2b7a12f2459335f9a1e327a39fcfdda"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/collection_index.json",
+        "sha256": "8034cbc8f28d4e9fceaceb4e99c0aefe35c2fb650307e364e8df3daddb3eeb2e"
+      },
+      "iteration": 15,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/selfplay/manifest.json",
+        "sha256": "91f2c06023f506e4390b2002f47eeb45bd30eef4f66c4e30af6c2a49a2315a4b"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/selfplay/summary.json",
+        "sha256": "53d012b231086378f1c633fc24affe9a56225bb273623335e94717f40daf16b6"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/checkpoints/final.pt",
+        "sha256": "9b0e46f358045a39e7a18abe1eefe6e0c974f31be9bc77b69b9550900557e5b4"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/collection_index.json",
+        "sha256": "e3cf79ced6e352c1fe761239c28ef49f7b43cc59338f7e10b71dbc6c003fa2d2"
+      },
+      "iteration": 16,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/selfplay/manifest.json",
+        "sha256": "b26416ee0cd51c840bb4330adfcb690b63a824edc31e62175b10b4a0efd233b3"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/selfplay/summary.json",
+        "sha256": "d2f9bd26fed9a8259c8fac17e0330854481a840b42c67fc7644ce9fafc9dea05"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/checkpoints/final.pt",
+        "sha256": "9080e1ee1f5463f0b286878eb87d2b400f7efadf76a41c690055d283ba63ccd8"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/collection_index.json",
+        "sha256": "83f60d1178c7e85534fa3ca33dea4891ae6b524d2c849d0871ef0616a22bedff"
+      },
+      "iteration": 17,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/selfplay/manifest.json",
+        "sha256": "ff9bf576bb079a2a8662ed09cf91b2e36262a2096cf145b38168c57467620f26"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/selfplay/summary.json",
+        "sha256": "4e780f1a07e684d73d9563a1409d74ba7cb769d295e3d95f3097c04813a4be06"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/checkpoints/final.pt",
+        "sha256": "5e21a829e97924529d348bb7e433ba66822147847753ff968c748b680b0308f4"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-017/collection_index.json",
+        "sha256": "a0eee24bb92d4bfdd45da00147af0a5ce200f26d56fc3a527c99ea871504581f"
+      },
+      "iteration": 18,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-017/selfplay/manifest.json",
+        "sha256": "597a24f88e949f91821fd26fa97f095bc8acff99b6c0bf613182f9e683d96a0d"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-017/selfplay/summary.json",
+        "sha256": "3c442706ec5b75ceac719b6ad785168c220d875913ac513a3707c35ff97d7564"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/checkpoints/final.pt",
+        "sha256": "75a33fc9b036bd78cbade7c8a34b3f9266e262da3b03f75ea10efe22dc2cc41d"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-018/collection_index.json",
+        "sha256": "36a5629d0752d30e7331b0acdac33c95dbd860271d2e62fcd069ded620278065"
+      },
+      "iteration": 19,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-018/selfplay/manifest.json",
+        "sha256": "c744161c1e943784ee65dfe9712c62e16912b3bcffa74a365fef87ab461ea98b"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-018/selfplay/summary.json",
+        "sha256": "88c1aa497a95a1eea296b95316b35ef59a2fac23469a8169a1c534348fa8eb25"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-017/checkpoints/final.pt",
+        "sha256": "2d6a9efe2e63ea11ea3f8312b4203ddebbacbf64243ab19e50f25f5ef8265b70"
+      }
+    },
+    {
+      "historical_catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+      "index": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-019/collection_index.json",
+        "sha256": "74094948f05e2eec8f58b0f33e730e73946afa0702700cfec497e202bffcc988"
+      },
+      "iteration": 20,
+      "manifest": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-019/selfplay/manifest.json",
+        "sha256": "a1c00becffa8bdc474a6e4ec7de3539fe531ee27acf091a2b7e2b58556a580e8"
+      },
+      "summary": {
+        "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-019/selfplay/summary.json",
+        "sha256": "45734197fd469dac1a05aaf61a102ac5ac42889b69a6a5361314aa9729a60f88"
+      },
+      "teacher": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-018/checkpoints/final.pt",
+        "sha256": "a43dda092a391fc663f9974444ed0cd5b30495e8f4e26b822ba4a22f007438ba"
+      }
+    }
+  ],
+  "splits": {
+    "train": {
+      "games": 71989,
+      "policy_positions": 1206369,
+      "positions": 5771871
+    },
+    "validation": {
+      "games": 8011,
+      "policy_positions": 134304,
+      "positions": 641723
+    }
+  },
+  "steps_target": 270557,
+  "validation_percent_step": 5,
+  "validation_steps": [
+    13528,
+    27056,
+    40584,
+    54112,
+    67640,
+    81168,
+    94695,
+    108223,
+    121751,
+    135279,
+    148807,
+    162335,
+    175863,
+    189390,
+    202918,
+    216446,
+    229974,
+    243502,
+    257030,
+    270557
+  ]
+}

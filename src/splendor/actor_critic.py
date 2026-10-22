@@ -532,6 +532,9 @@ def model_config_from_dict(config: dict[str, Any] | ActorCriticConfig):
     architecture = values.pop("architecture", "deep_sets_v1")
     if architecture == "deep_sets_v1":
         return ActorCriticConfig(**values)
+    if architecture in ("entity_set_mlp_v1", "entity_set_mlp_aux_v1"):
+        from .entity_set_mlp import EntitySetMLPConfig, EntitySetMLPAuxConfig
+        return (EntitySetMLPConfig if architecture == "entity_set_mlp_v1" else EntitySetMLPAuxConfig)(**values)
     if architecture == "entity_attention_v1":
         from .entity_attention import EntityAttentionConfig
         return EntityAttentionConfig(**values)
@@ -549,6 +552,11 @@ def build_actor_critic(config: dict[str, Any] | ActorCriticConfig) -> ActorCriti
     parsed = model_config_from_dict(config)
     if isinstance(parsed, ActorCriticConfig):
         return ActorCritic(parsed)
+    from .entity_set_mlp import EntitySetMLP, EntitySetMLPAux, EntitySetMLPConfig, EntitySetMLPAuxConfig
+    if isinstance(parsed, EntitySetMLPAuxConfig):
+        return EntitySetMLPAux(parsed)
+    if isinstance(parsed, EntitySetMLPConfig):
+        return EntitySetMLP(parsed)
     from .entity_attention import (EntityAttention, EntityAttentionAux, EntityAttentionAuxConfig,
                                    EntityAttentionPolicyValue, EntityAttentionPolicyValueConfig)
     if isinstance(parsed, EntityAttentionAuxConfig):

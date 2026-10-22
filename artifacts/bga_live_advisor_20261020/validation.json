@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-20",
+  "table": 934625108,
+  "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-019/checkpoints/final.pt",
+  "checkpoint_sha256": "fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd",
+  "configuration": {
+    "mode": "mcts",
+    "simulations": 1024,
+    "determinizations": 1,
+    "seed": 0,
+    "device": "cpu",
+    "threads": 1,
+    "root_noise_fraction": 0
+  },
+  "pytest": {
+    "passed": 34,
+    "command": "PYTHONPATH=src python -m pytest tests/test_recommend.py tests/test_bga_live.py tests/test_search_policy_equivalence.py tests/test_search_policy_hidden_permutation.py -o addopts='' -q"
+  },
+  "live_validated": [
+    "initial main action at step 2",
+    "own and opponent public reservations at step 4",
+    "live token choice and opponent reservation update at step 6 without reload",
+    "live payment, purchase, green bonus, market refill and opponent token update at step 8 without reload"
+  ],
+  "not_live_validated": [
+    "separate token-return and noble-selection phases",
+    "forced pass",
+    "full game completion",
+    "other UI languages",
+    "other accounts/tables"
+  ],
+  "step2_result_note": "Initial live snapshot retained; original result JSON had been invalidated by status updates, so the packaged step2 result was recomputed offline and explicitly labelled. Steps4/6/8 retain actual live results.",
+  "submitted_action": false,
+  "source_sha256": {
+    "src/splendor/bga_live.py": "bfd4779f33bf24bf3bcc9516a52ecd55f61be17bf3171e3cbfe996260780fc18",
+    "src/splendor/recommend.py": "3515ff0b594f8e9c13087d27177cc4d945fee9b62a53f7ab9307d5da8969c738",
+    "src/splendor/search_policy.py": "c23e97c49aac946d3baddba12ae7e466dab9edb552042848de8c5be5b2e30c24",
+    "tests/test_bga_live.py": "165998897e183d8edb595f2ee1256ec6e0be6c27fa58de9c92c4bf83f01c1939",
+    "tests/test_recommend.py": "70cb90ee2ccf0396ff3c1818f2d519b58809473bec5ab5c2bae64383b866ee1c",
+    "pyproject.toml": "b96fb503ed8e4309edaeea948d57cc39e34c799301326c563321569f5647783b",
+    "docs/guides/bga_advisor_zh-CN.md": "e5524517f8a916facd494b1fc7a2ad357ea47311a73f6b74b69b9dee1b6f371b",
+    "tests/fixtures/bga_live_initial_934625108.json": "f772995919d2c4afb3b001ace36be37bf9dcd64b1b1e28cbad66f1423ef02dfc",
+    "tests/fixtures/bga_live_step4_934625108.json": "cce68c47d4da564fcbadf363602c64ab0b8c7db1e891bc96a3a4268021c9c831",
+    "tests/fixtures/bga_live_step6_934625108.json": "bfab8c9e4a3da3b7d1b41fd54034427b4d9741cf3591a7df29a85851af1a8bed",
+    "tests/fixtures/bga_live_step8_934625108.json": "1ca77a58875e07f37ff2446d235bc6fa33553190dc5e7778be870e2ccfbcca47"
+  },
+  "git_head": "2394c1623839d1e5f14cfeb845f44bbef01c5419",
+  "dirty_workspace": true,
+  "browser_client_sources": {
+    "https://x.boardgamearena.net/data/themereleases/current/games/splendor/261019-2309/splendor.js": {
+      "sha256": "8a93f7a4c816c89c0bc2f024856474184ed55c617f0df303aea23f968651cfb4"
+    },
+    "https://x.boardgamearena.net/data/themereleases/current/games/splendor/261019-2309/modules/spl_game.js": {
+      "sha256": "04dd6adf9d6fe7592ee33b335b9f218fbc9dfbd94d0df3eb167c81ead2835326"
+    }
+  },
+  "restart_verified": {
+    "step": 8,
+    "same_decision_sha256": true,
+    "same_candidates_and_visits": true,
+    "login_and_history_preserved": true
+  }
+}

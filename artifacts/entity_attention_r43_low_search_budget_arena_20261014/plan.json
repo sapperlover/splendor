@@ -1,0 +1,52 @@
+{
+  "absolute_round": 43,
+  "difference_bootstrap_seed": 36340000,
+  "experiment": "entity_attention_r43_low_search_budget_arena_20261014",
+  "global_step": 72898,
+  "model": {
+    "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+    "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+  },
+  "panels": [
+    {
+      "budget": 128,
+      "config": {
+        "path": "artifacts/entity_attention_r43_low_search_budget_arena_20261014/configs/S128_vs_greedy.json",
+        "sha256": "3c1710fa08472e91427e244071ae709c367db8d7f43f31ab3f5d2af53ff81ead"
+      },
+      "id": "S128_vs_greedy",
+      "output": "artifacts/entity_attention_r43_low_search_budget_arena_20261014/panels/S128_vs_greedy.json",
+      "pairs": 500
+    },
+    {
+      "budget": 256,
+      "config": {
+        "path": "artifacts/entity_attention_r43_low_search_budget_arena_20261014/configs/S256_vs_greedy.json",
+        "sha256": "f782f07275f46bde2af345cf488d645c85938f5db7d6723700b5aefab7907604"
+      },
+      "id": "S256_vs_greedy",
+      "output": "artifacts/entity_attention_r43_low_search_budget_arena_20261014/panels/S256_vs_greedy.json",
+      "pairs": 500
+    },
+    {
+      "budget": 512,
+      "config": {
+        "path": "artifacts/entity_attention_r43_low_search_budget_arena_20261014/configs/S512_vs_greedy.json",
+        "sha256": "2bacb291f94d0de8fe28aaa99d9a76048b8eaaf1f32eec8c5b5cfab3bc2c9c9f"
+      },
+      "id": "S512_vs_greedy",
+      "output": "artifacts/entity_attention_r43_low_search_budget_arena_20261014/panels/S512_vs_greedy.json",
+      "pairs": 500
+    }
+  ],
+  "runner": {
+    "path": "artifacts/entity_attention_r43_low_search_budget_arena_20261014/run.py",
+    "sha256": "b959d7e95e027514117a947e9dc9ba69b27b65b8a797ef5e81722e1c2a377d40"
+  },
+  "scope": "Three 500-pair seat-swapped arenas using the same original R43 complete model and shared opening/policy/search seeds. Draws half score. 10000 whole-pair bootstrap resamples, unadjusted 95% intervals. Cross-panel differences compare scores versus the common greedy opponent, not direct search-versus-search games.",
+  "settings": "N1, c_puct1.5, no root noise, native_batched/CUDA compiled, active100, max_batch64; greedy argmax; sequential subprocesses",
+  "template": {
+    "path": "artifacts/entity_attention_r30_search_budget_arena_20261011/configs/S01_S1024_vs_greedy.json",
+    "sha256": "d2222b78435f84cdc719aa62477cc557b27c60bf1093c37061aa59779e4b60ec"
+  }
+}

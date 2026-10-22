@@ -872,6 +872,14 @@ def _candidate_feature_matrix(
     return result
 
 
+def encode_observation_state(observation: Observation) -> EncodedState:
+    """Encode a value-only observation without inventing legal candidates."""
+    return EncodedState(
+        feature_schema_version=FEATURE_SCHEMA.version,
+        **_state_arrays(observation),
+    )
+
+
 def encode_decision_state(request: DecisionRequest) -> EncodedState:
     """Encode only the state part of one public decision.
 
@@ -881,10 +889,7 @@ def encode_decision_state(request: DecisionRequest) -> EncodedState:
     is therefore preserved exactly as :func:`encode_decision` encodes it.
     """
 
-    return EncodedState(
-        feature_schema_version=FEATURE_SCHEMA.version,
-        **_state_arrays(request.observation),
-    )
+    return encode_observation_state(request.observation)
 
 
 def encode_decision(request: DecisionRequest) -> EncodedDecision:

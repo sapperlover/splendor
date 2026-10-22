@@ -122,12 +122,16 @@ def test_branches_use_identical_frozen_pool_and_sample_stream(setup, tmp_path):
         assert da.references == db.references
 
 
-@pytest.mark.parametrize("branch", ["policy_surprise", "value_auxiliary"])
+@pytest.mark.parametrize("branch", ["policy_surprise", "value_auxiliary", "plain", "turns_only"])
 def test_offline_entry_freezes_selected_round_and_resumes_exactly(setup, tmp_path, monkeypatch, branch):
     import splendor.offline_objectives as entry
     config, _, _ = setup
     if branch == "policy_surprise":
         config = replace(config, value_auxiliary=None, policy_surprise_weighting={"fraction": .5})
+    elif branch == "plain":
+        config = replace(config, value_auxiliary=None)
+    elif branch == "turns_only":
+        config = replace(config, value_auxiliary=asdict(ValueAuxiliaryConfig(score_loss_weight=0)))
     monkeypatch.setattr(entry, "source_identity", lambda *_: {"test": True})
     full, resumed = tmp_path / "full", tmp_path / "resumed"
     index, pool, _, _, plan = freeze_inputs(config, full)
@@ -148,3 +152,44 @@ def test_offline_entry_freezes_selected_round_and_resumes_exactly(setup, tmp_pat
     bad = replace(config, sampling_seed=config.sampling_seed + 1)
     with pytest.raises(ValueError, match="identical frozen configuration"):
         freeze_inputs(bad, full)
+
+
+def test_turns_only_preserves_base_and_legacy_turns_initialization(setup, tmp_path):
+    config, parent, samples = setup
+    torch.manual_seed(36100000)
+    dual = add_auxiliary_heads(parent.model)
+    torch.manual_seed(36100000)
+    turns = add_auxiliary_heads(parent.model, predict_score=False)
+    assert not hasattr(turns, "score_head")
+    assert sum(p.numel() for p in dual.parameters()) - sum(p.numel() for p in turns.parameters()) == 16897
+    for name, value in turns.state_dict().items():
+        torch.testing.assert_close(value, dual.state_dict()[name], rtol=0, atol=0)
+    legacy = asdict(dual.config)
+    legacy.pop("predict_score")
+    restored_dual = build_actor_critic(legacy)
+    restored_dual.load_state_dict(dual.state_dict(), strict=True)
+    cfg = ValueAuxiliaryConfig(score_loss_weight=0)
+    learner = initialize_learner(replace(config, value_auxiliary=asdict(cfg)), {"digest": "turns"}, 3)
+    batch = collate_selfplay_samples(samples)
+    assert learner.model.forward_with_auxiliary(batch.decisions)[2] is None
+    record = learner.train_step(batch, references=[], value_auxiliary=cfg,
+                               auxiliary_labels=auxiliary_targets(samples, cfg))
+    assert "score_loss" not in record
+    assert record["total_loss"] == pytest.approx(record["policy_loss"] + record["value_loss"] +
+                                                .25 * record["remaining_turns_loss"], abs=1e-6)
+    assert learner.model.remaining_turns_head.network[1].weight.grad.abs().sum() > 0
+    checkpoint = tmp_path / "turns.pt"
+    learner.save(checkpoint)
+    frozen = load_frozen_actor_critic_checkpoint(checkpoint)
+    assert not hasattr(frozen, "score_head")
+    for actual, expected in zip(frozen(batch.decisions), learner.model(batch.decisions)):
+        torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
+
+def test_turns_only_loss_rejects_a_dual_head_model(setup):
+    config, _, samples = setup
+    learner = initialize_learner(config, {"digest": "dual"}, 3)
+    cfg = ValueAuxiliaryConfig(score_loss_weight=0)
+    with pytest.raises(ValueError, match="score head"):
+        learner.train_step(collate_selfplay_samples(samples), references=[], value_auxiliary=cfg,
+                           auxiliary_labels=auxiliary_targets(samples, cfg))

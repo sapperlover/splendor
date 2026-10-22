@@ -2,6 +2,8 @@
 
 规则依据为 [标准规则](../splendor_standard_rules_zh-CN.md) 和 `data/`。本文描述公开接口与 Python checked 参考实现；规则集为 `splendor-base-two-player-v2-forced-skip`，replay schema 为 2。
 
+2026-10-21规范贵族池扩为12张：新增N11蓝绿黑333、N12红白44，均3分；双人局从完整12张洗牌抽3张，场外9张。规则身份还必须包含规范数据指纹，旧10张池与新12张池不能在同一冻结采集／评测目录中续接。贵族按属性编码，每局槽数及公开接口不变。
+
 当前 native 后端另有 C++ 规则实现并推进真实对局，见 [原生后端](../guides/native_search_zh-CN.md)。这是现有实现与旧“规则只实现一次”约定的差异。Python checked 引擎承担规则差分与 trace 重放参照；规则变更必须核对两条执行路径，不能将现有 native 行为当作规则依据。策略层仍只能使用引擎提供的候选。
 
 ## 1. 边界与权威性

@@ -1,0 +1,154 @@
+{
+  "status": "passed",
+  "scope": "Two-game compiled native CUDA pool engineering smoke;2 search workers/2 active games, production B500/pipeline2, actual high1024/4worlds and low128/1world. Not a strength or throughput experiment.",
+  "config_sha256": "2d031f0afba17fd0b844c721ee52353758c0381b80ff03e2a7cbabf32ab5db66",
+  "catalog_fingerprint": "084574b026e41ad6e5c64dfe36d74fb84a7604f6a0b0eb0ab59227c32a7ff17b",
+  "counts": {
+    "low": 105,
+    "high": 39,
+    "single": 24
+  },
+  "replay_validation": "both games replayed to recorded terminal",
+  "summary": {
+    "protocol": "mcts-selfplay-v2",
+    "expected_games": 2,
+    "completed_games": 2,
+    "missing_games": 0,
+    "p0_wins": 1,
+    "p1_wins": 1,
+    "draws": 0,
+    "samples": 168,
+    "policy_samples": 39,
+    "simulations": 53376,
+    "data_bytes": 137918,
+    "search_seconds_sum": 114.7348283179872,
+    "logical_model_positions": 49957,
+    "failed_games": 0,
+    "exceptions": 0,
+    "engineering_truncations": 0,
+    "batch_failures": 0,
+    "batch_failure_game_ids": [],
+    "semantic_fingerprint": "e4381352030a489a437165fa6f71b929c390772b2ec787bfdd9d3fa0258e5a32",
+    "statistics_scope": "collection_session",
+    "statistics_complete": true,
+    "statistics_missing_game_ids": [],
+    "games_per_wall_second": 0.03348869810123088,
+    "policy_samples_per_wall_second": 0.6530296129740022,
+    "simulations_per_wall_second": 893.7463749256499,
+    "low_budget_decisions": 105,
+    "full_budget_decisions": 39,
+    "forced_playouts": 0,
+    "pruned_visits": 0,
+    "wall_seconds": 59.72164083400094,
+    "inference": {
+      "batch_size_histogram": {
+        "1": 1538,
+        "2": 3028,
+        "3": 163,
+        "4": 1166,
+        "5": 5318,
+        "6": 8,
+        "7": 4,
+        "8": 1318
+      },
+      "d2h_seconds": 0.18849379980565573,
+      "feature_seconds": 0.0,
+      "forward_seconds": 48.20866431887771,
+      "h2d_seconds": 0.872419296143562,
+      "logical_model_positions": 49957,
+      "mean_batch_size": 3.98285896515985,
+      "physical_model_batches": 12543,
+      "wait_seconds": 3.5712114090310934
+    },
+    "cpu_peak_rss_kib": 1393068,
+    "gpu_peak_bytes": 100906496,
+    "peak_active_games": 2,
+    "peak_pending_requests": 4,
+    "decision_latency": {
+      "count": 168,
+      "max_ms": 15942.305261000001,
+      "p50_ms": 102.777446500113,
+      "p95_ms": 286.9781810004497
+    },
+    "root_encoding_seconds": 0.07715389599616174,
+    "real_rule_seconds": 0.03964770799211692,
+    "search_rule_seconds": 0.087287432,
+    "native_encoding_seconds": 0.0,
+    "native_compute_seconds": 0.231563862,
+    "write_seconds": 0.058473539000260644,
+    "queue_wait_seconds": 35.10467865006285,
+    "worker_initialization_seconds_sum": 0.0031097150003915885,
+    "worker_collection_wall_seconds_max": 58.4949378600013,
+    "native_batch_rows": 49957,
+    "native_batch_batches": 22219,
+    "native_root_rows": 144,
+    "native_policy_rows": 49957,
+    "native_value_rows": 0,
+    "native_wide_batches": 0,
+    "peak_inflight_rows": 4,
+    "native_fill_seconds": 0.2733466670506459,
+    "native_consume_seconds": 0.0,
+    "pipeline_slots": 2,
+    "compile_failure_policy": "fail_fast",
+    "worker_compile": [
+      {
+        "compile": {
+          "compile_failure_fallbacks": 0,
+          "compile_failures": [],
+          "compile_seconds": {
+            "policy_value:16:b16": 12.356554543999664,
+            "policy_value:32:b16": 15.099825983999835,
+            "policy_value:48:b16": 9.894626199999038,
+            "policy_value:64:b16": 9.877932776998932
+          },
+          "compiled_calls": {
+            "policy_value:16:b16": 6,
+            "policy_value:32:b16": 6,
+            "policy_value:48:b16": 6,
+            "policy_value:64:b16": 6
+          },
+          "disabled_graphs": {},
+          "dynamo_delta": {
+            "calls_captured": 1728,
+            "unique_graphs": 4
+          },
+          "eager_fallbacks": 0,
+          "effective_mode": {
+            "policy_value:16:b16": "compiled",
+            "policy_value:32:b16": "compiled",
+            "policy_value:48:b16": "compiled",
+            "policy_value:64:b16": "compiled"
+          }
+        },
+        "inference": {
+          "actor_projection": false,
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "worker_id": "gpu_owner"
+      }
+    ],
+    "statistics_game_ids": [
+      0,
+      1
+    ]
+  }
+}

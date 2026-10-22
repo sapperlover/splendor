@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-20",
+  "scope": "Search evaluation execution and future default size; no training or formal strength panel launched",
+  "default_search_pairs": 500,
+  "greedy_pairs_unchanged": 1000,
+  "search_execution": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_interface": "native",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 64,
+    "max_batch_size": 500,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "precision": "float32",
+    "search_workers": 12,
+    "shared_candidate_width": 256,
+    "shared_slots": 2,
+    "torch_threads": 1,
+    "total_active_games": 1000,
+    "workers": 1,
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      192,
+      256,
+      384,
+      500
+    ],
+    "compile_mode": "native-cudagraph",
+    "pipeline_slots": 2
+  },
+  "search_protocol": {
+    "simulations": 1024,
+    "determinizations": 1,
+    "root_noise": false,
+    "temperature": 0,
+    "paired_seat_swap": true,
+    "checked_real_game_runner": true,
+    "deterministic_policy_cycle_adjudication": true
+  },
+  "run_state": {
+    "completed_rounds": 17,
+    "next_iteration": 18,
+    "interrupted_stage": "round-017",
+    "next_search_panel_pairs": 500,
+    "latest_checkpoint": {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/checkpoints/final.pt",
+      "sha256": "75a33fc9b036bd78cbade7c8a34b3f9266e262da3b03f75ea10efe22dc2cc41d"
+    }
+  },
+  "resume": {
+    "algorithm_identity_matches_initial_config": true,
+    "existing_collection_config_preserved": true,
+    "prepared_evaluations_keep_original_config": true,
+    "historical_200pair_panels_not_rewritten": true,
+    "preflight_command": "bash scripts/run_random_budget_iteration_20261019.sh --check",
+    "preflight_exit_code": 0,
+    "script_syntax_check_exit_code": 0
+  },
+  "regression": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src python -m pytest -q tests/test_evaluation_pool.py tests/test_multiworker_gpu.py tests/test_speed_optimization.py tests/test_random_budget_iteration.py tests/test_pool_iteration.py tests/test_evaluation_3a.py --junitxml=runtime/search_evaluation_pool_regression_20261020.xml",
+    "tests": 76,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2,
+    "passed": 74,
+    "coverage": "two model routing, serial trace equivalence (native and CPW), pipeline 1/2, durable pair logs, interruption/resume, watchdog exclusion, inference config conflicts, frozen prepared panels and random-budget algorithm identity"
+  },
+  "gpu_verification": {
+    "path": "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_verification.json",
+    "summary": "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_summary.json",
+    "config": "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_config.json",
+    "games": "artifacts/entity_attention_random_budget_iteration_20261019/search_evaluation_gpu_games.json",
+    "scope": "2 pairs S3 engineering games plus repeated-root B500 width64 on both models/two lanes; no full S1024 throughput measurement"
+  },
+  "configuration_sha256": "3ccea40783fd209c149a9277ac606a6e74c4fb0ccdc82341100c48544e8da32f",
+  "previous_index_evidence_hashes": {
+    "artifacts/entity_attention_random_budget_iteration_20261019/README.md": "3383bf3870e3e6084aa0784ad96a96817b8f7ae526f21c752596f129ce12c171",
+    "artifacts/entity_attention_random_budget_iteration_20261019/preflight.json": "92063dff4334d2cb6324d573838c5beac0af9eb33270c01048e4dde4963aefb9",
+    "artifacts/entity_attention_random_budget_iteration_20261019/verification.json": "5fc07ffb09e6be2b99c59f0fcc4f2c7ea61ef4c2ac7b5763f6bc61c0e4a347b2",
+    "configs/entity_attention_v1/random_budget_37423_p6k_v24k_20261019.json": "9e68cda11d5924b28f97aa112e5847d432a38e964da43419b3e63c0bf6caf1d3",
+    "artifacts/entity_attention_random_budget_iteration_20261019/execution_tuning_verification.json": "a0c726e2eb77d68ac7bdb88e2751fdec1d876ca7ddeeec78eda742112d75d76c",
+    "artifacts/entity_attention_random_budget_iteration_20261019/batch500_update.json": "e7df00077ea7bc250d704f4fa4fc9c2a818861c2e3e60aae5cc1370a7e5843a3"
+  }
+}

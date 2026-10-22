@@ -313,14 +313,13 @@ def _player_state(
 
 
 def _determinized_state(
-    request: DecisionRequest,
+    observation: Observation,
     catalog: Catalog,
     *,
     seed: int,
 ) -> GameState:
     """Reconstruct one complete root-relative state from safe information."""
 
-    observation = request.observation
     own_reserved = _own_reservations(observation)
     opponent_known = _known_opponent_reservations(observation)
 
@@ -444,6 +443,28 @@ def _determinized_state(
     )
 
 
+def request_from_observation(
+    observation: Observation, *, catalog: Catalog | None = None, seed: int = 0
+) -> DecisionRequest:
+    """Validate a public snapshot and enumerate its exact root candidates.
+
+    A sampled unseen world only supplies invariant-complete private state.
+    Candidate generation and the returned view use the existing rule core.
+    This does not advance any turn or automatically select a noble.
+    """
+    from .invariants import assert_game_state
+    from .observation import build_observation
+    from .rules import legal_actions
+
+    catalog = catalog or load_default_catalog()
+    state = _determinized_state(observation, catalog, seed=seed)
+    assert_game_state(state, catalog)
+    rebuilt = build_observation(state, 0, catalog)
+    if rebuilt != observation:
+        raise ValueError("public snapshot does not reproduce its declared observation")
+    return DecisionRequest(rebuilt, legal_actions(state, catalog))
+
+
 def determinize_request(
     request: DecisionRequest,
     *,
@@ -455,7 +476,7 @@ def determinize_request(
     """Build a legal simulator whose root view exactly equals the input."""
 
     catalog = catalog or load_default_catalog()
-    state = _determinized_state(request, catalog, seed=seed)
+    state = _determinized_state(request.observation, catalog, seed=seed)
     engine = GameEngine(
         state,
         catalog,

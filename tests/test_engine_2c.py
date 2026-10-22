@@ -105,6 +105,34 @@ def _one_noble_state(initial_state: GameState, catalog: Catalog) -> GameState:
     return _with_assets(initial_state, catalog, purchased=(cards, ()))
 
 
+@pytest.mark.parametrize('noble_id', ['N11', 'N12'])
+def test_added_noble_claim_agrees_between_checked_and_native(initial_state, catalog, tmp_path, noble_id):
+    import numpy as np
+    from splendor.features import encode_decision
+    from splendor.native_policy import _native_catalog, _extension
+
+    selected = (noble_id, 'N03', 'N04')
+    state = replace(initial_state, nobles_in_play=selected,
+                    nobles_out_of_game=tuple(n.noble_id for n in catalog.nobles if n.noble_id not in selected))
+    purchased = _eligible_cards(state, catalog, (noble_id,))
+    state = _with_assets(state, catalog, purchased=(purchased, ()))
+    engine = _engine(state, catalog, tmp_path)
+    game = _extension().NativeGame(_native_catalog(catalog), state)
+    request = engine.decision()
+    encoded = game.encoded()
+    expected = encode_decision(request)
+    np.testing.assert_allclose(encoded['nobles'], expected.nobles, rtol=0, atol=1e-6)
+    action = TakeDistinct((Color.WHITE, Color.BLUE, Color.GREEN))
+    game.apply_index(request.legal_actions.index(action))
+    engine.apply(action)
+    actual = game.snapshot()
+    assert engine._debug_state().players[0].noble_ids == (noble_id,)
+    noble_index = next(i for i, n in enumerate(catalog.nobles) if n.noble_id == noble_id)
+    assert actual['players'][0]['nobles'] == [noble_index]
+    assert player_score(engine._debug_state().players[0], catalog) == 3
+    assert actual['actor'] == engine.current_player == 1
+
+
 def _pay_for_reserved(engine: GameEngine, card_id: str) -> DecisionRequest | TerminalResult:
     payment_request = engine.apply(BuyReserved(card_id))
     assert isinstance(payment_request, DecisionRequest)

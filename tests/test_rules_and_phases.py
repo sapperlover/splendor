@@ -18,8 +18,9 @@ def test_all_terminal_tiebreak_branches() -> None:
     assert TerminalResult((15, 15), (7, 7), (0, 1), (20, 20)).payoff(0) == 0
 
 
-def test_noble_eligibility_uses_purchased_bonuses_only(catalog: Catalog) -> None:
-    target = catalog.noble("N01")
+@pytest.mark.parametrize('noble_id', ['N01', 'N11', 'N12'])
+def test_noble_eligibility_uses_purchased_bonuses_only(catalog: Catalog, noble_id: str) -> None:
+    target = catalog.noble(noble_id)
     required_cards: list[str] = []
     for color in GEM_COLORS:
         candidates = [card.card_id for card in catalog.cards if card.bonus is color]
@@ -29,6 +30,9 @@ def test_noble_eligibility_uses_purchased_bonuses_only(catalog: Catalog) -> None
         purchased_card_ids=tuple(required_cards),
     )
     assert eligible_noble_ids(rich_in_tokens, (target.noble_id,), catalog) == (target.noble_id,)
+    assert eligible_noble_ids(PlayerState(tokens=rich_in_tokens.tokens), (target.noble_id,), catalog) == ()
+    short = PlayerState(tokens=TokenVector(), purchased_card_ids=tuple(required_cards[:-1]))
+    assert eligible_noble_ids(short, (target.noble_id,), catalog) == ()
 
 
 def test_visible_phase_topology_allows_automatic_skips() -> None:

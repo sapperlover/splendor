@@ -1,0 +1,43 @@
+{
+  "audit_sha256": "d694599801aed5c70e2ef39e65efd5292029d35fe7a6cd26f5f94a53ef7c3902",
+  "fingerprint_audit": "Per-root unique and world counts independently recomputed; ready/inflight flags reconciled with saved per-root counters, scheduling timestamps not independently replayed.",
+  "observer_invariance": "CPU native N1/N4/chance real 16-simulation jobs match full unobserved results; included in five tests.",
+  "panels": [
+    {
+      "panel": "S1024N1",
+      "recorded_ready_inflight_counts_reconciled": true,
+      "searches": 192,
+      "stream_rows": 187259,
+      "unique_and_world_decomposition_recomputed": true
+    },
+    {
+      "panel": "S256N4",
+      "recorded_ready_inflight_counts_reconciled": true,
+      "searches": 192,
+      "stream_rows": 188814,
+      "unique_and_world_decomposition_recomputed": true
+    },
+    {
+      "panel": "S1024N4",
+      "recorded_ready_inflight_counts_reconciled": true,
+      "searches": 192,
+      "stream_rows": 747785,
+      "unique_and_world_decomposition_recomputed": true
+    },
+    {
+      "panel": "chance_S1024",
+      "recorded_ready_inflight_counts_reconciled": true,
+      "searches": 192,
+      "stream_rows": 190073,
+      "unique_and_world_decomposition_recomputed": true
+    }
+  ],
+  "searches": 768,
+  "status": "passed",
+  "tests": {
+    "command": "conda run -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q artifacts/search_input_cache_rate_20261021/test_probe.py",
+    "failed": 0,
+    "passed": 5,
+    "test_sha256": "37fc2c521acfcff29a32eaa9cc32cff904054411ba2176b5f3c0ad53fed3efba"
+  }
+}

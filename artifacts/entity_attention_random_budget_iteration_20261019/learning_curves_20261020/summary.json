@@ -1,0 +1,723 @@
+{
+  "scope": "existing diagnostics only; no new model evaluation",
+  "analysis_script_sha256": "a892834e09e5af4ddbe86d24282291d4e58e07fd69eb97caa5e458cba93aea92",
+  "run": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019",
+  "completed_iterations": 17,
+  "steps": [
+    0,
+    100,
+    250,
+    500,
+    1000
+  ],
+  "initial_total_step": 37423,
+  "metric_definitions": {
+    "kl": "KL(search policy || model policy), positive archive policy weights",
+    "ce": "policy cross entropy = target entropy + KL",
+    "mse": "win/loss value MSE",
+    "train_windows": "mean minibatch metrics, steps1-250 vs751-1000; not a fixed train subset",
+    "validation": "2048 value-drawn positions fixed within each round; policy uses only positive weights; new subset every round"
+  },
+  "groups": {
+    "all": {
+      "iterations": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "means_by_step": {
+        "0": {
+          "kl": 0.43892310880272417,
+          "ce": 1.6660234010386814,
+          "mse": 0.759663107640603,
+          "policy_entropy": 1.6724086142694614,
+          "target_entropy": 1.2271002922359573
+        },
+        "100": {
+          "kl": 0.4364363505845204,
+          "ce": 1.6635366428204776,
+          "mse": 0.7591927349567413,
+          "policy_entropy": 1.6661771943835453,
+          "target_entropy": 1.2271002922359573
+        },
+        "250": {
+          "kl": 0.43829339169896014,
+          "ce": 1.6653936839349173,
+          "mse": 0.7578892804243985,
+          "policy_entropy": 1.6679622450286964,
+          "target_entropy": 1.2271002922359573
+        },
+        "500": {
+          "kl": 0.4379254278898862,
+          "ce": 1.6650257201258434,
+          "mse": 0.7598463564234621,
+          "policy_entropy": 1.6601423629221337,
+          "target_entropy": 1.2271002922359573
+        },
+        "1000": {
+          "kl": 0.4366307809343294,
+          "ce": 1.6637310731702866,
+          "mse": 0.7582559760879067,
+          "policy_entropy": 1.6681186157023653,
+          "target_entropy": 1.2271002922359573
+        }
+      },
+      "mean_within_round_delta": {
+        "kl": -0.0022923278683947834,
+        "ce": -0.0022923278683947734,
+        "mse": -0.001407131552696228,
+        "kl_plus_mse": -0.0036994594210910015
+      },
+      "improved_at_final": {
+        "kl": 11,
+        "mse": 12,
+        "kl_plus_mse": 13
+      },
+      "best_step_histogram": {
+        "kl": {
+          "100": 7,
+          "250": 5,
+          "500": 2,
+          "1000": 3
+        },
+        "mse": {
+          "0": 4,
+          "100": 1,
+          "250": 7,
+          "500": 1,
+          "1000": 4
+        },
+        "kl_plus_mse": {
+          "0": 1,
+          "100": 5,
+          "250": 2,
+          "1000": 9
+        }
+      },
+      "mean_train_window_delta": {
+        "policy_kl": -0.0021905106895364723,
+        "policy_loss": -0.001787659701179053,
+        "value_loss": -0.003564737404094014,
+        "total_loss": -0.005352393767412935
+      },
+      "late_delta_100_to_1000": {
+        "kl": 0.00019443034980896645,
+        "mse": -0.0009367588688345516
+      },
+      "late_delta_250_to_1000": {
+        "kl": -0.001662610764630776,
+        "mse": 0.00036669566350824693
+      },
+      "late_250_to_1000_worse_rounds": {
+        "kl": 5,
+        "mse": 9
+      },
+      "train_improves_val_worsens_rounds": {
+        "kl": [
+          4,
+          5,
+          8,
+          12,
+          15
+        ],
+        "mse": [
+          2,
+          5,
+          13,
+          14,
+          17
+        ]
+      }
+    },
+    "historical_replacement_1_5": {
+      "iterations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "means_by_step": {
+        "0": {
+          "kl": 0.43813382154910135,
+          "ce": 1.6633997567668495,
+          "mse": 0.7567963868379592,
+          "policy_entropy": 1.6712958227815373,
+          "target_entropy": 1.2252659352177482
+        },
+        "100": {
+          "kl": 0.4355930767196466,
+          "ce": 1.6608590119373947,
+          "mse": 0.7540547400712967,
+          "policy_entropy": 1.6727133335739688,
+          "target_entropy": 1.2252659352177482
+        },
+        "250": {
+          "kl": 0.4357147613082875,
+          "ce": 1.6609806965260356,
+          "mse": 0.7537272304296494,
+          "policy_entropy": 1.6828868455563482,
+          "target_entropy": 1.2252659352177482
+        },
+        "500": {
+          "kl": 0.43685508595816813,
+          "ce": 1.6621210211759163,
+          "mse": 0.7543276950716973,
+          "policy_entropy": 1.6719693120078527,
+          "target_entropy": 1.2252659352177482
+        },
+        "1000": {
+          "kl": 0.4366931542936408,
+          "ce": 1.661959089511389,
+          "mse": 0.7550318226218223,
+          "policy_entropy": 1.6651069857290919,
+          "target_entropy": 1.2252659352177482
+        }
+      },
+      "mean_within_round_delta": {
+        "kl": -0.0014406672554605703,
+        "ce": -0.0014406672554605926,
+        "mse": -0.0017645642161369323,
+        "kl_plus_mse": -0.0032052314715974362
+      },
+      "improved_at_final": {
+        "kl": 2,
+        "mse": 3,
+        "kl_plus_mse": 3
+      },
+      "best_step_histogram": {
+        "kl": {
+          "100": 1,
+          "250": 4
+        },
+        "mse": {
+          "0": 1,
+          "100": 1,
+          "250": 2,
+          "1000": 1
+        },
+        "kl_plus_mse": {
+          "0": 1,
+          "100": 1,
+          "250": 2,
+          "1000": 1
+        }
+      },
+      "mean_train_window_delta": {
+        "policy_kl": -0.0021592746257538264,
+        "policy_loss": -0.003031659793853736,
+        "value_loss": -0.0048120529651642045,
+        "total_loss": -0.007843708610534605
+      },
+      "late_delta_100_to_1000": {
+        "kl": 0.0011000775739942292,
+        "mse": 0.0009770825505256652
+      },
+      "late_delta_250_to_1000": {
+        "kl": 0.0009783929853532936,
+        "mse": 0.001304592192173004
+      },
+      "late_250_to_1000_worse_rounds": {
+        "kl": 4,
+        "mse": 2
+      },
+      "train_improves_val_worsens_rounds": {
+        "kl": [
+          4,
+          5
+        ],
+        "mse": [
+          2,
+          5
+        ]
+      }
+    },
+    "all_online_6_17": {
+      "iterations": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "means_by_step": {
+        "0": {
+          "kl": 0.43925197849173364,
+          "ce": 1.6671165861519446,
+          "mse": 0.7608575746417046,
+          "policy_entropy": 1.67287227738943,
+          "target_entropy": 1.2278646076602109
+        },
+        "100": {
+          "kl": 0.4367877146948845,
+          "ce": 1.6646523223550955,
+          "mse": 0.7613335661590099,
+          "policy_entropy": 1.663453803054202,
+          "target_entropy": 1.2278646076602109
+        },
+        "250": {
+          "kl": 0.43936782102840705,
+          "ce": 1.667232428688618,
+          "mse": 0.7596234679222107,
+          "policy_entropy": 1.6617436614755083,
+          "target_entropy": 1.2278646076602109
+        },
+        "500": {
+          "kl": 0.43837140369476874,
+          "ce": 1.6662360113549797,
+          "mse": 0.7621457986533642,
+          "policy_entropy": 1.6552144674697509,
+          "target_entropy": 1.2278646076602109
+        },
+        "1000": {
+          "kl": 0.4366047920346163,
+          "ce": 1.6644693996948272,
+          "mse": 0.7595993733654419,
+          "policy_entropy": 1.6693734615245628,
+          "target_entropy": 1.2278646076602109
+        }
+      },
+      "mean_within_round_delta": {
+        "kl": -0.0026471864571173723,
+        "ce": -0.002647186457117349,
+        "mse": -0.0012582012762626011,
+        "kl_plus_mse": -0.003905387733379987
+      },
+      "improved_at_final": {
+        "kl": 9,
+        "mse": 9,
+        "kl_plus_mse": 10
+      },
+      "best_step_histogram": {
+        "kl": {
+          "100": 6,
+          "250": 1,
+          "500": 2,
+          "1000": 3
+        },
+        "mse": {
+          "0": 3,
+          "250": 5,
+          "500": 1,
+          "1000": 3
+        },
+        "kl_plus_mse": {
+          "100": 4,
+          "1000": 8
+        }
+      },
+      "mean_train_window_delta": {
+        "policy_kl": -0.0022035257161125746,
+        "policy_loss": -0.0012693263292312684,
+        "value_loss": -0.003045022586981435,
+        "total_loss": -0.004314345916112239
+      },
+      "late_delta_100_to_1000": {
+        "kl": -0.00018292266026822637,
+        "mse": -0.0017341927935679753
+      },
+      "late_delta_250_to_1000": {
+        "kl": -0.002763028993790805,
+        "mse": -2.409455676873525e-05
+      },
+      "late_250_to_1000_worse_rounds": {
+        "kl": 1,
+        "mse": 7
+      },
+      "train_improves_val_worsens_rounds": {
+        "kl": [
+          8,
+          12,
+          15
+        ],
+        "mse": [
+          13,
+          14,
+          17
+        ]
+      }
+    },
+    "online_6_11": {
+      "iterations": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "means_by_step": {
+        "0": {
+          "kl": 0.4534797830864113,
+          "ce": 1.688756304731596,
+          "mse": 0.762887604534626,
+          "policy_entropy": 1.6844532995434864,
+          "target_entropy": 1.2352765216451849
+        },
+        "100": {
+          "kl": 0.45217883876237597,
+          "ce": 1.6874553604075608,
+          "mse": 0.7629522383213043,
+          "policy_entropy": 1.6779065690974795,
+          "target_entropy": 1.2352765216451849
+        },
+        "250": {
+          "kl": 0.45341034793891266,
+          "ce": 1.6886868695840975,
+          "mse": 0.7592623171706995,
+          "policy_entropy": 1.6877313247236891,
+          "target_entropy": 1.2352765216451849
+        },
+        "500": {
+          "kl": 0.4519841015554212,
+          "ce": 1.687260623200606,
+          "mse": 0.7634281466404597,
+          "policy_entropy": 1.6851396925021223,
+          "target_entropy": 1.2352765216451849
+        },
+        "1000": {
+          "kl": 0.4506136770693562,
+          "ce": 1.6858901987145412,
+          "mse": 0.7601158507168293,
+          "policy_entropy": 1.6785396791053278,
+          "target_entropy": 1.2352765216451849
+        }
+      },
+      "mean_within_round_delta": {
+        "kl": -0.0028661060170551054,
+        "ce": -0.002866106017055059,
+        "mse": -0.002771753817796707,
+        "kl_plus_mse": -0.005637859834851877
+      },
+      "improved_at_final": {
+        "kl": 5,
+        "mse": 6,
+        "kl_plus_mse": 6
+      },
+      "best_step_histogram": {
+        "kl": {
+          "100": 2,
+          "500": 2,
+          "1000": 2
+        },
+        "mse": {
+          "250": 5,
+          "1000": 1
+        },
+        "kl_plus_mse": {
+          "100": 1,
+          "1000": 5
+        }
+      },
+      "mean_train_window_delta": {
+        "policy_kl": -0.00314711020152326,
+        "policy_loss": -0.0017772956689198944,
+        "value_loss": -0.001084813594818083,
+        "total_loss": -0.002862103621164976
+      },
+      "late_delta_100_to_1000": {
+        "kl": -0.0015651616930197436,
+        "mse": -0.0028363876044750214
+      },
+      "late_delta_250_to_1000": {
+        "kl": -0.0027966708695564835,
+        "mse": 0.0008535335461298624
+      },
+      "late_250_to_1000_worse_rounds": {
+        "kl": 0,
+        "mse": 5
+      },
+      "train_improves_val_worsens_rounds": {
+        "kl": [
+          8
+        ],
+        "mse": []
+      }
+    },
+    "online_12_17": {
+      "iterations": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "means_by_step": {
+        "0": {
+          "kl": 0.42502417389705593,
+          "ce": 1.645476867572293,
+          "mse": 0.7588275447487831,
+          "policy_entropy": 1.6612912552353736,
+          "target_entropy": 1.2204526936752371
+        },
+        "100": {
+          "kl": 0.42139659062739304,
+          "ce": 1.64184928430263,
+          "mse": 0.7597148939967155,
+          "policy_entropy": 1.6490010370109247,
+          "target_entropy": 1.2204526936752371
+        },
+        "250": {
+          "kl": 0.42532529411790143,
+          "ce": 1.6457779877931384,
+          "mse": 0.7599846186737219,
+          "policy_entropy": 1.6357559982273275,
+          "target_entropy": 1.2204526936752371
+        },
+        "500": {
+          "kl": 0.42475870583411635,
+          "ce": 1.6452113995093534,
+          "mse": 0.7608634506662687,
+          "policy_entropy": 1.6252892424373795,
+          "target_entropy": 1.2204526936752371
+        },
+        "1000": {
+          "kl": 0.4225959069998763,
+          "ce": 1.6430486006751133,
+          "mse": 0.7590828960140547,
+          "policy_entropy": 1.6602072439437978,
+          "target_entropy": 1.2204526936752371
+        }
+      },
+      "mean_within_round_delta": {
+        "kl": -0.0024282668971796393,
+        "ce": -0.0024282668971796393,
+        "mse": 0.0002553512652715047,
+        "kl_plus_mse": -0.0021729156319080976
+      },
+      "improved_at_final": {
+        "kl": 4,
+        "mse": 3,
+        "kl_plus_mse": 4
+      },
+      "best_step_histogram": {
+        "kl": {
+          "100": 4,
+          "250": 1,
+          "1000": 1
+        },
+        "mse": {
+          "0": 3,
+          "500": 1,
+          "1000": 2
+        },
+        "kl_plus_mse": {
+          "100": 3,
+          "1000": 3
+        }
+      },
+      "mean_train_window_delta": {
+        "policy_kl": -0.0012599412307018887,
+        "policy_loss": -0.0007613569895426423,
+        "value_loss": -0.0050052315791447866,
+        "total_loss": -0.005766588211059502
+      },
+      "late_delta_100_to_1000": {
+        "kl": 0.0011993163724832907,
+        "mse": -0.0006319979826609293
+      },
+      "late_delta_250_to_1000": {
+        "kl": -0.0027293871180251263,
+        "mse": -0.000901722659667333
+      },
+      "late_250_to_1000_worse_rounds": {
+        "kl": 1,
+        "mse": 2
+      },
+      "train_improves_val_worsens_rounds": {
+        "kl": [
+          12,
+          15
+        ],
+        "mse": [
+          13,
+          14,
+          17
+        ]
+      }
+    }
+  },
+  "input_sha256": {
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/state.json": "74c9c496d1a181242df3239f7d743ec769be48c43153e9f95e59610ba1a78483",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/validation_references.json": "6578f604f665b31d87e37f3d5ab867440be028a2dcebd3fc55b019fe2307d733",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/replay_snapshot.json": "47b6347d33a9c9ec6fc5b0fe6bfc9a78b689e385f1f83e3d3a7112c6d652d02d",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/training_metrics.jsonl": "e4a1b6c65278891348208f62c2ad322c15e1ba268f3546fb01d8e63607e9612b",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/validation/step-000000000.json": "46e724afd8631ff2773f9cdb8a22a541f3834d6f9ad490902992b12105dcc072",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/validation/step-000000100.json": "8d839d4e9193beb58ac3e00b1c8bcb6c7df397877a30920a4f3330e58206e46b",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/validation/step-000000250.json": "21d9f40febc57b2e1e6934839b913f2077f6a41a9c32b7fffa03d01499aea7d9",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/validation/step-000000500.json": "e8878016111d39a34c7e68956ca68323a486639e0542b73bcf24775d71d4b2a9",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/validation/step-000001000.json": "1a86d17cf43267dc71cc6f893211f4078ed69b63e1aa77267923b4fb6315be96",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-000/greedy.json": "d10a553e3d8e19e3e748c047ae9cac5be9010e6915ef5d5001cb8292307727c2",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/validation_references.json": "64528e8cea9d15ab21cf475452b8507d067150de4f038d1a94900ce301eb699c",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/replay_snapshot.json": "82487fb04ddc56a09bd13fdd6844c184b6185e9f5881c8fa8d6bd00694ae4e00",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/training_metrics.jsonl": "b34f050d6629569d9e35c9a3a26e60f0c8537ae58e83ddfa3abe55921be63944",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/validation/step-000000000.json": "a4f9a79224798244f76e791ab3c51092c81144449577d99bfeb6c71690969815",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/validation/step-000000100.json": "b102b053f6541da6d3a8a989247b70893099b268f1120f9ea672ad2dfb97b479",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/validation/step-000000250.json": "5b8917bdf1a22b0ba71ac6bdf69fa676e5c777c526095b130d31ac68ffcd7763",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/validation/step-000000500.json": "6bbb5ffe13e9b233e967a567791690045ad03c134c5cce7c0e2ca22fbaa23973",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/validation/step-000001000.json": "636d40a858f38639a068912517d3bbe17e07e66428cebdf8a3bf55dd05d1d621",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/greedy.json": "4a2c5c089b589c0fae3f7f0ead1843e2d71231de6b66cefee8ec1e6da3ae0065",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/validation_references.json": "4e2d6d93a89787e04f4103e6e4e723d148b7724168215f4f2f633386386cad92",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/replay_snapshot.json": "f1488e93ad3552a5f45fa93bc93b87e058b9beb651f9cb7feeed708bc85a3ecb",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/training_metrics.jsonl": "f58ba9cda38f9df4de1458097404e112721590be6e3098a91e308d52aa427068",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/validation/step-000000000.json": "9c684c1b427b5e5a85c371242b314420f23268e9df7f6af9c2cf10a54bbdfaed",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/validation/step-000000100.json": "6c008c56f6cdbb83a8b129450d9e3b3b516ddfe38f9137698589ff93ec6183d4",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/validation/step-000000250.json": "abfc6df90a5fda04f1821d3ad10ed2b53243a2d5daa7a52b2c60a794cb7fbba5",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/validation/step-000000500.json": "7a4dfaadcb60e16f19b5fd46d38ebae9f1fb8678acb9b754894d80eb62f7f871",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/validation/step-000001000.json": "c4dc577e97e9fa6482cee5c325c451ec5ed73ccddb41e190484f1fa1e79cd692",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/greedy.json": "222d48f10a77598387f59d58c46c97e733b1e47e489a879f6492281218bd5cb7",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/search.json": "975e260163ef7d2bd5992b1b7858957f024e9c7308a70f1772213527895aedc5",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/validation_references.json": "fbedde337ba080d2e97e1e2be631bd3cae96592880c23e99aa6219a2e0f426c5",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/replay_snapshot.json": "5864711b6dd1976f4c081c776bf1491c124bbcc7f62d1b382bc604358365ba64",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/training_metrics.jsonl": "a5018eca3e4ac7f98685c99bf5e012641fffe85dc320fe86a3fe05bfb63fc26a",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/validation/step-000000000.json": "3245aa59bcd815b96f2a962c6fb61ab13b2089deb50e666dabfd31b08fd873ba",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/validation/step-000000100.json": "51f2d63f6751dcb05de5c2fbd61e6225eac51e4bfaab2da89ee77946f731e066",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/validation/step-000000250.json": "fa476282451ac882b4e4919e0e0688d364ee33f509879eaff5a2ec2c3dbd47f9",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/validation/step-000000500.json": "477e218eb4eaf8291b8d97fb36c257d3107a65a659e68bc34bd45b66cc57e1e4",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/validation/step-000001000.json": "7cb3b9771bda6812eb21bddfd0112c446cec455907eace340b722fe9043b6a34",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-003/greedy.json": "54b9aa72ea14f3fc0d22571a2702ebd19025ccacc00e894271d66eb42db79104",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/validation_references.json": "9f2c75fd76636577823a72ef2c7decf8557b5136e3c5e0d1359c66cfa5773a22",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/replay_snapshot.json": "468711f88cd77e7a79c2cddf98ce403b3cbe495c3c0ff138dec893ff3887d235",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/training_metrics.jsonl": "8571f060f2e6f517c642d1f54c4332d3116cc1faa7e5023c55d066cec7742901",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/validation/step-000000000.json": "3b98875b869c5e14f93d1abbf1b509b0c6559d0f99f283ef1a70508788a4cb93",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/validation/step-000000100.json": "89c83ae26982750bb0cd7a2e2b55b73806f7bcdf766912ecc1914ef54e16264a",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/validation/step-000000250.json": "b87ef9f4e9cea32c655771f4eed7c74371ba635728b1f6c685379d7f6d621a1a",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/validation/step-000000500.json": "0562ea38f9e8b50b7161dec74148f73456ae29aca6f010eb881116159dec5b3d",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/validation/step-000001000.json": "6e5434914e8782bf8966e8495371eff3a2b53c591417a930aecf30fc6b8d6de0",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-004/greedy.json": "1e00f9d7e167bff71a32cd4485483be532d9ce880099dbe13951e75f30c92705",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/validation_references.json": "76ce116911291ad5462c96d5828ef3dc1caf912a2b824e952a4debbc8f6e1b8a",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/replay_snapshot.json": "ef53b82b76ba55c4f7860cb25483058a26b4fe75efc6666ca04d45a1b4c44560",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/training_metrics.jsonl": "411687fffc38361e3cc4a76be0fc2c02b64fea64163bbf242df737ff2ff66944",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/validation/step-000000000.json": "0e443fe2103a696a7c0f8e59e265ef2d285d210aa970fabfff8e448bc6bb3025",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/validation/step-000000100.json": "20d226ddc44a53309d8ee562134202c7196e772c45c90a4c81044462c272d8c7",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/validation/step-000000250.json": "15ef33d7bc9694cf92867c8abe0fadd70f1fb1971dac6f39d7cff5d05f69cdfe",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/validation/step-000000500.json": "ca44e764b84340542bccc00d9c980877d6147ab7c6e606490b2d6a468a677b8c",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/validation/step-000001000.json": "ee07bccda59244a806c890cf28b9dc8099105100e1f2c137745926d7003dfe5c",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/greedy.json": "7a5f07e93ae9aecdcebb4fe4a08849faa4d2b009b2a746a44d729b7d5c3b1fb2",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-005/search.json": "09fef61ab6a861a35cd8d0e0a9655ccdbd4bdeb54ba899771f142f1e23896aa4",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/validation_references.json": "a794598432caf2d6a249f5a96b65d412072be7192ed05317ae040c87ba5e603d",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/replay_snapshot.json": "9ee75701ce693b9d0b0b5589e735dd4b2a95b7ec4a8f5a83f41574c84edc459e",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/training_metrics.jsonl": "96436ff809da760577cf066819cd5a383e4f945b2cddab2b81590b792793a2cb",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/validation/step-000000000.json": "d5654a84a0f27da133dc6221433ff371c96918f347d5e764328d623082c14ebd",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/validation/step-000000100.json": "845046547350955e4d1c18f9a11881e4fd5d9e1b4fb388ed8f1fe6af85bdef92",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/validation/step-000000250.json": "842ebc7a5901dac52afa805b9571dc87108987dc3c90548568901898716d19f6",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/validation/step-000000500.json": "2966223484f5e02d2b6954e6fa402700b764c8c63175d8061095b23bad2fba93",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/validation/step-000001000.json": "35affbfc0ce1d44d99380ccb0e368bcbe7e83b655e19754fac01f899593750db",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-006/greedy.json": "3fbac8ee93a166545ef5011bcfa5d40005877cadc3dc95321f30ae7a64590500",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/validation_references.json": "870c728fb0742a22e96873c9453ea9a5e1f5eb729a9f03d0d62a8c20b963554b",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/replay_snapshot.json": "10b39fc790bb16988d5e1d8ef8c10134b957490e9176c4788b2f9ef68b0d2b51",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/training_metrics.jsonl": "c4c590a531cc8080213d953b3f6e7512261c6d8869ed355c26496e2ec77d56f4",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/validation/step-000000000.json": "07105c21d65f4ac6fb038bbfea4723aa2045b547f3139f65d9224503cd9c8d1b",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/validation/step-000000100.json": "dc0b46022119a76aee949107d2345cf640e95c2391c87416954c2716c2c1c023",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/validation/step-000000250.json": "941be19232af771dac1e7231adf1d62da9240f99e2e9d07dc2e331d2501776e2",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/validation/step-000000500.json": "e8d6905213fa5e466856ff90aa788941ab6b3bed4d78d3bb811b431abed17189",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/validation/step-000001000.json": "d1ec2216964ad098e017242550faa61f4a4069cda91efa5e8feefb083a9a5d87",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-007/greedy.json": "41d835ff84267f540a462bbd85153c946c3444036f35382aba8f945579d62958",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/validation_references.json": "2bf989f90fab5ddd4eb3dae0c8022b71ebf1a05ce858ef88c1fd396766f85fee",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/replay_snapshot.json": "b8c75c102fbd258f4a99bbecb9678bdb2f941d6279bc0462d8c7666ffdba2896",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/training_metrics.jsonl": "13fa1612197723aa64e4e3385c049839953b74d0eec6fd9e48f4c21ba01b47ca",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/validation/step-000000000.json": "7f514bf86168d5b2fac36714eb6617736868622b728716ca3a4fe256cf185db7",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/validation/step-000000100.json": "2d5b6bb7d294f79b59dca45f328adb9deae517efbc05dafd1190e42539060d60",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/validation/step-000000250.json": "8a1c4034c1fc3fc5c3e3d7302527831be9912f12c735a12ebc5f7a5ef106c3a5",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/validation/step-000000500.json": "bca7bf4598f626c1c4dbee09635070ca8ea555a0816345c76ad9e878eac83d20",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/validation/step-000001000.json": "b877fc2be17c2b98fa22831a5aa52ee63dd464e6acb09ccee32e4741a74bce5c",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/greedy.json": "c1096e4c50ef1f80dcf8fa286da81cec15924dd78328f1bd9944a7d0b6716d91",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-008/search.json": "4ae01d7202b0d4aaf31e420709e0d9256b0288b8362e3999715352c6472d717e",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/validation_references.json": "bffb229416b2dcc4fc2cd692b6c39ddd77cdef563f4749bb1b49d596ba04dc5c",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/replay_snapshot.json": "1c2a7e27a813d07f69d3a8ae5be5719266a9279ec8206e97dec5921adfec7f04",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/training_metrics.jsonl": "9cfca8abfa5c6af87368dbfd13cd11e239ac155257f40a0a11a27b03bf873bc1",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/validation/step-000000000.json": "b9f49c4e2a55bff899b5bd02f648b72dea99192a1d32d78379ba1b186c2f60f0",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/validation/step-000000100.json": "f3a045667c859aae66e2abf6ca8c6f4fed01c630ce7da2893b8151093849b422",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/validation/step-000000250.json": "f7ba53f6b8976ec9ac715cdc0d7dfb3c6787635cdeb97cf6b57bb7a0616f5f06",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/validation/step-000000500.json": "ee59941b404bdf3e6907b33f9dfae1b4d15fd3d7dea9014df8f374f7d902333a",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/validation/step-000001000.json": "fa0087a57f5f979241340cfa0dedfa4b4b6bcf9d96112d88bcacdac0331f81a6",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-009/greedy.json": "a0204bb5a852d2c0e42107a86b348d57c9708d30792a2dd22409695970b7d96f",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/validation_references.json": "3edb6d4f0f9d80c508065977214c3b7b57562e8bafbd79aec27a03889cc4620e",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/replay_snapshot.json": "e49e4fbf802d238b32a60ce5bf4d4c04fa40a81c109819151efab66556ba80e5",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/training_metrics.jsonl": "7cdb84b7f3676d3f6159bf5fc7f314f5f5dc4e39708a14d431a35040f2762d28",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/validation/step-000000000.json": "bdc734723246663dfcaddaf6625a7e017235e5fff541b02f9398ac74a5cfacee",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/validation/step-000000100.json": "ed7b8f62ac43080df1388092497b657e11399cd81824c3943055bff1d5bb77a3",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/validation/step-000000250.json": "f23f8c17a798876a1853c3eb9d344ee15c4ff0c71d92533cdf7b800334fad0b7",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/validation/step-000000500.json": "e6113e021e3689362d9c8588d70246953993c43d678bb010bfb68ebe35809fe8",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/validation/step-000001000.json": "aa79903a32d8328164714ceeb891b16a92756cda271eb67ee67754640b6d2295",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-010/greedy.json": "ce3f86ad58fcc2e6f0ebc5e5d9d582e78e6b73f7b49f8fa297f6a79afbc3d638",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/validation_references.json": "4092ad09515f383c8bcb0a0b14d2b8749895f36287ee6232b0f0652a6d8cfc1b",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/replay_snapshot.json": "fc6fb5f986488c8418ff5d2c294c0c14ba67e49dd975608ebc42c1e186a9befb",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/training_metrics.jsonl": "903111d84f77e0363c5f07b8094d1c0c587f5e433a670b8ca052e609ceb4d560",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/validation/step-000000000.json": "fe40a55e5abecb84704d4e62f13b048a5b2bb25db57ca953fad7481e89bd5795",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/validation/step-000000100.json": "97b7b9c9ac1ee7c8e2b3478bd8595e9a152b28f7d7636b4a55fe93283ccfd8d4",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/validation/step-000000250.json": "e07505919548695ef95ced23aa3410c6f96b61903ead2ea89b8520546c6f2eb9",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/validation/step-000000500.json": "f395446825138202b43a34ea751ddeb95594cb8cb292bd8111926efea83c6275",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/validation/step-000001000.json": "3e344d12eef006746423f42de30880caa6e76da3b3dddfea1747a830bf3c1c0d",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/greedy.json": "e61625e729f05f819e46a435d4f20f5005703f3e311fd40789100d1f52a31eac",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-011/search.json": "b2b13681a676a97167c9dacb2036b74a0fc3612c42f9312cbfe070bc06f864d1",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/validation_references.json": "b2cefc2f45e20004aa640a431e00f1546382896bd62ecaff6f4b559879d6f9ae",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/replay_snapshot.json": "02947cd6337df858dee3cc7e05c9d6d0829e76ffa8dccbb7d0bb840821c5b541",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/training_metrics.jsonl": "8a577d9e8ca124aae3b03838e6e71ae450d05f765de6a351495f13fa87f4e32d",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/validation/step-000000000.json": "2ce89422507ee8fbeb746462342f4bd6b021ca90d67c5390c85e52a5efe73c61",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/validation/step-000000100.json": "0f1c9918ab86ad6427703e20711ba55183cc7d7c229db5f25ffd06ce149effe1",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/validation/step-000000250.json": "53a7bf0aa527264bdd2c3d21843b37d1257fd82a5d1cf1fa85d6d30fed26d24b",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/validation/step-000000500.json": "9f01d036e3c51757cd209722825d8200bb5ecae4c59df8a63f8a010d5f1d771c",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/validation/step-000001000.json": "eb5de8632b1a9850c8be7d562b9458d2a8a920bb98b9ee3ed5ec0eb0ab62b6d5",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-012/greedy.json": "8ae1a2daca0911d31734028d57c330e41b80ad4d497948be32d145450d9c75e1",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/validation_references.json": "3f1ddd416303bdfcb3088e82cef3e6a048a0ffe69f99b64be5def303654257ee",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/replay_snapshot.json": "16df0a85d488aa379958d03f36c9afe78155c001b3880c6c28faa23eda12aaa7",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/training_metrics.jsonl": "32449afc36102e8d7d273f14010772d10c68748e4cf389ffe4b2411c63ead15a",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/validation/step-000000000.json": "035daec0b83c4dd9ce9056e50a5510c67098d79d5e2047aecc8e3c1d459ed2bf",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/validation/step-000000100.json": "03cc41c14b3ddbcae596fbb8bf02daf349652836ae755624f24b5e670f6d538d",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/validation/step-000000250.json": "5055cd7ba5a9ff0ab0645deef6ce306b1097d3603d9962239f2a4ab5197427c4",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/validation/step-000000500.json": "768d6f651e8f1ad4e6530f7d4fa51b10336e605b39ad9eb04c38626068d42382",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/validation/step-000001000.json": "e1143260703cd7e1077d771b596ea379a0462b48cb3b005d91bfe9e3db8c1ad9",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-013/greedy.json": "d7b08123a4c087d2efc07104d4aa2769f4d3e19fb0313441aff72b42a2699ff3",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/validation_references.json": "e6bde815f04dc75d5976eadf9a2beec2c20cfcdcbbf399e1ed2740a748915c56",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/replay_snapshot.json": "0a9d8689cc27bbcc474501c36b49d5a9dc1ef132a9b3c84a3bfd93e31e6fa94e",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/training_metrics.jsonl": "42d6991b537a9b6a933c29812b2bc22e5823b44fcc888b2c952049a5fd1635c8",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/validation/step-000000000.json": "e39b552855b92fb09a47d279fe775583a8a691f67914031d770ed2487c196d2b",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/validation/step-000000100.json": "96e17883097d7d9f61aff282fe45a76037b8af7fccd4c87676b132ed2dffbd0e",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/validation/step-000000250.json": "39ce094abd0f052caa7c9378276e713a8027e4bc3faee79dcb44152b28304276",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/validation/step-000000500.json": "f2e7358ed4677c6d66d8341cf447860b1854f33c8a5744648869068a0b3b3ad2",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/validation/step-000001000.json": "9f54960cdaa69cc85bad7a7e067b51e30a189b9f179bd2c4988b26152e756a4f",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/greedy.json": "a151adc67f5cf5fe55303653ccdfa27f02591b49299a0660b45b128810d61049",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-014/search.json": "06e5f7a760bf189adcdb5401e53f0e7a7a1bc2acf6e153684c400ba3b7608f75",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/validation_references.json": "26603efda7e979ed49b985cd94b500ff0ddad5f0ced8926ec6ca301bf8cdc3e2",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/replay_snapshot.json": "b48eea01d9db7b31cef6cc7f8fbf4be1c5f812dc3bd7f44b79ac735c13ecfcd6",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/training_metrics.jsonl": "7473f6a1424ea9f7cb61f6dbc285156ba12f6c13cce26886bcb54e957951ad4f",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/validation/step-000000000.json": "b5796a22eaec5bec18918a7412d60a3bbf56aca70d0cba83eb6d5e3a0d7cca28",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/validation/step-000000100.json": "8d42e0b82b1b5db08af902383ee5468c10d6f76c43c5b7a54fcb263e53f72ccd",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/validation/step-000000250.json": "b9ac5bfdf88f8a024409730ed7d8d79716b4b6da0d4dad569447933e4fc810bd",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/validation/step-000000500.json": "f581586d4f8926d99edcd7a336abd38a480b4cdb351d19a683ec45a31cfe97f3",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/validation/step-000001000.json": "11c3c7379fc44fc55729182f2883e4f73c30973a4c71d87b89d45f0c4e795c8b",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-015/greedy.json": "239028652374b6401457bfcc6b862e0334bfe4c34678481f2011949bbb702e49",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/validation_references.json": "c381619befff9c7d9fbc61cbf4d081c63bfebe0476d7f00393a4ba9f0f2f35b2",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/replay_snapshot.json": "ce545f48388854df4b17b00a965b8eafdb227e550cd75d27d28a9b66acef427f",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/training_metrics.jsonl": "9bc9029b40e636ecec86de22970034a7765aa84220039e301cc42c9e48ce3935",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/validation/step-000000000.json": "27f2ac77f5a9365d1c30b4ec93c8b57ba2c6e4298013e731be1256268471fba5",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/validation/step-000000100.json": "7c7c781212513ec8ba77bf5e083af0fce8352d1b1decb79c2459ea4ac775e36d",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/validation/step-000000250.json": "5bdbc7c477d175f65006a64d3dabd78fbba5acde44893327227e917df5b8c1f7",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/validation/step-000000500.json": "a64a78c149b0347720d3d54a43240d7ace377198ef5e83d77d43d134952529b3",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/validation/step-000001000.json": "884139b4a7f275a9c49aa47618a943afb637ce5bca7d94fcc1de95914eae6a1e",
+    "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-016/greedy.json": "679c1b121499c3b518701a78e0fb0620f6bb27deb7b20a9d71826ea2fb19694e"
+  }
+}

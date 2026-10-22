@@ -1,0 +1,100 @@
+{
+  "protocol": "alphazero-loop-v1",
+  "run_id": "search_training_cpu_smoke_20261019",
+  "num_rounds": 1,
+  "new_games_per_round": 2,
+  "initial_checkpoint": "runs/entity_attention_128x2_relations_no_aux_r24_r43_20261019/checkpoints/step-000037423.pt",
+  "replay_max_games": 8,
+  "replay_cache_bytes": 67108864,
+  "seeds": {
+    "collection": 36740000,
+    "split": 36750000,
+    "sampling": 36760000
+  },
+  "selfplay": {
+    "protocol": "mcts-selfplay-v2",
+    "search_config": {
+      "simulations": 32,
+      "determinizations": 1,
+      "c_puct": 1.5,
+      "seed": 36770000,
+      "fold_forced_phases": true,
+      "max_simulation_transitions": 512,
+      "root_noise_fraction": 0.25,
+      "dirichlet_alpha": 0.3,
+      "forced_playouts": 2.0,
+      "policy_target_pruning": true
+    },
+    "execution": {
+      "backend": "native_cpu",
+      "engine_mode": "fast",
+      "workers": 1,
+      "active_games_per_worker": 2,
+      "max_batch_size": 8,
+      "max_batch_wait_ms": 0,
+      "torch_threads": 1,
+      "precision": "float32",
+      "batch_interface": "native",
+      "inference_mode": "eager",
+      "actor_projection": false,
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ]
+    },
+    "add_root_noise": true,
+    "temperature_schedule": {
+      "opening_completed_turns": 10,
+      "opening_temperature": 1.0,
+      "late_temperature": 0.0
+    },
+    "validation_fraction": 0,
+    "max_completed_turns": 400,
+    "budget_randomization": {
+      "low_simulations": 4,
+      "low_probability": 0.75
+    }
+  },
+  "learner": {
+    "device": "cpu",
+    "batch_size": 8,
+    "history_batch_size": 4,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "policy_loss_weight": 1.0,
+    "value_loss_weight": 1.0,
+    "max_grad_norm": 1.0,
+    "steps_per_new_position": 4.0,
+    "checkpoint_every_steps": 1,
+    "validation_batch_size": 8,
+    "max_steps_per_round": 2
+  },
+  "evaluation": {
+    "workers": 1,
+    "device": "cpu",
+    "adjudicate_deterministic_policy_cycles": true,
+    "mcts_vs_parent": {
+      "pairs": 1,
+      "seed_start": 36790000,
+      "policy_seed_base": 36800000,
+      "search_config": {
+        "simulations": 8,
+        "determinizations": 1,
+        "c_puct": 1.5,
+        "seed": 36780000,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.0,
+        "dirichlet_alpha": 0.3
+      }
+    },
+    "greedy_vs_initial": {
+      "pairs": 1,
+      "seed_start": 36810000,
+      "policy_seed_base": 36820000
+    },
+    "mcts_backend": "native"
+  }
+}

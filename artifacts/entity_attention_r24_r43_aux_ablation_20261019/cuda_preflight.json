@@ -1,0 +1,215 @@
+{
+  "branches": {
+    "plain": {
+      "base_weights_and_moments_preserved": true,
+      "checkpoint": "runtime/entity_attention_r24_r43_aux_ablation_20261019/preflight_cuda/plain.pt",
+      "checkpoint_sha256": "a1076800cbe9cdd9ac63a57e6d5f42c88476b952d965cf54d0164f4be3dbb4d0",
+      "inference_stats": {
+        "batch_size_histogram": {
+          "3": 10
+        },
+        "compile": {
+          "compile_failure_fallbacks": 0,
+          "compile_failures": [],
+          "compile_seconds": {
+            "policy_value:32": 13.244594127000255
+          },
+          "compiled_calls": {
+            "policy_value:32": 10
+          },
+          "disabled_graphs": {},
+          "dynamo_delta": {
+            "calls_captured": 382,
+            "unique_graphs": 2
+          },
+          "eager_fallbacks": 0,
+          "effective_mode": {
+            "policy_value:32": "compiled"
+          }
+        },
+        "d2h_seconds": 0.00037685400047848816,
+        "feature_seconds": 0.00025026799994520843,
+        "forward_seconds": 25.759839819000263,
+        "h2d_seconds": 0.00029846099960195716,
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": null,
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "logical_model_positions": 30,
+        "mean_batch_size": 3.0,
+        "physical_model_batches": 10,
+        "wait_seconds": 3.0142000014166115e-05
+      },
+      "legacy_turns_initialization_matches": false,
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2
+      },
+      "native_S8_roots": 3,
+      "parameters": 532738,
+      "passed": true,
+      "step_metrics": {
+        "batch_size": 4,
+        "entropy_sum": 7.477726936340332,
+        "event": "train_step",
+        "grad_clipped": true,
+        "grad_norm": 18.38309669494629,
+        "learning_rate": 2e-05,
+        "policy_ce_sum": 8.310413360595703,
+        "policy_entropy": 1.869431734085083,
+        "policy_kl": 0.32012235181527204,
+        "policy_loss": 2.077603340148926,
+        "policy_positions": 4,
+        "policy_weight_sum": 4.0,
+        "round_index": 0,
+        "round_train_step": 1,
+        "target_entropy": 1.7574809883336537,
+        "target_entropy_sum": 7.029923953334615,
+        "total_loss": 3.1632909774780273,
+        "total_train_step": 72899,
+        "value_loss": 1.0856876373291016,
+        "value_positions": 4,
+        "value_sq_sum": 4.342750549316406,
+        "value_target_sq_sum": 4.0,
+        "value_target_sum": 0.0,
+        "value_weight_sum": 4.0,
+        "value_zero_mse": 1.0
+      }
+    },
+    "turns_only": {
+      "base_weights_and_moments_preserved": true,
+      "checkpoint": "runtime/entity_attention_r24_r43_aux_ablation_20261019/preflight_cuda/turns_only.pt",
+      "checkpoint_sha256": "3115950ce8965caa9ae8ecb3891fd734490c8eb9b9b9383581fa7aae4d2d7774",
+      "inference_stats": {
+        "batch_size_histogram": {
+          "3": 10
+        },
+        "compile": {
+          "compile_failure_fallbacks": 0,
+          "compile_failures": [],
+          "compile_seconds": {
+            "policy_value:32": 1.298770821999824
+          },
+          "compiled_calls": {
+            "policy_value:32": 10
+          },
+          "disabled_graphs": {},
+          "dynamo_delta": {
+            "calls_captured": 382,
+            "unique_graphs": 2
+          },
+          "eager_fallbacks": 0,
+          "effective_mode": {
+            "policy_value:32": "compiled"
+          }
+        },
+        "d2h_seconds": 0.0003767019989027176,
+        "feature_seconds": 0.00025471800017839996,
+        "forward_seconds": 2.441384559000653,
+        "h2d_seconds": 0.00028929200016136747,
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": null,
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "logical_model_positions": 30,
+        "mean_batch_size": 3.0,
+        "physical_model_batches": 10,
+        "wait_seconds": 3.087799996137619e-05
+      },
+      "legacy_turns_initialization_matches": true,
+      "model_config": {
+        "architecture": "entity_attention_aux_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "predict_score": false
+      },
+      "native_S8_roots": 3,
+      "parameters": 549635,
+      "passed": true,
+      "step_metrics": {
+        "batch_size": 4,
+        "entropy_sum": 7.477726936340332,
+        "event": "train_step",
+        "grad_clipped": true,
+        "grad_norm": 19.138530731201172,
+        "learning_rate": 2e-05,
+        "policy_ce_sum": 8.310413360595703,
+        "policy_entropy": 1.869431734085083,
+        "policy_kl": 0.32012235181527204,
+        "policy_loss": 2.077603340148926,
+        "policy_positions": 4,
+        "policy_weight_sum": 4.0,
+        "remaining_turns_loss": 0.42481717467308044,
+        "remaining_turns_mse": 679.7074794769287,
+        "round_index": 0,
+        "round_train_step": 1,
+        "target_entropy": 1.7574809883336537,
+        "target_entropy_sum": 7.029923953334615,
+        "total_loss": 3.2694952487945557,
+        "total_train_step": 72899,
+        "value_loss": 1.0856876373291016,
+        "value_positions": 4,
+        "value_sq_sum": 4.342750549316406,
+        "value_target_sq_sum": 4.0,
+        "value_target_sum": 0.0,
+        "value_weight_sum": 4.0,
+        "value_zero_mse": 1.0
+      }
+    }
+  },
+  "device": "cuda",
+  "environment": {
+    "compile_cache": {
+      "path": "/tmp/torchinductor_lc",
+      "warm_state": "unknown; compilation hit/miss counters in owner status are authoritative"
+    },
+    "cpu_count": 16,
+    "cpu_model": "13th Gen Intel(R) Core(TM) i5-13500H",
+    "cuda_available": true,
+    "executable": "/home/lc/anaconda3/envs/splendor/bin/python",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU, GPU-328e3c53-3afb-333f-7325-d411dd30f366, 580.178.04, 6141",
+    "meminfo": "MemTotal:       32597828 kB\nMemFree:        11820976 kB\nMemAvailable:   22679176 kB\nBuffers:          566384 kB\nCached:         10165860 kB\nSwapCached:            0 kB\nActive:         12590452 kB\nInactive:        6110744 kB\nActive(anon):    8148108 kB\nInactive(anon):        0 kB\nActive(file):    4442344 kB\nInactive(file):  6110744 kB\nUnevictable:       15564 kB\nMlocked:             184 kB\nSwapTotal:             0 kB\nSwapFree:              0 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             25664 kB\nWriteback:             0 kB\nAnonPages:       7984548 kB\nMapped:          2928032 kB\nShmem:            179184 kB\nKReclaimable:     776896 kB\nSlab:            1101140 kB\nSReclaimable:     776896 kB\nSUnreclaim:       324244 kB\nKernelStack:       34288 kB\nPageTables:       108804 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    16298912 kB\nCommitted_AS:   37267920 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      237776 kB\nVmallocChunk:          0 kB\nPercpu:            18816 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:    10240 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:     1181952 kB\nDirectMap2M:    20572160 kB\nDirectMap1G:    11534336 kB\n",
+    "performance_environment": {
+      "CONDA_DEFAULT_ENV": "splendor",
+      "MKL_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "PYTHONPATH": "src"
+    },
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14 (main, Sep  2 2026, 23:27:36) [GCC 15.3.0]",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0",
+    "torch_threads": 1
+  },
+  "initial_policy_and_value_identical": true,
+  "passed": true,
+  "plan_sha256": "cc57bc8be6775f733a346d8c3200e4cf2ef473dee590a9c442642e4f8c7afbad",
+  "scope": "Four real archived positions per branch and three S8 roots; engineering verification, excluded from training/strength results.",
+  "seconds": 31.156690852999873,
+  "validator_sha256": "f564fde3a72b549b395fe8c717f9b1140274361e008c17fff747028249a6a3e8"
+}

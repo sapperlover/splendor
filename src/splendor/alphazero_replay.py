@@ -30,7 +30,8 @@ import numpy as np
 
 from .rng import DeterministicRng
 from .selfplay_data import (
-    DATA_SCHEMA, DATA_SCHEMA_V2, SelfPlaySample, load_game, validate_game_arrays,
+    DATA_SCHEMA, DATA_SCHEMA_V2, DATA_SCHEMA_V3, SelfPlaySample, load_game, validate_game_arrays,
+    _manifest_search_training,
 )
 
 INDEX_PROTOCOL = "alphazero-replay-index-v1"
@@ -214,7 +215,7 @@ def _read_manifest(root: Path) -> dict[str, Any]:
     manifest = json.loads(path.read_text(encoding="utf-8"))
     if manifest.get("protocol") not in ("mcts-selfplay-v1", "mcts-selfplay-v2"):
         raise ValueError(f"replay run protocol mismatch: {root}")
-    if manifest.get("versions", {}).get("data") not in (DATA_SCHEMA, DATA_SCHEMA_V2):
+    if manifest.get("versions", {}).get("data") not in (DATA_SCHEMA, DATA_SCHEMA_V2, DATA_SCHEMA_V3):
         raise ValueError(f"replay run data schema mismatch: {root}")
     return manifest
 
@@ -239,6 +240,8 @@ def _scan_run(run: ReplayRun) -> tuple[list[ReplayGame], dict[str, Any]]:
         "simulations": int(search["simulations"]),
         "worlds": int(search["determinizations"]),
     }
+    if manifest["versions"]["data"] == DATA_SCHEMA_V3:
+        verify["search_training"] = _manifest_search_training(manifest[config_key])
     games: list[ReplayGame] = []
     for path in sorted((run.root / "games").glob("game-*.npz")):
         game_id = int(path.stem.removeprefix("game-"))
@@ -308,6 +311,7 @@ def _verify_game(game: ReplayGame, verify: Mapping[str, Any], entry: Mapping[str
         simulations=int(verify["simulations"]),
         worlds=int(verify["worlds"]),
         split=game.split,
+        search_training=verify.get("search_training"),
     )
 
 

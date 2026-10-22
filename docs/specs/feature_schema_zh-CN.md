@@ -2,6 +2,8 @@
 
 Schema：`splendor-observation-action-v1`。入口为 `features.encode_decision` / `collate_encoded_decisions`。编码器只读取公开 DTO，不枚举、筛选或修改合法动作；当前 Python 路径使用向量化 NumPy，native 编码与其做差分核对。
 
+2026-10-21默认贵族池从10张补齐到12张（蓝绿黑333、红白44），双人局仍抽3张。贵族以17维牌面属性编码，无贵族ID embedding，因此3个贵族槽、schema版本和模型权重形状不变；当前规则数据身份由catalog fingerprint另行区分，不能用相同特征schema证明牌池相同。
+
 ## 2. 固定顺序与总维度
 
 - 普通颜色：`white, blue, green, red, black`

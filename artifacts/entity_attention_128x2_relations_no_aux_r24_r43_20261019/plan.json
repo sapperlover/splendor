@@ -1,0 +1,86 @@
+{
+  "absolute_rounds": [
+    24,
+    43
+  ],
+  "config": {
+    "path": "configs/entity_attention_v1/offline_128x2_relations_no_aux_r24_r43_20261019.json",
+    "sha256": "48886514d244182682071354fcfbb4fe5d8bc6839b0118a61e4fcd310edab238"
+  },
+  "draw_exposures": 12.0,
+  "experiment": "entity_attention_128x2_relations_no_aux_r24_r43_20261019",
+  "games": 20000,
+  "initialization": "random 128x2 relations model; no auxiliary heads; fresh AdamW; R43 is opponent only",
+  "model_config": {
+    "architecture": "entity_attention_v1",
+    "dropout": 0.0,
+    "ffn_hidden": 512,
+    "heads": 4,
+    "hidden": 128,
+    "layers": 2,
+    "market_relations": true,
+    "value_readout": "global_players_market"
+  },
+  "opponent": {
+    "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+    "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+  },
+  "panels": [
+    {
+      "id": "greedy_vs_R43",
+      "kind": "greedy",
+      "pairs": 1000,
+      "seed_start": 36600000
+    },
+    {
+      "id": "search_S1024_vs_R43",
+      "kind": "search",
+      "pairs": 200,
+      "seed_start": 36700000
+    }
+  ],
+  "runner": {
+    "path": "artifacts/entity_attention_128x2_relations_no_aux_r24_r43_20261019/run.py",
+    "sha256": "a4241b406d6483e251a7562619faca47f26028b9716878114a2e714c42e23fd3"
+  },
+  "scope": "Prepared pipeline only until run is explicitly invoked. Single training seed; no checkpoint selection by match results; no PSW; original archived targets and whole-game splits.",
+  "search_template": {
+    "path": "artifacts/entity_attention_r43_search_variants_arena_20261014/configs/S1024_vs_greedy.json",
+    "sha256": "3ba97bd11ba9d1c582a80925609ad216b79aa8f7548e955736d280df60c5e6d4"
+  },
+  "selection": "minimum full-holdout policy KL + win/loss value MSE at the percentage checkpoints; auxiliary losses excluded; ties earlier step",
+  "splits": {
+    "train": {
+      "games": 17971,
+      "positions": 1451525
+    },
+    "validation": {
+      "games": 2029,
+      "positions": 163595
+    }
+  },
+  "steps_target": 68041,
+  "validation_percent_step": 5,
+  "validation_steps": [
+    3403,
+    6805,
+    10207,
+    13609,
+    17011,
+    20413,
+    23815,
+    27217,
+    30619,
+    34021,
+    37423,
+    40825,
+    44227,
+    47629,
+    51031,
+    54433,
+    57835,
+    61237,
+    64639,
+    68041
+  ]
+}

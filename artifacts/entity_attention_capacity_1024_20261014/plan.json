@@ -1,0 +1,30 @@
+{
+  "client_date": "2026-10-14",
+  "clip": 1.0,
+  "early_stop": {
+    "min_delta": 1e-05,
+    "patience": 500
+  },
+  "effective_batch": 1024,
+  "eval_every": 100,
+  "init_seed": 37000001,
+  "learning_rate": 0.0005,
+  "max_steps": 2500,
+  "micro_batch": 512,
+  "models": {
+    "big_256x4": {
+      "architecture": "entity_attention_v1",
+      "dropout": 0.0,
+      "ffn_hidden": 1024,
+      "heads": 8,
+      "hidden": 256,
+      "layers": 4
+    },
+    "small_128x2": {
+      "architecture": "entity_attention_v1"
+    }
+  },
+  "note": "random init; same 1024 positions every step; identical optimizer for both models",
+  "protocol": "capacity-1024-v1",
+  "weight_decay": 0.0
+}

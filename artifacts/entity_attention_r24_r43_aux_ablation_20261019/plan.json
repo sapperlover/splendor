@@ -1,0 +1,87 @@
+{
+  "base_config": {
+    "path": "configs/entity_attention_v1/offline_r24_r43_value_auxiliary_20261013.json",
+    "sha256": "c16a738d02abf446a48fd7b4f10d348e28da2ed8f0ebe87a107552bbba178aa0"
+  },
+  "branches": {
+    "plain": {
+      "config": {
+        "path": "configs/entity_attention_v1/offline_r24_r43_no_aux_20261019.json",
+        "sha256": "fa7549c9f90f1e8a9229d80a51a80b613650e976d705fabb6933b901d096c606"
+      },
+      "output": "runs/entity_attention_r24_r43_aux_ablation_20261019/plain",
+      "splits": {
+        "train": {
+          "games": 17971,
+          "positions": 1451525
+        },
+        "validation": {
+          "games": 2029,
+          "positions": 163595
+        }
+      },
+      "steps_target": 22681
+    },
+    "turns_only": {
+      "config": {
+        "path": "configs/entity_attention_v1/offline_r24_r43_turns_only_20261019.json",
+        "sha256": "55d07a45ec2dd716b62ad20ea064a58ff76582020c9516521ee1937c3c01f04f"
+      },
+      "output": "runs/entity_attention_r24_r43_aux_ablation_20261019/turns_only",
+      "splits": {
+        "train": {
+          "games": 17971,
+          "positions": 1451525
+        },
+        "validation": {
+          "games": 2029,
+          "positions": 163595
+        }
+      },
+      "steps_target": 22681
+    }
+  },
+  "evaluation": {
+    "greedy": {
+      "pairs": 1000,
+      "policy_seed_base": 36210000,
+      "seed_start": 36200000
+    },
+    "search": {
+      "pairs": 200,
+      "policy_seed_base": 39110000,
+      "seed_start": 39100000
+    }
+  },
+  "experiment": "entity_attention_r24_r43_aux_ablation_20261019",
+  "initial_checkpoint": {
+    "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+    "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+  },
+  "old_dual_full_validation": {
+    "path": "runs/entity_attention_r24_r43_value_auxiliary_offline_20261013/full_validation.json",
+    "sha256": "b12ebda24ddc4f6bbbe1cc6dbd70b2662293b753117800696fc5d68ddd78b9de"
+  },
+  "old_dual_greedy": {
+    "path": "artifacts/entity_attention_r24_r43_offline_objectives_20261013/greedy_vs_r43_1000pair/value_auxiliary.json",
+    "sha256": "6fc9fc15eab4928f7bf40aa55ae63125cc9be6ddf22cb7d56ac86ad2cc95db6b"
+  },
+  "old_dual_initial": {
+    "path": "runs/entity_attention_r24_r43_value_auxiliary_offline_20261013/checkpoints/initial.pt",
+    "sha256": "e9f068a6b2d07aaf5bd02137c09345aa7338f3d05bcd46468299a256663c126b"
+  },
+  "old_dual_training_metrics": {
+    "path": "runs/entity_attention_r24_r43_value_auxiliary_offline_20261013/training_metrics.jsonl",
+    "sha256": "6e7082fc47aac13035da8c12c82584d070cb65fdd955c087fdab04b65bedc24b"
+  },
+  "runner": {
+    "path": "artifacts/entity_attention_r24_r43_aux_ablation_20261019/run.py",
+    "sha256": "dc89172866882a603d7f9757ae4baef9fafef02ef1300a51167d2987a388e2cd"
+  },
+  "scope": "Two new training branches only, ordinary joint policy/value versus remaining-turns auxiliary0.25. Same R43 weights/AdamW/RNG, historical targets, pool, splits, sampling and budget as the old dual-head run. Greedy reuses the old DEV openers for paired contrasts; search uses a common new panel. No new data collection.",
+  "search_template": {
+    "path": "artifacts/entity_attention_r43_search_variants_arena_20261014/configs/S1024_vs_greedy.json",
+    "sha256": "3ba97bd11ba9d1c582a80925609ad216b79aa8f7548e955736d280df60c5e6d4"
+  },
+  "selection": "final22681 only, matching the previous small-model experiment; no DEV checkpoint selection"
+}

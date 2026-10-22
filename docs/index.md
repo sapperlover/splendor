@@ -1,10 +1,24 @@
 # 文档导航
 
-2026-10-13完成[R24–43固定数据的PSW／value双辅助目标离线与greedy结果](../artifacts/entity_attention_r24_r43_offline_objectives_20261013/results.md)：两组各22681步，final对原R43各200pair greedy得分50.000%／50.125%，未确认提升。辅助头已实现且能拟合标签，尚无搜索棋力结论。下述固定4k对照执行时尚未包含辅助头。
+[MLP角色初始化标定＋同8万局离线训练](../artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md)：std0.05、906434参数，原数据／抽样／lr1e-4／16GiB及5%留出不变；用户后来启动，现中断、已保存81168步。六节点中KL＋MSE最低54112步[对R20 greedy1000pair](../artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md)得43.225% [41.075%,45.325%]；原270557步计划未完成，未测搜索。
 
-本文按阅读目的组织。状态以 [当前状态](current_project_state_zh-CN.md) 导航，以对应代码／配置和 [实验索引](../artifacts/experiment_index.json) 的原始证据核验。历史准备说明与被替代设计在 [archive](archive/README.md)，其日期不表示当前实现状态。
+[第20轮继承续跑：S256N4＋12贵族](../artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md)：继承状态与24k池，高预算256×4总1024，低预算128×1；每轮4k局／1000更新，默认无限自迭代，启动／恢复命令和验证见专题。
 
-2026-10-13完成[Policy Surprise Weighting实现、R43固定4k S4096对照及value辅助头适配说明](../artifacts/entity_attention_r43_policy_surprise_s4096_20261013/README.md)。加权仅作用于policy；本轮未确认棋力收益。该次实验只实现PSW，后续辅助头实现与命令见上文。
+[Checkpoint去重与外置完成](../artifacts/repository_archive_20261021/README.md)：161个副本、1885个冷模型，T7包10.80GB，本阶段释放12.85GB，冷模型读取前需解压。[原审计及首次清理](../artifacts/checkpoint_storage_audit_20261021/README.md)保留历史记录。[Attention128同8万局离线对照](../artifacts/entity_attention_128x2_offline_80k_20261021/README.md)最近提交135279步，核验时日志KeyboardInterrupt退出，未自动恢复；[94695步对R20 greedy1000pair](../artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/README.md)得54.400%，区间[52.299%,56.525%]。[MLP同节点对R20 greedy1000pair](../artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/README.md)得37.075%，区间[35.000%,39.175%]。
+
+2026-10-19按已保存原始产物更新完成状态与冷产物位置。研究事实和限制集中在[当前状态](current_project_state_zh-CN.md)，实验身份与证据见[实验索引](../artifacts/experiment_index.json)。历史准备说明和被替代设计见[历史文档](archive/README.md)。
+
+| 近期专题 | 当前结论与入口 |
+| --- | --- |
+| 实体汇总残差MLP | [256宽×4块实现与验证](../artifacts/entity_set_mlp_256x4_20261021/README.md)：848,418参数，目标牌/贵族属性直连动作head；旧schema/目标兼容，无正式训练或棋力结论 |
+| 12张贵族规则池 | [规则修正与验证](../artifacts/noble_pool_bga12_20261021/README.md)：加入蓝绿黑333、红白44；双人仍抽3张，Python/native/BGA/采集/评测共用规范表，旧产物按原牌池保留 |
+| 搜索训练新功能 | [预算随机化、Forced Playouts与Policy Target Pruning](guides/search_training_zh-CN.md)：默认关闭，有限工程验证，无正式训练与棋力结论 |
+| 新版128×2无辅助从零训练 | [完成结果](../artifacts/entity_attention_128x2_relations_no_aux_r24_r43_20261019/results.md)：68041步，选37423；greedy53.775%、搜索56.625%，单训练seed与固定面板 |
+| 原小模型辅助消融 | [完成结果](../artifacts/entity_attention_r24_r43_aux_ablation_20261019/results.md)：无辅助已提供普通训练对照，未确认辅助头额外收益 |
+| R43历史池离线 | [完成结果](../artifacts/entity_attention_r43_history_pool_20261012/results.md)：独立500pair为50.50%，未确认超原R43 |
+| 256×4双辅助从零训练 | [中断状态与恢复](../artifacts/entity_attention_256x4_aux_r24_r43_20261014/README.md)：最近保存44227步，终点和搜索未完成；[结构有限验证](../artifacts/entity_attention_256x4_20261014/README.md)单独解释 |
+| R43搜索与value诊断 | [搜索预算／随机节点／CPW完成结果](../artifacts/entity_attention_r43_search_variants_arena_20261014/results.md)、[64根终局信号](../artifacts/entity_attention_r43_value_signal_64_20261014/results.md)、[Greedy动作排序完成结果](../artifacts/entity_attention_r43_action_ranking_64_20261015/results.md)；[S1024续局分支已停止](../artifacts/entity_attention_r43_action_ranking_64_s1024_20261015/README.md) |
+| 冷产物与恢复 | [本次7.03GiB迁移清单](../artifacts/repository_archive_20261019/README.md)、[归档登记](../archive/README.md)；20261012旧归档已由用户外置，当前未挂载 |
 
 ## 规则与契约
 
@@ -22,7 +36,7 @@
 | 数据格式、采集与恢复 | [自对弈数据](guides/selfplay_data_zh-CN.md) |
 | 训练与恢复 | [AZ 循环](guides/alphazero_zh-CN.md)、[实体注意力离线学习](guides/entity_attention_offline_zh-CN.md) |
 | R43 起点 S4096/N1、policy 2k／value 6k | [连续自迭代配置、时限与恢复](../artifacts/entity_attention_r43_s4096_p2k_v6k_20261013/README.md)：保持 lr2e-5、1000 局／1000 步和联合更新，单次 8 小时会话 |
-| R43起点的同历史池离线实验（已启动） | [串行流程与续跑命令](../artifacts/entity_attention_r43_history_pool_20261012/README.md)：先测R24＋24388步对R43的200pair，再以相同43000局池从R43追加48776步，保留5组greedy、4组搜索和独立500pair确认；各离线节点对手固定原R43 |
+| R43起点同历史池离线（完成） | [流程与命令](../artifacts/entity_attention_r43_history_pool_20261012/README.md)、[完成结果](../artifacts/entity_attention_r43_history_pool_20261012/results.md)：48776步、5组greedy／4组搜索及独立500pair均完成；选中＋24388步独立确认为50.50% [47.35%,53.70%]，未确认收益；前置R24离线候选对R43为51.25%，区间跨50% |
 | R24起点历史池离线（完成） | [完整流程](../artifacts/entity_attention_r24_history_pool_20261012/README.md)、[结果](../artifacts/entity_attention_r24_history_pool_20261012/results.md)：选中＋24388步，对原R24独立500pair为54.00% [50.80%,57.10%]；尚未由此证明超过R43 |
 | 近期大池离线训练 | [29,000局 attention S1024/N1固定池](../artifacts/entity_attention_recent_pool_20261009/README.md)，34398步对θ5000得分86.125%，最终完整模型55.50%；最终policy＋34398步value的双网络组合200pair得分92.25%，较34398步提高6.125个百分点，配对差CI [+2.000,+10.250] |
 | P4起点九轮自迭代（完成） | [完整报告](reports/entity_attention_p4_pool_iteration_20261010_zh-CN.md)：终点搜索对P4／同预算旧池对照／P12＋V4得分58.750%／61.625%／58.125%，各200pair且区间高于50%；[流程与命令](guides/entity_attention_p4_pool_iteration_zh-CN.md)，旧池224／在线32渐变至第6轮32／224，第7轮起纯在线 |
@@ -32,15 +46,16 @@
 | 较早训练分支的复现 | [10×1000](guides/entity_attention_self_iteration_zh-CN.md)、[5000步混合分支](guides/entity_attention_hybrid_zh-CN.md)、[第九轮 N2 fork](guides/entity_attention_hybrid_fork_zh-CN.md)、[N1 小步分支](guides/entity_attention_hybrid_s1024_n1_zh-CN.md) |
 | 未完成的 B→C→D 趋势实验 | [套件流程](guides/entity_attention_iteration_suite_zh-CN.md)，B仅完成前两轮，C／D未运行 |
 | 棋力与快速诊断 | [配对评测及网页](guides/evaluation_zh-CN.md)、[固定256真实局面](guides/decision_probe_zh-CN.md) |
+| BGA 实时/离线只读推荐 | [本地权重推荐器](guides/bga_advisor_zh-CN.md)：已有 Chrome 自动识桌／任意轮次接入；双方行动及翻牌后模型估计；greedy／原生MCTS；用户自行执行 |
 | 配置与运行工具 | [configs](../configs/README.md)、[scripts](../scripts/README.md) |
 
 ## 最近的实验结论与证据
 
-最新读[P4起点九轮自迭代完整报告](reports/entity_attention_p4_pool_iteration_20261010_zh-CN.md)：完整对照支持本次在线方案的棋力收益，但不单独证明教师换代贡献或最优参数。较早的 [M4 与固定数据诊断完整结论](reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md) 统合以下实验，结论限定对应分支，不能用本次新方案回填旧分支收益。
+较早已完成方案见[P4起点九轮自迭代完整报告](reports/entity_attention_p4_pool_iteration_20261010_zh-CN.md)：完整对照支持本次在线方案的棋力收益，但不单独证明教师换代贡献或最优参数。较早的 [M4 与固定数据诊断完整结论](reports/entity_attention_m4_diagnostics_conclusions_zh-CN.md) 统合以下实验，结论限定对应分支，不能用本次新方案回填旧分支收益。
 
 | 问题 | 专题与原始记录 |
 | --- | --- |
-| 本地归档对应什么结论 | [45来源／721入口结论索引](../artifacts/repository_archive_20261012/conclusions.md)、[归档阅读说明](../archive/20261012/README.md)；专题报告保留在原位置，工程输出和未完成面板不作棋力确认 |
+| 冷产物对应什么结论 | [本次7个离线run归档](../artifacts/repository_archive_20261019/README.md)、[旧归档45来源／721入口结论索引](../artifacts/repository_archive_20261012/conclusions.md)；旧归档已外置，当前本地副本见[登记](../archive/README.md)，专题报告与必要原始统计保留 |
 | 早期旧θ5续训十轮是否完成 | [完成报告](reports/az_theta5_10x1000_zh-CN.md)：10000局／12050更新及20个常规面板完成；终点对旧θ5搜索200pair未确认提升，对PPO追加面板只有100/200pair |
 | 早期采集、smoke与临时校准器 | [工程试验说明](reports/archived_engineering_experiments_20261012_zh-CN.md)：说明保存事实及适用范围，没有正式棋力证据的明确标出 |
 | P4新分支第九轮的步数／lr／池大小／batch | [10组单变量完成分析](../artifacts/entity_attention_r9_ofat_20261010/analysis.md)、[100–2000步全部55点矩阵](../artifacts/entity_attention_r9_ofat_20261010/steps_100_2000.md)、[完整曲线与配对区间](../artifacts/entity_attention_r9_ofat_20261010/results.md)：同一第八轮终点及AdamW，固定第九轮完整留出；较小lr对policy有正面信号，1k池加重value过拟合；单个候选的后续棋力补测见下一条 |

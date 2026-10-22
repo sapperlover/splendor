@@ -18,6 +18,7 @@ import pytest
 import torch
 
 from splendor.actor_critic import ActorCritic
+from splendor.catalog import load_catalog
 from splendor.contracts import DecisionRequest
 from splendor.engine import GameEngine
 from splendor.features import (
@@ -82,6 +83,14 @@ def golden() -> dict:
     return json.loads(GOLDEN_PATH.read_text(encoding="utf-8"))
 
 
+@pytest.fixture(scope="module")
+def golden_catalog():
+    # The scalar golden predates the 12-noble rule correction. Preserve its
+    # exact original setup instead of replacing the captured feature hashes.
+    return load_catalog(Path(__file__).resolve().parents[1] /
+                        'artifacts/noble_pool_bga12_20261021/previous_catalog')
+
+
 def test_golden_fixture_matches_current_schema(golden: dict) -> None:
     assert golden["feature_schema_version"] == FEATURE_SCHEMA_VERSION
     assert len(golden["cases"]) >= 100
@@ -90,7 +99,7 @@ def test_golden_fixture_matches_current_schema(golden: dict) -> None:
     assert {case["pending"] for case in golden["cases"]} == {True, False}
 
 
-def test_vectorized_encoder_is_bit_identical_to_the_scalar_golden(golden: dict) -> None:
+def test_vectorized_encoder_is_bit_identical_to_the_scalar_golden(golden: dict, golden_catalog) -> None:
     expected = {(case["seed"], case["step"]): case for case in golden["cases"]}
     counts = {phase: 0 for phase in TARGETS}
     checked = 0
@@ -98,7 +107,7 @@ def test_vectorized_encoder_is_bit_identical_to_the_scalar_golden(golden: dict) 
 
     def run(seed: int, policies) -> bool:
         nonlocal checked
-        engine = GameEngine.new(seed, first_player=seed % 2)
+        engine = GameEngine.new(seed, first_player=seed % 2, catalog=golden_catalog)
         step = 0
         while step <= 200:
             response = engine.decision()
@@ -132,14 +141,14 @@ def test_vectorized_encoder_is_bit_identical_to_the_scalar_golden(golden: dict) 
     assert checked == len(golden["cases"])
 
 
-def test_golden_samples_match_elementwise(golden: dict) -> None:
+def test_golden_samples_match_elementwise(golden: dict, golden_catalog) -> None:
     by_key = {(case["seed"], case["step"]) for case in golden["cases"]}
     wanted = {(sample["seed"], sample["step"]) for sample in golden["samples"]}
     checked = 0
 
     def walk(seed: int, policies) -> None:
         nonlocal checked
-        engine = GameEngine.new(seed, first_player=seed % 2)
+        engine = GameEngine.new(seed, first_player=seed % 2, catalog=golden_catalog)
         step = 0
         while step <= 200 and checked < len(wanted):
             response = engine.decision()

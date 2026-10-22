@@ -1,0 +1,123 @@
+{
+  "activation": "Existing old process must exit and load the updated code once. Its started round keeps B500/pipeline1; the first unstarted round after restart uses B768/pipeline2.",
+  "allowed_resume_changes": [
+    "max_batch_size",
+    "batch_buckets",
+    "pipeline_slots"
+  ],
+  "checked_at": "2026-10-19T20:35:57+08:00",
+  "checks": {
+    "fresh_round_selects_768_pipeline2": true,
+    "legacy_active_round_fingerprint_preserved": true,
+    "mock_live_reload_on_next_round": "passed",
+    "mock_resume_model_adamw_sampling_rng_bitexact": true,
+    "production_frozen_config_manifest_checkpoint_unchanged": true,
+    "production_input_preflight": "passed",
+    "search_budget_change_rejected": "passed",
+    "shell_syntax": "passed",
+    "unit_tests_passed": 7,
+    "worker_count_change_rejected": "passed"
+  },
+  "commands": [
+    "conda run -n splendor env PYTHONPATH=src python -m pytest -q tests/test_random_budget_iteration.py",
+    "bash scripts/run_random_budget_iteration_20261019.sh --check",
+    "bash -n scripts/run_random_budget_iteration_20261019.sh"
+  ],
+  "observed_run": {
+    "active_execution": {
+      "active_games_per_worker": 1,
+      "actor_projection": false,
+      "backend": "native_cuda_pool",
+      "batch_buckets": [
+        16,
+        32,
+        64,
+        128,
+        192,
+        256,
+        384,
+        500
+      ],
+      "batch_interface": "native",
+      "candidate_buckets": [
+        16,
+        32,
+        48,
+        64
+      ],
+      "compile_failure_policy": "fail_fast",
+      "compile_mode": "native-cudagraph",
+      "engine_mode": "fast",
+      "inference_mode": "compiled",
+      "local_microbatch": 64,
+      "max_batch_size": 500,
+      "max_batch_wait_ms": 5,
+      "native_transport": "reused",
+      "pipeline_slots": 1,
+      "precision": "float32",
+      "search_workers": 12,
+      "shared_candidate_width": 256,
+      "shared_slots": 2,
+      "torch_threads": 1,
+      "total_active_games": 1000,
+      "workers": 1
+    },
+    "active_manifest": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/selfplay/manifest.json",
+    "active_round": 3,
+    "active_semantic_fingerprint": "5b270b20a36d5aa39c91737562fa18d8cd2d6e05a53cb5fae4e4ea873dc0a6b5",
+    "completed_rounds": 2,
+    "preserved_files": {
+      "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-001/checkpoints/final.pt": "9a4b3536a5d974d7a627735d7dd4d114cc27af09f813ef720e5cdfd898406c91",
+      "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/config.json": "c3a98e51cac92191898864ee7ba10c96b9e98b09541b8a3c0113098c5ebff678",
+      "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-002/selfplay/manifest.json": "df8f214f997a92db10881a9a94b4cbc22146c82d7d534acdf0ee86ca2571390a"
+    },
+    "root": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019"
+  },
+  "requested_execution": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      192,
+      256,
+      384,
+      500,
+      768
+    ],
+    "batch_interface": "native",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "compile_mode": "native-cudagraph",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 64,
+    "max_batch_size": 768,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "pipeline_slots": 2,
+    "precision": "float32",
+    "search_workers": 12,
+    "shared_candidate_width": 256,
+    "shared_slots": 2,
+    "torch_threads": 1,
+    "total_active_games": 1000,
+    "workers": 1
+  },
+  "scope": "CPU tests with synthetic arrays and mocked collection; real active manifest checked using an isolated temporary copy. No production collection/training/arena launched, no user process stopped, no GPU benchmark.",
+  "source_sha256": {
+    "configs/entity_attention_v1/random_budget_37423_p6k_v24k_20261019.json": "9d1f719620ef6547b4a19d56e8146900a516e2856e4c20681f724706d00ffb6a",
+    "scripts/run_random_budget_iteration_20261019.sh": "3fee802b5377d8783ab44e3d9a1240f6bedeac11c78a2c28b4ff4b81369e57c4",
+    "src/splendor/random_budget_iteration.py": "bd0cc81fd61fd20518748c7dc1544f88496a94201fc2acad69be76f8302b4c00",
+    "tests/test_random_budget_iteration.py": "2de11c15ca9c76fd6559c0177ec27c3816254dc9262f6daec51ced3a8da011e8"
+  },
+  "status": "execution_tuning_verified_not_restarted"
+}

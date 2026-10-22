@@ -1,6 +1,6 @@
 # 《璀璨宝石》基础标准版规则与实现规格
 
-> 范围：2–4 人基础游戏，不含任何扩展、《璀璨宝石：对决》或漫威版。卡牌数值沿用经典基础版；规则以官方 10 周年重制版说明书中的现行表述为准。美术、贵族译名及是否附实体首玩家标记不影响玩法。
+> 范围：2–4人基础玩法，不启用扩展机制、《璀璨宝石：对决》或漫威版。发展卡沿用经典90张，行动规则按现行说明书；**本项目自2026-10-21起统一使用BGA对齐的12张贵族池**，即经典10张加蓝绿黑各3、红白各4两张。新开局、搜索、评测和自对弈采集均以此为规范，不再仅从经典10张抽取。美术、贵族译名及是否附实体首玩家标记不影响玩法。
 
 ## 1. 胜利目标与术语
 
@@ -22,7 +22,7 @@
 ## 2. 全部组件
 
 - 90 张发展卡：等级 1 共 40 张、等级 2 共 30 张、等级 3 共 20 张。
-- 10 块贵族板块，每块 3 分。
+- 本项目贵族池12块，每块3分；其中经典实体基础盒为10块，另加入下述两块贵族，统一参与开局洗牌。
 - 40 枚 token：白、蓝、绿、红、黑各 7 枚，黄金 5 枚。
 - 10 周年重制版另有 1 个首玩家标记；旧版可用任意标记替代。
 
@@ -40,13 +40,20 @@
 | 2 | 30 | 6 | 1 分 10 张；2 分 15 张；3 分 5 张 |
 | 3 | 20 | 4 | 3 分 5 张；4 分 10 张；5 分 5 张 |
 
-贵族需求只有两种模式：五块为两个颜色各 4 个加成，五块为三个颜色各 3 个加成；所有贵族均为 3 分。
+当前12张贵族的需求有两种模式：六张为两个颜色各4个加成，六张为三个颜色各3个加成；所有贵族均为3分。原N01–N10的ID与需求不变，新增：
+
+| 稳定ID | 牌面 | 白 | 蓝 | 绿 | 红 | 黑 | 分数 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| N11 | 蓝绿黑333 | 0 | 3 | 3 | 0 | 3 | 3 |
+| N12 | 红白44 | 4 | 0 | 0 | 4 | 0 | 3 |
+
+每种需求组合在池中仅一张。贵族需求比较永久加成，筹码和黄金不计入。
 
 ## 3. 开局设置
 
 1. 按等级分别洗匀三叠发展卡，面朝下放置。
 2. 每个等级翻开 4 张，形成共 12 张的公开市场。
-3. 洗匀贵族，随机翻开“玩家数 + 1”块，其余移出本局。
+3. 洗匀全部12张贵族，随机翻开“玩家数 + 1”块，其余移出本局；双人局仍是场上3张、场外9张。
 4. 按人数建立公共 token 供应；黄金始终使用全部 5 枚。
 5. 官方规则由最年轻玩家成为首玩家；程序实现应允许随机或外部指定首玩家。此后顺时针行动。
 
@@ -140,11 +147,15 @@ validate main action
 
 ## 8. 数据来源与版本说明
 
-双人引擎当前规则版本为 `splendor-base-two-player-v2-forced-skip`。该版本在原基础规则上加入本文 4.E 的本地死锁裁决；replay schema 因新增 forced-skip 事件与终局原因而升为 `2`。
+双人引擎的动作／死锁裁决协议仍为 `splendor-base-two-player-v2-forced-skip`，replay schema仍为`2`；本次修改贵族数据，不改变转移接口或特征形状。**完整规则身份由规则协议与规范数据指纹共同确定**：`data/splendor_nobles.csv`及`data/splendor_config.json`的更新会改变catalog fingerprint，采集与评测manifest均冻结该指纹，禁止在同一冻结批次恢复时混入不同贵族池。
+
+经典10张池的历史实验、保存局和数据保留原身份，不改写成12张结果；旧目录不得用新规则继续采集或补评测。需要复现旧局时必须显式使用对应的旧代码与规范数据，见[本次规则修正和旧数据快照](../artifacts/noble_pool_bga12_20261021/README.md)。原模型的贵族输入按牌面属性编码、每局最多3个贵族槽，权重形状无需改变。
 
 - [Space Cowboys / Asmodee 官方英文规则 PDF（10 周年重制版）](https://cdn.svc.asmodee.net/production-asmodeeca/uploads/2022/01/SCSPL01EN_SPLENDOR_RULES_LIGHT.pdf)：组件、设置、行动、贵族、终局与平局规则。
 - [bouk/splendimax 完整 90 张卡牌 CSV](https://github.com/bouk/splendimax/blob/master/Splendor%20Cards.csv) 与 [seal256/splendor 独立卡牌 CSV](https://github.com/seal256/splendor/blob/master/assets/cards.csv)：两份数据经逐行字段映射后 90/90 完全一致，本地卡表据此生成。
-- [2014 基础版 Splendor Brief](https://themindcafe.com.sg/wp-content/uploads/2018/05/Splendor.pdf)：列出 10 块经典贵族的人物与对应需求，用于核对本地贵族表。
+- [2014 基础版 Splendor Brief](https://themindcafe.com.sg/wp-content/uploads/2018/05/Splendor.pdf)：用于核对经典N01–N10，不覆盖本项目新加入的两张。
 - [The States of Splendor 论文附录 A](https://www.researchgate.net/publication/306058411_The_States_of_Splendor_Searching_Game_Trees_with_Partial_Information)：另列卡牌与贵族结构，用作数量和分布复核。
 
 本文件是为软件实现整理的规则摘要，不复制卡面美术或说明书版式。不同印次的美术、贵族人名翻译和首玩家标记可能变化；本文锁定的功能性规则与 90 张经典基础卡数值不随这些表现差异改变。
+
+新增两张按用户明确要求统一纳入本项目规则。对应BGA可见牌表为Rani Chennabhairadevi（蓝绿黑333，标注来源The Silk Road）和Hino Tomiko（红白44，标注来源The Sun Never Sets）；这里只使用其贵族牌面，不启用这些扩展的其他机制。可复核的本地BGA牌表见[原始页面快照](../artifacts/bga_934713322_move18_plan_20261021/captured_snapshot.json)中的`gamedatas.nobledb`。

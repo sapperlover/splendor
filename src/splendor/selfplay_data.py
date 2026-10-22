@@ -13,9 +13,12 @@ from typing import Any, Iterable, Iterator, Mapping, Sequence
 import numpy as np
 
 from .features import EncodedDecisionBatch, FEATURE_SCHEMA, FEATURE_SCHEMA_VERSION, PHASE_ORDER
+from .search_training import SearchBudgetRandomization, prune_policy_counts
 
 DATA_SCHEMA = "splendor-mcts-selfplay-v1"
 DATA_SCHEMA_V2 = "splendor-mcts-selfplay-v2"
+DATA_SCHEMA_V3 = "splendor-mcts-selfplay-v3"
+SEARCH_TRAINING_MATRICES = ("per_world_policy_target_counts", "per_world_root_value_sums", "per_world_forced_playouts")
 STATE_FIELDS = (
     "global_features", "market_t1", "market_t1_mask", "market_t2",
     "market_t2_mask", "market_t3", "market_t3_mask", "self_reserved",
@@ -59,6 +62,8 @@ def pack_game(records: Sequence[Mapping[str, Any]], metadata: Mapping[str, Any],
         arrays[name] = np.stack([r[name] for r in records]).copy()
     for name in FLAT_FIELDS:
         dtype = np.int32 if name == "root_visit_counts" else np.float32
+        if metadata["data_schema"] == DATA_SCHEMA_V3 and name == "root_used_prior":
+            dtype = np.float64  # Exact PUCT/pruning reconstruction at integer boundaries.
         arrays[name] = np.concatenate([r[name] for r in records]).astype(dtype, copy=True)
     dtype_map = {
         "player_id": np.int8, "decision_index": np.int32, "phase": np.int8,
@@ -76,6 +81,15 @@ def pack_game(records: Sequence[Mapping[str, Any]], metadata: Mapping[str, Any],
         if count:
             arrays["simulation_budgets"][i, :count] = r["simulation_budgets"]
             arrays["per_world_root_visit_counts"][:count, offsets[i]:offsets[i+1]] = r["per_world_root_visit_counts"]
+    if metadata["data_schema"] == DATA_SCHEMA_V3:
+        arrays["low_budget"] = np.asarray([r["low_budget"] for r in records], dtype=np.bool_)
+        for name in SEARCH_TRAINING_MATRICES:
+            dtype = np.float64 if name == "per_world_root_value_sums" else np.int32
+            arrays[name] = np.zeros((worlds, int(offsets[-1])), dtype=dtype)
+            for i, r in enumerate(records):
+                count = len(r["simulation_budgets"])
+                if count:
+                    arrays[name][:count, offsets[i]:offsets[i+1]] = r[name]
     return arrays
 
 
@@ -129,12 +143,13 @@ def validate_game_arrays(
     *, expected_game_id: int | None = None, fingerprint: str | None = None,
     simulations: int | None = None, worlds: int | None = None,
     split: str | None = None,
+    search_training: Mapping[str, Any] | None = None,
 ) -> dict[str, int | float]:
     game_id = metadata.get("game_id")
     if type(game_id) is not int or (expected_game_id is not None and game_id != expected_game_id):
         raise ValueError("archive game_id mismatch")
     schema = metadata.get("data_schema")
-    if schema not in (DATA_SCHEMA, DATA_SCHEMA_V2) or metadata.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+    if schema not in (DATA_SCHEMA, DATA_SCHEMA_V2, DATA_SCHEMA_V3) or metadata.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
         raise ValueError(f"game {game_id}: schema mismatch")
     if fingerprint is not None and metadata.get("semantic_fingerprint") != fingerprint:
         raise ValueError(f"game {game_id}: semantic fingerprint mismatch")
@@ -149,6 +164,23 @@ def validate_game_arrays(
     required = set(STATE_FIELDS) | set(FLAT_FIELDS) | set(SAMPLE_FIELDS) | {
         "candidate_offsets", "candidate_features", "simulation_budgets", "per_world_root_visit_counts"
     }
+    enhanced = schema == DATA_SCHEMA_V3
+    training = None
+    budget_randomization = None
+    if enhanced:
+        from .mcts_policy import MCTSConfig
+        required.update(("low_budget", *SEARCH_TRAINING_MATRICES))
+        training = metadata.get("search_training")
+        if not isinstance(training, dict) or set(training) != {"search_config", "budget_randomization", "add_root_noise"}:
+            raise ValueError(f"game {game_id}: missing search training semantics")
+        if search_training is not None and training != search_training:
+            raise ValueError(f"game {game_id}: search training semantics mismatch")
+        cfg = MCTSConfig(**training["search_config"])
+        if cfg.simulations != simulations or cfg.determinizations != worlds or type(training["add_root_noise"]) is not bool:
+            raise ValueError(f"game {game_id}: search training configuration mismatch")
+        if training["budget_randomization"] is not None:
+            budget_randomization = SearchBudgetRandomization(**training["budget_randomization"])
+            budget_randomization.validate_search(simulations, worlds)
     if set(arrays) != required:
         raise ValueError(f"game {game_id}: archive fields mismatch")
     offsets = arrays["candidate_offsets"]
@@ -183,6 +215,8 @@ def validate_game_arrays(
     for name in FLAT_FIELDS:
         value = arrays[name]
         dtype = np.int32 if name == "root_visit_counts" else np.float32
+        if enhanced and name == "root_used_prior":
+            dtype = np.float64
         if value.shape != (candidates,) or value.dtype != dtype:
             raise ValueError(f"game {game_id}: invalid {name}")
     sample_dtypes = {
@@ -209,7 +243,16 @@ def validate_game_arrays(
         raise ValueError(f"game {game_id}: player decision counts mismatch")
     if np.any(arrays["value_target"] != np.array([_payoff(winners, int(p)) for p in arrays["player_id"]])):
         raise ValueError(f"game {game_id}: terminal value labels mismatch")
-    if np.any(arrays["value_weight"] != 1) or np.any(arrays["policy_weight"] != arrays["searchable"].astype(np.float32)):
+    policy_mask = arrays["searchable"]
+    if enhanced:
+        if arrays["low_budget"].dtype != np.bool_ or arrays["low_budget"].shape != (length,):
+            raise ValueError(f"game {game_id}: invalid low_budget")
+        for name in SEARCH_TRAINING_MATRICES:
+            dtype = np.float64 if name == "per_world_root_value_sums" else np.int32
+            if arrays[name].shape != (worlds, candidates) or arrays[name].dtype != dtype or not np.all(np.isfinite(arrays[name])):
+                raise ValueError(f"game {game_id}: invalid {name}")
+        policy_mask = policy_mask & ~arrays["low_budget"]
+    if np.any(arrays["value_weight"] != 1) or np.any(arrays["policy_weight"] != policy_mask.astype(np.float32)):
         raise ValueError(f"game {game_id}: sample weights mismatch")
     if arrays["simulation_budgets"].shape != (length, worlds) or arrays["per_world_root_visit_counts"].shape != (worlds, candidates):
         raise ValueError(f"game {game_id}: world statistics shape mismatch")
@@ -231,22 +274,67 @@ def validate_game_arrays(
         world_visits = arrays["per_world_root_visit_counts"][:, start:end]
         budgets = arrays["simulation_budgets"][i]
         valid = int(arrays["valid_world_count"][i])
+        expected_simulations = simulations
+        expected_worlds = worlds
+        low = False
+        if enhanced:
+            low = width > 1 and budget_randomization is not None and budget_randomization.is_low(int(arrays["sampling_seed"][i]))
+            if bool(arrays["low_budget"][i]) != low:
+                raise ValueError(f"game {game_id} sample {i}: budget draw mismatch")
+            if low:
+                expected_simulations = budget_randomization.low_simulations
+                if budget_randomization.low_determinizations is not None:
+                    expected_worlds = budget_randomization.low_determinizations
+            target_counts = arrays["per_world_policy_target_counts"][:, start:end]
+            value_sums = arrays["per_world_root_value_sums"][:, start:end]
+            forced_counts = arrays["per_world_forced_playouts"][:, start:end]
+            if (np.any(target_counts < 0) or np.any(target_counts > world_visits)
+                    or np.any(forced_counts < 0) or np.any(forced_counts > world_visits)
+                    or np.any(np.abs(value_sums) > world_visits + 1e-9)):
+                raise ValueError(f"game {game_id} sample {i}: invalid root training statistics")
+            if (low or not training["add_root_noise"] or cfg.root_noise_fraction == 0) and not np.allclose(
+                    arrays["root_used_prior"][start:end], arrays["root_network_prior"][start:end], rtol=0, atol=1e-6):
+                raise ValueError(f"game {game_id} sample {i}: unexpected root noise")
+            if (low or cfg.forced_playouts == 0) and np.any(forced_counts):
+                raise ValueError(f"game {game_id} sample {i}: unexpected forced playouts")
+            if width == 1 and (np.any(target_counts) or np.any(value_sums) or np.any(forced_counts)):
+                raise ValueError(f"game {game_id} sample {i}: single-candidate training statistics")
         if np.any(visits < 0) or np.any(world_visits < 0) or np.any(budgets < 0):
             raise ValueError(f"game {game_id} sample {i}: negative visits or budget")
         if not np.array_equal(visits, world_visits.sum(axis=0)):
             raise ValueError(f"game {game_id} sample {i}: root visits mismatch")
         if bool(arrays["searchable"][i]):
-            expected_budgets = np.asarray([simulations // worlds + (j < simulations % worlds) for j in range(worlds)], dtype=np.int32)
-            if width <= 1 or valid != worlds or not np.array_equal(budgets, expected_budgets) or int(visits.sum()) != simulations or int(arrays["simulations"][i]) != simulations:
+            expected_budgets = np.zeros(worlds, dtype=np.int32)
+            expected_budgets[:expected_worlds] = [expected_simulations // expected_worlds + (j < expected_simulations % expected_worlds) for j in range(expected_worlds)]
+            if width <= 1 or valid != expected_worlds or not np.array_equal(budgets, expected_budgets) or int(visits.sum()) != expected_simulations or int(arrays["simulations"][i]) != expected_simulations:
                 raise ValueError(f"game {game_id} sample {i}: simulation budget mismatch")
             if not np.array_equal(world_visits.sum(axis=1), budgets):
                 raise ValueError(f"game {game_id} sample {i}: per-world visits mismatch")
-            mean = (world_visits / budgets[:, None]).mean(axis=0)
+            mean = (world_visits[:valid] / budgets[:valid, None]).mean(axis=0)
+            if enhanced:
+                from .mcts_policy import _temperature_policy
+                temperature = float(arrays["temperature"][i])
+                if temperature == 0:
+                    if mean[chosen] < float(mean.max()) - 1e-12:
+                        raise ValueError(f"game {game_id} sample {i}: behavior does not select raw visits")
+                elif not np.allclose(behavior, _temperature_policy(tuple(mean), temperature), rtol=0, atol=1e-6):
+                    raise ValueError(f"game {game_id} sample {i}: raw-visit behavior mismatch")
+                expected_counts = world_visits
+                if cfg.policy_target_pruning and not low:
+                    expected_counts = np.asarray([prune_policy_counts(row, sums, arrays["root_used_prior"][start:end],
+                        c_puct=cfg.c_puct, forced_playouts=cfg.forced_playouts)
+                        for row, sums in zip(world_visits, value_sums)])
+                if not np.array_equal(target_counts, expected_counts):
+                    raise ValueError(f"game {game_id} sample {i}: pruned policy counts mismatch")
+                if (np.any(target_counts[:valid].sum(axis=1) <= 0)
+                        or np.any(target_counts[valid:]) or np.any(value_sums[valid:]) or np.any(forced_counts[valid:])):
+                    raise ValueError(f"game {game_id} sample {i}: empty pruned target")
+                mean = (target_counts[:valid] / target_counts[:valid].sum(axis=1)[:, None]).mean(axis=0)
             if not np.allclose(target, mean, rtol=0, atol=1e-6):
                 raise ValueError(f"game {game_id} sample {i}: equal-world policy target mismatch")
         elif width != 1 or valid != 0 or np.any(budgets) or np.any(visits) or int(arrays["simulations"][i]) != 0 or target[0] != 1:
             raise ValueError(f"game {game_id} sample {i}: invalid single-candidate result")
-    if int(np.sum(arrays["searchable"])) != metadata.get("policy_samples"):
+    if int(np.sum(policy_mask)) != metadata.get("policy_samples"):
         raise ValueError(f"game {game_id}: policy sample count mismatch")
     if schema == DATA_SCHEMA:
         replay = metadata.get("replay")
@@ -277,7 +365,13 @@ def validate_game_arrays(
                     or action.get("candidate_index") != int(arrays["chosen_candidate_index"][index])
                     or not isinstance(action.get("action"), dict)):
                 raise ValueError(f"game {game_id} sample {index}: trace action mismatch")
-    return {"decisions": length, "policy_samples": int(np.sum(arrays["searchable"])), "candidates": candidates, "simulations": int(np.sum(arrays["simulations"]))}
+    counts = {"decisions": length, "policy_samples": int(np.sum(policy_mask)), "candidates": candidates, "simulations": int(np.sum(arrays["simulations"]))}
+    if enhanced:
+        counts.update(low_budget_decisions=int(arrays["low_budget"].sum()),
+                      full_budget_decisions=int(np.sum(arrays["searchable"] & ~arrays["low_budget"])),
+                      forced_playouts=int(arrays["per_world_forced_playouts"].sum()),
+                      pruned_visits=int(arrays["per_world_root_visit_counts"].sum() - arrays["per_world_policy_target_counts"].sum()))
+    return counts
 
 
 @dataclass(frozen=True, slots=True)
@@ -343,10 +437,11 @@ class SelfPlayDataset:
             raise ValueError("split must be train, validation, or None")
         self.root = Path(root)
         manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
-        if manifest.get("protocol") not in ("mcts-selfplay-v1", "mcts-selfplay-v2") or manifest.get("versions", {}).get("data") not in (DATA_SCHEMA, DATA_SCHEMA_V2):
+        if manifest.get("protocol") not in ("mcts-selfplay-v1", "mcts-selfplay-v2") or manifest.get("versions", {}).get("data") not in (DATA_SCHEMA, DATA_SCHEMA_V2, DATA_SCHEMA_V3):
             raise ValueError("self-play manifest schema mismatch")
         config_key = "semantic_config" if manifest["protocol"] == "mcts-selfplay-v1" else "config"
         search = manifest[config_key]["search_config"]
+        training = _manifest_search_training(manifest[config_key]) if manifest["versions"]["data"] == DATA_SCHEMA_V3 else None
         self.entries: list[tuple[Path, int]] = []
         self._cache: tuple[Path, dict[str, np.ndarray], dict[str, Any]] | None = None
         for path in sorted((self.root / "games").glob("game-*.npz")):
@@ -357,6 +452,7 @@ class SelfPlayDataset:
                 fingerprint=manifest["semantic_fingerprint"],
                 simulations=search["simulations"],
                 worlds=search["determinizations"],
+                search_training=training,
             )
             if split is None or metadata["split"] == split:
                 self.entries.extend((path, i) for i in range(int(metadata["decision_count"])))
@@ -374,3 +470,11 @@ class SelfPlayDataset:
     def __iter__(self) -> Iterator[SelfPlaySample]:
         for i in range(len(self)):
             yield self[i]
+
+
+def _manifest_search_training(config: Mapping[str, Any]) -> dict[str, Any]:
+    from dataclasses import asdict
+    from .mcts_policy import MCTSConfig
+    return {"search_config": asdict(MCTSConfig(**config["search_config"])),
+            "add_root_noise": config.get("add_root_noise", True),
+            "budget_randomization": config.get("budget_randomization")}

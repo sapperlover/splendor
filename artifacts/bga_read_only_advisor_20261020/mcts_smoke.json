@@ -1,0 +1,142 @@
+[
+  {
+    "schema": "splendor-read-only-recommendation-v1",
+    "decision_sha256": "8470996e5308e90a0ad1c2baa6979d93272b4aa6b80de65b809d1881ebed3e23",
+    "phase": "main_action",
+    "mode": "mcts",
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-019/checkpoints/final.pt",
+    "checkpoint_sha256": "fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd",
+    "catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+    "recommended_candidate_index": 15,
+    "recommended_action": {
+      "__type__": "ReserveMarket",
+      "card_id": "007"
+    },
+    "description": "保留市场牌 007（1级，黑加成，0分，原价绿3）",
+    "value_actor_raw": 0.0964123085141182,
+    "candidate_count": 30,
+    "candidates": [
+      {
+        "candidate_index": 15,
+        "action": {
+          "__type__": "ReserveMarket",
+          "card_id": "007"
+        },
+        "description": "保留市场牌 007（1级，黑加成，0分，原价绿3）",
+        "policy_probability": 0.29437449651956804,
+        "visits": 14,
+        "visit_share": 0.4375,
+        "search_q_actor": 0.06989023415371776
+      },
+      {
+        "candidate_index": 1,
+        "action": {
+          "__type__": "TakeDistinct",
+          "colors": [
+            "white",
+            "blue",
+            "red"
+          ]
+        },
+        "description": "拿取白、蓝、红各1枚",
+        "policy_probability": 0.20189276100824324,
+        "visits": 7,
+        "visit_share": 0.21875,
+        "search_q_actor": 0.022910185690437044
+      },
+      {
+        "candidate_index": 0,
+        "action": {
+          "__type__": "TakeDistinct",
+          "colors": [
+            "white",
+            "blue",
+            "green"
+          ]
+        },
+        "description": "拿取白、蓝、绿各1枚",
+        "policy_probability": 0.1641297281726109,
+        "visits": 6,
+        "visit_share": 0.1875,
+        "search_q_actor": 0.009022476927687725
+      }
+    ],
+    "simulations": 32,
+    "elapsed_seconds": 0.06089979599346407,
+    "submitted_action": false,
+    "decision_index": 0,
+    "bga_move": 2
+  },
+  {
+    "schema": "splendor-read-only-recommendation-v1",
+    "decision_sha256": "703c67201f0c949e9fc21f737ed9a7613d8a1d635f9ca71c2f4173f20ce5e665",
+    "phase": "payment",
+    "mode": "mcts",
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-019/checkpoints/final.pt",
+    "checkpoint_sha256": "fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd",
+    "catalog_fingerprint": "2ccb91f7c2a8803360760ca8af13d3cc4b468605f462535046004448b6bbca08",
+    "recommended_candidate_index": 1,
+    "recommended_action": {
+      "__type__": "Pay",
+      "tokens": {
+        "__type__": "TokenVector",
+        "white": 0,
+        "blue": 0,
+        "green": 0,
+        "red": 3,
+        "black": 0,
+        "gold": 0
+      }
+    },
+    "description": "支付红3",
+    "value_actor_raw": 0.016506168991327286,
+    "candidate_count": 2,
+    "candidates": [
+      {
+        "candidate_index": 1,
+        "action": {
+          "__type__": "Pay",
+          "tokens": {
+            "__type__": "TokenVector",
+            "white": 0,
+            "blue": 0,
+            "green": 0,
+            "red": 3,
+            "black": 0,
+            "gold": 0
+          }
+        },
+        "description": "支付红3",
+        "policy_probability": 0.9402233821750576,
+        "visits": 31,
+        "visit_share": 0.96875,
+        "search_q_actor": 0.15938560138907162
+      },
+      {
+        "candidate_index": 0,
+        "action": {
+          "__type__": "Pay",
+          "tokens": {
+            "__type__": "TokenVector",
+            "white": 0,
+            "blue": 0,
+            "green": 0,
+            "red": 2,
+            "black": 0,
+            "gold": 1
+          }
+        },
+        "description": "支付红2、金1",
+        "policy_probability": 0.059776617824942375,
+        "visits": 1,
+        "visit_share": 0.03125,
+        "search_q_actor": -0.05754348635673523
+      }
+    ],
+    "simulations": 32,
+    "elapsed_seconds": 0.05835692099935841,
+    "submitted_action": false,
+    "decision_index": 10,
+    "bga_move": 10
+  }
+]

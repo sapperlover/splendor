@@ -13,7 +13,7 @@ import resource
 import subprocess
 import time
 from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, as_completed, wait
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
@@ -21,6 +21,7 @@ import numpy as np
 import torch
 
 from .compact_trace import replay_trace
+from .catalog import load_default_catalog
 from .features import FEATURE_SCHEMA_VERSION, PHASE_ORDER, encode_decision
 from .match_stepper import MatchStepper
 from .mcts_policy import MCTSConfig, MCTSSearchJob, PUCTSearchPolicy
@@ -28,9 +29,10 @@ from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .replay import REPLAY_SCHEMA_VERSION, RULESET_ID, to_primitive
 from .rng import RNG_ALGORITHM
 from .search_inference import FrozenSearchInference, InferenceConfig
+from .search_training import SearchBudgetRandomization
 from .selfplay import TemperatureSchedule, derive_seed, label_terminal_values
 from .selfplay_data import (
-    DATA_SCHEMA_V2, STATE_FIELDS, commit_game, game_path, load_game,
+    DATA_SCHEMA_V2, DATA_SCHEMA_V3, STATE_FIELDS, commit_game, game_path, load_game,
     pack_game, validate_game_arrays,
 )
 
@@ -140,6 +142,7 @@ class FastSelfPlayConfig:
     search_backend: str = "native"
     chance_widening: dict[str, float] | None = None
     record_search_diagnostics: bool = False
+    budget_randomization: SearchBudgetRandomization | None = None
 
     def __post_init__(self) -> None:
         if self.protocol != PROTOCOL or not self.run_id:
@@ -153,6 +156,8 @@ class FastSelfPlayConfig:
             raise ValueError("num_games and max_completed_turns must be positive")
         if type(self.add_root_noise) is not bool:
             raise ValueError("add_root_noise must be bool")
+        if self.budget_randomization is not None:
+            self.budget_randomization.validate_search(self.search_config.simulations, self.search_config.determinizations)
         if self.search_backend not in ("native", "native_chance"):
             raise ValueError("unknown self-play search backend")
         if self.search_backend == "native_chance":
@@ -188,6 +193,8 @@ class FastSelfPlayConfig:
             search_backend=raw.get("search_backend", "native"),
             chance_widening=raw.get("chance_widening"),
             record_search_diagnostics=raw.get("record_search_diagnostics", False),
+            budget_randomization=(SearchBudgetRandomization(**raw["budget_randomization"])
+                                  if raw.get("budget_randomization") is not None else None),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -199,6 +206,13 @@ class FastSelfPlayConfig:
             raw.pop("chance_widening")
         if not self.record_search_diagnostics:
             raw.pop("record_search_diagnostics")
+        if self.budget_randomization is None:
+            raw.pop("budget_randomization")
+        else:
+            raw["budget_randomization"] = self.budget_randomization.to_dict()
+        for name, default in (("forced_playouts", 0.0), ("policy_target_pruning", False)):
+            if raw["search_config"][name] == default:
+                raw["search_config"].pop(name)
         if not self.execution.batch_buckets:
             raw["execution"].pop("batch_buckets")
         if self.execution.backend != "native_cuda_pool":
@@ -206,6 +220,17 @@ class FastSelfPlayConfig:
                          "shared_slots", "shared_candidate_width"):
                 raw["execution"].pop(name)
         return raw
+
+    @property
+    def data_schema(self) -> str:
+        enhanced = (self.budget_randomization is not None or self.search_config.forced_playouts > 0
+                    or self.search_config.policy_target_pruning)
+        return DATA_SCHEMA_V3 if enhanced else DATA_SCHEMA_V2
+
+    def search_training(self) -> dict[str, Any]:
+        return {"search_config": asdict(self.search_config), "add_root_noise": self.add_root_noise,
+                "budget_randomization": (None if self.budget_randomization is None
+                                         else self.budget_randomization.to_dict())}
 
 
 def _sha256(path: Path) -> str:
@@ -240,7 +265,7 @@ def build_manifest(config: FastSelfPlayConfig) -> dict[str, Any]:
     checkpoint = Path(config.checkpoint)
     checkpoint_identity = {"path": str(checkpoint), "sha256": _sha256(checkpoint)}
     native = config.execution.backend.startswith("native_")
-    versions = {"data": DATA_SCHEMA_V2, "search": "determinized-puct-native-v1" if native else SEARCH_PROTOCOL,
+    versions = {"data": config.data_schema, "search": "determinized-puct-native-v1" if native else SEARCH_PROTOCOL,
                 "numeric": "native-cpp-fp32-v1" if native else NUMERIC_VERSION,
                 "rules": RULESET_ID, "replay": REPLAY_SCHEMA_VERSION,
                 "rng": "splitmix64-world-mt19937-gamma-v1" if native else RNG_ALGORITHM,
@@ -260,7 +285,10 @@ def build_manifest(config: FastSelfPlayConfig) -> dict[str, Any]:
         versions["search"] = ("sampled-chance-pw-puct-native-v1" if config.chance_widening is not None
                               else "sampled-chance-puct-native-v1")
         versions["rng"] = "splitmix64-mt19937-sampled-chance-v1"
-    frozen = {"config": config.to_dict(), "checkpoint_identity": checkpoint_identity, "versions": versions}
+    if config.data_schema == DATA_SCHEMA_V3:
+        versions["search_training"] = "playout-cap-forced-pruning-v1"
+    frozen = {"config": config.to_dict(), "checkpoint_identity": checkpoint_identity,
+              "catalog_fingerprint": load_default_catalog().data_fingerprint, "versions": versions}
     fingerprint = hashlib.sha256(json.dumps(frozen, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     repository = Path(__file__).resolve().parents[2]
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository,
@@ -288,7 +316,7 @@ def _sample_record(session: _GameSession, result: object) -> dict[str, Any]:
         "temperature": session.temperature,
         "sampling_seed": session.sampling_seed,
         "searchable": result.searchable,
-        "policy_weight": float(result.searchable), "value_weight": 1.0,
+        "policy_weight": float(result.searchable and not session.low_budget), "value_weight": 1.0,
         "policy_target": result.policy_target,
         "behavior_policy": result.behavior_policy,
         "root_network_prior": result.root_network_prior,
@@ -301,6 +329,11 @@ def _sample_record(session: _GameSession, result: object) -> dict[str, Any]:
         "max_tree_depth": result.max_tree_depth,
         "transition_cap_hits": result.transition_cap_hits,
     })
+    if session.config.data_schema == DATA_SCHEMA_V3:
+        record.update(low_budget=session.low_budget,
+                      per_world_policy_target_counts=result.per_world_policy_target_counts,
+                      per_world_root_value_sums=result.per_world_root_value_sums,
+                      per_world_forced_playouts=result.per_world_forced_playouts)
     return record
 
 
@@ -319,6 +352,7 @@ class _GameSession:
     encoded: Any = None
     temperature: float = 0.0
     sampling_seed: int = 0
+    low_budget: bool = False
     job_started: float = 0.0
     decision_latencies_ms: list[float] = field(default_factory=list)
     root_encoding_seconds: float = 0.0
@@ -378,9 +412,19 @@ class _GameSession:
                 self.config.seed, self.config.round_index, self.game_id,
                 "search_sampling", player_id, self.stepper.decision_count,
             )
+            randomization = self.config.budget_randomization
+            self.low_budget = (len(request.legal_actions) > 1 and randomization is not None
+                               and randomization.is_low(self.sampling_seed))
+            policy = self.policies[player_id]
+            high_config = replace(self.config.search_config, seed=policy.config.seed)
+            policy.config = (replace(high_config, simulations=randomization.low_simulations,
+                                     determinizations=(high_config.determinizations if randomization.low_determinizations is None
+                                                       else randomization.low_determinizations),
+                                     forced_playouts=0.0, policy_target_pruning=False)
+                             if self.low_budget else high_config)
             self.job_started = time.perf_counter()
-            self.job = self.policies[player_id].start_job(
-                request, add_root_noise=self.config.add_root_noise,
+            self.job = policy.start_job(
+                request, add_root_noise=self.config.add_root_noise and not self.low_budget,
                 temperature=self.temperature, sampling_seed=self.sampling_seed,
                 root_encoded=self.encoded,
             )
@@ -419,7 +463,7 @@ class _GameSession:
             raise RuntimeError("cannot commit an incomplete game")
         label_terminal_values(self.records, terminal)
         metadata = {
-            "data_schema": DATA_SCHEMA_V2, "feature_schema_version": FEATURE_SCHEMA_VERSION,
+            "data_schema": self.config.data_schema, "feature_schema_version": FEATURE_SCHEMA_VERSION,
             "semantic_fingerprint": fingerprint, "checkpoint_sha256": checkpoint_sha,
             "run_id": self.config.run_id, "round_index": self.config.round_index,
             "game_id": self.game_id, "game_seed": self.stepper.trace["game_seed"],
@@ -430,7 +474,7 @@ class _GameSession:
             "completed_player_turns": self.stepper.completed_player_turns,
             "decision_count": len(self.records),
             "player_decisions": [sum(r["player_id"] == p for r in self.records) for p in (0, 1)],
-            "policy_samples": sum(r["searchable"] for r in self.records),
+            "policy_samples": sum(r["policy_weight"] > 0 for r in self.records),
             "mcts_stats": [policy.stats.to_dict() | {"rule_seconds": policy.stats.rule_seconds,
                                                "native_compute_seconds": getattr(policy, "native_compute_seconds", 0.0)}
                            for policy in self.policies],
@@ -438,6 +482,8 @@ class _GameSession:
             "trace": self.stepper.trace,
             "collection_seconds": time.perf_counter() - self.started,
         }
+        if self.config.data_schema == DATA_SCHEMA_V3:
+            metadata["search_training"] = self.config.search_training()
         if self.config.record_search_diagnostics:
             metadata["search_diagnostics"] = self.search_diagnostics
         write_started = time.perf_counter()
@@ -830,7 +876,8 @@ def _scan_committed(root: Path, config: FastSelfPlayConfig, manifest: Mapping[st
             raise ValueError(f"unexpected committed game {path}")
         with np.load(path, allow_pickle=False) as archive:
             metadata = json.loads(archive["metadata_json"].tobytes().decode("utf-8"))
-        if (metadata.get("data_schema") != DATA_SCHEMA_V2 or
+        if (metadata.get("data_schema") != config.data_schema or
+                (config.data_schema == DATA_SCHEMA_V3 and metadata.get("search_training") != config.search_training()) or
                 metadata.get("semantic_fingerprint") != manifest["semantic_fingerprint"] or
                 metadata.get("checkpoint_sha256") != manifest["checkpoint_identity"]["sha256"] or
                 metadata.get("game_id") != game_id or
@@ -862,6 +909,8 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
         "games_per_wall_second": None, "policy_samples_per_wall_second": None,
         "simulations_per_wall_second": None,
     }
+    if config.data_schema == DATA_SCHEMA_V3:
+        summary.update(low_budget_decisions=0, full_budget_decisions=0, forced_playouts=0, pruned_visits=0)
     for game_id, metadata in committed.items():
         path = game_path(root, game_id)
         arrays, metadata = load_game(path)
@@ -875,6 +924,9 @@ def validate_run(root: Path, *, replay: bool = False) -> dict[str, Any]:
         summary["samples"] += counts["decisions"]
         summary["policy_samples"] += counts["policy_samples"]
         summary["simulations"] += counts["simulations"]
+        if config.data_schema == DATA_SCHEMA_V3:
+            for name in ("low_budget_decisions", "full_budget_decisions", "forced_playouts", "pruned_visits"):
+                summary[name] += counts[name]
         summary["data_bytes"] += path.stat().st_size
         summary["search_seconds_sum"] += sum(s["total_seconds"] for s in metadata["mcts_stats"])
         summary["logical_model_positions"] += sum(s["model_positions"] for s in metadata["mcts_stats"])

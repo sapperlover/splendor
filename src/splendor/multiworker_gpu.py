@@ -136,7 +136,7 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
             slots: tuple[SlotNames, ...], tasks: Any, ready: Any, replies: Any,
             fingerprint: str, checkpoint_sha: str, parent_pid: int,
             start_event: Any = None, stop_event: Any = None,
-            session_factory: Callable = _GameSession) -> None:
+            session_factory: Callable = _GameSession, route_models: bool = False) -> None:
     _watch_owner(parent_pid)
     initialization_started = time.perf_counter()
     torch.set_num_threads(1)
@@ -163,6 +163,7 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
     fill_seconds = wait_seconds = backpressure_seconds = 0.0
     decision_latencies: list[float] = []
     kind_turn = 0
+    model_turn = {False: 0, True: 0}
     exhausted = False
     current_game_id: int | None = None
     started = time.perf_counter()
@@ -206,7 +207,7 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
                 completed.append(summary)
                 decision_latencies.extend(session.decision_latencies_ms)
                 del active[game_id]
-                ready.put(("complete", worker_id, game_id), timeout=30)
+                ready.put(("complete", worker_id, game_id, summary), timeout=30)
             current_game_id = None
         peak_pending = max(
             peak_pending,
@@ -222,6 +223,12 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
                     if session.job is not None and session.job.pending_rows(state_only)]
             if not jobs:
                 continue
+            model_key = config.round_index
+            if route_models:
+                keys = sorted({job.policy.model_version for job in jobs})
+                model_key = keys[model_turn[state_only] % len(keys)]
+                model_turn[state_only] += 1
+                jobs = [job for job in jobs if job.policy.model_version == model_key]
             job_set = set(jobs)
             kind_turn += 1
             width = 1 if state_only else max(job.pending_width(False) for job in jobs)
@@ -273,7 +280,7 @@ def _worker(config: FastSelfPlayConfig, root: Path, worker_id: int, quota: int,
             generation = generations[slot_index]
             outstanding[slot_index] = (generation, batch, segments, roots, used_jobs)
             desc = (worker_id, slot_index, generation, rows,
-                    "value" if state_only else "policy", width, config.round_index)
+                    "value" if state_only else "policy", width, model_key)
             before_put = time.perf_counter()
             ready.put(("batch", desc), timeout=30)
             backpressure_seconds += time.perf_counter() - before_put
@@ -470,9 +477,9 @@ def _gather(src: _Slot, src_width: int, dst: Any,
         np.copyto(dm[:, base_mask:base_mask + src_width], sm[:, base_mask:base_mask + src_width], casting="unsafe")
 
 
-def _batch_group(desc: tuple, compiled_width: int) -> tuple[str, bool]:
-    """Keep a wide eager request from widening unrelated compiled requests."""
-    return desc[4], desc[4] == "policy" and desc[5] > compiled_width
+def _batch_group(desc: tuple, compiled_width: int) -> tuple[str, bool, Any]:
+    """Isolate models and keep wide eager requests out of compiled batches."""
+    return desc[4], desc[4] == "policy" and desc[5] > compiled_width, desc[6]
 
 
 def _batch_trigger(pending: deque, active_workers: set[int], blocked: dict,
@@ -503,14 +510,21 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             completed_before: int = 0, evaluator: Any = None,
             benchmark_seconds: float | None = None,
             warmup_seconds: float = 0.0,
-            session_factory: Callable = _GameSession) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+            session_factory: Callable = _GameSession,
+            model_evaluators: dict[str, Any] | None = None,
+            completion_callback: Callable[[dict[str, Any]], None] | None = None,
+            ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Run bounded search sessions with one inference owner.
 
     Defaults to real selfplay games; a fixed-root source supplies the same
     job/completion interface without taking actions or loading a worker model.
+    model_evaluators enables routing by job.policy.model_version; the default
+    single-model descriptor retains the frozen collection round identity.
     """
     session_started = time.perf_counter()
     execution = config.execution
+    if evaluator is not None and model_evaluators is not None:
+        raise ValueError("provide evaluator or model_evaluators, not both")
     if benchmark_seconds is not None and benchmark_seconds <= 0:
         raise ValueError("benchmark_seconds must be positive")
     if warmup_seconds < 0:
@@ -564,7 +578,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                     target=_worker,
                     args=(config, root, worker_id, quotas[worker_id], slot_names[worker_id],
                           tasks, ready, replies[worker_id], fingerprint, checkpoint_sha, os.getpid(),
-                          start_event, stop_event, session_factory),
+                          start_event, stop_event, session_factory, model_evaluators is not None),
                     name=f"native-search-{worker_id}",
                 )
                 process.start()
@@ -576,7 +590,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                 else:
                     os.environ[name] = previous
         torch.set_num_threads(1)
-        if evaluator is None:
+        if evaluator is None and model_evaluators is None:
             model = load_frozen_actor_critic_checkpoint(Path(config.checkpoint), device="cuda")
             evaluator = FrozenSearchInference(model, device="cuda", config=InferenceConfig(
                 mode=execution.inference_mode, actor_projection=execution.actor_projection,
@@ -584,10 +598,26 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                 compile_failure_policy=execution.compile_failure_policy, native_transport="reused",
                 batch_buckets=execution.batch_buckets))
             torch.cuda.reset_peak_memory_stats()
+        evaluators = model_evaluators if model_evaluators is not None else {config.round_index: evaluator}
+
+        def inference_stats():
+            if model_evaluators is None:
+                return evaluator.stats.to_dict()
+            from .search_inference import InferenceStats
+            total = InferenceStats(config={"mode": "model-routed"})
+            for item in evaluators.values():
+                for name in ("batches", "positions", "feature_seconds", "forward_seconds",
+                             "h2d_seconds", "d2h_seconds", "wait_seconds",
+                             "native_graph_captures", "native_graph_replays"):
+                    setattr(total, name, getattr(total, name) + getattr(item.stats, name))
+                total.batch_sizes.update(item.stats.batch_sizes)
+            return total.to_dict()
+
         init_done = time.perf_counter()
-        compile_warmup_seconds = (evaluator.warmup_native(execution.candidate_buckets)
+        compile_warmup_seconds = (sum(item.warmup_native(execution.candidate_buckets)
+                                     for item in evaluators.values())
                                   if benchmark_seconds is not None else 0.0)
-        transfers: dict[tuple[int, str, int], tuple[Any, Any, dict[str, Any]]] = {}
+        transfers: dict[tuple[Any, int, str, int], tuple[Any, Any, dict[str, Any]]] = {}
         pending: deque[dict[str, Any]] = deque()
         results: list[dict[str, Any]] = []
         active_workers = set(range(worker_count))
@@ -628,6 +658,8 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                     blocked[wid] = slots
             elif event[0] == "complete":
                 completed_count += 1
+                if completion_callback is not None:
+                    completion_callback(event[3])
                 if not all_assigned:
                     tasks.put(next(unassigned))
                     if completed_count + active_limit == len(missing):
@@ -738,7 +770,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                         "batch_padding_positions": batch_padding_positions,
                         "batches_prepared_while_inflight": batches_prepared_while_inflight,
                         "overlapped_gather_seconds": overlapped_gather_seconds,
-                        "inference": evaluator.stats.to_dict(),
+                        "inference": inference_stats(),
                     }
                     start_event.set()
                 if window_start is not None and window_end is None and (
@@ -752,7 +784,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                         "batch_padding_positions": batch_padding_positions,
                         "batches_prepared_while_inflight": batches_prepared_while_inflight,
                         "overlapped_gather_seconds": overlapped_gather_seconds,
-                        "inference": evaluator.stats.to_dict(),
+                        "inference": inference_stats(),
                     }
                     stop_event.set()
             before_wait = time.perf_counter()
@@ -812,7 +844,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             for entry in chosen:
                 desc = entry["event"][1]
                 wid, slot_index, generation, rows, _, src_width, version = desc
-                if version != config.round_index:
+                if version not in evaluators:
                     raise RuntimeError("pooled inference model version mismatch")
                 take = min(rows - entry["offset"], execution.max_batch_size - used)
                 if not take:
@@ -831,11 +863,11 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             width = 0 if kind == "value" else max(part[7] for part in parts)
             bucket = (next((item for item in execution.candidate_buckets if width <= item),
                            width_limit) if kind == "policy" else 0)
-            key = (next_lane, kind, bucket)
+            key = (version, next_lane, kind, bucket)
             cached = transfers.get(key)
             if cached is None:
                 probe = _extension().NativeBatch(native_catalog, kind == "value", 1, bucket or 1)
-                transfer = evaluator.new_native_transfer(
+                transfer = evaluators[version].new_native_transfer(
                     state_only=kind == "value", capacity=execution.max_batch_size,
                     width=bucket or 1, float_stride=probe.float_stride(),
                     mask_stride=probe.mask_stride())
@@ -926,7 +958,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             "batch_trigger_detail": wait_detail,
             "supply_series": supply_series, "tail_intervals_exclusive": tail_intervals,
             "owner_initialization_seconds": init_done - session_started,
-            "inference": evaluator.stats.to_dict(),
+            "inference": inference_stats(),
             "benchmark": ({
                 "compile_warmup_seconds": compile_warmup_seconds,
                 "warmup_seconds": warmup_seconds,
@@ -937,7 +969,7 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
                     "dispatch_seconds": owner_dispatch,
                     "wait_input_seconds": owner_wait,
                     "wait_coalesce_seconds": owner_coalesce_wait,
-                    "inference": evaluator.stats.to_dict()}},
+                    "inference": inference_stats()}},
                 "worker_windows": [
                     {"worker_id": item["worker_id"], **item["window"]}
                     for item in sorted(results, key=lambda result: result["worker_id"])
@@ -958,7 +990,8 @@ def collect(config: FastSelfPlayConfig, root: Path, missing: tuple[int, ...],
             "worker_row_statistics": [{"worker_id": item["worker_id"],
                 "actual_width_rows_by_root_stage": item["actual_width_rows_by_root_stage"],
                 "descriptor_width_rows": item["descriptor_width_rows"]} for item in results],
-            "gpu_peak_bytes": (torch.cuda.max_memory_allocated() if evaluator.device.type == "cuda" else 0),
+            "gpu_peak_bytes": (torch.cuda.max_memory_allocated() if any(
+                item.device.type == "cuda" for item in evaluators.values()) else 0),
             "owner_cpu_peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
         }
         succeeded = True

@@ -8,7 +8,41 @@ from torch import Tensor, nn
 from torch.nn import functional as F
 
 from .actor_critic import ActorCritic, TorchDecisionBatch, TorchStateBatch
-from .features import FEATURE_SCHEMA, FEATURE_SCHEMA_VERSION, GLOBAL_FEATURE_NAMES
+from .features import (CARD_FEATURE_NAMES, FEATURE_SCHEMA, FEATURE_SCHEMA_VERSION,
+                       GLOBAL_FEATURE_NAMES, SCALES)
+
+
+MARKET_RELATION_FEATURE_NAMES = (
+    *(f"opponent_ordinary_deficit_{color}_scaled" for color in ("white", "blue", "green", "red", "black")),
+    "opponent_gold_uncovered_deficit_scaled", "self_can_afford", "opponent_can_afford",
+)
+_CARD_COST = CARD_FEATURE_NAMES.index("cost_white_scaled")
+_CARD_GOLD = CARD_FEATURE_NAMES.index("gold_uncovered_deficit_scaled")
+_CARD_MARKET_SOURCE = CARD_FEATURE_NAMES.index("source_market")
+
+
+def market_purchase_relations(cards: Tensor, mask: Tensor, opponent: Tensor) -> Tensor:
+    """Eight current-actor-relative signals for market and public reserved cards.
+
+    Existing card features already contain self deficits and post-gold gap. Totals
+    and self/opponent differences are not stacked again. Affordability ignores
+    the current decision phase: it tests resources, not legal-action membership.
+    """
+    known = mask & (cards[..., 1] > 0.5)
+    cards = torch.where(known.unsqueeze(-1), cards, 0)
+    # Recover public integer counts before thresholding: normalized float32
+    # arithmetic can otherwise turn exact affordability into a tiny positive gap.
+    costs = (cards[..., _CARD_COST:_CARD_COST + 5] * SCALES.card_cost).round()
+    tokens = (opponent[:, :5] * opponent.new_tensor(SCALES.token_by_color[:5])).round()
+    bonuses = (opponent[:, 6:11] * SCALES.player_bonus).round()
+    gold = (opponent[:, 5] * SCALES.token_by_color[5]).round()
+    deficit = (costs - bonuses[:, None, :] - tokens[:, None, :]).clamp_min(0)
+    uncovered = (deficit.sum(-1) - gold[:, None]).clamp_min(0)
+    relations = torch.cat((deficit / SCALES.card_cost,
+                           (uncovered / SCALES.purchase_gap_total).unsqueeze(-1),
+                           (cards[..., _CARD_GOLD] == 0).to(cards.dtype).unsqueeze(-1),
+                           (uncovered == 0).to(cards.dtype).unsqueeze(-1)), dim=-1)
+    return torch.where(known.unsqueeze(-1), relations, 0)
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,14 +54,25 @@ class EntityAttentionConfig:
     layers: int = 2
     ffn_hidden: int = 512
     dropout: float = 0.0
+    market_relations: bool = False
+    value_readout: str = "global"
 
     def __post_init__(self) -> None:
         if self.architecture != "entity_attention_v1":
             raise ValueError("EntityAttentionConfig requires entity_attention_v1")
         if self.feature_schema_version != FEATURE_SCHEMA_VERSION:
             raise ValueError("model feature schema mismatch")
-        if (self.hidden, self.heads, self.layers, self.ffn_hidden, self.dropout) != (128, 4, 2, 512, 0):
-            raise ValueError("entity_attention_v1 fixes hidden128/heads4/layers2/FFN512/dropout0")
+        for name in ("hidden", "heads", "layers", "ffn_hidden"):
+            if type(getattr(self, name)) is not int or getattr(self, name) <= 0:
+                raise ValueError(f"entity_attention_v1 {name} must be a positive integer")
+        if self.hidden % self.heads:
+            raise ValueError("entity_attention_v1 hidden must be divisible by heads")
+        if type(self.market_relations) is not bool:
+            raise ValueError("market_relations must be boolean")
+        if self.value_readout not in ("global", "global_players_market"):
+            raise ValueError("invalid value_readout")
+        if self.dropout != 0:
+            raise ValueError("entity_attention_v1 requires dropout0")
 
 
 class EntityAttentionLayer(nn.Module):
@@ -78,6 +123,25 @@ class GlobalValueHead(nn.Module):
         return self.network(state[0][:, 0])
 
 
+class PlayersMarketValueHead(nn.Module):
+    """Direct readout of global, self, opponent and masked mean market tokens."""
+    def __init__(self, hidden: int) -> None:
+        super().__init__()
+        self.network = nn.Sequential(nn.LayerNorm(4 * hidden), nn.Linear(4 * hidden, hidden),
+                                     nn.GELU(), nn.Linear(hidden, 1))
+
+    def forward(self, state: tuple[Tensor, Tensor]) -> Tensor:
+        entities, valid = state
+        market_valid = valid[:, 3:15].unsqueeze(-1)
+        market = torch.where(market_valid, entities[:, 3:15], 0).sum(1)
+        market = market / market_valid.sum(1).clamp_min(1)
+        return self.network(torch.cat((entities[:, 0], entities[:, 1], entities[:, 2], market), dim=-1))
+
+
+def _value_head(hidden: int, readout: str) -> nn.Module:
+    return GlobalValueHead(hidden) if readout == "global" else PlayersMarketValueHead(hidden)
+
+
 class EntityAttention(ActorCritic):
     """Same public model API, with one shared state encode and independent action queries."""
     def __init__(self, config: EntityAttentionConfig | None = None) -> None:
@@ -107,7 +171,9 @@ class EntityAttention(ActorCritic):
         self.memory_norm = nn.LayerNorm(hidden)
         self.cross_attention = EntityAttentionLayer(hidden, self.config.heads)
         self.actor = nn.Sequential(nn.LayerNorm(hidden), nn.Linear(hidden, hidden), nn.GELU(), nn.Linear(hidden, 1))
-        self.critic = GlobalValueHead(hidden)
+        self.critic = _value_head(hidden, self.config.value_readout)
+        if self.config.market_relations:
+            self.market_relation_encoder = nn.Linear(len(MARKET_RELATION_FEATURE_NAMES), hidden, bias=False)
 
     def _role(self, kind: int, owner: int = 0, tier: int = 0) -> Tensor:
         return self.type_embedding.weight[kind] + self.owner_embedding.weight[owner] + self.tier_embedding.weight[tier]
@@ -131,6 +197,13 @@ class EntityAttention(ActorCritic):
         ):
             encoder = self.noble_encoder if kind == 4 else self.card_encoder
             encoded = encoder(torch.where(mask.unsqueeze(-1), features, 0)) + self._role(kind, owner, tier)
+            if kind in (2, 3) and self.config.market_relations:
+                # Public market reservations use the same relation projection.
+                # Self-known deck reservations retain their original private
+                # features, without this additional public-card channel.
+                public_mask = mask & (features[..., _CARD_MARKET_SOURCE] > 0.5)
+                relations = market_purchase_relations(features, public_mask, global_features[:, self.opponent_indices])
+                encoded = encoded + self.market_relation_encoder(relations)
             tokens.append(torch.where(mask.unsqueeze(-1), encoded, 0))
             masks.append(mask)
         valid = torch.cat(masks, dim=1)
@@ -159,32 +232,43 @@ class EntityAttentionAuxConfig:
     layers: int = 2
     ffn_hidden: int = 512
     dropout: float = 0.0
+    market_relations: bool = False
+    value_readout: str = "global"
+    predict_score: bool = True
 
     def __post_init__(self):
         if self.architecture != "entity_attention_aux_v1":
             raise ValueError("invalid auxiliary attention architecture")
+        if type(self.predict_score) is not bool:
+            raise ValueError("predict_score must be boolean")
         EntityAttentionConfig(feature_schema_version=self.feature_schema_version,
                               hidden=self.hidden, heads=self.heads, layers=self.layers,
-                              ffn_hidden=self.ffn_hidden, dropout=self.dropout)
+                              ffn_hidden=self.ffn_hidden, dropout=self.dropout,
+                              market_relations=self.market_relations, value_readout=self.value_readout)
 
 
 class EntityAttentionAux(EntityAttention):
-    """Two training heads; search still consumes only policy and win/loss value."""
+    """Duration and optional score heads; search consumes policy and win/loss value."""
 
     def __init__(self, config: EntityAttentionAuxConfig | None = None):
         config = config or EntityAttentionAuxConfig()
         super().__init__(EntityAttentionConfig(feature_schema_version=config.feature_schema_version,
                                               hidden=config.hidden, heads=config.heads, layers=config.layers,
-                                              ffn_hidden=config.ffn_hidden, dropout=config.dropout))
+                                              ffn_hidden=config.ffn_hidden, dropout=config.dropout,
+                                              market_relations=config.market_relations, value_readout=config.value_readout))
         self.config = config
-        self.score_head = GlobalValueHead(config.hidden)
-        self.remaining_turns_head = GlobalValueHead(config.hidden)
+        self.score_head = _value_head(config.hidden, config.value_readout)
+        self.remaining_turns_head = _value_head(config.hidden, config.value_readout)
+        if not config.predict_score:
+            # Consume the legacy score-head initialization draws so the remaining
+            # head starts identically in matched dual-head/turns-only experiments.
+            del self.score_head
 
     def forward_with_auxiliary(self, batch):
         prepared = self._prepare(batch)
         state = self.encode_state(prepared)
         return (self._actor_logits(prepared, state), self.critic(state).squeeze(-1),
-                self.score_head(state).squeeze(-1),
+                self.score_head(state).squeeze(-1) if self.config.predict_score else None,
                 F.softplus(self.remaining_turns_head(state).squeeze(-1)))
 
 

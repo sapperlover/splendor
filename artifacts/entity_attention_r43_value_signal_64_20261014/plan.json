@@ -1,0 +1,65 @@
+{
+  "active_continuations": 128,
+  "add_root_noise": true,
+  "checkpoint": {
+    "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+    "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+  },
+  "client_date": "2026-10-14",
+  "engineering": "400 total completed-player-turn cap fails explicitly; never map truncation or exception to draw. One formal duplicate of root0/repeat0 tests fixed-seed reproducibility and is excluded from signal statistics.",
+  "estimand": "Current actor's terminal z under frozen R43 S1024/N1 self-play with root noise .25 and T0, averaging hidden starting worlds and independent search randomness. Not exact conditional expectation of historical mixed-teacher trajectories, not a proven Bayes floor under the real game posterior.",
+  "inference": {
+    "actor_projection": false,
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "compile_mode": null,
+    "mode": "compiled",
+    "native_transport": "reused"
+  },
+  "max_completed_turns": 400,
+  "native_batch_capacity": 64,
+  "pool_config": {
+    "path": "configs/entity_attention_v1/offline_r24_r43_value_auxiliary_20261013.json",
+    "sha256": "c16a738d02abf446a48fd7b4f10d348e28da2ed8f0ebe87a107552bbba178aa0"
+  },
+  "protocol": "r43-terminal-value-signal-64-v1",
+  "repeats": 16,
+  "root_bank": {
+    "path": "artifacts/entity_attention_r43_value_signal_64_20261014/root_bank.json",
+    "sha256": "2a6a142057a3c44d62e7f33ed1e21696a083d9b3e4327fd6465a5a5a7447906e"
+  },
+  "roots": 64,
+  "runner": {
+    "path": "artifacts/entity_attention_r43_value_signal_64_20261014/run.py",
+    "sha256": "fb38a85fd533d36795fe8ed91ce0cc8e913dc6c98c14ef698226549cad91575e"
+  },
+  "sampling": "Existing determinize_request uniform hidden-card/deck sampler conditional on current actor's safe request; actual world sampled once per continuation; search samples its own independent worlds at every decision.",
+  "search": {
+    "c_puct": 1.5,
+    "determinizations": 1,
+    "dirichlet_alpha": 0.3,
+    "fold_forced_phases": true,
+    "max_simulation_transitions": 512,
+    "root_noise_fraction": 0.25,
+    "seed": 30730000,
+    "simulations": 1024
+  },
+  "seeds": {
+    "bootstrap": 37400000,
+    "noise": 37300000,
+    "search": 37200000,
+    "selection": 37000000,
+    "world": 37100000
+  },
+  "source_manifest": {
+    "path": "artifacts/entity_attention_r24_history_pool_20261012/pool_games.jsonl",
+    "sha256": "99d7c8460d45206daa195d9bf0994b8935e148233833ec841a6e9d1dab611cfb"
+  },
+  "statistics": "Root-equal metrics; unbiased within-root outcome variance; mean-target squared error minus s2/16; between-root variance minus mean(s2/16); stage-stratified independent-root bootstrap10000; Monte Carlo corrections are not clipped.",
+  "temperature": 0.0
+}

@@ -167,6 +167,14 @@ def test_real_greedy_panel_resumes(source, tmp_path):
     resumed = read_json(out)
     assert resumed['win_rate_score'] == first['win_rate_score']
     assert resumed['pairs'] == first['pairs']
+    config_path = out.with_name(out.stem + '_config.json')
+    frozen_bytes = config_path.read_bytes()
+    larger = {**plan['greedy_evaluation'], 'pairs': len(first['pairs']) + 1}
+    result = pool_iteration.panel(larger, p, p, out)
+    assert result.summary['pairs'] == first['pairs']
+    assert config_path.read_bytes() == frozen_bytes
+    with pytest.raises(ValueError, match='prepared evaluation protocol'):
+        pool_iteration.panel({**larger, 'seed_start': larger['seed_start'] + 1}, p, p, out)
 
 
 @pytest.mark.parametrize('policy_games', [None, 2])

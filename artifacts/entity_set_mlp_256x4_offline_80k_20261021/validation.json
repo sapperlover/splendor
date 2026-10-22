@@ -1,0 +1,90 @@
+{
+  "date": "2026-10-21",
+  "status": "prepared_not_started",
+  "steps_target": 270557,
+  "validation_steps": [
+    13528,
+    27056,
+    40584,
+    54112,
+    67640,
+    81168,
+    94695,
+    108223,
+    121751,
+    135279,
+    148807,
+    162335,
+    175863,
+    189390,
+    202918,
+    216446,
+    229974,
+    243502,
+    257030,
+    270557
+  ],
+  "splits": {
+    "train": {
+      "games": 71989,
+      "policy_positions": 1206369,
+      "positions": 5771871
+    },
+    "validation": {
+      "games": 8011,
+      "policy_positions": 134304,
+      "positions": 641723
+    }
+  },
+  "fixed_validation": {
+    "positions": 4096,
+    "digest": "4a4d5b8662e92fc042744e3aa2287be26c2d4e3fb87d180e42ce5e36170a032c",
+    "whole_game_validation_only": true,
+    "same_as_before_reset": true
+  },
+  "manifest_sha256": "1be97736d1b5af7ff8312642b56ae23f4c07036816d1a59cdc3b6469a6662c5a",
+  "dataset_digest": "d648af9581daac92ebcf768d0e715b0c13921d80cd7a026de752d2d0cb0d51df",
+  "checkpoint_created": false,
+  "scope": "After explicit user-authorized deletion of the interrupted 659-step 8GiB-cache run: fresh 16GiB-cache inputs prepared only. No new formal training or arena launched; no new GPU workload. Runtime throughput after the cache change has not been measured.",
+  "pytest": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "previous_implementation_regression": {
+    "tests": 74,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "configuration_changes": {
+    "cache_mib": {
+      "old": 8192,
+      "new": 16384
+    }
+  },
+  "cache": {
+    "cache_mib": 16384,
+    "configured_capacity_bytes": 17179869184,
+    "estimated_full_pool_gib": 13.1,
+    "available_memory_at_preparation_kib": 25240844
+  },
+  "reset_record": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/cache_restart_16g.json",
+  "old_source_snapshot_removed": true,
+  "commands": [
+    "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -o addopts= -q tests/test_offline_mixed_budget.py --junitxml=artifacts/entity_set_mlp_256x4_offline_80k_20261021/cache_reset_tests.xml",
+    "bash scripts/run_entity_set_mlp_offline_20261021.sh prepare",
+    "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -u -m splendor.offline_mixed_budget --config configs/entity_set_mlp_v1/offline_80k_lr1e4_20261021.json --output runs/entity_set_mlp_256x4_offline_80k_20261021 --prepare-only"
+  ],
+  "source_files": {
+    "src/splendor/offline_mixed_budget.py": "18f08c3877903883a62c17b068705940a744625df15290971236fa402f29a455",
+    "src/splendor/offline_objectives.py": "e89eedde349b1cd16749ec7dddb2c5a90c15a9518a46af84fbb5fabd6d745a32",
+    "src/splendor/offline_scratch.py": "ecc260d070dd9c96f629a3dc764916be063d605a036f72fb5280bc261ed6dd23",
+    "src/splendor/entity_set_mlp.py": "b58301b0bf94eeb79ccf5d35978423abb2e7e91ca71c3a2788f005eaaf99e620",
+    "tests/test_offline_mixed_budget.py": "293ce268634a218d23f6e9c35c0195f9bc24af4b09f516698a156acac21361ef",
+    "scripts/run_entity_set_mlp_offline_20261021.sh": "f1dfaf9eaa612cabd424b8b84c4a47e563c769a420759d2b5816e0cbfd131fdc",
+    "configs/entity_set_mlp_v1/offline_80k_lr1e4_20261021.json": "3fcb43c66ecf3adc64212e44163a1c9ac33ff1e9a37e09b7f537089d9504b7f7",
+    "artifacts/entity_set_mlp_256x4_offline_80k_20261021/run.py": "42742c635e4d54bad834fecff89dcddbbc227c26a75d98e472feba3b5c13e08b"
+  }
+}
