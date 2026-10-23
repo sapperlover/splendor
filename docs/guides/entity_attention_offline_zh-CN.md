@@ -1,6 +1,12 @@
 # 实体注意力模型与离线搜索经验学习
 
-2026-10-21[attention128的同8万局对照](../../artifacts/entity_attention_128x2_offline_80k_20261021/README.md)已由用户启动并仍在运行；本次[存储清理](../../artifacts/checkpoint_storage_audit_20261021/README.md)没有中断或改变训练。命令`bash scripts/run_attention128_offline_20261021.sh`：128×2／4头／FFN512／583682参数，保留购买关系和value读取；除模型和独立输出路径外逐字段沿用MLP配置，固定4096引用和完整dataset相同。只训练＋完整留出KL+MSE选点，不自动对战。
+2026-10-23[新增购买结算方案已撤回](../../artifacts/entity_attention_first_round_20261022/README.md)：删除新增购买／贵族／终局派生特征及专用offline_first_round入口、配置和启动脚本。当前使用既有attention与offline_early_stopping／offline_finetune等入口；短期进展辅助保持关闭。原组合／纯购买准备与短验证保留历史身份，不用当前代码直接恢复这些历史实验模型。
+
+2026-10-22的[同44k池最低节点lr2e-5续训](../../artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/README.md)已在新增10000步触发三次联合指标上升早停，选中新增4000步／累计63453步。原59453步继承AdamW/RNG、每2000步完整留出、两头B256和原标签／split不变；原训练命令仍只训练＋选点，已完成后返回。用户后续独立授权对R31做1000pair greedy，同原R31面板开局，评测命令、原始结果及核验见专题；不恢复训练或运行搜索。
+
+2026-10-22的[第21–31轮44000局attention128离线实验](../../artifacts/entity_attention_128x2_offline_r21_r31_20261022/README.md)：用户后续主动停止训练，保存84000步，原148632步／12次value曝光预算未完成，也未触发自动早停。按已到达完整留出节点最低KL＋MSE固定59453步整个checkpoint，仅执行对R20／R31各1000pair greedy，搜索取消；使用专题的`run_greedy_after_stop.py run`命令，不以原shell恢复完整队列。原lr1e-4、种子、两头各B256、16GiB、数据及整局split和冻结源码不变，训练与评测均12贵族。
+
+2026-10-21[attention128的同8万局对照](../../artifacts/entity_attention_128x2_offline_80k_20261021/README.md)已由用户启动，后续执行记录为KeyboardInterrupt退出，最近保存135279步，原270557步计划未完成；本次新实验不恢复或修改旧run。命令`bash scripts/run_attention128_offline_20261021.sh`会恢复旧训练：128×2／4头／FFN512／583682参数，保留购买关系和value读取；除模型和独立输出路径外逐字段沿用MLP配置，固定4096引用和完整dataset相同。只训练＋完整留出KL+MSE选点，不自动对战。
 
 [当前实体MLP的8万局离线流程](../../artifacts/entity_set_mlp_256x4_offline_80k_20261021/README.md)已按用户要求停止，保留97000步，原270557步计划及自动面板未完成。七个节点内94695步完整留出KL+MSE最低（KL 0.530577、MSE 0.782832），value最佳在40584步；之后新授权的该候选对R20 greedy1000pair已完成，MLP得37.075%，95%配对区间[35.000%,39.175%]，无搜索对战。训练使用新分支第1–20轮80000局、lr1e-4、16GiB缓存，每5%固定4096子集和完整留出；`offline_mixed_budget`两头各256独立抽样、一次联合更新，policy只用高预算有效步，value全部预算，无辅助或PSW。历史训练来自10贵族池，本次greedy对战为12贵族。
 

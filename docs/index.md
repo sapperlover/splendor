@@ -1,5 +1,15 @@
 # 文档导航
 
+[R31起点10k新局／60k池自迭代（仅命令）](../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)：R22–R31的40k历史，首轮50k、第二轮60k，lr2e-5／每轮3000步；采集2000活跃局／microbatch128、16GiB回放缓存，原混合预算与评测协议；已清除首次未完成采集，未重启。
+
+[新增购买结算方案已撤回](../artifacts/entity_attention_first_round_20261022/README.md)：2026-10-23删除全部新增派生特征及专用候选入口，原关系attention128恢复583682参数；短期进展辅助保持关闭。历史准备、工程验证、冗余审查与撤回快照见专题，未启动正式训练。
+
+[最低节点attention128降lr续训](../artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/README.md)：新增10000步三次上升早停，完整留出选中新增4000步／累计63453步；用户追加R31 greedy1000pair的配置、同开局复测结果与核验入口。
+
+[第21–31轮44000局attention128离线训练](../artifacts/entity_attention_128x2_offline_r21_r31_20261022/README.md)：用户已停止，保存84000步；按完整留出最低联合指标固定59453步，仅执行对R20／R31各1000pair greedy，搜索取消。仅greedy命令、范围变更与结果入口。
+
+[第21–30轮及Cross64离线冷产物T7归档](../artifacts/repository_archive_20261022/README.md)：完成清单、逐文件校验及恢复方法；全部第21–31轮采集对局留本机，291个模型及43个账本外置，净释放4.3250GB。
+
 [MLP角色初始化标定＋同8万局离线训练](../artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md)：std0.05、906434参数，原数据／抽样／lr1e-4／16GiB及5%留出不变；用户后来启动，现中断、已保存81168步。六节点中KL＋MSE最低54112步[对R20 greedy1000pair](../artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md)得43.225% [41.075%,45.325%]；原270557步计划未完成，未测搜索。
 
 [第20轮继承续跑：S256N4＋12贵族](../artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md)：继承状态与24k池，高预算256×4总1024，低预算128×1；每轮4k局／1000更新，默认无限自迭代，启动／恢复命令和验证见专题。

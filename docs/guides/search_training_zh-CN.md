@@ -1,5 +1,7 @@
 # 搜索预算随机化、Forced Playouts 与 Policy Target Pruning
 
+2026-10-23的[raw R31起点、10k新局／60k池／3000步新分支](../../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)已按要求清除首次未完成采集，重置后未重启。历史用原R22–R31的40k完整局，首轮50k即可训练、第二轮满60k；lr2e-5，采集采用最新12worker／2000活跃局／B500／microbatch128，训练回放缓存16GiB。仍沿用原S256N4总1024／S128N1总128、policy历史25%子集、噪声／温度及R43评测协议。`random_budget_iteration`前置检查现支持未满池及其continuation，实际配额以活动池大小计算。
+
 [37423步起点的4k局／24k池持续迭代](../../artifacts/entity_attention_random_budget_iteration_20261019/README.md)已完成20轮；初版“未启动”状态已过时。2026-10-22另设[第20轮继承续跑分支](../../artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md)：25%高预算S256N4（总1024）、75%低预算S128N1（总128），新采集用12贵族；继承AdamW/RNG及24k活动池，FP/PTP关闭。
 
 2026-10-19实现。入口是 `selfplay_fast`，以及复用它的 `alphazero_loop` / `hybrid_train` / `pool_iteration` 在线采集；Python批量搜索和native搜索使用相同规则。三个开关默认关闭，原冻结实验配置不改写。没有启动正式训练，也没有棋力收益结论。

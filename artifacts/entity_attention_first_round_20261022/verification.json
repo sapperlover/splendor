@@ -1,0 +1,101 @@
+{
+  "current_noble_pool_count": 12,
+  "formal_checkpoint_exists": false,
+  "formal_run": "runs/entity_attention_first_round_r21_r31_20261022",
+  "git_head": "5c3b2d0288ad6d7a79a170d45ab3a9061c3e0f8a",
+  "legacy_ten_noble_scope": "Only recreate old R43 golden inputs for bitwise compatibility; no use in new training or search smoke.",
+  "plan_metadata_correction": {
+    "after": {
+      "auxiliary_seed": 36100000,
+      "kind": "random_initialization",
+      "model_config": {
+        "architecture": "entity_attention_progress_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "purchase_outcomes": true,
+        "value_readout": "global_players_market"
+      },
+      "optimizer": "fresh AdamW",
+      "seed": 43100000
+    },
+    "before": {
+      "auxiliary_seed": null,
+      "kind": "random_initialization",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "purchase_outcomes": true,
+        "value_readout": "global_players_market"
+      },
+      "seed": 43100000
+    },
+    "changed_training": false,
+    "validation": "Plan initialization equals actual learner parent identity and remains so after selection; tested in the full regression suite."
+  },
+  "preparation_sha256": "d28ef216f9626c04be88fbd84b8c37021f18a2f87e8ba5c150efbcb116371564",
+  "scope": "One combined candidate; finite engineering verification only, no formal training or arena/strength conclusion.",
+  "smokes": {
+    "cpu": {
+      "checkpoint_sha256": "fd855f810559d316a7821f5e1545c55909a5b82976cc0d6bc68db05e94cb42d6",
+      "label_checks": 424,
+      "native_roots": 3,
+      "note": "Only preparation/selection metadata in the entry point changed after smoke; model, targets, sampler and updates unchanged. Regression suite rerun. Original smoke provenance retained.",
+      "purchase_checks": 78,
+      "report": "artifacts/entity_attention_first_round_20261022/cpu_validation.json",
+      "report_sha256": "079485e0fd577f015cf39bd1272184af2a842fb65ec49093e6e6adc333a10b31",
+      "source_changes_after_smoke": [
+        "src/splendor/offline_first_round.py"
+      ],
+      "total_search_simulations": 24,
+      "updates": 12
+    },
+    "cuda": {
+      "checkpoint_sha256": "f903068e9cf344f37f3a80f37acc116dd44ae61ff79981806fcb49673b22c01e",
+      "label_checks": 424,
+      "native_roots": 3,
+      "note": "Only preparation/selection metadata in the entry point changed after smoke; model, targets, sampler and updates unchanged. Regression suite rerun. Original smoke provenance retained.",
+      "purchase_checks": 78,
+      "report": "artifacts/entity_attention_first_round_20261022/cuda_validation.json",
+      "report_sha256": "48ba51dc01d4d010285f1e477a885edc74a04aae1b90a349f286ea82b9214c5e",
+      "source_changes_after_smoke": [
+        "src/splendor/offline_first_round.py"
+      ],
+      "total_search_simulations": 24,
+      "updates": 12
+    }
+  },
+  "source_hashes": {
+    "artifacts/entity_attention_first_round_20261022/validate.py": "cb3f42d42e72582f3bb7ab5d4f055e2dc85b67a5471796c1f92ccbd2f5be8817",
+    "configs/entity_attention_v1/offline_first_round_r21_r31_20261022.json": "3383f59adc03825092051806d205cbbf548040652b10ef10ee32fe0024bb2edb",
+    "scripts/run_attention_first_round_20261022.sh": "edfa8d6382c2b7d8e3903ca2fe45c05c0c017b1741b911b03fdd9ba056995f9d",
+    "src/splendor/actor_critic.py": "3f7651ebce7095d1c69e9919f86e0002065eb49ddebc9cec9c93d3f7de2e77e8",
+    "src/splendor/alphazero_train.py": "b0fdbad2131db18f2d57067d81f72842d16e4a998700e90feb717692f10c6e38",
+    "src/splendor/compact_game_cache.py": "cbed41983413e3a3c4a0de74928dd7909824562708e752a54580c4a2f90e68f3",
+    "src/splendor/entity_attention.py": "d47b188762a978a8c6b407566cb07d88b38f2c5a2473753cdc8c716614fec8f9",
+    "src/splendor/offline_first_round.py": "1eab402ff488b7272dd0c4c18e332fcccb4de129d08b7205b0b5f0a234b5ea4d",
+    "src/splendor/offline_objectives.py": "47879971657f9d32477f968b0bbedea76b15ab4e165e401396536e903213ae73",
+    "src/splendor/progress_auxiliary.py": "103316708efadce50ee84adc32dede6df9288a302a093f3c5523c6992ceef972",
+    "src/splendor/purchase_outcomes.py": "4d522e32ad22498e56b857c3873394fdddeca88eae371fe6fd091dfa28a1941e",
+    "tests/test_attention_first_round.py": "d6afbdd494c058bed3f3a99a7ea9cf2a381dc115ddfed85d1a0ca0608a981d4e"
+  },
+  "status": "implementation_verified_formal_training_not_started",
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "seconds": 27.057,
+    "skipped": 0,
+    "tests": 134
+  },
+  "verified_at_utc": "2026-10-22T15:38:25.318747+00:00",
+  "working_tree": "Dirty before and after task; preserved existing work. Current source hashes identify this delivery; no commit or push."
+}

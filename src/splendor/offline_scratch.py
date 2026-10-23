@@ -101,12 +101,15 @@ def checkpoint_path(output, step):
 
 
 def select_checkpoint(config, output, *, input_preparer=prepare_inputs):
-    """Full-holdout KL+MSE minimum over the predeclared percentage checkpoints."""
+    """Full-holdout KL+MSE minimum over the predeclared validation checkpoints."""
     progress = read_json(output / "progress.json")
     if progress["status"] != "complete":
         raise ValueError("checkpoint selection requires completed training")
     _, _, _, _, plan = input_preparer(config, output)
     candidates = plan["validation_steps"]
+    early_stopped = progress.get("stop_reason") == "consecutive_validation_increases"
+    if early_stopped:
+        candidates = [step for step in candidates if step <= progress["step"]]
     rows = []
     for step in candidates:
         checkpoint = checkpoint_path(output, step)
@@ -120,9 +123,14 @@ def select_checkpoint(config, output, *, input_preparer=prepare_inputs):
         row["selection_objective"] = row["metrics"]["policy_kl"] + row["metrics"]["value_loss"]
         rows.append(row)
     best = min(rows, key=lambda p: (p["selection_objective"], p["step"]))
+    interval = plan.get("validation_interval_steps")
     selection = {"criterion": "full_validation.policy_kl + full_validation.value_loss; auxiliary losses excluded; ties earlier step",
-        "candidate_rule": "all post-update percentage checkpoints, including final",
-        "validation_percent_step": config.validation_percent_step, "candidates": rows,
+        "candidate_rule": ("all reached post-update fixed-interval checkpoints, including the budget endpoint if reached"
+                           if interval is not None else
+                           "all reached post-update percentage checkpoints through early stopping"
+                           if early_stopped else "all post-update percentage checkpoints, including final"),
+        **({"validation_interval_steps": interval} if interval is not None else
+           {"validation_percent_step": config.validation_percent_step}), "candidates": rows,
         "selected_step": best["step"], "checkpoint": best["checkpoint"],
         "checkpoint_sha256": best["checkpoint_sha256"], "selection_objective": best["selection_objective"],
         "scope": "single training seed; validation-selected full checkpoint, no policy/value composition"}

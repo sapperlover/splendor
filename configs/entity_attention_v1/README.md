@@ -1,8 +1,16 @@
 # Entity attention v1 配置
 
+2026-10-23新增[random_budget_r31_10k_p60k_20261023.json](random_budget_r31_10k_p60k_20261023.json)：raw R31完整模型／AdamW／RNG起点，历史为R22–R31共40k局（原round_index64–73，配置65–74），每轮10k、池上限60k、lr2e-5／3000步；首轮50k不淘汰，第二轮满60k，后续沿用原淘汰与配额。新分支局部第1轮为原谱系R32，不导入旧24k活动池／完成轮列表。原混合预算、学习与R43评测协议不变；采集更新为最新12worker／2000活跃局／B500／microbatch128，搜索评测同执行参数但owner单槽，回放缓存16GiB。已清除首次未完成采集，重置后未重启；[命令、池增长、清除记录和冻结来源](../../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)。
+
+2026-10-23撤回新增购买结算关系方案，删除专用`offline_first_round_r21_r31_20261022.json`及入口／启动脚本。原583682参数关系attention128、现有离线与在线配置保持原配方，短期进展辅助关闭；旧组合／纯特征准备及删除前配置见[历史记录](../../artifacts/entity_attention_first_round_20261022/README.md)。
+
+2026-10-22新增[offline_128x2_r21_r31_lr2e5_20261022.json](offline_128x2_r21_r31_lr2e5_20261022.json)：原59453步继承权重／AdamW／RNG，lr2e-5，每2000新增步固定子集／完整留出；44k原数据、两头B256及16GiB不变。已在新增10000步三次严格上升早停，选中新增4000步／累计63453步；原新增148632步上限保留，训练不恢复。用户后续追加R31 greedy1000pair独立面板，当前命令、原始结果及核验见[专题](../../artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/README.md)。
+
+2026-10-22新增[offline_128x2_r21_r31_early_stop_20261022.json](offline_128x2_r21_r31_early_stop_20261022.json)：第21–31轮44000局，原始round_index63–73（配置1基64–74），从零attention128及全新AdamW，lr1e-4，其余继承原attention128同8万局离线配置。原12次value曝光上限148632步／连续三次完整留出严格上升早停配置保留；用户后续主动停止于保存84000步，按已完成节点固定59453步，仅执行对R20／R31各greedy1000pair，搜索取消。当前仅greedy命令及结果见[实验入口](../../artifacts/entity_attention_128x2_offline_r21_r31_20261022/README.md)，不使用原完整队列恢复训练。
+
 2026-10-22新增[random_budget_r20_s256n4_noble12_20261022.json](random_budget_r20_s256n4_noble12_20261022.json)：继承raw R20状态、AdamW/RNG及24k活动池，从第21轮无限续跑；25%高预算S256N4（基础simulations仍为总1024）、75%低预算S128N1（low_simulations128、low_determinizations1），新采集用12贵族。其余有效在线配置沿用原分支，旧21轮残留已授权删除。[配置身份、验证与恢复](../../artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md)。下文原在线分支“完成17轮”是历史时点，实际已完成20轮。
 
-后续状态（2026-10-21）：下方attention128同8万局对照已由用户启动，当前训练仍在运行；“正式训练未启动”保留为首次配置交付时的状态。当前模型、数据及冻结源码在[本次存储审计](../../artifacts/checkpoint_storage_audit_20261021/README.md)中列为保留，未中断或改配置。
+后续状态（2026-10-22核对）：下方attention128同8万局对照已由用户启动，后续以KeyboardInterrupt退出，最近保存135279步；“正式训练未启动”保留为首次配置交付时的状态。旧run不由本次新实验恢复或修改；原270557步计划未完成。
 
 2026-10-21新增[同MLP的8万局attention128从零离线对照](../../artifacts/entity_attention_128x2_offline_80k_20261021/README.md)：`offline_128x2_no_aux_80k_lr1e4_20261021.json`使用现有128×2／4头／FFN512购买关系预设、583682参数，lr1e-4、16GiB缓存、policy高预算/value全预算各256、270557步，每5%同固定子集与完整留出。除模型及独立输出路径外与MLP配置相同，正式训练未启动；命令`bash scripts/run_attention128_offline_20261021.sh`只训练＋KL+MSE选点，不自动对战。
 

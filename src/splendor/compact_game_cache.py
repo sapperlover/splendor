@@ -43,8 +43,9 @@ def compact(arrays, metadata):
 
 
 class CompactGameCache(_GameCache):
-    def __init__(self, max_bytes):
+    def __init__(self, max_bytes, *, progress_targets=False):
         super().__init__(max_bytes)
+        self.progress_targets = progress_targets
         self.encode_seconds = 0.
         self.raw_decoded_bytes = 0
 
@@ -64,6 +65,10 @@ class CompactGameCache(_GameCache):
             self.raw_decoded_bytes += sum(a.nbytes for a in arrays.values())
             tick = time.perf_counter()
             entry = compact(arrays, metadata)
+            if self.progress_targets:
+                from .progress_auxiliary import game_progress_targets
+                extra = game_progress_targets(arrays, metadata)
+                entry = (entry[0] | extra, entry[1], entry[2] + sum(a.nbytes for a in extra.values()))
             self.encode_seconds += time.perf_counter()-tick
             size = entry[2]
             self.decoded_bytes += size

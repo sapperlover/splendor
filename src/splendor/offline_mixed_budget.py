@@ -27,7 +27,12 @@ class MixedBudgetOfflineConfig(ScratchOfflineConfig):
 
 
 def prepare_inputs(config, output):
-    index, value, identity, fixed, plan = prepare_scratch_inputs(config, output)
+    return prepare_sampling(config, output, prepare_scratch_inputs(config, output))
+
+
+def prepare_sampling(config, output, prepared):
+    """Describe the shared policy-high/value-all sampling over frozen inputs."""
+    index, value, identity, fixed, plan = prepared
     for split, counts in plan["splits"].items():
         counts["policy_positions"] = sum(g.policy_samples for g in index.split_games(split))
     policy_positions = plan["splits"]["train"]["policy_positions"]

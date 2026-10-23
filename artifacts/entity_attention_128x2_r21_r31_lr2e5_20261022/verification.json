@@ -1,0 +1,30 @@
+{
+  "command": "bash scripts/run_attention128_r21_r31_lr2e5_20261022.sh",
+  "config_sha256": "dc7c6190dd40665cb67ee200b162d15a130b012c48098b81ecc05c4c42da64ae",
+  "dataset_and_fixed_holdout_match_parent": true,
+  "git_head": "5c3b2d0288ad6d7a79a170d45ab3a9061c3e0f8a",
+  "parent_checkpoint": {
+    "path": "runs/entity_attention_128x2_offline_r21_r31_20261022/checkpoints/step-000059453.pt",
+    "sha256": "3f43ec717fe3b2a548f5eb3e5e9878d3e402b15c9d848871e9934543b4862f5a"
+  },
+  "parent_objective": 0.9951373455538077,
+  "parent_step": 59453,
+  "plan_sha256": "0c001064de693799f440e0566c785e7525aac48d5850a433efed1a1906b3fa33",
+  "preserved_model_feature_and_update_sources": {
+    "src/splendor/actor_critic.py": "61fc1a88238cd12e65c1083bfd2d8b590a9a73e1e9507c72e71f525b2d76aa6f",
+    "src/splendor/alphazero_train.py": "2fb05eaf0076d1b798f704de348f83ec216acea9d1c2ba252af5b6156557ac94",
+    "src/splendor/entity_attention.py": "15a6a462c832ec705afcd339b871f3987ec0faae4cde9d19f465b80e3db1d6b8",
+    "src/splendor/features.py": "8083891d25924191e3cec3c54838f02afeed85bb07dfc9d9d43044c8bf914c57"
+  },
+  "production_training_started": false,
+  "regression": {
+    "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q tests/test_offline_finetune.py tests/test_offline_early_stopping.py tests/test_offline_mixed_budget.py tests/test_offline_scratch.py --junitxml=artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/tests.xml",
+    "errors": 0,
+    "failures": 0,
+    "junit_sha256": "f4628fc20018dc8eeee239f5cadcea92c9586b38850f6fde7ed0f4652ac8dcd7",
+    "skipped": 0,
+    "tests": 37
+  },
+  "scope": "prepared command and finite synthetic CPU regression only; no production training or arenas started",
+  "strength_arenas_configured": false
+}

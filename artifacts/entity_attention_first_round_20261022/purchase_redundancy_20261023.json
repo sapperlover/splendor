@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-23",
+  "scope": "Read-only algebraic redundancy audit; no purchase feature or model-shape change, no training or strength claim. Three archived natural-terminal games, all main-action positions and all legal purchase candidates.",
+  "source_games": [
+    {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_r20_s256n4_noble12_iteration_20261022/rounds/round-020/selfplay/games/game-000000.npz",
+      "round_index": 63,
+      "game_id": 0,
+      "sha256": "7d9b77871c05b735e447ab6c3a2481c26e3c589fc12006e5f27bede8fac29dfc",
+      "main_positions": 54
+    },
+    {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_r20_s256n4_noble12_iteration_20261022/rounds/round-025/selfplay/games/game-000000.npz",
+      "round_index": 68,
+      "game_id": 0,
+      "sha256": "793ae382e8fd7b82c1f95c2ceeba946af89822013e8ca7f44e8d4fbb864ba57b",
+      "main_positions": 54
+    },
+    {
+      "path": "/home/lc/下载/splendor/runs/entity_attention_r20_s256n4_noble12_iteration_20261022/rounds/round-030/selfplay/games/game-000000.npz",
+      "round_index": 73,
+      "game_id": 0,
+      "sha256": "f9f8f7038b9abe2d4ce908b25b047b4b834eec3220c0e675da38a713026db424",
+      "main_positions": 56
+    }
+  ],
+  "main_positions": 164,
+  "purchase_candidates": 737,
+  "states_with_multiple_purchase_candidates": 127,
+  "identity_checks": {
+    "noble_requirements_repeat_raw_input": 2111,
+    "opponent_noble_gaps_repeat_raw_input": 2111,
+    "card_points_repeat_action_input": 737,
+    "eligible_from_post_gaps": 2111,
+    "newly_eligible_from_eligible_and_gap_reduction": 2111,
+    "noble_points_from_any_eligible": 737,
+    "score_after_from_current_score_and_points": 737,
+    "reaches_from_score_after": 737,
+    "new_final_from_reaches_and_existing_final": 737,
+    "end_and_reply_partition_final": 737,
+    "end_from_final_and_turn_order": 737,
+    "reply_from_final_and_turn_order": 737,
+    "purchased_difference_from_global_counts": 737
+  },
+  "all_checks_passed": true,
+  "limitations": [
+    "Sample checks confirm the listed identities on these inputs; the general relations follow from the formulas and legal main-action turn invariants.",
+    "Information redundancy does not establish that removing the feature improves learning or inference.",
+    "Static noble context is jointly encoded with action-dependent gaps before pooling, so deleting it changes the representation."
+  ],
+  "source_hashes": {
+    "src/splendor/purchase_outcomes.py": "4d522e32ad22498e56b857c3873394fdddeca88eae371fe6fd091dfa28a1941e",
+    "src/splendor/features.py": "8083891d25924191e3cec3c54838f02afeed85bb07dfc9d9d43044c8bf914c57",
+    "src/splendor/entity_attention.py": "d47b188762a978a8c6b407566cb07d88b38f2c5a2473753cdc8c716614fec8f9",
+    "src/splendor/rules.py": "b88d3ccb9aba619dedc4f30aece51426805e192d0ef5983736f2a6b18e677ab3"
+  }
+}

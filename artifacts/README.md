@@ -2,6 +2,8 @@
 
 本目录保存报告引用、值得长期复核的配置快照、汇总与统计表，默认纳入 Git。阅读入口为[实验导航](index.md)，机器可读身份与SHA见[实验索引](experiment_index.json)，按 valid、historical_valid、invalid_or_superseded、incomplete、unverified 明确适用范围；有效不等于“已证明棋力提升”。
 
+2026-10-22按授权完成[第21–30轮及Cross64离线冷产物T7归档](repository_archive_20261022/README.md)：291个模型＋43个唯一账本外置、12个相同账本去重，包`archive-20261022.tar.zst`约2.45GB，净释放4.3250GB。**第21–31轮全部44000个采集对局、第32轮已采对局、原80k局均保留本机**；final及离线关键节点不动，冷路径恢复方式见专题。
+
 2026-10-21先按授权清理5组缓存和96个MLP普通恢复模型，释放3.4335GB；随后按新授权完成[161个副本去重及1885个模型T7外置](repository_archive_20261021/README.md)，再释放12.8474GB。包名`archive-20261021.tar.zst`，逐文件SHA和纳秒mtime已核验；当前训练、数据、账本和保留模型不动。[原占用审计](checkpoint_storage_audit_20261021/README.md)保留为操作前快照，具体当前位置依归档manifest，外部实体不计为本地可释放空间。
 
 日志、失败现场、cache、分片运行状态和可恢复 `*.games/` sidecar 放在忽略的 `runtime/` 或相邻被忽略的 sidecar 目录。训练 NPZ、checkpoint、TensorBoard 放在忽略的 `runs/`。新报告引用的必要汇总不能只存于 runtime；重型 sidecar/模型不因此纳管。

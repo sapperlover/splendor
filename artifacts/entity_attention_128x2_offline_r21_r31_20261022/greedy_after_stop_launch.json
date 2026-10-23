@@ -1,0 +1,52 @@
+{
+  "requested_scope": "user stopped training, two greedy1000pair panels only",
+  "command": [
+    "conda",
+    "run",
+    "--no-capture-output",
+    "-n",
+    "splendor",
+    "env",
+    "PYTHONPATH=runtime/entity_attention_128x2_offline_r21_r31_20261022/source/src",
+    "OMP_NUM_THREADS=1",
+    "MKL_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "python",
+    "-u",
+    "artifacts/entity_attention_128x2_offline_r21_r31_20261022/run_greedy_after_stop.py",
+    "run"
+  ],
+  "cwd": "/home/lc/下载/splendor",
+  "recorded_at": "2026-10-22T19:54:46+08:00",
+  "git_head": "5c3b2d0288ad6d7a79a170d45ab3a9061c3e0f8a",
+  "git_status": " M README.md\n M archive/README.md\n M artifacts/README.md\n M artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md\n M artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md\n M artifacts/experiment_index.json\n M artifacts/index.md\n M configs/entity_attention_v1/README.md\n M configs/entity_set_mlp_v1/README.md\n M docs/current_project_state_zh-CN.md\n M docs/guides/entity_attention_offline_zh-CN.md\n M docs/index.md\n M docs/specs/learning_contract_zh-CN.md\n M scripts/README.md\n M src/splendor/alphazero_train.py\n M src/splendor/offline_objectives.py\n M src/splendor/offline_scratch.py\n?? archive/20261022/\n?? artifacts/cache_recheck_20261022/\n?? artifacts/collection_tuning_20261022/\n?? artifacts/entity_attention_128x2_offline_r21_r31_20261022/\n?? artifacts/repository_archive_20261022/\n?? configs/entity_attention_v1/offline_128x2_r21_r31_early_stop_20261022.json\n?? scripts/run_attention128_r21_r31_offline_20261022.sh\n?? src/splendor/offline_early_stopping.py\n?? tests/test_offline_early_stopping.py\n",
+  "startup_live": {
+    "child_pid": 482187,
+    "command": [
+      "/home/lc/anaconda3/envs/splendor/bin/python",
+      "-u",
+      "-m",
+      "splendor.evaluation",
+      "--config",
+      "/home/lc/下载/splendor/artifacts/entity_attention_128x2_offline_r21_r31_20261022/evaluation_configs/greedy_vs_R31.json",
+      "--output",
+      "/home/lc/下载/splendor/artifacts/entity_attention_128x2_offline_r21_r31_20261022/panels/greedy_vs_R31.json",
+      "--progress-every",
+      "10",
+      "--summary-every",
+      "10"
+    ],
+    "phase": "greedy_vs_R31",
+    "pid": 480627,
+    "status": "running"
+  },
+  "source_sha256": "6e609f49c3f06fdc304abbdb128971ad8aa8b8e93e0f5ec24721d732bfc260f0",
+  "override_sha256": "1e8ad1abfd5c265293edab4c9ce251ca0af9b526de62bd2689f57f3eb0b33c56",
+  "performance_environment": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "evaluation_pythonpath": "/home/lc/下载/splendor/runtime/entity_attention_128x2_offline_r21_r31_20261022/source/src"
+  },
+  "training_checkpoint": "/home/lc/下载/splendor/runs/entity_attention_128x2_offline_r21_r31_20261022/checkpoints/step-000084000.pt"
+}

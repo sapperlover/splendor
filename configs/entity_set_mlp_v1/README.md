@@ -1,5 +1,7 @@
 # 实体汇总残差MLP预设
 
+2026-10-22[Cross64离线冷产物已外置到T7](../../artifacts/repository_archive_20261022/README.md)：初始及6个百分比checkpoint保留原位，大账本与81个普通恢复模型为归档链接；如需恢复该离线训练，先按清单恢复会读写的账本为原位真实文件。原80k训练池、配置及留出指标未迁移。
+
 2026-10-22新增[角色初始化标定及同8万局离线训练](../../artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md)：三个角色embedding各std0.05，合成RMS实测0.0864，内容编码0.0909；参数量仍906434，乘积及非线性旁路保留。新配置`offline_cross64_role005_80k_lr1e4_20261022.json`与旧离线训练除模型及manifest路径外相同，95项CPU及GPU短验证通过。最初只交付命令，用户后来启动，现中断、已保存81168步，原270557步计划未完成；六节点完整留出KL＋MSE最低54112步，独立对R20 greedy1000pair得43.225% [41.075%,45.325%]，未测搜索。原命令`bash scripts/run_mlp_cross64_role005_offline_20261022.sh`会恢复训练及后续流程。
 
 `model_256x4.json`是模型配置片段，不是训练CLI配置：牌编码64、贵族32、主干256宽×4残差块、actor/critic128、购买关系开启；当前906,434参数。状态主干保留分组pooling及残差MLP；动作读取82维原属性及派生目标关系8维，并通过一层64维／2头cross-attention读取25个未汇总实体。

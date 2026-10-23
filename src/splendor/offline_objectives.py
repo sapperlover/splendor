@@ -26,6 +26,7 @@ from .policy_surprise import PolicySurpriseConfig
 from .rng import DeterministicRng
 from .selfplay_data import collate_selfplay_samples
 from .value_auxiliary import ValueAuxiliaryConfig, add_auxiliary_heads, auxiliary_targets, extend_optimizer_state
+from .progress_auxiliary import ProgressAuxiliaryConfig, progress_targets, progress_loss_sums, progress_metrics
 
 
 def digest(value):
@@ -118,12 +119,15 @@ def freeze_history_inputs(config, output, *, initialization):
         if (stat.st_size, stat.st_mtime_ns) != (game["size"], game["mtime_ns"]):
             raise ValueError(f"frozen source archive changed: {game['path']}")
     index = make_index(dataset, config.cache_mib * 1024**2)
-    index.cache = CompactGameCache(config.cache_mib * 1024**2)
+    progress_config = getattr(config, "progress_auxiliary", None)
+    index.cache = CompactGameCache(config.cache_mib * 1024**2, progress_targets=progress_config is not None)
     pool = PositionPool(index.split_games("train"), index.cache, "all-frozen-train")
     steps = math.ceil(config.draw_exposures * len(pool) / config.learner.batch_size)
     identity = {**index.identity(), "digest": digest({"data": dataset["digest"], "config": frozen}),
                 "policy_surprise_weighting": config.policy_surprise_weighting,
                 "value_auxiliary": config.value_auxiliary}
+    if progress_config is not None:
+        identity["progress_auxiliary"] = asdict(ProgressAuxiliaryConfig(**progress_config))
     fixed_path = output / "fixed_validation.json"
     if not fixed_path.exists():
         subset_config = OfflineConfig(source_run="", source_artifacts="", model_config={}, max_steps=steps,
@@ -174,7 +178,7 @@ def initialize_learner(config, identity, steps):
     return learner
 
 
-def evaluate(learner, index, fixed, auxiliary):
+def evaluate(learner, index, fixed, auxiliary, progress_auxiliary=None):
     """Unweighted primary validation, plus scaled and natural-unit auxiliary errors."""
     games = {g.key: g for g in index.games}
     refs = (fixed["references"] if fixed is not None else
@@ -188,7 +192,11 @@ def evaluate(learner, index, fixed, auxiliary):
         batch = collate_selfplay_samples(samples)
         tensors = _torch_batch(batch, learner.device)
         with torch.inference_mode():
-            if auxiliary is None:
+            if progress_auxiliary is not None:
+                logits, values, predictions = learner.model.forward_with_progress(batch.decisions)
+                sums = progress_loss_sums(predictions, progress_targets(samples), tensors["value_weights"])
+                totals.update({key: float(value) for key, value in sums.items()})
+            elif auxiliary is None:
                 logits, values = learner.model(batch.decisions)
             else:
                 logits, values, score, turns = learner.model.forward_with_auxiliary(batch.decisions)
@@ -218,6 +226,9 @@ def evaluate(learner, index, fixed, auxiliary):
     learner.model.train(was_training)
     result = {**totals, **metric_ratios(totals)}
     result["total_loss"] = learner.config.policy_loss_weight * result["policy_loss"] + learner.config.value_loss_weight * result["value_loss"]
+    if progress_auxiliary is not None:
+        result.update(progress_metrics(totals))
+        result["total_loss"] += progress_auxiliary.loss_weight * result["progress_loss"]
     if auxiliary is not None:
         n = totals["value_weight_sum"]
         result.update(remaining_turns_loss=totals["turns_sq_sum"] / n,
@@ -233,7 +244,8 @@ def evaluate(learner, index, fixed, auxiliary):
 
 def run(config, output, *, prepare_only=False, max_steps_this_session=None,
         input_preparer=freeze_inputs, learner_initializer=initialize_learner,
-        validation_percent_step=None, batch_drawer_factory=None):
+        validation_percent_step=None, batch_drawer_factory=None, early_stopping_increases=None,
+        validation_interval_steps=None):
     output.mkdir(parents=True, exist_ok=True)
     with (output / ".lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -247,6 +259,14 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None,
         evaluation_steps = (None if validation_percent_step is None else
             tuple(sorted({math.ceil(plan["steps_target"] * p / 100)
                           for p in range(validation_percent_step, 101, validation_percent_step)})))
+        if validation_interval_steps is not None:
+            if validation_percent_step is not None:
+                raise ValueError("choose either percentage or fixed-interval validation")
+            evaluation_steps = tuple(range(validation_interval_steps, plan["steps_target"], validation_interval_steps)) + (plan["steps_target"],)
+        if early_stopping_increases is not None and evaluation_steps is None:
+            raise ValueError("early stopping requires scheduled full-validation checkpoints")
+        stop_state = None
+        dataset_digest = read_json(output / "dataset.json")["digest"]
         torch.set_num_threads(1)
         checkpoints = output / "checkpoints"
         checkpoints.mkdir(exist_ok=True)
@@ -259,6 +279,10 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None,
             learner = learner_initializer(config, identity, plan["steps_target"])
             learner.save(latest)
         auxiliary = ValueAuxiliaryConfig(**config.value_auxiliary) if config.value_auxiliary is not None else None
+        progress_config = getattr(config, "progress_auxiliary", None)
+        progress_auxiliary = ProgressAuxiliaryConfig(**progress_config) if progress_config is not None else None
+        # Keep the historical call signature for unchanged configurations.
+        evaluation_kwargs = {} if progress_auxiliary is None else {"progress_auxiliary": progress_auxiliary}
         session = str(time.time_ns())
         write_json(output / "source" / session / "identity.json", {
             **source_identity(Path.cwd(), output / "source" / session), "command": sys.argv,
@@ -269,6 +293,7 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None,
         curve_path.write_text("".join(json.dumps(p, ensure_ascii=False) + "\n" for p in curve))
 
         def validate(current, checkpoint):
+            nonlocal stop_state
             step = current.round_train_step
             # The callback runs after checkpoint commit, including recovery-only saves.
             # Publish that boundary even if the session is interrupted before returning.
@@ -278,7 +303,7 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None,
             if evaluation_steps is not None and step != 0 and step not in evaluation_steps:
                 return
             if not any(point["step"] == step for point in curve):
-                metrics = evaluate(current, index, fixed, auxiliary)
+                metrics = evaluate(current, index, fixed, auxiliary, **evaluation_kwargs)
                 point = {"step": step, "metrics": metrics, "checkpoint": str(checkpoint),
                          "draw_exposure": step * config.learner.batch_size / len(pool)}
                 curve.append(point)
@@ -287,11 +312,31 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None,
             full_path = output / "full_validation" / f"step-{step:09d}.json"
             if evaluation_steps is not None and step in evaluation_steps and not full_path.exists():
                 tick = time.perf_counter()
-                metrics = evaluate(current, index, None, auxiliary)
+                metrics = evaluate(current, index, None, auxiliary, **evaluation_kwargs)
                 write_json(full_path, {"step": step, "checkpoint": str(checkpoint),
-                    "checkpoint_sha256": sha256(checkpoint), "dataset_digest": read_json(output / "dataset.json")["digest"],
+                    "checkpoint_sha256": sha256(checkpoint), "dataset_digest": dataset_digest,
                     "metrics": metrics, "seconds": time.perf_counter() - tick})
                 print(f"完整留出 step={step} KL={metrics['policy_kl']:.6f} MSE={metrics['value_loss']:.6f}", flush=True)
+            if early_stopping_increases is not None and step in evaluation_steps:
+                points = []
+                for scheduled in evaluation_steps:
+                    if scheduled > step:
+                        break
+                    row = read_json(output / "full_validation" / f"step-{scheduled:09d}.json")
+                    if (row["checkpoint_sha256"] != sha256(checkpoints / f"step-{scheduled:09d}.pt")
+                            or row["dataset_digest"] != dataset_digest):
+                        raise ValueError("early-stopping validation identity differs")
+                    points.append({"step": scheduled, "objective": row["metrics"]["policy_kl"] + row["metrics"]["value_loss"]})
+                streak = 0
+                for previous, point in zip(points, points[1:]):
+                    streak = streak + 1 if point["objective"] > previous["objective"] else 0
+                stop_state = {"criterion": "full_validation.policy_kl + full_validation.value_loss",
+                    "patience_increases": early_stopping_increases, "consecutive_increases": streak,
+                    "triggered": streak >= early_stopping_increases, "step": step, "points": points,
+                    "comparison": ("strict increase versus previous scheduled checkpoint; ties/decreases reset; step0 excluded"
+                                   if validation_interval_steps is not None else
+                                   "strict increase versus previous percentage checkpoint; ties/decreases reset; step0 excluded")}
+                write_json(output / "early_stopping.json", stop_state)
 
         validate(learner, latest)
         if batch_drawer is None:
@@ -315,20 +360,27 @@ def run(config, output, *, prepare_only=False, max_steps_this_session=None,
                 batch_drawer=batch_drawer, joint_separate_batches=batch_drawer is not None,
                 policy_surprise_weighting=(PolicySurpriseConfig(**config.policy_surprise_weighting)
                                           if config.policy_surprise_weighting is not None else None),
-                value_auxiliary=auxiliary)
+                value_auxiliary=auxiliary,
+                progress_auxiliary=progress_auxiliary,
+                stop_condition=(None if early_stopping_increases is None else
+                                lambda: stop_state is not None and stop_state["triggered"]))
         finally:
             writer.close()
-        completed = learner.round_train_step == plan["steps_target"]
+        stopped_early = stop_state is not None and stop_state["triggered"]
+        completed = learner.round_train_step == plan["steps_target"] or stopped_early
         if completed:
             shutil.copyfile(checkpoints / f"step-{learner.round_train_step:09d}.pt", checkpoints / "final.pt")
             if not (output / "full_validation.json").exists():
                 full_path = output / "full_validation" / f"step-{learner.round_train_step:09d}.json"
                 metrics = (read_json(full_path)["metrics"] if full_path.exists()
-                           else evaluate(learner, index, None, auxiliary))
+                           else evaluate(learner, index, None, auxiliary, **evaluation_kwargs))
                 write_json(output / "full_validation.json", metrics)
         write_json(output / "progress.json", {"status": "complete" if completed else "incomplete",
                                               "step": learner.round_train_step, "steps_target": plan["steps_target"],
-                                              "replay_identity": identity, "training": result})
+                                              "replay_identity": identity, "training": result,
+                                              **({"stop_reason": "consecutive_validation_increases" if stopped_early else
+                                                  "exposure_budget", "early_stopping": stop_state}
+                                                 if early_stopping_increases is not None else {})})
         return result
 
 

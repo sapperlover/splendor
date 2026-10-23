@@ -2,6 +2,8 @@
 
 Schema：`splendor-observation-action-v1`。入口为 `features.encode_decision` / `collate_encoded_decisions`。编码器只读取公开 DTO，不枚举、筛选或修改合法动作；当前 Python 路径使用向量化 NumPy，native 编码与其做差分核对。
 
+2026-10-23已撤回并删除新增`purchase_outcomes`模型字段及全部购买／贵族／终局派生分支，恢复原输入读取路径。下述29／17／148／82维schema、历史NPZ和native编码未变；原准备、验证与冗余审查见[历史记录](../../artifacts/entity_attention_first_round_20261022/README.md)。
+
 2026-10-21默认贵族池从10张补齐到12张（蓝绿黑333、红白44），双人局仍抽3张。贵族以17维牌面属性编码，无贵族ID embedding，因此3个贵族槽、schema版本和模型权重形状不变；当前规则数据身份由catalog fingerprint另行区分，不能用相同特征schema证明牌池相同。
 
 ## 2. 固定顺序与总维度

@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-23",
+  "status": "purchase_only_prepared_not_started",
+  "scope": "User-requested disabling of short-progress supervision; purchase features unchanged and reviewed for redundancy. No formal training, CUDA smoke or arena run.",
+  "progress_auxiliary": null,
+  "model_config": {
+    "architecture": "entity_attention_v1",
+    "dropout": 0.0,
+    "feature_schema_version": "splendor-observation-action-v1",
+    "ffn_hidden": 512,
+    "heads": 4,
+    "hidden": 128,
+    "layers": 2,
+    "market_relations": true,
+    "purchase_outcomes": true,
+    "value_readout": "global_players_market"
+  },
+  "parameters": 587138,
+  "run": "runs/entity_attention_purchase_only_r21_r31_20261023",
+  "preserved_combined_run": "runs/entity_attention_first_round_r21_r31_20261022",
+  "same_data_split_schedule_as_combined": true,
+  "fixed_validation_digest": "b7d07bc00d1277c7eabfea561199e33ab83c7e49c1598a22b35ee52919da55b5",
+  "splits": {
+    "train": {
+      "games": 39629,
+      "policy_positions": 664043,
+      "positions": 3170796
+    },
+    "validation": {
+      "games": 4371,
+      "policy_positions": 72631,
+      "positions": 349435
+    }
+  },
+  "sampling": {
+    "policy_batch_size": 256,
+    "policy_draw_exposure": 57.30019290919413,
+    "protocol": "policy-high-value-all-v1",
+    "update": "one joint AdamW update and one global gradient clip per policy/value batch pair",
+    "value_batch_size": 256,
+    "value_draw_exposure": 12.000075690772917
+  },
+  "steps_target": 148632,
+  "formal_checkpoints_exist": false,
+  "tests": {
+    "tests": "108",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "22.147"
+  },
+  "test_report": "artifacts/entity_attention_first_round_20261022/purchase_only_20261023_tests.xml",
+  "cpu_smoke": {
+    "report": "artifacts/entity_attention_first_round_20261022/cpu_purchase_only_20261023_validation.json",
+    "updates": 12,
+    "native_roots": 3,
+    "simulations_per_root": 8,
+    "total_search_simulations": 24,
+    "compile_failure_fallbacks": 0,
+    "progress_auxiliary": null
+  },
+  "source_hashes": {
+    "src/splendor/offline_first_round.py": "b2da2f9e8f7383053f0ab2418115a9cc4a6e937a023c31c12a38567556878a11",
+    "configs/entity_attention_v1/offline_first_round_r21_r31_20261022.json": "adb6127c9b44dc0b03a21cf612ab7e1753dcfd764b1a97b55ddb6458a51bea6d",
+    "scripts/run_attention_first_round_20261022.sh": "6b8ddf8a1b5e63eb30629018242f98829f766e8acbd821013ecaa3618d9380c2",
+    "tests/test_attention_first_round.py": "9ac223f53bafed1e85f5432aaa1cc5e9568a55308d039282e4e3ec310674216a",
+    "artifacts/entity_attention_first_round_20261022/validate.py": "6aea82dfd3f520b4fe39a3b7b94ed6f082bbbaa41b79ad1d05734c59b1312e4a",
+    "src/splendor/purchase_outcomes.py": "4d522e32ad22498e56b857c3873394fdddeca88eae371fe6fd091dfa28a1941e"
+  },
+  "preserved_historical_evidence": {
+    "preparation.json": "d28ef216f9626c04be88fbd84b8c37021f18a2f87e8ba5c150efbcb116371564",
+    "verification.json": "d4dd1278e2cbdf80e617195822e383d909c479bef7e918af51c08a349fbcb320",
+    "cpu_validation.json": "079485e0fd577f015cf39bd1272184af2a842fb65ec49093e6e6adc333a10b31",
+    "cuda_validation.json": "48ba51dc01d4d010285f1e477a885edc74a04aae1b90a349f286ea82b9214c5e",
+    "tests.xml": "aa7b24547d9ebe830589a5b1bb07420eaacb9c25f2b155265fa898dd27890527"
+  },
+  "redundancy_report": "artifacts/entity_attention_first_round_20261022/purchase_redundancy_20261023.md",
+  "plan": {
+    "absolute_rounds": [
+      64,
+      74
+    ],
+    "draw_exposures": 12.0,
+    "fixed_validation_digest": "b7d07bc00d1277c7eabfea561199e33ab83c7e49c1598a22b35ee52919da55b5",
+    "games": 44000,
+    "initialization": {
+      "auxiliary_seed": null,
+      "kind": "random_initialization",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "purchase_outcomes": true,
+        "value_readout": "global_players_market"
+      },
+      "optimizer": "fresh AdamW",
+      "seed": 43100000
+    },
+    "replay_identity": {
+      "digest": "47f87529da71ddb1d3139022de6b38ccdef061de36afe1ac862b03ad25fb7f78",
+      "evicted_games": 0,
+      "first_key": [
+        63,
+        0
+      ],
+      "last_key": [
+        73,
+        3999
+      ],
+      "policy_surprise_weighting": null,
+      "protocol": "alphazero-replay-index-v1",
+      "total_games": 44000,
+      "train_games": 39629,
+      "train_positions": 3170796,
+      "validation_games": 4371,
+      "value_auxiliary": null
+    },
+    "sampling": {
+      "policy_batch_size": 256,
+      "policy_draw_exposure": 57.30019290919413,
+      "protocol": "policy-high-value-all-v1",
+      "update": "one joint AdamW update and one global gradient clip per policy/value batch pair",
+      "value_batch_size": 256,
+      "value_draw_exposure": 12.000075690772917
+    },
+    "splits": {
+      "train": {
+        "games": 39629,
+        "policy_positions": 664043,
+        "positions": 3170796
+      },
+      "validation": {
+        "games": 4371,
+        "policy_positions": 72631,
+        "positions": 349435
+      }
+    },
+    "status": "prepared",
+    "steps_target": 148632,
+    "validation_steps": [
+      7432,
+      14864,
+      22295,
+      29727,
+      37158,
+      44590,
+      52022,
+      59453,
+      66885,
+      74316,
+      81748,
+      89180,
+      96611,
+      104043,
+      111474,
+      118906,
+      126338,
+      133769,
+      141201,
+      148632
+    ]
+  }
+}

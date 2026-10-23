@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-23",
+  "scope": "User withdrew all newly added purchase-settlement features, including terminal-related features; no replacement design, training or arenas. Short-progress supervision remains disabled.",
+  "archive": "artifacts/entity_attention_first_round_20261022/withdrawn_purchase_sources_20261023.tar.gz",
+  "archive_sha256": "86a79bd70128771393dc51e7edc2dab9c066092fd58e7787d3ad8f1bd8e47a1e",
+  "source_before_removal": {
+    "src/splendor/purchase_outcomes.py": "4d522e32ad22498e56b857c3873394fdddeca88eae371fe6fd091dfa28a1941e",
+    "src/splendor/offline_first_round.py": "b2da2f9e8f7383053f0ab2418115a9cc4a6e937a023c31c12a38567556878a11",
+    "src/splendor/entity_attention.py": "d47b188762a978a8c6b407566cb07d88b38f2c5a2473753cdc8c716614fec8f9",
+    "src/splendor/progress_auxiliary.py": "103316708efadce50ee84adc32dede6df9288a302a093f3c5523c6992ceef972",
+    "src/splendor/alphazero_train.py": "b0fdbad2131db18f2d57067d81f72842d16e4a998700e90feb717692f10c6e38",
+    "src/splendor/compact_game_cache.py": "cbed41983413e3a3c4a0de74928dd7909824562708e752a54580c4a2f90e68f3",
+    "src/splendor/offline_objectives.py": "47879971657f9d32477f968b0bbedea76b15ab4e165e401396536e903213ae73",
+    "src/splendor/actor_critic.py": "3f7651ebce7095d1c69e9919f86e0002065eb49ddebc9cec9c93d3f7de2e77e8",
+    "configs/entity_attention_v1/offline_first_round_r21_r31_20261022.json": "adb6127c9b44dc0b03a21cf612ab7e1753dcfd764b1a97b55ddb6458a51bea6d",
+    "scripts/run_attention_first_round_20261022.sh": "6b8ddf8a1b5e63eb30629018242f98829f766e8acbd821013ecaa3618d9380c2",
+    "tests/test_attention_first_round.py": "9ac223f53bafed1e85f5432aaa1cc5e9568a55308d039282e4e3ec310674216a",
+    "artifacts/entity_attention_first_round_20261022/validate.py": "6aea82dfd3f520b4fe39a3b7b94ed6f082bbbaa41b79ad1d05734c59b1312e4a",
+    "artifacts/entity_attention_first_round_20261022/README.md": "e76a91b5169ec8d8b9c0467078469498fd326d9134e7c74caaa993d6aa1e2d60",
+    "artifacts/entity_attention_first_round_20261022/purchase_redundancy_20261023.md": "812d9a4a386a87237a0234a21b2645a4931de9822bad6e759f285ed938a6588c"
+  },
+  "baseline_config": {
+    "architecture": "entity_attention_v1",
+    "hidden": 128,
+    "heads": 4,
+    "layers": 2,
+    "ffn_hidden": 512,
+    "dropout": 0.0,
+    "market_relations": true,
+    "value_readout": "global_players_market"
+  },
+  "baseline_seed": 43100000,
+  "baseline_parameters": 583682,
+  "baseline_requests": 3,
+  "baseline_outputs": "artifacts/entity_attention_first_round_20261022/withdrawal_20261023_baseline.npz",
+  "historical_reports": {
+    "tests.xml": "aa7b24547d9ebe830589a5b1bb07420eaacb9c25f2b155265fa898dd27890527",
+    "cuda_validation.json": "48ba51dc01d4d010285f1e477a885edc74a04aae1b90a349f286ea82b9214c5e",
+    "preparation.json": "d28ef216f9626c04be88fbd84b8c37021f18a2f87e8ba5c150efbcb116371564",
+    "purchase_only_20261023.json": "d134f1256177643cc094a83fc43ac8c61ded8df1908bd272774f53902b90ff9b",
+    "purchase_only_20261023_tests.xml": "32e07630ddf41739a181f8d7ea612c305e0a214360fa45ffbf1c048332198130",
+    "cpu_purchase_only_20261023_validation.json": "e3b69f1611d77608a60cc33fe6988b0a0de806b9b40a6e0e0d8eee119d7d7630",
+    "verification.json": "d4dd1278e2cbdf80e617195822e383d909c479bef7e918af51c08a349fbcb320",
+    "cpu_validation.json": "079485e0fd577f015cf39bd1272184af2a842fb65ec49093e6e6adc333a10b31",
+    "purchase_redundancy_20261023.json": "834978b2beb13c7b17718a11693c7ccf390ba944c2897c5787dd8ab37d32513a"
+  },
+  "status": "withdrawn_verified",
+  "baseline_outputs_bitwise_unchanged": true,
+  "parameters": 583682,
+  "purchase_feature_modules_absent": true,
+  "progress_head_absent": true,
+  "native_smoke": {
+    "device": "cpu",
+    "roots": 3,
+    "per_root": "S8N1",
+    "total_simulations": 24,
+    "engineering_only": true
+  },
+  "original_checkpoints": [
+    {
+      "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-019/checkpoints/final.pt",
+      "sha256": "fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd",
+      "strict_load_and_forward": true,
+      "parameters": 583682
+    },
+    {
+      "path": "runs/entity_attention_r20_s256n4_noble12_iteration_20261022/rounds/round-030/checkpoints/final.pt",
+      "sha256": "c57a2a8a7721fe65de90dbc1336483f5d0358d10c4ff4d5c893986e88e588f6c",
+      "strict_load_and_forward": true,
+      "parameters": 583682
+    }
+  ],
+  "historical_reports_unchanged": true,
+  "deleted_files": [
+    "src/splendor/purchase_outcomes.py",
+    "src/splendor/offline_first_round.py",
+    "configs/entity_attention_v1/offline_first_round_r21_r31_20261022.json",
+    "scripts/run_attention_first_round_20261022.sh",
+    "artifacts/entity_attention_first_round_20261022/validate.py"
+  ],
+  "tests": {
+    "tests": "115",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "29.948"
+  },
+  "test_report": "artifacts/entity_attention_first_round_20261022/withdrawal_20261023_tests.xml",
+  "source_after_removal": {
+    "src/splendor/entity_attention.py": "3005eb9b7ea904a7fb73dd36658173a8d972f1aeed64bcc698f7aa4f50fcb9a7",
+    "tests/test_attention_first_round.py": "3110a121402237136dd3ea3201839db6f83b3c703404169ab3ebceafc0d68fe9",
+    "src/splendor/progress_auxiliary.py": "103316708efadce50ee84adc32dede6df9288a302a093f3c5523c6992ceef972"
+  },
+  "formal_candidate_checkpoints_exist": false
+}

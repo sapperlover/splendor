@@ -1,0 +1,140 @@
+{
+  "scope": "corrected cache feasibility measurements; no production cache implementation or A/B",
+  "hit_rate": {
+    "source": "96 roots x 2 seeds x (S128N1, S256N4); R20 attention model; per-search empty cache",
+    "S128N1": {
+      "requests": 23894,
+      "unique_inputs": 22722,
+      "ready_rate": 0.04904997070394241,
+      "potential_rate": 0.04904997070394241,
+      "inflight_rate": 0.0
+    },
+    "S256N4": {
+      "requests": 188814,
+      "unique_inputs": 152553,
+      "ready_rate": 0.16291164850064085,
+      "potential_rate": 0.19204614064635037,
+      "inflight_rate": 0.029134492145709533
+    },
+    "request_weighting": {
+      "high_share": 0.7287336708908834,
+      "low_share": 0.27126632910911663,
+      "basis": "R20 full-round S256N4/S128N1 simulation counts"
+    },
+    "weighted_ready_rate": 0.13202480913852546,
+    "weighted_potential_rate": 0.15325609454940997,
+    "caveat": "per-search empty cache; no cross-root/cross-game/global cache; not full 4000"
+  },
+  "gpu_graph": {
+    "method": "production NativePackedTransfer._direct_graph CUDAGraph replay; B500; 6-7 steady batches/width; total includes H2D+D2H",
+    "per_width_b500": {
+      "16": {
+        "graph_ms_b500": 6.793439865112305,
+        "total_ms_b500": 9.901135921478271,
+        "b500_graph_n": 6
+      },
+      "32": {
+        "graph_ms_b500": 6.634367942810059,
+        "total_ms_b500": 9.675840377807617,
+        "b500_graph_n": 6
+      },
+      "48": {
+        "graph_ms_b500": 6.947807788848877,
+        "total_ms_b500": 9.599360466003418,
+        "b500_graph_n": 7
+      },
+      "64": {
+        "graph_ms_b500": 6.703455924987793,
+        "total_ms_b500": 9.724736213684082,
+        "b500_graph_n": 7
+      }
+    },
+    "mlp_per_width_b500": {
+      "16": {
+        "graph_ms_b500": 2.312831997871399,
+        "total_ms_b500": 5.0147199630737305,
+        "b500_graph_n": 6
+      },
+      "32": {
+        "graph_ms_b500": 2.0854239463806152,
+        "total_ms_b500": 4.974464178085327,
+        "b500_graph_n": 6
+      },
+      "48": {
+        "graph_ms_b500": 1.8648639917373657,
+        "total_ms_b500": 4.712096214294434,
+        "b500_graph_n": 7
+      },
+      "64": {
+        "graph_ms_b500": 2.1342720985412598,
+        "total_ms_b500": 4.882944107055664,
+        "b500_graph_n": 7
+      }
+    },
+    "width_weighted": {
+      "attention_full": {
+        "graph_ms_b500": 6.885470500538404,
+        "graph_us_per_row": 13.770941001076809,
+        "total_ms_b500": 9.629999377841616,
+        "total_us_per_row": 19.25999875568323,
+        "width_share": {
+          "16": 2.1794258559379634e-05,
+          "32": 0.01601641304175131,
+          "48": 0.7494076500281533,
+          "64": 0.23455414267153596
+        }
+      },
+      "attention_tuned_60s": {
+        "graph_ms_b500": 6.7431801378061,
+        "graph_us_per_row": 13.4863602756122,
+        "width_share": {
+          "32": 0.641231585560384,
+          "48": 0.34387136584753847,
+          "64": 0.01489704859207761
+        }
+      },
+      "mlp_tuned_60s": {
+        "graph_ms_b500": 1.9825261811278407,
+        "graph_us_per_row": 3.9650523622556815,
+        "total_ms_b500": 4.837625953719887,
+        "total_us_per_row": 9.675251907439774,
+        "width_share": {
+          "32": 0.41562491533979357,
+          "48": 0.4878970045352991,
+          "64": 0.09647808012490733
+        }
+      }
+    },
+    "gpu_graph_share": {
+      "attention_full": 0.7236348979692346,
+      "attention_tuned_60s": 0.8142005049608739,
+      "mlp_tuned_60s": 0.5026418719733438
+    },
+    "cache_upper_bound_graph_only": {
+      "attention_full": 0.0955377526774086,
+      "attention_tuned_60s": 0.10749465882735838,
+      "mlp_tuned_60s": 0.06636119261890631
+    },
+    "direct_dispatch_superseded": {
+      "attention_us_per_row": 15.0127,
+      "mlp_us_per_row": 3.575,
+      "attention_share": 0.7889,
+      "mlp_share": 0.453,
+      "attention_upper": 0.1042,
+      "mlp_upper": 0.0598
+    },
+    "scope": "production CUDAGraph B500; graph-only share excludes H2D/D2H overlap; not full 4000"
+  },
+  "key_cost": {
+    "python_us_per_row": 8.83,
+    "note": "Python measurement; at 52.5k rows/s about 0.46 CPU-core equivalent, not wall fraction; production C++ key cost not measured"
+  },
+  "conclusion": "Production CUDAGraph B500: attention graph share 72.4% full /81.4% tuned, MLP 50.3%; cache graph-only upper bounds 9.6%/10.8% attention and 6.6% MLP; actual cache A/B still required.",
+  "limits": [
+    "per-search empty cache, not cross-game/global",
+    "GPU graph timing excludes H2D/gather/dispatch",
+    "no cache implementation/A-B",
+    "measurements on one machine/model",
+    "width-weighted projection uses B500 per-width medians, not per-batch GPU busy"
+  ]
+}

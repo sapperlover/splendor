@@ -1,0 +1,52 @@
+{
+  "protocol": "mcts-selfplay-v2",
+  "run_id": "mlp_cpu",
+  "round_index": 0,
+  "checkpoint": "/home/lc/下载/splendor/runs/entity_set_mlp_cross64_role005_offline_80k_20261022/checkpoints/step-000054112.pt",
+  "num_games": 1008,
+  "seed": 44000000,
+  "search_config": {
+    "c_puct": 1.5,
+    "determinizations": 4,
+    "dirichlet_alpha": 0.3,
+    "fold_forced_phases": true,
+    "forced_playouts": 0.0,
+    "max_simulation_transitions": 512,
+    "policy_target_pruning": false,
+    "root_noise_fraction": 0.25,
+    "seed": 36930000,
+    "simulations": 1024
+  },
+  "execution": {
+    "backend": "native_cpu",
+    "engine_mode": "fast",
+    "workers": 8,
+    "active_games_per_worker": 4,
+    "max_batch_size": 4,
+    "max_batch_wait_ms": 0,
+    "torch_threads": 1,
+    "precision": "float32",
+    "batch_interface": "native",
+    "inference_mode": "eager",
+    "actor_projection": false,
+    "candidate_buckets": [
+      16,
+      32,
+      48
+    ]
+  },
+  "add_root_noise": true,
+  "temperature_schedule": {
+    "late_temperature": 0.0,
+    "opening_completed_turns": 10,
+    "opening_temperature": 1.0
+  },
+  "validation_fraction": 0.1,
+  "split_seed": 44001000,
+  "max_completed_turns": 400,
+  "budget_randomization": {
+    "low_determinizations": 1,
+    "low_probability": 0.75,
+    "low_simulations": 128
+  }
+}

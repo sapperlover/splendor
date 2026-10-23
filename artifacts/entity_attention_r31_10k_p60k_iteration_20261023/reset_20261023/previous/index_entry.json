@@ -1,0 +1,35 @@
+{
+  "id": "entity-attention-r31-10k-p60k-iteration-2026-10-23",
+  "status": "incomplete",
+  "report": "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md",
+  "scope": "Prepared command only; no real collection, production training or arenas started. Original rawR31 full model/AdamW/all RNG, total68423 updates, source R22-R31 exactly40000 games with original labels and whole-game splits. New10000 games/round, replay capacity60000, lr2e-5 and3000 updates/round. Partial first pool50000 with policy new share1/5, second pool60000 share1/3; thereafter existing random-initial-history-first then online-FIFO eviction. Preserve fixed25% historical policy subset, policy-high/value-all eachB256,8GiB cache, S256N4 total1024 / S128N1 total128 mixed collection, original execution and fixedR43 greedy1000pair/every3branch-round S1024N1 total1024 search500pair. Local iteration1 maps lineageR32; no import of parent24k active pool/completed-round state. Snapshot retains exact parent model/learner/collector/native/catalog implementation, only random_budget_iteration.py is replaced to allow initial/continuation underfill and report actual next pool/share.20 synthetic/mock CPU regressions pass against the actual frozen implementation,19 workspace regressions passed, and delivered shell --check succeeds; no GPU workload or strength result.",
+  "evidence": [
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/prepare.py",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/plan.json",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/source.json",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/input_check.json",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/tests.xml",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/workspace_tests.xml",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/verification.json",
+    "configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json",
+    "scripts/run_r31_10k_p60k_iteration_20261023.sh",
+    "tests/test_random_budget_pool_warmup.py"
+  ],
+  "evidence_hashes": {
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md": "3ee3fbf35328536d5ef7e1eb12db87a6130212c4df87eacbfc8845a8c206fbac",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/prepare.py": "373f13573578561743d8ce21759f7b5a9b71eb7c5aa57c0fe0603bfa756a9ca5",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/plan.json": "8767ee58da52229b6f20f7dcde37ec4dfdf9d138309cfe3c57bdeb2df77c32d0",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/source.json": "6c48e92d266ddcaaabc26e2c40b8117290d584332d3952de584ec0c88f2c120e",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/input_check.json": "c6717a57aa92864cb912d0405e130845bc624678dee76610542009cb41f0bd0a",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/tests.xml": "7feb25950d686d915a4962294a99f4a010db8430fad60067ff162b839608b500",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/workspace_tests.xml": "51639856a3f735d6b3ce39dabb014f9fe961843d7506c32bd3571bd7defb5cfd",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/verification.json": "4b389d10636657b9419529cb86bd3f125d0967fe169d48af152b29d6057583d0",
+    "configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json": "4bdd7daaa1a88ebb55bd6dfd28f23eee4fb3e08195b13aeb2640a98704174346",
+    "scripts/run_r31_10k_p60k_iteration_20261023.sh": "c7a73011d7632233cb73fbe42b660d8657d15b94d52fb3f088ec84f3aed77b9c",
+    "tests/test_random_budget_pool_warmup.py": "1a2226a002bfe5ed1a196633fc77758f220bd4b6c2cfdbdc63a99bcd5999271d"
+  },
+  "historical_source_hashes": {
+    "src/splendor/random_budget_iteration.py": "373018a2d2f891aa1b5d2bf4c1368507e30810468e4f7a5351fdf08d911da34c"
+  }
+}

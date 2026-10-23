@@ -1,0 +1,128 @@
+{
+  "config": {
+    "path": "configs/entity_attention_v1/offline_first_round_r21_r31_20261022.json",
+    "sha256": "3383f59adc03825092051806d205cbbf548040652b10ef10ee32fe0024bb2edb"
+  },
+  "fixed_validation_digest": "b7d07bc00d1277c7eabfea561199e33ab83c7e49c1598a22b35ee52919da55b5",
+  "formal_checkpoints_exist": false,
+  "games": 44000,
+  "no_arena": true,
+  "plan": {
+    "absolute_rounds": [
+      64,
+      74
+    ],
+    "draw_exposures": 12.0,
+    "fixed_validation_digest": "b7d07bc00d1277c7eabfea561199e33ab83c7e49c1598a22b35ee52919da55b5",
+    "games": 44000,
+    "initialization": {
+      "auxiliary_seed": 36100000,
+      "kind": "random_initialization",
+      "model_config": {
+        "architecture": "entity_attention_progress_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "purchase_outcomes": true,
+        "value_readout": "global_players_market"
+      },
+      "optimizer": "fresh AdamW",
+      "seed": 43100000
+    },
+    "replay_identity": {
+      "digest": "6c9606fafbfedbfe0ad345d1c45afe275cca7a0dd80ab1bdff221ff599798fd0",
+      "evicted_games": 0,
+      "first_key": [
+        63,
+        0
+      ],
+      "last_key": [
+        73,
+        3999
+      ],
+      "policy_surprise_weighting": null,
+      "progress_auxiliary": {
+        "loss_weight": 0.05,
+        "protocol": "short-progress-main-h2-h4-v1"
+      },
+      "protocol": "alphazero-replay-index-v1",
+      "total_games": 44000,
+      "train_games": 39629,
+      "train_positions": 3170796,
+      "validation_games": 4371,
+      "value_auxiliary": null
+    },
+    "sampling": {
+      "policy_batch_size": 256,
+      "policy_draw_exposure": 57.30019290919413,
+      "protocol": "policy-high-value-all-v1",
+      "update": "one joint AdamW update and one global gradient clip per policy/value batch pair",
+      "value_batch_size": 256,
+      "value_draw_exposure": 12.000075690772917
+    },
+    "splits": {
+      "train": {
+        "games": 39629,
+        "policy_positions": 664043,
+        "positions": 3170796
+      },
+      "validation": {
+        "games": 4371,
+        "policy_positions": 72631,
+        "positions": 349435
+      }
+    },
+    "status": "prepared",
+    "steps_target": 148632,
+    "validation_steps": [
+      7432,
+      14864,
+      22295,
+      29727,
+      37158,
+      44590,
+      52022,
+      59453,
+      66885,
+      74316,
+      81748,
+      89180,
+      96611,
+      104043,
+      111474,
+      118906,
+      126338,
+      133769,
+      141201,
+      148632
+    ]
+  },
+  "run": "runs/entity_attention_first_round_r21_r31_20261022",
+  "same_data_split_schedule_as_baseline": true,
+  "sampling": {
+    "policy_batch_size": 256,
+    "policy_draw_exposure": 57.30019290919413,
+    "protocol": "policy-high-value-all-v1",
+    "update": "one joint AdamW update and one global gradient clip per policy/value batch pair",
+    "value_batch_size": 256,
+    "value_draw_exposure": 12.000075690772917
+  },
+  "splits": {
+    "train": {
+      "games": 39629,
+      "policy_positions": 664043,
+      "positions": 3170796
+    },
+    "validation": {
+      "games": 4371,
+      "policy_positions": 72631,
+      "positions": 349435
+    }
+  },
+  "status": "prepared_not_started",
+  "steps_target": 148632
+}

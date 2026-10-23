@@ -1,5 +1,14 @@
 # Actor–Critic、学习环境与 PPO 契约
 
+2026-10-23撤回新增购买结算关系方案：`EntityAttentionConfig`及旧辅助配置均不再接受`purchase_outcomes`，actor回到原动作编码＋cross-attention；删除专用offline_first_round入口／配置／脚本。当前关系attention128为583682参数，原market_relations与value读取不变；此前短期进展辅助保持关闭，保留的底层进展模块只供历史组件复核，不在现行训练配置中启用。旧购买增强实验权重不由当前代码静默降级；当时源码、配置和工程记录见[撤回专题](../../artifacts/entity_attention_first_round_20261022/README.md)。
+
+2026-10-23：`random_budget_iteration`允许“初始历史局数＋每轮新局数≤池容量”，仍拒绝初轮就超容量淘汰历史；首轮及未满池continuation的预检输出实际`first_pool_games`，新policy配额按实际活动局数计算。未满时不淘汰，满后沿用原历史随机优先／在线FIFO；旧配置和默认序列化不变。[R31起点40k历史→首轮50k→60k池](../../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)只准备未启动，首轮新数据比例1/5，第二轮1/3；模型／AdamW／RNG完整继承，训练两头及预算规则不变。
+
+
+2026-10-22新增`offline_finetune`：从AZ完整checkpoint继承模型、AdamW状态／计数、采样和Torch RNG，仅修改lr，重置本段局部步、保留累计步；固定`validation_interval_steps`评估固定子集与完整留出，非整倍数预算结束点补评估。沿用混合预算两头独立batch、一次联合更新和可恢复的严格上升早停，本段step0排除；预算为新增曝光。配置冻结起点SHA及间隔，未使用的原随机初始化seed和百分比间隔不带入新配置；`sampling_seed`字段保留来源记录，实际从checkpoint采样状态继续，不重置。旧百分比入口默认行为不变，见[lr2e-5续训](../../artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/README.md)。
+
+2026-10-22新增可选`offline_early_stopping`入口，继承混合预算scratch配置并冻结`early_stopping_increases`（正整数，当前3）。只在百分比完整留出的policy KL＋胜负MSE连续严格上升时结束训练，持平或下降重置；step0不参与。达到早停或曝光上限均完成训练阶段，progress的`stop_reason`区分两者；只从实际到达的百分比checkpoint选最低联合指标，并列较早步。恢复重建既有评估序列，不从停止点额外更新。旧scratch／mixed配置和默认序列化不变，见[第21–31轮实验](../../artifacts/entity_attention_128x2_offline_r21_r31_20261022/README.md)。
+
 2026-10-22新建MLP动作cross模块的type／owner／tier embedding各std0.05（初始化后原位缩放，不额外消耗RNG）。仅改变新建权重的初始分布，906434参数、模型配置字段、旧checkpoint严格恢复及已存权重均不变；不会在加载后再次缩放。对应离线配置及验证见[角色标定](../../artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md)，正式训练按用户要求未启动。
 
 模型只消费 [数值特征](feature_schema_zh-CN.md)，不接收 `GameState`、执行 handle、种子或隐藏牌。本文区分纯权重、PPO 训练 checkpoint；AlphaZero checkpoint 和损失见 [AZ 指南](../guides/alphazero_zh-CN.md)。下表为默认模型和基础 `PPOConfig`，具体训练参数由冻结 run config 决定。

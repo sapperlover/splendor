@@ -45,6 +45,8 @@ from .policy_surprise import PolicySurpriseConfig, PolicySurpriseWeighting
 from .rng import DeterministicRng
 from .selfplay_data import SelfPlayBatch, SelfPlaySample, collate_selfplay_samples
 from .value_auxiliary import ValueAuxiliaryConfig, auxiliary_targets
+from .progress_auxiliary import (ProgressAuxiliaryConfig, progress_targets,
+                                 progress_loss_sums, progress_metrics)
 
 DEFAULT_DEVICE = "cuda"
 _EPS = torch.finfo(torch.float32).tiny
@@ -415,6 +417,8 @@ class AlphazeroLearner:
         value_batch: SelfPlayBatch | None = None,
         value_auxiliary: ValueAuxiliaryConfig | None = None,
         auxiliary_labels: tuple[np.ndarray, np.ndarray] | None = None,
+        progress_auxiliary: ProgressAuxiliaryConfig | None = None,
+        progress_labels: tuple[np.ndarray, np.ndarray, np.ndarray] | None = None,
     ) -> dict[str, Any]:
         """Joint update with optional separate value samples and one global clip.
 
@@ -426,6 +430,10 @@ class AlphazeroLearner:
         self.model.train()
         if (value_auxiliary is None) != (auxiliary_labels is None):
             raise ValueError("auxiliary configuration and labels must be supplied together")
+        if (progress_auxiliary is None) != (progress_labels is None):
+            raise ValueError("progress configuration and labels must be supplied together")
+        if progress_auxiliary is not None and (value_auxiliary is not None or value_batch is None):
+            raise ValueError("progress supervision requires separate value samples and no legacy auxiliary")
         if value_auxiliary is not None:
             if value_batch is not None:
                 raise ValueError("auxiliary offline fitting requires one shared minibatch")
@@ -445,7 +453,10 @@ class AlphazeroLearner:
         )
         if value_batch is not None:
             value_tensors = _torch_batch(value_batch, self.device)
-            values = self.model.value_only(value_batch.decisions)
+            if progress_auxiliary is not None:
+                values, progress_logits = self.model.value_with_progress(value_batch.decisions)
+            else:
+                values = self.model.value_only(value_batch.decisions)
             terms = AlphazeroLossSums(
                 terms.policy_ce_sum, terms.policy_weight_sum,
                 ((values - value_tensors["value_targets"]) ** 2 * value_tensors["value_weights"]).sum(),
@@ -453,6 +464,12 @@ class AlphazeroLearner:
             )
         total = terms.total(self.config)
         auxiliary_metrics = {}
+        if progress_auxiliary is not None:
+            sums = progress_loss_sums(progress_logits, progress_labels, value_tensors["value_weights"])
+            progress_loss = (sums["progress_score_ce_sum"] + sums["progress_bonus_ce_sum"]) / (
+                2 * sums["progress_weight_sum"].clamp_min(_EPS))
+            total = total + progress_auxiliary.loss_weight * progress_loss
+            auxiliary_metrics = progress_metrics({key: value.detach() for key, value in sums.items()})
         if value_auxiliary is not None:
             score_target, turns_target = [torch.as_tensor(x, device=self.device) for x in auxiliary_labels]
             if score_target.shape != values.shape or turns_target.shape != values.shape:
@@ -726,6 +743,8 @@ def run_training_round(
     joint_separate_batches: bool = False,
     policy_surprise_weighting: PolicySurpriseConfig | None = None,
     value_auxiliary: ValueAuxiliaryConfig | None = None,
+    progress_auxiliary: ProgressAuxiliaryConfig | None = None,
+    stop_condition: Callable[[], bool] | None = None,
 ) -> dict[str, Any]:
     """Drive one round of optimizer steps and checkpoint every N updates."""
 
@@ -742,6 +761,11 @@ def run_training_round(
         raise ValueError("value auxiliary objective differs from checkpoint replay identity")
     if value_auxiliary is not None and (joint_separate_batches or split_grad_norms is not None):
         raise ValueError("auxiliary offline fitting requires joint shared minibatches")
+    progress_identity = asdict(progress_auxiliary) if progress_auxiliary is not None else None
+    if learner.replay_identity.get("progress_auxiliary") != progress_identity:
+        raise ValueError("progress auxiliary differs from checkpoint replay identity")
+    if progress_auxiliary is not None and (not joint_separate_batches or value_auxiliary is not None):
+        raise ValueError("progress auxiliary requires joint separate batches without legacy auxiliary")
     if learner.round_steps_target != steps_target:
         raise ValueError("learner step target disagrees with this training round")
     if max_steps_this_session is not None and max_steps_this_session <= 0:
@@ -763,7 +787,7 @@ def run_training_round(
     history_length = 0 if history_pool is None else len(history_pool)
     step_records: list[dict[str, Any]] = []
     timings = {name: 0.0 for name in ("draw_load", "collate", "update_host", "checkpoint", "validation")}
-    while learner.round_train_step < session_target:
+    while learner.round_train_step < session_target and not (stop_condition and stop_condition()):
         cache_before = current_pool.cache_stats()
         tick = time.perf_counter()
         drawn = (batch_drawer(learner.sampling_rng) if batch_drawer is not None else
@@ -781,7 +805,9 @@ def run_training_round(
         if joint_separate_batches:
             if value_batch is None:
                 raise ValueError("joint separate batches require explicit value samples")
-            record = learner.train_step(batch, value_batch=value_batch, references=drawn.references)
+            progress_kwargs = ({} if progress_auxiliary is None else {
+                "progress_auxiliary": progress_auxiliary, "progress_labels": progress_targets(drawn.value_samples)})
+            record = learner.train_step(batch, value_batch=value_batch, references=drawn.references, **progress_kwargs)
         else:
             if (value_batch is None) != (split_grad_norms is None):
                 raise ValueError("split batches and independent gradient limits must be supplied together")

@@ -108,8 +108,9 @@ def check(config):
         raise ValueError("historical round/game count mismatch")
     if len({_key(g) for g in records}) != len(records):
         raise ValueError("duplicate historical game key")
-    if len(records) + config.new_games_per_round != config.replay_max_games:
-        raise ValueError("first round must fill the replay capacity without evicting historical games")
+    first_pool_games = len(records) + config.new_games_per_round
+    if first_pool_games > config.replay_max_games:
+        raise ValueError("first round exceeds replay capacity and would evict historical games")
     for game in records:
         stat = Path(game["path"]).stat()
         if (stat.st_size, stat.st_mtime_ns) != (game["size"], game["mtime_ns"]):
@@ -129,7 +130,7 @@ def check(config):
     if payload.learner_config["weight_decay"] != config.learner.weight_decay:
         raise ValueError("weight decay differs from source optimizer")
     inherited_rounds = 0
-    first_new_policy_fraction = config.new_games_per_round / config.replay_max_games
+    first_new_policy_fraction = config.new_games_per_round / first_pool_games
     if config.continuation_state is not None:
         parent = Path(config.continuation_state["path"])
         if sha256(parent) != config.continuation_state["sha256"]:
@@ -146,7 +147,7 @@ def check(config):
         if sha256(Path(prior["path"])) != prior["sha256"]:
             raise ValueError("continuation replay snapshot changed")
         games = read_json(Path(prior["path"]))["games"]
-        if len(games) != config.replay_max_games or len({_key(g) for g in games}) != len(games):
+        if not 0 < len(games) <= config.replay_max_games or len({_key(g) for g in games}) != len(games):
             raise ValueError("continuation replay capacity/keys mismatch")
         for game in games:
             stat = Path(game["path"]).stat()
@@ -154,11 +155,14 @@ def check(config):
                 raise ValueError(f"continuation archive changed: {game['path']}")
         original_keys = {_key(g) for g in records}
         original_count = sum(_key(g) in original_keys for g in games)
-        first_new_policy_fraction = 1 - max(0, original_count-config.new_games_per_round) / config.replay_max_games
+        overflow = max(0, len(games) + config.new_games_per_round - config.replay_max_games)
+        first_pool_games = min(config.replay_max_games, len(games) + config.new_games_per_round)
+        first_new_policy_fraction = 1 - max(0, original_count-overflow) / first_pool_games
     return sorted(records, key=_key), {"initial_step": payload.total_train_step,
         "inherited_completed_rounds": inherited_rounds,
         "historical_games": len(records), "historical_train_games": sum(g["split"] == "train" for g in records),
         "source_rounds": [config.first_round, config.last_round], "games_per_iteration": config.new_games_per_round,
+        "first_pool_games": first_pool_games,
         "pool_capacity": config.replay_max_games, "policy_batch": config.learner.batch_size,
         "value_batch": config.learner.batch_size, "updates": config.updates_per_round,
         "learning_rate": config.learner.learning_rate,

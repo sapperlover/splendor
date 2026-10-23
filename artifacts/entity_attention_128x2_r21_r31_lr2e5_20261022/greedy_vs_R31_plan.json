@@ -1,0 +1,64 @@
+{
+  "authorization": "User: 和R31做1000pair的greedy",
+  "candidate": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_128x2_r21_r31_lr2e5_20261022/checkpoints/step-000004000.pt",
+    "local_step": 4000,
+    "selection_sha256": "442c44712d0b4ff142cf972f3c84e9f95c3b6c80952dbaf150b7bdb25d815c6c",
+    "sha256": "f3b0dd6a6e9e0241ccc646a0dd00f5519399f989bacf84db5264aef00614fdf6",
+    "total_step": 63453
+  },
+  "command": [
+    "conda",
+    "run",
+    "--no-capture-output",
+    "-n",
+    "splendor",
+    "env",
+    "PYTHONPATH=/home/lc/下载/splendor/runtime/entity_attention_128x2_offline_r21_r31_20261022/source/src",
+    "OMP_NUM_THREADS=1",
+    "MKL_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "python",
+    "-u",
+    "-m",
+    "splendor.evaluation",
+    "--config",
+    "/home/lc/下载/splendor/artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/evaluation_configs/greedy_vs_R31.json",
+    "--output",
+    "/home/lc/下载/splendor/artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/panels/greedy_vs_R31.json",
+    "--progress-every",
+    "50",
+    "--summary-every",
+    "50"
+  ],
+  "config": {
+    "path": "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/evaluation_configs/greedy_vs_R31.json",
+    "sha256": "b5d4217026136606face3b33924f7321f2b43b8c9d6ebb548a44d53576e00efa"
+  },
+  "created_at": "2026-10-22T20:47:01+08:00",
+  "cwd": "/home/lc/下载/splendor",
+  "evaluation_source": {
+    "git_head": "5c3b2d0288ad6d7a79a170d45ab3a9061c3e0f8a",
+    "manifest": "artifacts/entity_attention_128x2_offline_r21_r31_20261022/source.json",
+    "manifest_sha256": "6e609f49c3f06fdc304abbdb128971ad8aa8b8e93e0f5ec24721d732bfc260f0",
+    "path": "runtime/entity_attention_128x2_offline_r21_r31_20261022/source"
+  },
+  "games": 2000,
+  "opening_seed_range": [
+    44000000,
+    44000999
+  ],
+  "opponent": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r20_s256n4_noble12_iteration_20261022/rounds/round-030/checkpoints/final.pt",
+    "sha256": "c57a2a8a7721fe65de90dbc1336483f5d0358d10c4ff4d5c893986e88e588f6c"
+  },
+  "pairs": 1000,
+  "previous_panel": {
+    "path": "artifacts/entity_attention_128x2_offline_r21_r31_20261022/panels/greedy_vs_R31.json",
+    "sha256": "6dee6cc6551dd9a8dae9fc6479d172ac67baa59a3fdc14b44b7f48c846d53adb"
+  },
+  "rules": "12 nobles; same frozen evaluation source/catalog and opening seeds as parent vsR31 panel",
+  "scope": "Selected entire checkpoint fixed before play. Reuse existing parent panel only for common-opponent paired score comparison, not direct candidate battle; no additional arena.",
+  "status": "prepared",
+  "workers": 8
+}

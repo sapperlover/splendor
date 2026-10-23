@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-22",
+  "git_head": "5c3b2d0288ad6d7a79a170d45ab3a9061c3e0f8a",
+  "git_status_short": [
+    "M README.md",
+    " M archive/README.md",
+    " M artifacts/README.md",
+    " M artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md",
+    " M artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md",
+    " M artifacts/experiment_index.json",
+    " M artifacts/index.md",
+    " M configs/entity_set_mlp_v1/README.md",
+    " M docs/current_project_state_zh-CN.md",
+    " M docs/index.md",
+    " M scripts/README.md",
+    "?? archive/20261022/",
+    "?? artifacts/collection_tuning_20261022/",
+    "?? artifacts/repository_archive_20261022/"
+  ],
+  "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU, 6141 MiB, 580.178.04",
+  "torch": "2.14.0+cu130",
+  "cuda": "13.0",
+  "python": "3.12.14",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+  "cpu_count": 16,
+  "memory_total_kib": 32597824,
+  "models": {
+    "attention_r20": {
+      "path": "runs/entity_attention_37423_random_budget_p6k_v24k_20261019/rounds/round-019/checkpoints/final.pt",
+      "file_sha256": "fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd",
+      "params": 583682,
+      "config": {
+        "architecture": "entity_attention_v1",
+        "hidden": 128,
+        "heads": 4,
+        "layers": 2,
+        "ffn_hidden": 512,
+        "market_relations": true,
+        "value_readout": "global_players_market"
+      }
+    },
+    "mlp_cross64_54112": {
+      "path": "runs/entity_set_mlp_cross64_role005_offline_80k_20261022/checkpoints/step-000054112.pt",
+      "file_sha256": "d90f8187f68be487bcacac49f829684b56f8edfecade5811d97fc92eb7b1c584",
+      "model_sha256": "056a9ed3b9a14ca6dc15da3df451422f012d999f804e1b8b4877ce11b5d0b68c",
+      "params": 906434,
+      "config": {
+        "architecture": "entity_set_mlp_v1",
+        "card_hidden": 64,
+        "noble_hidden": 32,
+        "state_hidden": 256,
+        "residual_blocks": 4,
+        "actor_hidden": 128,
+        "critic_hidden": 128,
+        "market_relations": true,
+        "action_bottleneck": 32,
+        "multiplicative_interaction": true,
+        "action_cross_hidden": 64,
+        "action_cross_heads": 2
+      }
+    }
+  }
+}

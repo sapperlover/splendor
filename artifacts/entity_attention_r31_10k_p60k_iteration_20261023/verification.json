@@ -1,0 +1,191 @@
+{
+  "arenas_started": false,
+  "cache_bytes": 17179869184,
+  "cache_scope": "Decoded compact replay LRU capacity; not a process RSS/cgroup hard cap.",
+  "changed_from_parent": {
+    "src/splendor/random_budget_iteration.py": {
+      "branch_sha256": "373018a2d2f891aa1b5d2bf4c1368507e30810468e4f7a5351fdf08d911da34c",
+      "parent_sha256": "b7e62904aa62a57fc51ed957869cbc78943088a707024a63b4886972430c82e2"
+    }
+  },
+  "collection_execution": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      192,
+      256,
+      384,
+      500
+    ],
+    "batch_interface": "native",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "compile_mode": "native-cudagraph",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 128,
+    "max_batch_size": 500,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "pipeline_slots": 2,
+    "precision": "float32",
+    "search_workers": 12,
+    "shared_candidate_width": 256,
+    "shared_slots": 2,
+    "torch_threads": 1,
+    "total_active_games": 2000,
+    "workers": 1
+  },
+  "collection_execution_source": {
+    "path": "artifacts/collection_tuning_20261022/configs/full_attention_best_4000.json",
+    "sha256": "8a9d4acf164e594c01de68f78f3ff89b97022f2a66a79e9d6351f8f7c8b7c4fd"
+  },
+  "config_changes": [
+    {
+      "current": 17179869184,
+      "field": "cache_bytes",
+      "previous": 8589934592
+    },
+    {
+      "current": 128,
+      "field": "search_evaluation.execution.local_microbatch",
+      "previous": 64
+    },
+    {
+      "current": 2000,
+      "field": "search_evaluation.execution.total_active_games",
+      "previous": 1000
+    },
+    {
+      "current": 128,
+      "field": "selfplay.execution.local_microbatch",
+      "previous": 64
+    },
+    {
+      "current": 2000,
+      "field": "selfplay.execution.total_active_games",
+      "previous": 1000
+    }
+  ],
+  "date": "2026-10-23",
+  "evidence_hashes": {
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/input_check.json": "c6717a57aa92864cb912d0405e130845bc624678dee76610542009cb41f0bd0a",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/plan.json": "c03024410bf9a15415c9e75fffbeb90d89fd7057b3986daf70716b58ac4dab7b",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/reset_20261023/record.json": "ed33e4f22c38f81dbcc4d7c334c4478a3071d44d5363574cfdb4612f40862d1b",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/source.json": "98b9df41ff06362e7946c802417baa331fa275cd77e00ac2dd61e6d71c77af1f",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/tests.xml": "94bbe29f1c3ddc3a77f8f28952e2e54b4f5d61ea6e9cf5ffaa026d1e0d750d81"
+  },
+  "final_run_contents": [
+    "inputs/history_r22_r31.jsonl"
+  ],
+  "frozen_modules": {
+    "splendor.actor_critic": "/home/lc/下载/splendor/runtime/entity_attention_r31_10k_p60k_iteration_20261023/source/src/splendor/actor_critic.py",
+    "splendor.alphazero_train": "/home/lc/下载/splendor/runtime/entity_attention_r31_10k_p60k_iteration_20261023/source/src/splendor/alphazero_train.py",
+    "splendor.compact_game_cache": "/home/lc/下载/splendor/runtime/entity_attention_r31_10k_p60k_iteration_20261023/source/src/splendor/compact_game_cache.py",
+    "splendor.random_budget_iteration": "/home/lc/下载/splendor/runtime/entity_attention_r31_10k_p60k_iteration_20261023/source/src/splendor/random_budget_iteration.py"
+  },
+  "frozen_source_files_verified": 109,
+  "git_head": "5c3b2d0288ad6d7a79a170d45ab3a9061c3e0f8a",
+  "input_check_command": "bash scripts/run_r31_10k_p60k_iteration_20261023.sh --check",
+  "launcher_sha256": "c7a73011d7632233cb73fbe42b660d8657d15b94d52fb3f088ec84f3aed77b9c",
+  "preflight": {
+    "first_new_policy_fraction": 0.2,
+    "first_pool_games": 50000,
+    "games_per_iteration": 10000,
+    "historical_games": 40000,
+    "historical_policy_fraction": 0.25,
+    "historical_train_games": 36013,
+    "inherited_completed_rounds": 0,
+    "initial_step": 68423,
+    "learning_rate": 2e-05,
+    "policy_batch": 256,
+    "pool_capacity": 60000,
+    "source_rounds": [
+      65,
+      74
+    ],
+    "updates": 3000,
+    "value_batch": 256
+  },
+  "previous_workspace_tests": {
+    "path": "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/workspace_tests.xml",
+    "result": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 19
+    },
+    "scope": "Initial preparation only; not rerun for this configuration revision."
+  },
+  "prior_attempt": {
+    "checkpoint_files": 0,
+    "collection_started": true,
+    "completed_rounds": 0,
+    "npz_files": 0,
+    "owner_error_type": "KeyboardInterrupt",
+    "stage": "first-round collection; no learner updates"
+  },
+  "production_command": "bash scripts/run_r31_10k_p60k_iteration_20261023.sh",
+  "production_started_after_reset": false,
+  "production_training_started": false,
+  "regression_command": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/entity_attention_r31_10k_p60k_iteration_20261023/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q -o pythonpath=runtime/entity_attention_r31_10k_p60k_iteration_20261023/source/src tests/test_random_budget_iteration.py tests/test_random_budget_pool_warmup.py --junitxml=artifacts/entity_attention_r31_10k_p60k_iteration_20261023/tests.xml",
+  "regressions": {
+    "tests.xml": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 20
+    }
+  },
+  "reset_record": "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/reset_20261023/record.json",
+  "scope": "User-requested deletion of just-started branch outputs completed, prior small provenance retained, original R31 and R22-R31 history protected. Latest attention collection execution adopted and compact replay cache raised from8GiB to16GiB. Search execution matches collection with owner pipeline1. Only five config values changed; model, seeds, labels, splits, budgets, optimizer, replay protocol and evaluation semantics remain as prepared. Actual frozen-source20 synthetic/mock CPU regressions and delivered --check passed. No new GPU collection, training or arenas launched.",
+  "search_execution": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      192,
+      256,
+      384,
+      500
+    ],
+    "batch_interface": "native",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "compile_mode": "native-cudagraph",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 128,
+    "max_batch_size": 500,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "pipeline_slots": 1,
+    "precision": "float32",
+    "search_workers": 12,
+    "shared_candidate_width": 256,
+    "shared_slots": 2,
+    "torch_threads": 1,
+    "total_active_games": 2000,
+    "workers": 1
+  },
+  "status": "prepared_after_requested_reset"
+}

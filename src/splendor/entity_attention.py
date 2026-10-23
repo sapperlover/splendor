@@ -114,10 +114,10 @@ class EntityBlock(nn.Module):
 
 
 class GlobalValueHead(nn.Module):
-    def __init__(self, hidden: int) -> None:
+    def __init__(self, hidden: int, outputs: int = 1) -> None:
         super().__init__()
         self.network = nn.Sequential(nn.LayerNorm(hidden), nn.Linear(hidden, hidden),
-                                     nn.GELU(), nn.Linear(hidden, 1))
+                                     nn.GELU(), nn.Linear(hidden, outputs))
 
     def forward(self, state: tuple[Tensor, Tensor]) -> Tensor:
         return self.network(state[0][:, 0])
@@ -125,10 +125,10 @@ class GlobalValueHead(nn.Module):
 
 class PlayersMarketValueHead(nn.Module):
     """Direct readout of global, self, opponent and masked mean market tokens."""
-    def __init__(self, hidden: int) -> None:
+    def __init__(self, hidden: int, outputs: int = 1) -> None:
         super().__init__()
         self.network = nn.Sequential(nn.LayerNorm(4 * hidden), nn.Linear(4 * hidden, hidden),
-                                     nn.GELU(), nn.Linear(hidden, 1))
+                                     nn.GELU(), nn.Linear(hidden, outputs))
 
     def forward(self, state: tuple[Tensor, Tensor]) -> Tensor:
         entities, valid = state
@@ -138,8 +138,8 @@ class PlayersMarketValueHead(nn.Module):
         return self.network(torch.cat((entities[:, 0], entities[:, 1], entities[:, 2], market), dim=-1))
 
 
-def _value_head(hidden: int, readout: str) -> nn.Module:
-    return GlobalValueHead(hidden) if readout == "global" else PlayersMarketValueHead(hidden)
+def _value_head(hidden: int, readout: str, outputs: int = 1) -> nn.Module:
+    return GlobalValueHead(hidden, outputs) if readout == "global" else PlayersMarketValueHead(hidden, outputs)
 
 
 class EntityAttention(ActorCritic):

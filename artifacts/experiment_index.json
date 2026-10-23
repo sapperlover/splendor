@@ -1,10 +1,238 @@
 {
   "entries": [
     {
-      "id": "entity-set-mlp-cross64-54112-vs-r20-greedy-2026-10-22",
-      "status": "valid",
-      "report": "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md",
-      "scope": "User-authorized independent1000pair/2000game deterministic greedy evaluation of Cross64 role-std0.05 MLP step54112 versus raw R20. Candidate fixed before arena as minimum full-holdout KL+MSE among six completed percentage nodes through81168; KL0.4729014151/MSE0.7726106593. Score43.225%, whole-pair bootstrap95% [41.075%,45.325%],858wins/13draws/1129losses. Current12-noble catalog, swapped seats, same opening seeds/evaluator version as earlier MLP and attention panels. Zero exceptions/illegal actions/engineering truncations/invariant failures; one legitimate engine forced skip in a naturally terminated game and one deterministic-policy-cycle draw. All model/config/frozen source/catalog identities, pair population and bootstrap recomputed. Supports this candidate greedy being weaker than raw R20; no search/value strength or architecture-only causal conclusion. Training remains interrupted at saved81168 of270557, not resumed or modified; no replacement of original final selection or arena-based checkpoint selection.",
+      "evidence": [
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/prepare.py",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/plan.json",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/source.json",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/input_check.json",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/tests.xml",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/workspace_tests.xml",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/verification.json",
+        "configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json",
+        "scripts/run_r31_10k_p60k_iteration_20261023.sh",
+        "tests/test_random_budget_pool_warmup.py",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/reset_20261023/record.json",
+        "artifacts/collection_tuning_20261022/configs/full_attention_best_4000.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/collection_tuning_20261022/configs/full_attention_best_4000.json": "8a9d4acf164e594c01de68f78f3ff89b97022f2a66a79e9d6351f8f7c8b7c4fd",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md": "ffb3924d004a996b170c7a81f9eedf9193fbba1fe7177d0a5843c2d027c5d8e6",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/input_check.json": "c6717a57aa92864cb912d0405e130845bc624678dee76610542009cb41f0bd0a",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/plan.json": "c03024410bf9a15415c9e75fffbeb90d89fd7057b3986daf70716b58ac4dab7b",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/prepare.py": "84106b4f3b62ec4385a95b6c199f5a6e56bfce81fd2c2f6399d85b4f0b697e06",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/reset_20261023/record.json": "ed33e4f22c38f81dbcc4d7c334c4478a3071d44d5363574cfdb4612f40862d1b",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/source.json": "98b9df41ff06362e7946c802417baa331fa275cd77e00ac2dd61e6d71c77af1f",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/tests.xml": "94bbe29f1c3ddc3a77f8f28952e2e54b4f5d61ea6e9cf5ffaa026d1e0d750d81",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/verification.json": "56f83e1717bea1a0d941d3a9a082e16c2f623ceafa5fd9f448daa4146043c154",
+        "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/workspace_tests.xml": "51639856a3f735d6b3ce39dabb014f9fe961843d7506c32bd3571bd7defb5cfd",
+        "configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json": "8530e494dcef412b8b50ab2aed51f836206cf016dd5d597cb091a79d13675aad",
+        "scripts/run_r31_10k_p60k_iteration_20261023.sh": "c7a73011d7632233cb73fbe42b660d8657d15b94d52fb3f088ec84f3aed77b9c",
+        "tests/test_random_budget_pool_warmup.py": "879844a7fe6740d2edfb1eab4e6cb31b383d17b0e78874fd6e48c9b29b6c4fe2"
+      },
+      "historical_source_hashes": {
+        "src/splendor/random_budget_iteration.py": "373018a2d2f891aa1b5d2bf4c1368507e30810468e4f7a5351fdf08d911da34c"
+      },
+      "id": "entity-attention-r31-10k-p60k-iteration-2026-10-23",
+      "report": "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md",
+      "scope": "Original rawR31 full model/AdamW/all RNG, total68423 updates, source R22-R31 exactly40000 games with original labels and whole-game splits. New10000 games/round, replay capacity60000, lr2e-5 and3000 updates/round. Partial first pool50000 with policy new share1/5, second pool60000 share1/3; thereafter existing random-initial-history-first then online-FIFO eviction. Preserve fixed25% historical policy subset, policy-high/value-all eachB256, S256N4 total1024 / S128N1 total128 mixed collection and fixedR43 greedy1000pair/every3branch-round S1024N1 total1024 search500pair. Local iteration1 maps lineageR32; no import of parent24k active pool/completed-round state. Snapshot retains exact parent model/learner/collector/native/catalog implementation, only random_budget_iteration.py replaced for underfill. User later started first collection, interrupted before any completed NPZ or learner update. On2026-10-23 explicit request deleted124 generated files/44552317 bytes, protected originalR31/history/input manifest, and preserved prior small metadata/reset hashes. Now adopts latest attention execution W12/A2000/B500/local_microbatch128/pipeline2 and compact replay cache16GiB, not an RSS hard cap; search uses same execution with pipeline1. Only five config values changed from previous preparation. Actual frozen implementation20 synthetic/mock CPU regressions and delivered --check passed after reset; earlier19 workspace regressions remain historical evidence. Reset branch not restarted; no production training, arenas, full-round throughput or strength result.",
+      "status": "incomplete"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_first_round_20261022/README.md",
+        "artifacts/entity_attention_first_round_20261022/preparation.json",
+        "artifacts/entity_attention_first_round_20261022/tests.xml",
+        "artifacts/entity_attention_first_round_20261022/cpu_validation.json",
+        "artifacts/entity_attention_first_round_20261022/cuda_validation.json",
+        "artifacts/entity_attention_first_round_20261022/verification.json",
+        "src/splendor/actor_critic.py",
+        "src/splendor/entity_attention.py",
+        "src/splendor/progress_auxiliary.py",
+        "src/splendor/compact_game_cache.py",
+        "src/splendor/alphazero_train.py",
+        "src/splendor/offline_objectives.py",
+        "tests/test_attention_first_round.py",
+        "artifacts/entity_attention_first_round_20261022/purchase_only_20261023.json",
+        "artifacts/entity_attention_first_round_20261022/purchase_only_20261023_tests.xml",
+        "artifacts/entity_attention_first_round_20261022/cpu_purchase_only_20261023_validation.json",
+        "artifacts/entity_attention_first_round_20261022/purchase_redundancy_20261023.md",
+        "artifacts/entity_attention_first_round_20261022/purchase_redundancy_20261023.json",
+        "artifacts/entity_attention_first_round_20261022/withdrawal_20261023.json",
+        "artifacts/entity_attention_first_round_20261022/withdrawn_purchase_sources_20261023.tar.gz",
+        "artifacts/entity_attention_first_round_20261022/withdrawal_20261023_baseline.npz",
+        "artifacts/entity_attention_first_round_20261022/withdrawal_20261023_tests.xml"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_first_round_20261022/README.md": "7bdbad5c752e2dbb16744a8953974aeb9da4e5c1bbabbc81a8c2b0c25b157041",
+        "artifacts/entity_attention_first_round_20261022/preparation.json": "d28ef216f9626c04be88fbd84b8c37021f18a2f87e8ba5c150efbcb116371564",
+        "artifacts/entity_attention_first_round_20261022/tests.xml": "aa7b24547d9ebe830589a5b1bb07420eaacb9c25f2b155265fa898dd27890527",
+        "artifacts/entity_attention_first_round_20261022/cpu_validation.json": "079485e0fd577f015cf39bd1272184af2a842fb65ec49093e6e6adc333a10b31",
+        "artifacts/entity_attention_first_round_20261022/cuda_validation.json": "48ba51dc01d4d010285f1e477a885edc74a04aae1b90a349f286ea82b9214c5e",
+        "artifacts/entity_attention_first_round_20261022/verification.json": "d4dd1278e2cbdf80e617195822e383d909c479bef7e918af51c08a349fbcb320",
+        "src/splendor/actor_critic.py": "3f7651ebce7095d1c69e9919f86e0002065eb49ddebc9cec9c93d3f7de2e77e8",
+        "src/splendor/entity_attention.py": "3005eb9b7ea904a7fb73dd36658173a8d972f1aeed64bcc698f7aa4f50fcb9a7",
+        "src/splendor/progress_auxiliary.py": "103316708efadce50ee84adc32dede6df9288a302a093f3c5523c6992ceef972",
+        "src/splendor/compact_game_cache.py": "cbed41983413e3a3c4a0de74928dd7909824562708e752a54580c4a2f90e68f3",
+        "src/splendor/alphazero_train.py": "b0fdbad2131db18f2d57067d81f72842d16e4a998700e90feb717692f10c6e38",
+        "src/splendor/offline_objectives.py": "47879971657f9d32477f968b0bbedea76b15ab4e165e401396536e903213ae73",
+        "tests/test_attention_first_round.py": "3110a121402237136dd3ea3201839db6f83b3c703404169ab3ebceafc0d68fe9",
+        "artifacts/entity_attention_first_round_20261022/purchase_only_20261023.json": "d134f1256177643cc094a83fc43ac8c61ded8df1908bd272774f53902b90ff9b",
+        "artifacts/entity_attention_first_round_20261022/purchase_only_20261023_tests.xml": "32e07630ddf41739a181f8d7ea612c305e0a214360fa45ffbf1c048332198130",
+        "artifacts/entity_attention_first_round_20261022/cpu_purchase_only_20261023_validation.json": "e3b69f1611d77608a60cc33fe6988b0a0de806b9b40a6e0e0d8eee119d7d7630",
+        "artifacts/entity_attention_first_round_20261022/purchase_redundancy_20261023.md": "1928daacd00bf93b794294d22a08cb4ef82ec630ca30bf000067155d6f366e9c",
+        "artifacts/entity_attention_first_round_20261022/purchase_redundancy_20261023.json": "834978b2beb13c7b17718a11693c7ccf390ba944c2897c5787dd8ab37d32513a",
+        "artifacts/entity_attention_first_round_20261022/withdrawal_20261023.json": "3edf77a4c751bf803cc6898d0d07e6cfeb7a6b2b8112e219f0f51ffa5e14fe7a",
+        "artifacts/entity_attention_first_round_20261022/withdrawn_purchase_sources_20261023.tar.gz": "86a79bd70128771393dc51e7edc2dab9c066092fd58e7787d3ad8f1bd8e47a1e",
+        "artifacts/entity_attention_first_round_20261022/withdrawal_20261023_baseline.npz": "e57ec8c22aaf72da0a0656d7c6fb6646b3c46884ef4b607fd2939c51fb9b948a",
+        "artifacts/entity_attention_first_round_20261022/withdrawal_20261023_tests.xml": "f1ea6c66601c32926ad091d7bf4f8e39a62d1ae547c171e31af8dd81d6235f53"
+      },
+      "id": "entity-attention-first-round-2026-10-22",
+      "report": "artifacts/entity_attention_first_round_20261022/README.md",
+      "scope": "2026-10-23用户撤回全部新增购买结算特征，包括终局派生标记；已删除购买模块、actor分支、模型字段、专用offline_first_round入口/配置/启动脚本与旧验证入口。原关系attention128恢复583682参数，短期进展辅助保持关闭，未新增终局设计或启动训练/采集/棋力赛。原组合/纯购买两个候选均只有prepare、无正式训练checkpoint；历史134/108回归、CPU/CUDA短验证与冗余审查原件保留，删除前源码及配置已按原路径冻结到快照。当前115项CPU回归通过，原模型开/中/后3根删除前后policy/value逐位相同，原R20/R31 checkpoint严格加载前向通过；3个CPU原生S8N1根共24模拟通过。撤回属于设计决定，历史工程证据仍有效，不代表已证明该方案棋力无效。旧增强实验权重须用历史快照读取，当前无静默字段忽略或权重降级。",
+      "status": "invalid_or_superseded",
+      "historical_source_hashes": {
+        "artifacts/entity_attention_first_round_20261022/README.md": "aa25f2ae3ca741311d79cf7c8c7839f0d53a8396a5f786e74d560304c5467674",
+        "artifacts/entity_attention_first_round_20261022/validate.py": "cb3f42d42e72582f3bb7ab5d4f055e2dc85b67a5471796c1f92ccbd2f5be8817",
+        "configs/entity_attention_v1/offline_first_round_r21_r31_20261022.json": "3383f59adc03825092051806d205cbbf548040652b10ef10ee32fe0024bb2edb",
+        "scripts/run_attention_first_round_20261022.sh": "edfa8d6382c2b7d8e3903ca2fe45c05c0c017b1741b911b03fdd9ba056995f9d",
+        "src/splendor/offline_first_round.py": "1eab402ff488b7272dd0c4c18e332fcccb4de129d08b7205b0b5f0a234b5ea4d",
+        "tests/test_attention_first_round.py": "d6afbdd494c058bed3f3a99a7ea9cf2a381dc115ddfed85d1a0ca0608a981d4e",
+        "src/splendor/entity_attention.py": "d47b188762a978a8c6b407566cb07d88b38f2c5a2473753cdc8c716614fec8f9",
+        "src/splendor/purchase_outcomes.py": "4d522e32ad22498e56b857c3873394fdddeca88eae371fe6fd091dfa28a1941e",
+        "artifacts/entity_attention_first_round_20261022/purchase_redundancy_20261023.md": "812d9a4a386a87237a0234a21b2645a4931de9822bad6e759f285ed938a6588c"
+      }
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/README.md",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/plan.json",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/run.py",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/tests.xml",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/verification.json",
+        "configs/entity_attention_v1/offline_128x2_r21_r31_lr2e5_20261022.json",
+        "src/splendor/offline_finetune.py",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/source.json",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/execution.json",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/results.md",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/summary.json",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_plan.json",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_execution.json",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_summary.json",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_results.md",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/evaluation_configs/greedy_vs_R31.json",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/panels/greedy_vs_R31.json",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_documentation_update.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/README.md": "56a9fd566dd701c3d7d2c813a9db539e89de2a2e1cdbd33b709e36d338d682d1",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/evaluation_configs/greedy_vs_R31.json": "b5d4217026136606face3b33924f7321f2b43b8c9d6ebb548a44d53576e00efa",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/execution.json": "2b904aa884ba34bd1669e09453d0ae93dadfbabe82fd90b7016132426f0c673c",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_documentation_update.json": "9a37bbdc548caf34487ae6d9d6e16b544e3d8c7f8531d539b2cd86faeb01a5ae",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_execution.json": "d15e76cd3e03090ec566ca50a89b9d2eff1f3bc5d54f483fe2af72f76dd2a9d6",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_plan.json": "f16f21ec35425c650013a55ac8d8e2e501f2474a4d9e53d2383685205ded6444",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_results.md": "c3b4cc746ed652ad3a6c58f8fdcb33c61481db0c5abe6a20cc7872279b4585f1",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/greedy_vs_R31_summary.json": "6c4b7b25851d6611f8b9e817c3d840908a1e7fe587805a9bc9b802a81ac7bfaa",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/panels/greedy_vs_R31.json": "c69cac864b75c061660de173937f440e499f8cf5a62f28dbe3039838c6826e22",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/plan.json": "0c001064de693799f440e0566c785e7525aac48d5850a433efed1a1906b3fa33",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/results.md": "b2ba5842a6531f3ebc7e856a488ad33a0d572d2bff107140b8eaac2255050754",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/run.py": "6a2bed9800dbfa0af77e5d91b230a31168b7e169f6c67575ada3a89463e50e50",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/source.json": "0915b9fdb7fb343edb64f1e57d959fbfda44168b6ca148615de3717f58a8387d",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/summary.json": "074b40c7bde228e883dc84261f3da662dea52f85ab3e5519dd41495d30acec20",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/tests.xml": "f4628fc20018dc8eeee239f5cadcea92c9586b38850f6fde7ed0f4652ac8dcd7",
+        "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/verification.json": "743476a4e92e0c9749f1eeaf146187289bc96304226c2fd206bf73cb8d8eab97",
+        "configs/entity_attention_v1/offline_128x2_r21_r31_lr2e5_20261022.json": "dc7c6190dd40665cb67ee200b162d15a130b012c48098b81ecc05c4c42da64ae",
+        "src/splendor/offline_finetune.py": "0582065831b07da997c7f45e5653dc4c02b327cb17737c3336959d5721ef0913"
+      },
+      "id": "entity-attention-128x2-r21-r31-lr2e5-2026-10-22",
+      "report": "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/README.md",
+      "scope": "Continuation actually ran on2026-10-22 from parent59453, preserving full model/AdamW/RNG and same44k pool/splits/targets; lr2e-5 and2000-update validation interval. Complete full-holdout sums at local2000/4000/6000/8000/10000:0.980955391/0.976699395/0.977422822/0.979995082/0.980745073; three consecutive strict rises triggered normal stop at10000 (cumulative69453). Pre-arena selection is entire local4000/cumulative63453 checkpoint, SHA f3b0dd6a6e9e0241ccc646a0dd00f5519399f989bacf84db5264aef00614fdf6; KL0.2172128553,MSE0.7594865399. User later explicitly authorized only1000pair greedy vsR31. Independent arena reused parent frozen evaluation source,12-noble catalog,CPU8workers and opening seeds44000000-44000999 swapped seats,10000-resample paired bootstrap. Completed2000 valid games:992W/22D/986L,50.150% [48.025%,52.300%]; no exceptions/illegal actions/engineering truncations/invariant failures/policy-cycle draws. Model/config/catalog hashes,all pair seats/seeds and both sides zero search independently verified. Against the sameR31 and same previously viewed panel,parent scored49.525%; common-opponent score difference+0.625pp,paired95%[-2.050625,+3.325625]pp. No confirmed greedy improvement from lowerlr or advantage overR31; does not prove equality,no value/search strength result. Selection fixed before play,no score-based reselection,no training resumed or extra arenas.37 original synthetic CPU regressions remain preparation evidence,actual production training/arena recorded separately; previous prepared-only entry and document hashes preserved in greedy_vs_R31_documentation_update.json.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/README.md",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/plan.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/run.py",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/tests.xml",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/gpu_smoke.json",
+        "configs/entity_attention_v1/offline_128x2_r21_r31_early_stop_20261022.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/verification.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/source.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/launch.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/run_greedy_after_stop.py",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/manual_stop_greedy_plan.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/selected_candidate.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/greedy_after_stop_launch.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/greedy_after_stop_execution.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/greedy_after_stop_verification.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/results.md",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/summary.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/evaluation_configs/greedy_vs_R20.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/evaluation_configs/greedy_vs_R31.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/panels/greedy_vs_R20.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/panels/greedy_vs_R31.json",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/manual_stop_documentation_update.json"
+      ],
+      "evidence_hashes": {
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/README.md": "aaca260b52d1dfa9dad3998739d88dcb2e8b888dffc0405649fa6859581b2d73",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/evaluation_configs/greedy_vs_R20.json": "f7831752e94621423a25a5618f0bc23f99089e4b04ee7929a9dd364c842e6144",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/evaluation_configs/greedy_vs_R31.json": "abe9316a651a5eee385fbe21be6ab8606d3c9f1e12b60c8e84c6488178847cdf",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/gpu_smoke.json": "68c19199fe15d12e04816ae9cd53e6074a55e5ea0329af3bc582c7344814285a",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/greedy_after_stop_execution.json": "15c74c4fef45092c2e348dde37f3049231c26d5c23b383bb2acda37b23c4e848",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/greedy_after_stop_launch.json": "d9a423df0932c4985f288474654d481567082c699edb0d3eb9809b5590cd5700",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/greedy_after_stop_verification.json": "f7630f2694dba4d67b06e88c7ca1c68569132e812947f87fd23976c8d2be23c5",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/launch.json": "4fbb302fb6ba37f9724b87d655e2a5fdb696237f9762fac175f744e97ffad70e",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/manual_stop_documentation_update.json": "98f396ac3336aa1e2748881e43da1abbc1c7cacc067fe5edee13da0fc4989092",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/manual_stop_greedy_plan.json": "1e8ad1abfd5c265293edab4c9ce251ca0af9b526de62bd2689f57f3eb0b33c56",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/panels/greedy_vs_R20.json": "d3933ae0265b8c7bf1d04d72e7a8108e56312c7a007a110d465f8fa8d7df39b6",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/panels/greedy_vs_R31.json": "6dee6cc6551dd9a8dae9fc6479d172ac67baa59a3fdc14b44b7f48c846d53adb",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/plan.json": "5a9702da87d738fdfcc9772f27924395c824fb4fdaec9b60230cb8dbc0572b35",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/results.md": "239d50248546eb660f4604fdc619c5240454e127ffcbe60acddd37d466d859fc",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/run.py": "c9d25ff4b676d14da68b2f731e6e5964bb17e8330d42d60e164b0e6c4d21e663",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/run_greedy_after_stop.py": "a14091b0597a1eec67aca67e6064bb4aee9cb1972ce38f79e482fcc63fd680b9",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/selected_candidate.json": "7f0e4e19deb2e2e67769ab5c664de862e2c64bf571a5a7eacc4863cc0d1dba76",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/source.json": "6e609f49c3f06fdc304abbdb128971ad8aa8b8e93e0f5ec24721d732bfc260f0",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/summary.json": "2e79eb323929755c6b49b1886f0afbd0abc9f812721e9c836797f411a5d1170a",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/tests.xml": "5d30f89116f9a3230391c8cb647a8edfe9feeed21db77fe9c50733b694cea9b6",
+        "artifacts/entity_attention_128x2_offline_r21_r31_20261022/verification.json": "6c00ed907e433672926045cb6f095a2c1f1d565f5fc0f39ac634992fbb843163",
+        "configs/entity_attention_v1/offline_128x2_r21_r31_early_stop_20261022.json": "b5e13634708e577738efe5b3c40d13396385dfbf27d1cb198ef28e5b920b43fa"
+      },
+      "id": "entity-attention-128x2-offline-r21-r31-2026-10-22",
+      "report": "artifacts/entity_attention_128x2_offline_r21_r31_20261022/README.md",
+      "scope": "User changed scope on2026-10-22: stop training and run only two greedy1000pair panels. SIGINT to verified supervisor435440 stopped trainer435468; latest saved84000/148632, original training remains incomplete and automatic early stop was not triggered. Among11 reached full-holdout percentage checkpoints, pre-arena minimum KL+MSE selects entire step59453 (KL0.2271240486,MSE0.7680132969,sum0.9951373456), SHA3f43ec717fe3b2a548f5eb3e5e9878d3e402b15c9d848871e9934543b4862f5a. New greedy-only runner reuses frozen evaluation source/rules and prior panel seeds44000000-44000999, CPU8workers, swapped seats,10000-resample paired bootstrap. Both panels complete and independently reverified: vsrawR20 1059W/18D/923L,53.400% [51.250%,55.550%]; vsR31 976W/29D/995L,49.525% [47.375%,51.600625%]. All4000games have zero exceptions/illegal actions/engineering truncations/invariant failures; actual zero search, checkpoint/catalog/config hashes and all swapped pairs verified. Supports candidate greedy aboveR20; no confirmed advantage aboveR31, no equivalence or value/search strength conclusion. Original two S1024N1 search panels cancelled by latest user instruction, never launched. No training resumed, no selection based on game scores. Original configuration, plan, source snapshot and interrupted execution retained; scope override and previous index evidence hashes recorded separately.",
+      "status": "valid"
+    },
+    {
+      "evidence": [
+        "artifacts/repository_archive_20261022/README.md",
+        "artifacts/repository_archive_20261022/run.py",
+        "artifacts/repository_archive_20261022/manifest.json",
+        "artifacts/repository_archive_20261022/plan_revision.json",
+        "artifacts/repository_archive_20261022/package_inventory.json",
+        "artifacts/repository_archive_20261022/external_verification.json",
+        "artifacts/repository_archive_20261022/export_state.json",
+        "artifacts/repository_archive_20261022/completion.json",
+        "artifacts/repository_archive_20261022/moves.jsonl"
+      ],
+      "evidence_hashes": {
+        "artifacts/repository_archive_20261022/README.md": "12990aaf46c3e91fec1ed1a8a904ad39badcb2e19e39951c1ad7f3b5ededa185",
+        "artifacts/repository_archive_20261022/completion.json": "a78aaac00d62f1b59e54c487a5b5af759b9d3f11125534710a01385d43256962",
+        "artifacts/repository_archive_20261022/export_state.json": "3e8cba12644af923b9abd20f0487ba17349338c873c558d30b97cf3b737f5e2a",
+        "artifacts/repository_archive_20261022/external_verification.json": "3e8cba12644af923b9abd20f0487ba17349338c873c558d30b97cf3b737f5e2a",
+        "artifacts/repository_archive_20261022/manifest.json": "4abefc39f90a00694d52456f4df79431ef31d342065b0da8c1545541f2912d27",
+        "artifacts/repository_archive_20261022/moves.jsonl": "09e4fc9b970a3119431c9e8284e255465a3d5b866c3ac7991ef3218d93911ac9",
+        "artifacts/repository_archive_20261022/package_inventory.json": "a9b687a8e7caf6f0a965eff9db23a57a5d1e051c538ec50993629c2a9f0b1d85",
+        "artifacts/repository_archive_20261022/plan_revision.json": "9f857056d211c757009764861244c827fe32a9f2d5e2c46c9a376d399a91d4ae",
+        "artifacts/repository_archive_20261022/run.py": "595472b73b5645e81d7b614a2e2537ba7b25b3cd78e6e28cbe78d204fb793a7b"
+      },
+      "id": "repository-archive-2026-10-22",
+      "report": "artifacts/repository_archive_20261022/README.md",
+      "scope": "User-authorized cold archive limited to new online branch iterations21-30 checkpoint/large training-sampling ledgers and interrupted Cross64 role005 offline run. User then explicitly required all iterations21-31 collection games stay local: final plan/export/release includes no NPZ or collection metadata.291 actual checkpoints and43 unique ledgers (334 payload files) compressed directly to T7 archive-20261022.tar.zst,2447304521bytes,SHA2561e61748d5030717f3fbb2ae236c3a7230c48df265c490fe80b2beedcf193c7e9;12 byte-identical ledgers deduplicated as relative aliases.337 tar regular files including3 metadata, every SHA/size/nanosecond mtime and compressed archive SHA verified before original-path atomic replacement by relative links. Net payload disk release4325044224bytes.17 in-scope key models remain real:10 online finals and offline initial+all6 percentage nodes; latest R31 model/state/active24k and all source inputs untouched. Ordered per-file SHA/metadata fingerprints unchanged before/after for original80000NPZ,all44000NPZ from rounds21-31 and2142NPZ partial round32. Online resume requires no restore; historical intermediate-model/ledger analysis and offline writable ledger resume require restoring relevant cold files. No training/evaluation started, no config/measurements/rules/old archives/other offline runs/cache changes.",
+      "status": "valid"
+    },
+    {
       "evidence": [
         "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md",
         "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/config.json",
@@ -16,19 +244,19 @@
       ],
       "evidence_hashes": {
         "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md": "b32f18f6d16d023caa5e60d2ee4c4d6bcb4ac715b78aa323ada0064dcd73a503",
-        "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/config.json": "49dd38c61fd32645faa418b25b9da32f31eb399e6ec11f37dbc63ae85b7a164e",
         "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/candidate_selection.json": "61ce41b18e59cad3393ac53b44b83d5e064fa1d156f13a13877ec1badaaf8b3b",
+        "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/config.json": "49dd38c61fd32645faa418b25b9da32f31eb399e6ec11f37dbc63ae85b7a164e",
         "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/execution_plan.json": "6e30a425ea4adb513cdc0738784414691839e62282e0ac8e6dfc113c9e0fabe4",
         "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/result.json": "3cc2ef12362974b8fc561c3852912dc0c30c2cc2aa563d6764a6067f9bd089a7",
         "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/summary.json": "fd30b86f42dfbe7cccc28892383e7a54fa5414865170f81d4502390b686ee8dc",
         "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/source.json": "41380760879fe5fc1a908197c09abbde14b9763da602ec2746c1b539d273963d"
-      }
+      },
+      "id": "entity-set-mlp-cross64-54112-vs-r20-greedy-2026-10-22",
+      "report": "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md",
+      "scope": "User-authorized independent1000pair/2000game deterministic greedy evaluation of Cross64 role-std0.05 MLP step54112 versus raw R20. Candidate fixed before arena as minimum full-holdout KL+MSE among six completed percentage nodes through81168; KL0.4729014151/MSE0.7726106593. Score43.225%, whole-pair bootstrap95% [41.075%,45.325%],858wins/13draws/1129losses. Current12-noble catalog, swapped seats, same opening seeds/evaluator version as earlier MLP and attention panels. Zero exceptions/illegal actions/engineering truncations/invariant failures; one legitimate engine forced skip in a naturally terminated game and one deterministic-policy-cycle draw. All model/config/frozen source/catalog identities, pair population and bootstrap recomputed. Supports this candidate greedy being weaker than raw R20; no search/value strength or architecture-only causal conclusion. Training remains interrupted at saved81168 of270557, not resumed or modified; no replacement of original final selection or arena-based checkpoint selection.",
+      "status": "valid"
     },
     {
-      "id": "entity-set-mlp-cross64-role005-offline-80k-2026-10-22",
-      "status": "incomplete",
-      "report": "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md",
-      "scope": "User requested balancing role initialization then same-config offline fitting, subsequently explicitly changed instruction to command-only/no launch. Formal training not started; no formal progress/checkpoints and execution sessions empty. New MLP cross type/owner/tier embeddings scaled in place to std0.05 each without extra RNG draws or parameter/config-shape changes; loading existing weights overwrites initialization without re-scaling.906434 params,64dim/2head cross, original nonlinear action branch and multiplicative interaction retained. Fixed early/middle/late roots at seed43100000: role RMS0.086420/content0.090920,ratio0.9505.95 CPU tests passed and finite actual GPU updates/checkpoint restore/compiled policy-policyonly-valueonly/native N1-N4-chance roots passed, no compile fallback. New config/data/fixed4096 checked identical to old80k MLP except model and independent manifest path: fresh model/AdamW,lr1e-4,16GiB,270557updates,5percent fixed/full validation, no PSW/auxiliary; same whole-game splits and seed ledgers. Prepared default original train-select-R20 greedy1000pair/search500pair flow, train-only option available. Frozen executable source/native/catalog prepared; no arenas run, no convergence/strength/throughput claim. Original runs/checkpoints unchanged; historical std1 cross validation retained. Local free9.55GB versus rough training-output estimate8.97GB excludes compilation/evaluation; T7 unmounted, no cleanup/migration performed. Subsequent status correction2026-10-22: user later started the delivered command; execution now records interrupted, last saved81168, six percentage nodes completed, original270557-step plan incomplete. Earlier preparation/no-launch statements above describe first delivery only. Full-holdout KL+MSE minimum among those six is54112 (0.4729014151/0.7726106593); value-only minimum40584 (0.7690112471), later81168 value MSE0.7976161480. Independently authorized54112-vs-rawR20 greedy1000pair completed43.225%,95% [41.075%,45.325%]; see entity-set-mlp-cross64-54112-vs-r20-greedy-2026-10-22. No training resume/config change/original final-selection replacement/search arena.",
       "evidence": [
         "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md",
         "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/run.py",
@@ -49,36 +277,40 @@
         "src/splendor/entity_set_mlp.py",
         "tests/test_entity_set_mlp.py",
         "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md",
-        "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/summary.json"
+        "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/summary.json",
+        "artifacts/repository_archive_20261022/README.md",
+        "artifacts/repository_archive_20261022/completion.json"
       ],
       "evidence_hashes": {
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md": "2d578cd19a9c87ea3fa8e2acf6de952d888ba9d923c5a671073dfac808888791",
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/run.py": "823e336dad7da9d55fee80ea4105084350caa5836b9da9ecc117527fe6059f28",
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/plan.json": "0d6ad1d609b0974fa9dd95e4ff72e03d58679150649da0923d1fdf28c100c97a",
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/configuration_validation.json": "1698c75b0f02595326a6bbdc61586b6e389d48682b5aef3be78bfcca38ef3206",
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/validation.json": "3c08f25ea2f309e822059af04b43c778d2dab900a771f4098b1d32ec7fccf2fe",
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/validate.py": "0e8425c1a6c132673f5d70c8222dd0618a6e446f6b8a9eef5b3dd6809156cc94",
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/tests.xml": "537db2161a42b0b2502b5a21b4c47ed67cd76f21d7c7b92dd92a6bc943ed92db",
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/cuda_validation.json": "8e8f025bbe0e7ba2a9ac922d96c6450c773272c4cba9a490895cd70b4c9b3c4e",
+        "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md": "b32f18f6d16d023caa5e60d2ee4c4d6bcb4ac715b78aa323ada0064dcd73a503",
+        "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/summary.json": "fd30b86f42dfbe7cccc28892383e7a54fa5414865170f81d4502390b686ee8dc",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md": "cbc1f9ccb68aa1e3ab7a724047b0e978cca1d35ae95aeb047c44f8a240f004e7",
         "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/capacity.json": "b4a42d9980bbc605fe321198820eace6b67b394ad18df2e76a072ec242fcdaf1",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/configuration_validation.json": "1698c75b0f02595326a6bbdc61586b6e389d48682b5aef3be78bfcca38ef3206",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/cuda_validation.json": "8e8f025bbe0e7ba2a9ac922d96c6450c773272c4cba9a490895cd70b4c9b3c4e",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/execution.json": "c9b4a3a259c69f10822e6c9b3f81f6f730838c23bd3aabea126d0e17d2fa0cc4",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/plan.json": "0d6ad1d609b0974fa9dd95e4ff72e03d58679150649da0923d1fdf28c100c97a",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/results.md": "aca75f4ce58e798de25ef17df3c4f3e517b870e8cdc2e6ddb6e7d0120c472d28",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/run.py": "823e336dad7da9d55fee80ea4105084350caa5836b9da9ecc117527fe6059f28",
         "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/source.json": "41380760879fe5fc1a908197c09abbde14b9763da602ec2746c1b539d273963d",
         "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/summary.json": "151132e9af5f693072062938516e3628d76dfa6a3aad26ef70f555648aea0183",
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/results.md": "aca75f4ce58e798de25ef17df3c4f3e517b870e8cdc2e6ddb6e7d0120c472d28",
-        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/execution.json": "c9b4a3a259c69f10822e6c9b3f81f6f730838c23bd3aabea126d0e17d2fa0cc4",
-        "configs/entity_set_mlp_v1/offline_cross64_role005_80k_lr1e4_20261022.json": "b0d129f6d1c17f9e016985fdef5603facaa0c4415d3ae2b0799d84812c21998a",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/tests.xml": "537db2161a42b0b2502b5a21b4c47ed67cd76f21d7c7b92dd92a6bc943ed92db",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/validate.py": "0e8425c1a6c132673f5d70c8222dd0618a6e446f6b8a9eef5b3dd6809156cc94",
+        "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/validation.json": "3c08f25ea2f309e822059af04b43c778d2dab900a771f4098b1d32ec7fccf2fe",
+        "artifacts/repository_archive_20261022/README.md": "12990aaf46c3e91fec1ed1a8a904ad39badcb2e19e39951c1ad7f3b5ededa185",
+        "artifacts/repository_archive_20261022/completion.json": "a78aaac00d62f1b59e54c487a5b5af759b9d3f11125534710a01385d43256962",
         "configs/entity_set_mlp_v1/model_256x4.json": "8d88af1b758092357c45a4daa29ab89b08d2cfdfe3075c165e0f013924160e4c",
+        "configs/entity_set_mlp_v1/offline_cross64_role005_80k_lr1e4_20261022.json": "b0d129f6d1c17f9e016985fdef5603facaa0c4415d3ae2b0799d84812c21998a",
         "scripts/run_mlp_cross64_role005_offline_20261022.sh": "b7ccc9a82449611b9627b608586e6d36dfe52d8df18de40a3c5d3a0b1cc8badb",
         "src/splendor/entity_set_mlp.py": "f97bfd1ca0b3d3fb08f4960a91c667e2647897a66c5b59f98496ad39ea6eeac4",
-        "tests/test_entity_set_mlp.py": "e72e96b54d680cef2e9be769c57eadcb5858e56a31bf152344647d09b48e9f4d",
-        "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/README.md": "b32f18f6d16d023caa5e60d2ee4c4d6bcb4ac715b78aa323ada0064dcd73a503",
-        "artifacts/entity_set_mlp_cross64_54112_vs_r20_greedy_20261022/summary.json": "fd30b86f42dfbe7cccc28892383e7a54fa5414865170f81d4502390b686ee8dc"
-      }
+        "tests/test_entity_set_mlp.py": "e72e96b54d680cef2e9be769c57eadcb5858e56a31bf152344647d09b48e9f4d"
+      },
+      "id": "entity-set-mlp-cross64-role005-offline-80k-2026-10-22",
+      "report": "artifacts/entity_set_mlp_cross64_role005_offline_80k_20261022/README.md",
+      "scope": "User requested balancing role initialization then same-config offline fitting, subsequently explicitly changed instruction to command-only/no launch. Formal training not started; no formal progress/checkpoints and execution sessions empty. New MLP cross type/owner/tier embeddings scaled in place to std0.05 each without extra RNG draws or parameter/config-shape changes; loading existing weights overwrites initialization without re-scaling.906434 params,64dim/2head cross, original nonlinear action branch and multiplicative interaction retained. Fixed early/middle/late roots at seed43100000: role RMS0.086420/content0.090920,ratio0.9505.95 CPU tests passed and finite actual GPU updates/checkpoint restore/compiled policy-policyonly-valueonly/native N1-N4-chance roots passed, no compile fallback. New config/data/fixed4096 checked identical to old80k MLP except model and independent manifest path: fresh model/AdamW,lr1e-4,16GiB,270557updates,5percent fixed/full validation, no PSW/auxiliary; same whole-game splits and seed ledgers. Prepared default original train-select-R20 greedy1000pair/search500pair flow, train-only option available. Frozen executable source/native/catalog prepared; no arenas run, no convergence/strength/throughput claim. Original runs/checkpoints unchanged; historical std1 cross validation retained. Local free9.55GB versus rough training-output estimate8.97GB excludes compilation/evaluation; T7 unmounted, no cleanup/migration performed. Subsequent status correction2026-10-22: user later started the delivered command; execution now records interrupted, last saved81168, six percentage nodes completed, original270557-step plan incomplete. Earlier preparation/no-launch statements above describe first delivery only. Full-holdout KL+MSE minimum among those six is54112 (0.4729014151/0.7726106593); value-only minimum40584 (0.7690112471), later81168 value MSE0.7976161480. Independently authorized54112-vs-rawR20 greedy1000pair completed43.225%,95% [41.075%,45.325%]; see entity-set-mlp-cross64-54112-vs-r20-greedy-2026-10-22. No training resume/config change/original final-selection replacement/search arena. Storage update2026-10-22: see repository-archive-2026-10-22. Cold intermediate checkpoints and heavy training/sampling ledgers are externalized with original relative compatibility links; key final/initial/percentage models remain real. All collected NPZ and collection metadata, including all44000games from iterations21-31, remain local and SHA/metadata-verified. No original experiment measurements or configurations changed; online latest boundary/active pool unchanged. Offline writable-ledger resume or old cold trajectory analysis must first restore the relevant files.",
+      "status": "incomplete"
     },
     {
-      "id": "entity-attention-r20-s256n4-noble12-iteration-2026-10-22",
-      "status": "incomplete",
-      "report": "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md",
-      "scope": "User-authorized continuous online continuation started in background from raw R20 (total57423 updates), full AdamW/Torch/sampling RNG and inherited completed20-round state and active24000-game R15-R20 pool. First new iteration21/data round63,4000games; only high-budget25% changed from total1024/world1 to S256N4(total1024/world4), low75% remains S128N1(total128/world1). New collection/evaluation frozen12-noble catalog includes N11 blue-green-black333 and N12 white-red44; old10-noble numeric labels retained unchanged and FIFO4000 evicted each round. Learner1000updates/lr2e-5/batch256/clip1/cache8GiB, W12/A1000/B500/pipeline2 and original R43 evaluation panels preserved.37 CPU regressions plus1 additional continuation regression passed, two actual compiled CUDA-pool games replayed successfully:39 high1024/4world and105 low128/1world searchable decisions, correct masks and zero failures. Production manifest and collect_start iteration21 verified; trainerPID131091, no session/round limit, no completed new round or strength claim. Old incomplete round21 removed explicitly per user:2591 NPZ/2605 files,187736064 allocated bytes; old R20 state/pool unchanged. Frozen executable source/native/catalog recorded. Optional low_determinizations and continuation_state preserve omitted-field legacy serialization.",
       "evidence": [
         "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md",
         "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/prepare.py",
@@ -98,35 +330,39 @@
         "src/splendor/selfplay_fast.py",
         "src/splendor/selfplay_data.py",
         "tests/test_search_training.py",
-        "tests/test_random_budget_iteration.py"
+        "tests/test_random_budget_iteration.py",
+        "artifacts/repository_archive_20261022/README.md",
+        "artifacts/repository_archive_20261022/completion.json"
       ],
       "evidence_hashes": {
-        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md": "ad4565be23dbe47e9ab0046283d7513b2a53e8eda7b97519efda1c1e3909f0f8",
-        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/prepare.py": "cc0e74a4dbf594f01f46de05d3d8c57f8baa64b9741b6f5dcb8064583676d57a",
-        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/plan.json": "24bb95c707df4552d1086b61c244114cb696cf8093d15c136426febb8e95603e",
-        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/source.json": "e7112449c002135b7453e669c569a2183783e0fd96697efc54f7ae4773c95383",
-        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/launch.json": "723e6ea09c4b4cfe34d6d4d2513aacde9a04c44710492c588a99f609ba72455c",
-        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/startup_verification.json": "b1baecd52b65f37fb4ee5659b5853e4e44367557ff82c12dbc2e4acc45a01082",
-        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/discarded_round21.json": "259837f564e6b218b51c5428c36c5dd0bf1afd3c415ce19690babdc6e969391c",
-        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/tests.xml": "36de54e3c395fcc9a649327c1cd14d844a8dff199f9d38aabd7b6f8d22dbf70a",
+        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md": "e6b017340dc5c40608c7072d8b08f3002748996702e1956acfa479fe417310e8",
         "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/continuation_tests.xml": "ea8ead2032a8db6486db4f6462c1421dfb463959b8aa11ca8e3bd211a9145b96",
+        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/discarded_round21.json": "259837f564e6b218b51c5428c36c5dd0bf1afd3c415ce19690babdc6e969391c",
         "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/gpu_smoke_config.json": "2d031f0afba17fd0b844c721ee52353758c0381b80ff03e2a7cbabf32ab5db66",
         "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/gpu_smoke_verification.json": "ac36ab9eee90ef73636b1382481c55d6f01b9ec5a45b2f3b35255b5eecc14003",
+        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/launch.json": "723e6ea09c4b4cfe34d6d4d2513aacde9a04c44710492c588a99f609ba72455c",
+        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/plan.json": "24bb95c707df4552d1086b61c244114cb696cf8093d15c136426febb8e95603e",
+        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/prepare.py": "cc0e74a4dbf594f01f46de05d3d8c57f8baa64b9741b6f5dcb8064583676d57a",
+        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/source.json": "e7112449c002135b7453e669c569a2183783e0fd96697efc54f7ae4773c95383",
+        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/startup_verification.json": "b1baecd52b65f37fb4ee5659b5853e4e44367557ff82c12dbc2e4acc45a01082",
+        "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/tests.xml": "36de54e3c395fcc9a649327c1cd14d844a8dff199f9d38aabd7b6f8d22dbf70a",
+        "artifacts/repository_archive_20261022/README.md": "12990aaf46c3e91fec1ed1a8a904ad39badcb2e19e39951c1ad7f3b5ededa185",
+        "artifacts/repository_archive_20261022/completion.json": "a78aaac00d62f1b59e54c487a5b5af759b9d3f11125534710a01385d43256962",
         "configs/entity_attention_v1/random_budget_r20_s256n4_noble12_20261022.json": "39a06a6402a09f2ab0506b3bcb3dfbe03fe46f70f76a3e342f2b785fd2ca645f",
         "scripts/run_r20_s256n4_iteration_20261022.sh": "c9b6d9cf833a5abe21b2ee6ee27472a64962d6a73190eacaaabd6fbf202f5e92",
         "src/splendor/random_budget_iteration.py": "b7e62904aa62a57fc51ed957869cbc78943088a707024a63b4886972430c82e2",
         "src/splendor/search_training.py": "27f6d4d8aa53f66644d51860ecad0266b0342f3250ae0eab2d0c959c3104ca40",
-        "src/splendor/selfplay_fast.py": "a3b3af5fe19059e74e5a3a329c0cd56891b738f3d976a3beac9f1662404d7257",
         "src/splendor/selfplay_data.py": "39c281a899ef92b241a78b7e6e6a3e4f5de0a1970559efc8d22a3fb43c8aa8f5",
-        "tests/test_search_training.py": "ec3d06b5463f42d37827660e52ac781369a7b5d70dddeefcec7a95818654e868",
-        "tests/test_random_budget_iteration.py": "5148d543b9553e2b470381c09e2ee2331a2b8cf80dab5b82c9cd407af7d1b178"
-      }
+        "src/splendor/selfplay_fast.py": "a3b3af5fe19059e74e5a3a329c0cd56891b738f3d976a3beac9f1662404d7257",
+        "tests/test_random_budget_iteration.py": "5148d543b9553e2b470381c09e2ee2331a2b8cf80dab5b82c9cd407af7d1b178",
+        "tests/test_search_training.py": "ec3d06b5463f42d37827660e52ac781369a7b5d70dddeefcec7a95818654e868"
+      },
+      "id": "entity-attention-r20-s256n4-noble12-iteration-2026-10-22",
+      "report": "artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md",
+      "scope": "User-authorized continuous online continuation started in background from raw R20 (total57423 updates), full AdamW/Torch/sampling RNG and inherited completed20-round state and active24000-game R15-R20 pool. First new iteration21/data round63,4000games; only high-budget25% changed from total1024/world1 to S256N4(total1024/world4), low75% remains S128N1(total128/world1). New collection/evaluation frozen12-noble catalog includes N11 blue-green-black333 and N12 white-red44; old10-noble numeric labels retained unchanged and FIFO4000 evicted each round. Learner1000updates/lr2e-5/batch256/clip1/cache8GiB, W12/A1000/B500/pipeline2 and original R43 evaluation panels preserved.37 CPU regressions plus1 additional continuation regression passed, two actual compiled CUDA-pool games replayed successfully:39 high1024/4world and105 low128/1world searchable decisions, correct masks and zero failures. Production manifest and collect_start iteration21 verified; trainerPID131091, no session/round limit, no completed new round or strength claim. Old incomplete round21 removed explicitly per user:2591 NPZ/2605 files,187736064 allocated bytes; old R20 state/pool unchanged. Frozen executable source/native/catalog recorded. Optional low_determinizations and continuation_state preserve omitted-field legacy serialization. Storage update2026-10-22: see repository-archive-2026-10-22. Cold intermediate checkpoints and heavy training/sampling ledgers are externalized with original relative compatibility links; key final/initial/percentage models remain real. All collected NPZ and collection metadata, including all44000games from iterations21-31, remain local and SHA/metadata-verified. No original experiment measurements or configurations changed; online latest boundary/active pool unchanged. Offline writable-ledger resume or old cold trajectory analysis must first restore the relevant files.",
+      "status": "incomplete"
     },
     {
-      "id": "entity-set-mlp-cross64x2-2026-10-22",
-      "status": "historical_valid",
-      "report": "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/README.md",
-      "scope": "Implementation only: 906434-parameter preset with one 64-dimensional/two-head action-to-unpooled-entity cross-attention. Query reads action and shared state; K/V and query-state projection shared per row; semantic roles/masks retained; direct/nonlinear/product actor paths retained and independently switchable. Value-only skips the new branch. 197 tests passed / one CUDA condition skipped; finite actual-preset CPU joint/auxiliary updates, strict weights/AZ restore, compiled policy/value/policy-only/state-only and native N1/N4/chance roots passed with zero fallback. Old 848418/855682 weights load strictly with attention disabled; frozen 80k training configs/results unchanged. No new GPU, formal training, ablation, strength or throughput result. Subsequent role initialization std0.05 revision recorded separately in entity-set-mlp-cross64-role005-offline-80k-2026-10-22. This original197-test/CPU proof and frozen source apply to std1 initialization; current structure/capacity is unchanged but initial numeric values differ. Saved weights are not rescaled. Original raw validation records retained.",
       "evidence": [
         "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/README.md",
         "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/capacity.json",
@@ -145,24 +381,24 @@
       "evidence_hashes": {
         "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/README.md": "5a6bb16c101ae4fd5c7134e9be02de473e5c956cb4fb2e2018dcd3070a7edc3d",
         "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/capacity.json": "b4a42d9980bbc605fe321198820eace6b67b394ad18df2e76a072ec242fcdaf1",
+        "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/cost_estimate.json": "cd9e03360ef88f544dcb45ef83bd964e1d1be3861708bbe99e18bd247fd59628",
         "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/cpu_validation.json": "8eb83d985f683356677ef0ea2746007842367adf7fe732fc41880f3e4e417384",
         "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/tests.xml": "bc04794b7958aa0cd63f1e53397a32598869147c53cb717c63aef14026a51ef4",
         "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/validate.py": "4fe4a54486611ccf9d2de94755b857af3e8087e708aa1bb31ab388c4760dbccb",
-        "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/cost_estimate.json": "cd9e03360ef88f544dcb45ef83bd964e1d1be3861708bbe99e18bd247fd59628",
+        "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/validation.json": "cd296281c2895daa1e144cdc124ec24f1db73ef67f7c87b3618bc47cc69fd02b",
+        "configs/entity_set_mlp_v1/README.md": "b83240e40cd41938b8877b256376af26ab976766eb7be0599615d6a793029343",
+        "configs/entity_set_mlp_v1/model_256x4.json": "8d88af1b758092357c45a4daa29ab89b08d2cfdfe3075c165e0f013924160e4c",
         "src/splendor/entity_set_mlp.py": "ec4c5f2a98d2470723c7fa236fbf07403d00b7a4b072850476917daa97666324",
         "tests/test_entity_set_mlp.py": "646b8121af104a442beb6153df7773d52358e3826f420955f43dbc3fbf3f6566",
         "tests/test_entity_set_mlp_training.py": "44915010c330b74246bef8db1c4737c76e6cd07f74bff18967c4462ea03a714b",
-        "tests/test_offline_mixed_budget.py": "12a8aa78882af837a05768cda20abc987dcd4f3bad15e3696257b496184b4a37",
-        "configs/entity_set_mlp_v1/model_256x4.json": "8d88af1b758092357c45a4daa29ab89b08d2cfdfe3075c165e0f013924160e4c",
-        "configs/entity_set_mlp_v1/README.md": "b83240e40cd41938b8877b256376af26ab976766eb7be0599615d6a793029343",
-        "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/validation.json": "cd296281c2895daa1e144cdc124ec24f1db73ef67f7c87b3618bc47cc69fd02b"
-      }
+        "tests/test_offline_mixed_budget.py": "12a8aa78882af837a05768cda20abc987dcd4f3bad15e3696257b496184b4a37"
+      },
+      "id": "entity-set-mlp-cross64x2-2026-10-22",
+      "report": "artifacts/entity_set_mlp_256x4_20261021/action_cross_64x2_20261022/README.md",
+      "scope": "Implementation only: 906434-parameter preset with one 64-dimensional/two-head action-to-unpooled-entity cross-attention. Query reads action and shared state; K/V and query-state projection shared per row; semantic roles/masks retained; direct/nonlinear/product actor paths retained and independently switchable. Value-only skips the new branch. 197 tests passed / one CUDA condition skipped; finite actual-preset CPU joint/auxiliary updates, strict weights/AZ restore, compiled policy/value/policy-only/state-only and native N1/N4/chance roots passed with zero fallback. Old 848418/855682 weights load strictly with attention disabled; frozen 80k training configs/results unchanged. No new GPU, formal training, ablation, strength or throughput result. Subsequent role initialization std0.05 revision recorded separately in entity-set-mlp-cross64-role005-offline-80k-2026-10-22. This original197-test/CPU proof and frozen source apply to std1 initialization; current structure/capacity is unchanged but initial numeric values differ. Saved weights are not rescaled. Original raw validation records retained.",
+      "status": "historical_valid"
     },
     {
-      "id": "entity-attention-128x2-94695-vs-r20-greedy-2026-10-21",
-      "status": "valid",
-      "report": "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/README.md",
-      "scope": "User-authorized 1000pair/2000game deterministic greedy evaluation of attention128 step94695 versus raw R20. Candidate frozen before arena: min full-holdout KL+MSE among first eight completed percentage nodes through108223, not selected from arena outcomes or subsequent checkpoints. Score54.400%, whole-pair bootstrap95% [52.299375%,56.525%],1078wins/20draws/902losses. Current12-noble pool, swapped seats, same opening seeds as earlier MLP panel; common-opponent comparison is not direct attention-vs-MLP strength. Zero exceptions/illegal actions/engineering truncations/invariant failures/forced skips; one deterministic-policy-cycle draw. Model/config/frozen source/rules identities, pair population and bootstrap reverified. No search or value-strength conclusion. Training settings/process not modified; at verification original training recorded KeyboardInterrupt near135600, last committed135279, no running trainer and no automatic resume.",
       "evidence": [
         "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/README.md",
         "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/config.json",
@@ -178,13 +414,13 @@
         "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/result.json": "d44b52436f913634f55fc0d2b532ca2f4eace2b8e40d5d7169b6a6426bae668c",
         "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/summary.json": "bb7de114ebaffee0303c1b3a88aab9979f8d93b9666beb9b63e2d3e657aedab1",
         "artifacts/entity_attention_128x2_offline_80k_20261021/source.json": "45d8fde07b8255df11375552e8072e364364819e1e627db73f81d8b0eb18ec70"
-      }
+      },
+      "id": "entity-attention-128x2-94695-vs-r20-greedy-2026-10-21",
+      "report": "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/README.md",
+      "scope": "User-authorized 1000pair/2000game deterministic greedy evaluation of attention128 step94695 versus raw R20. Candidate frozen before arena: min full-holdout KL+MSE among first eight completed percentage nodes through108223, not selected from arena outcomes or subsequent checkpoints. Score54.400%, whole-pair bootstrap95% [52.299375%,56.525%],1078wins/20draws/902losses. Current12-noble pool, swapped seats, same opening seeds as earlier MLP panel; common-opponent comparison is not direct attention-vs-MLP strength. Zero exceptions/illegal actions/engineering truncations/invariant failures/forced skips; one deterministic-policy-cycle draw. Model/config/frozen source/rules identities, pair population and bootstrap reverified. No search or value-strength conclusion. Training settings/process not modified; at verification original training recorded KeyboardInterrupt near135600, last committed135279, no running trainer and no automatic resume.",
+      "status": "valid"
     },
     {
-      "id": "repository-checkpoint-archive-2026-10-21",
-      "status": "valid",
-      "report": "artifacts/repository_archive_20261021/README.md",
-      "scope": "User-authorized completed deduplication/externalization:161 audited duplicate copies replaced with canonical relative links;1885 original checkpoint files(809 ordinary recovery +1076 historical/EMA) moved with original source links then streamed as GNU pax tar+zstd-T2-3 to/media/lc/T7/splendor/archive-20261021.tar.zst. Compressed10795534732bytes, SHA7f61d4ebaca016342d0872fdcea2e8e60f11d2fb68171c49873f5bfcaf4c7016; all1894 regular tar members including1885 real models verified by SHA, checkpoint nanosecond mtimes verified. Compressed SHA rechecked before local payload release. Removed12847374336 allocated local bytes; lightweight local metadata retained, no local duplicate tar.84 protected snapshot models verified, all active attention files excluded; original PID12682 remained alive and source80000 NPZ size/mtime/manifest match.168 EMA source/boundary models and9 EMA exports preserved in package.23 of the24 models retained in20261019 were subsequently archived in this batch;37423 seed remains local. Previous982 external aliases and old T7 archives unchanged. Cold-model links require extraction before use; restore original writable files before old training. No additional training/evaluation, implementation or gitignore changes.",
       "evidence": [
         "artifacts/repository_archive_20261021/README.md",
         "artifacts/repository_archive_20261021/run.py",
@@ -200,25 +436,25 @@
         "archive/20261021/SHA256SUMS"
       ],
       "evidence_hashes": {
+        "archive/20261021/README.md": "cd7652f7d29a0154fcee73fd4e297d5142060cb662ef1c24097480b27a59a4aa",
+        "archive/20261021/SHA256SUMS": "79cefc801eece45ab3fe1390dca3a25211d09f8b6bed13effcf93c413c3bbebe",
+        "archive/README.md": "127cc0142be83f09896410f7a2f6bcb4148648cb84c6f750ee1dd6fc2f98fd92",
         "artifacts/repository_archive_20261021/README.md": "17b53abf00d5c7b0a789cc20242d056b027e59f287af2042ddc41c866a55ba53",
-        "artifacts/repository_archive_20261021/run.py": "07861160f07fbadf81c35cc4b150ecfa85b7d1b748adbf8b6183a762042a3ced",
+        "artifacts/repository_archive_20261021/completion.json": "9270e590e55a6b31dfab9aa1f0d801a3d9b2d51c605b79b162e3edbe926561ff",
+        "artifacts/repository_archive_20261021/export_state.json": "486f41f19dfac77cedb90ccd4ddf7afafd741be9a3c3cc4f023bbc7360f217c2",
+        "artifacts/repository_archive_20261021/external_verification.json": "486f41f19dfac77cedb90ccd4ddf7afafd741be9a3c3cc4f023bbc7360f217c2",
         "artifacts/repository_archive_20261021/manifest.json": "2b0040014ec561fa3b47f60d771fd4c6db9116c24203b5a3540327cb3f3766eb",
         "artifacts/repository_archive_20261021/moves.jsonl": "e94aa5e578cb9a87a20288ac54c8ec83222b1b80f92bdbcc89773c398416604d",
         "artifacts/repository_archive_20261021/package_inventory.json": "2db643142a5f63a4c35cc49108f1ed21274217cb6ee90f93fd85e10774f8f794",
-        "artifacts/repository_archive_20261021/external_verification.json": "486f41f19dfac77cedb90ccd4ddf7afafd741be9a3c3cc4f023bbc7360f217c2",
-        "artifacts/repository_archive_20261021/export_state.json": "486f41f19dfac77cedb90ccd4ddf7afafd741be9a3c3cc4f023bbc7360f217c2",
-        "artifacts/repository_archive_20261021/completion.json": "9270e590e55a6b31dfab9aa1f0d801a3d9b2d51c605b79b162e3edbe926561ff",
-        "artifacts/repository_archive_20261021/verification.json": "6d98e0cbc929bba8b4d3364c36bd62e57af576a9296249136e0155d342344334",
-        "archive/README.md": "127cc0142be83f09896410f7a2f6bcb4148648cb84c6f750ee1dd6fc2f98fd92",
-        "archive/20261021/README.md": "cd7652f7d29a0154fcee73fd4e297d5142060cb662ef1c24097480b27a59a4aa",
-        "archive/20261021/SHA256SUMS": "79cefc801eece45ab3fe1390dca3a25211d09f8b6bed13effcf93c413c3bbebe"
-      }
+        "artifacts/repository_archive_20261021/run.py": "07861160f07fbadf81c35cc4b150ecfa85b7d1b748adbf8b6183a762042a3ced",
+        "artifacts/repository_archive_20261021/verification.json": "6d98e0cbc929bba8b4d3364c36bd62e57af576a9296249136e0155d342344334"
+      },
+      "id": "repository-checkpoint-archive-2026-10-21",
+      "report": "artifacts/repository_archive_20261021/README.md",
+      "scope": "User-authorized completed deduplication/externalization:161 audited duplicate copies replaced with canonical relative links;1885 original checkpoint files(809 ordinary recovery +1076 historical/EMA) moved with original source links then streamed as GNU pax tar+zstd-T2-3 to/media/lc/T7/splendor/archive-20261021.tar.zst. Compressed10795534732bytes, SHA7f61d4ebaca016342d0872fdcea2e8e60f11d2fb68171c49873f5bfcaf4c7016; all1894 regular tar members including1885 real models verified by SHA, checkpoint nanosecond mtimes verified. Compressed SHA rechecked before local payload release. Removed12847374336 allocated local bytes; lightweight local metadata retained, no local duplicate tar.84 protected snapshot models verified, all active attention files excluded; original PID12682 remained alive and source80000 NPZ size/mtime/manifest match.168 EMA source/boundary models and9 EMA exports preserved in package.23 of the24 models retained in20261019 were subsequently archived in this batch;37423 seed remains local. Previous982 external aliases and old T7 archives unchanged. Cold-model links require extraction before use; restore original writable files before old training. No additional training/evaluation, implementation or gitignore changes.",
+      "status": "valid"
     },
     {
-      "id": "checkpoint-storage-audit-2026-10-21",
-      "status": "valid",
-      "report": "artifacts/checkpoint_storage_audit_20261021/README.md",
-      "scope": "User-authorized storage maintenance only: deleted ten named compile/triton cache directories (five completed runs) and exactly96 ordinary MLP recovery checkpoints, removing3433484288 allocated bytes. Initial/seven evaluated/97000 MLP models retained and SHA verified; no raw data, ledger, result, active attention model, frozen source or existing external alias removed. Read-only census of2130 local real models at2026-10-21T22:37:15+08:00:161 verified duplicate candidates1.0289GB,809 ordinary historical step candidates5.2207GB,1076 historical/archive candidates6.5979GB,84 keep-local models0.5870GB. EMA original168 files verified from frozen plan;982 existing unavailable external links unchanged. Further pruning/externalization is a proposal only. Literal-reference absence does not exclude dynamic consumers. Active attention process12682 verified alive and committed60000 at verification; training continues and its files remain protected. Later explicit user authorization completed the161 deduplications and1885 externalized files; the census/candidate JSONL remains an unchanged pre-operation snapshot. Current locations and verification are in repository-checkpoint-archive-2026-10-21.",
       "evidence": [
         "artifacts/checkpoint_storage_audit_20261021/README.md",
         "artifacts/checkpoint_storage_audit_20261021/cleanup_authorized.py",
@@ -238,27 +474,27 @@
       ],
       "evidence_hashes": {
         "artifacts/checkpoint_storage_audit_20261021/README.md": "d6d713e7e65f080a1ebaf4f0100d0faee8ba435a45e0551fd1c1997750901765",
-        "artifacts/checkpoint_storage_audit_20261021/cleanup_authorized.py": "60fb791dc17d9b4d22d94b35dacd1b08e493118f7e82caee806d99e0dca9995f",
-        "artifacts/checkpoint_storage_audit_20261021/cleanup.json": "87a7f20fdac99bfde0a65680565545221c30dd2c244e81fcf6215c9f62381f7f",
         "artifacts/checkpoint_storage_audit_20261021/audit.py": "8545b913bf933b36f9fe2aa48af197906ea6e848d3152455a796a62ba893246e",
-        "artifacts/checkpoint_storage_audit_20261021/inventory_summary.json": "de8d837083c1c95b5cb57c3c3363817aa7bf09cff63a3e0f59da713dc09e7e6f",
         "artifacts/checkpoint_storage_audit_20261021/checkpoints.jsonl": "63bf5a978d20da1baf3120062e8b2431e3cd4feeef514c9773631ec568cfc305",
+        "artifacts/checkpoint_storage_audit_20261021/cleanup.json": "87a7f20fdac99bfde0a65680565545221c30dd2c244e81fcf6215c9f62381f7f",
+        "artifacts/checkpoint_storage_audit_20261021/cleanup_authorized.py": "60fb791dc17d9b4d22d94b35dacd1b08e493118f7e82caee806d99e0dca9995f",
+        "artifacts/checkpoint_storage_audit_20261021/deduplicate_candidates.jsonl": "0474752a5d3ff20f773cf026ab1cd35b74f7ba0f3e705f7e68652ea07300d792",
         "artifacts/checkpoint_storage_audit_20261021/duplicate_groups.json": "dd752f4aacd66f88fb628f71017baa79d2778b4895415ef00094fc125adff238",
         "artifacts/checkpoint_storage_audit_20261021/existing_links.json": "cf69c40527ddc4361fd08e5eb78e1043a1f4648c18f665759c70a1f133a8b630",
-        "artifacts/checkpoint_storage_audit_20261021/keep_local.jsonl": "c3910c1f8c36e34dbc4d57121666e5598494e2bdede66c0fb5c8d6590c6e09ad",
-        "artifacts/checkpoint_storage_audit_20261021/deduplicate_candidates.jsonl": "0474752a5d3ff20f773cf026ab1cd35b74f7ba0f3e705f7e68652ea07300d792",
-        "artifacts/checkpoint_storage_audit_20261021/ordinary_step_candidates.jsonl": "5a0f7ac9e1273eb0fb6a99d538a7ea6de61bcd486758fd80586428fe7ae28d0c",
         "artifacts/checkpoint_storage_audit_20261021/externalize_candidates.jsonl": "8f0ed3dc4e30c7d934226179bfedd314d9bb896eb5f6135db03f2087cb7f30d8",
+        "artifacts/checkpoint_storage_audit_20261021/inventory_summary.json": "de8d837083c1c95b5cb57c3c3363817aa7bf09cff63a3e0f59da713dc09e7e6f",
+        "artifacts/checkpoint_storage_audit_20261021/keep_local.jsonl": "c3910c1f8c36e34dbc4d57121666e5598494e2bdede66c0fb5c8d6590c6e09ad",
+        "artifacts/checkpoint_storage_audit_20261021/ordinary_step_candidates.jsonl": "5a0f7ac9e1273eb0fb6a99d538a7ea6de61bcd486758fd80586428fe7ae28d0c",
         "artifacts/checkpoint_storage_audit_20261021/verification.json": "8b5e0f4a98b3b4fe8d8af05374ffc5d74f6bbfd3524733e3ede2fc0a01554055",
         "artifacts/repository_archive_20261021/README.md": "17b53abf00d5c7b0a789cc20242d056b027e59f287af2042ddc41c866a55ba53",
         "artifacts/repository_archive_20261021/verification.json": "6d98e0cbc929bba8b4d3364c36bd62e57af576a9296249136e0155d342344334"
-      }
+      },
+      "id": "checkpoint-storage-audit-2026-10-21",
+      "report": "artifacts/checkpoint_storage_audit_20261021/README.md",
+      "scope": "User-authorized storage maintenance only: deleted ten named compile/triton cache directories (five completed runs) and exactly96 ordinary MLP recovery checkpoints, removing3433484288 allocated bytes. Initial/seven evaluated/97000 MLP models retained and SHA verified; no raw data, ledger, result, active attention model, frozen source or existing external alias removed. Read-only census of2130 local real models at2026-10-21T22:37:15+08:00:161 verified duplicate candidates1.0289GB,809 ordinary historical step candidates5.2207GB,1076 historical/archive candidates6.5979GB,84 keep-local models0.5870GB. EMA original168 files verified from frozen plan;982 existing unavailable external links unchanged. Further pruning/externalization is a proposal only. Literal-reference absence does not exclude dynamic consumers. Active attention process12682 verified alive and committed60000 at verification; training continues and its files remain protected. Later explicit user authorization completed the161 deduplications and1885 externalized files; the census/candidate JSONL remains an unchanged pre-operation snapshot. Current locations and verification are in repository-checkpoint-archive-2026-10-21.",
+      "status": "valid"
     },
     {
-      "id": "entity-attention-128x2-offline-80k-2026-10-21",
-      "status": "incomplete",
-      "report": "artifacts/entity_attention_128x2_offline_80k_20261021/README.md",
-      "scope": "Initially delivered prepared without running; subsequently launched by the user. Original process12682 remained alive during storage maintenance and had committed60000 steps at verification; all active-run checkpoints/frozen source/NPZ data/ledgers protected. No training settings or code changed by cleanup. Attention128x2/4heads/FFN512 with relations and expanded value readout,583682 parameters; same80k source games, splits, fixed4096 references, sampler, seeds, lr1e-4, cache16GiB,270557steps and20percentage evaluations as MLP except model/output. Ten CPU tests passed at preparation. Default train plus holdout selection only, no automatic arenas. Original validation/summary preparation records are historical; current progress/logs are authoritative. Subsequent cold-model archive preserved the entire active run and all80000 source NPZ; PID12682 remained alive, committed86000 during final verification. No active checkpoint or configuration moved. Later independent user-authorized greedy arena of preselected94695 versus raw R20 completed1000pair:54.400%,95% [52.299375%,56.525%]. Training remains incomplete; during arena verification its execution/log recorded KeyboardInterrupt near135600, committed135279; no trainer remained, no automatic resume. This arena did not modify or signal training. See entity-attention-128x2-94695-vs-r20-greedy-2026-10-21.",
       "evidence": [
         "artifacts/entity_attention_128x2_offline_80k_20261021/README.md",
         "artifacts/entity_attention_128x2_offline_80k_20261021/run.py",
@@ -278,32 +514,32 @@
         "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/summary.json"
       ],
       "evidence_hashes": {
-        "artifacts/entity_attention_128x2_offline_80k_20261021/README.md": "3814874315cdf610a019f87098ee1828ff32e89c633b38d502ed37cc97573561",
-        "artifacts/entity_attention_128x2_offline_80k_20261021/run.py": "f49f1dcaebdb781ecc3cfd9652c9c1b175ab21b86bce12c175f06832068944ac",
-        "artifacts/entity_attention_128x2_offline_80k_20261021/plan.json": "cd80be4b4ba8a1146f1fb50aabaff3f75263ef0ca413b5f3485bbab053e2d2e1",
-        "artifacts/entity_attention_128x2_offline_80k_20261021/summary.json": "c2f5864d1ce978fffbcd0dcde0ef204021fc44ab077976def17a15ddeffa6fb3",
-        "artifacts/entity_attention_128x2_offline_80k_20261021/validation.json": "dc00204d832ab0b3fec9b9a7566d3172cb76c04be210f03eb738df761fca4804",
-        "artifacts/entity_attention_128x2_offline_80k_20261021/tests.xml": "d4f5c291ae529d9b3f4128e985ae2364cece5b81421038bc5c569d3e147c4928",
-        "scripts/run_attention128_offline_20261021.sh": "77896c455a983b3a6d3c054a9e48b84522178491539eb9e3f4d38df2004ad4ff",
-        "configs/entity_attention_v1/offline_128x2_no_aux_80k_lr1e4_20261021.json": "a94b219da134df38f865c010f30263a29ebb9152cb4451d13978e0c0d3fb33de",
-        "configs/entity_attention_v1/model_relations_128x2.json": "957d0a43cc797c44b1bceb1e72a35c3c47b2f948ad26e5cbf67c078a12591a6b",
-        "tests/test_offline_mixed_budget.py": "12a8aa78882af837a05768cda20abc987dcd4f3bad15e3696257b496184b4a37",
         "artifacts/checkpoint_storage_audit_20261021/verification.json": "8b5e0f4a98b3b4fe8d8af05374ffc5d74f6bbfd3524733e3ede2fc0a01554055",
+        "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/README.md": "53ccc68d1dee2d06283f142156b099eb4d60fefcc5d795c5d53455ac8269b0c6",
+        "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/summary.json": "bb7de114ebaffee0303c1b3a88aab9979f8d93b9666beb9b63e2d3e657aedab1",
+        "artifacts/entity_attention_128x2_offline_80k_20261021/README.md": "3814874315cdf610a019f87098ee1828ff32e89c633b38d502ed37cc97573561",
+        "artifacts/entity_attention_128x2_offline_80k_20261021/plan.json": "cd80be4b4ba8a1146f1fb50aabaff3f75263ef0ca413b5f3485bbab053e2d2e1",
+        "artifacts/entity_attention_128x2_offline_80k_20261021/run.py": "f49f1dcaebdb781ecc3cfd9652c9c1b175ab21b86bce12c175f06832068944ac",
         "artifacts/entity_attention_128x2_offline_80k_20261021/source.json": "45d8fde07b8255df11375552e8072e364364819e1e627db73f81d8b0eb18ec70",
+        "artifacts/entity_attention_128x2_offline_80k_20261021/summary.json": "c2f5864d1ce978fffbcd0dcde0ef204021fc44ab077976def17a15ddeffa6fb3",
+        "artifacts/entity_attention_128x2_offline_80k_20261021/tests.xml": "d4f5c291ae529d9b3f4128e985ae2364cece5b81421038bc5c569d3e147c4928",
+        "artifacts/entity_attention_128x2_offline_80k_20261021/validation.json": "dc00204d832ab0b3fec9b9a7566d3172cb76c04be210f03eb738df761fca4804",
         "artifacts/repository_archive_20261021/README.md": "17b53abf00d5c7b0a789cc20242d056b027e59f287af2042ddc41c866a55ba53",
         "artifacts/repository_archive_20261021/verification.json": "6d98e0cbc929bba8b4d3364c36bd62e57af576a9296249136e0155d342344334",
-        "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/README.md": "53ccc68d1dee2d06283f142156b099eb4d60fefcc5d795c5d53455ac8269b0c6",
-        "artifacts/entity_attention_128x2_94695_vs_r20_greedy_20261021/summary.json": "bb7de114ebaffee0303c1b3a88aab9979f8d93b9666beb9b63e2d3e657aedab1"
+        "configs/entity_attention_v1/model_relations_128x2.json": "957d0a43cc797c44b1bceb1e72a35c3c47b2f948ad26e5cbf67c078a12591a6b",
+        "configs/entity_attention_v1/offline_128x2_no_aux_80k_lr1e4_20261021.json": "a94b219da134df38f865c010f30263a29ebb9152cb4451d13978e0c0d3fb33de",
+        "scripts/run_attention128_offline_20261021.sh": "77896c455a983b3a6d3c054a9e48b84522178491539eb9e3f4d38df2004ad4ff",
+        "tests/test_offline_mixed_budget.py": "12a8aa78882af837a05768cda20abc987dcd4f3bad15e3696257b496184b4a37"
       },
       "historical_source_hashes": {
         "tests/test_offline_mixed_budget.py": "94ecdcf4dc3f39ddf51ad40ad0e4e7e0b96c43e7d85dd722f0c05423a74a7065"
-      }
+      },
+      "id": "entity-attention-128x2-offline-80k-2026-10-21",
+      "report": "artifacts/entity_attention_128x2_offline_80k_20261021/README.md",
+      "scope": "Initially delivered prepared without running; subsequently launched by the user. Original process12682 remained alive during storage maintenance and had committed60000 steps at verification; all active-run checkpoints/frozen source/NPZ data/ledgers protected. No training settings or code changed by cleanup. Attention128x2/4heads/FFN512 with relations and expanded value readout,583682 parameters; same80k source games, splits, fixed4096 references, sampler, seeds, lr1e-4, cache16GiB,270557steps and20percentage evaluations as MLP except model/output. Ten CPU tests passed at preparation. Default train plus holdout selection only, no automatic arenas. Original validation/summary preparation records are historical; current progress/logs are authoritative. Subsequent cold-model archive preserved the entire active run and all80000 source NPZ; PID12682 remained alive, committed86000 during final verification. No active checkpoint or configuration moved. Later independent user-authorized greedy arena of preselected94695 versus raw R20 completed1000pair:54.400%,95% [52.299375%,56.525%]. Training remains incomplete; during arena verification its execution/log recorded KeyboardInterrupt near135600, committed135279; no trainer remained, no automatic resume. This arena did not modify or signal training. See entity-attention-128x2-94695-vs-r20-greedy-2026-10-21.",
+      "status": "incomplete"
     },
     {
-      "id": "entity-set-mlp-94695-vs-r20-greedy-2026-10-21",
-      "status": "valid",
-      "report": "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/README.md",
-      "scope": "User-authorized independent 1000pair/2000game deterministic greedy evaluation; preselected MLP94695 is minimum full-holdout KL+MSE among seven completed nodes of the interrupted run, opponent raw R20. Score 37.075%, paired-bootstrap95% [35.0%,39.175%], 736 wins/11 draws/1253 losses; frozen current12-noble rules, swapped seats, no search. Zero exceptions/illegal actions/engineering truncations/invariant failures, one deterministic-policy-cycle draw. Checkpoint/config/rules/seed identities and paired bootstrap verified. Single candidate/training history; no architecture-only causal claim. Does not resume the stopped MLP run.",
       "evidence": [
         "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/README.md",
         "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/config.json",
@@ -317,13 +553,13 @@
         "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/execution_plan.json": "b6d82ece630cc8d36dffa5bb902a2a9647ba8cc629264517c6a1a119f68a4155",
         "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/result.json": "4ad10990cf55fab5579f61660525fc5b8e34904f73b20adf6f830006aa3eed50",
         "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/summary.json": "d44886a7ee413707f378e0192a5c81bbce1cd13a2693e70027196bd33da46d26"
-      }
+      },
+      "id": "entity-set-mlp-94695-vs-r20-greedy-2026-10-21",
+      "report": "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/README.md",
+      "scope": "User-authorized independent 1000pair/2000game deterministic greedy evaluation; preselected MLP94695 is minimum full-holdout KL+MSE among seven completed nodes of the interrupted run, opponent raw R20. Score 37.075%, paired-bootstrap95% [35.0%,39.175%], 736 wins/11 draws/1253 losses; frozen current12-noble rules, swapped seats, no search. Zero exceptions/illegal actions/engineering truncations/invariant failures, one deterministic-policy-cycle draw. Checkpoint/config/rules/seed identities and paired bootstrap verified. Single candidate/training history; no architecture-only causal claim. Does not resume the stopped MLP run.",
+      "status": "valid"
     },
     {
-      "id": "entity-set-mlp-offline-80k-2026-10-21",
-      "status": "incomplete",
-      "report": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/README.md",
-      "scope": "Stopped at user request; original 270557-step plan incomplete, latest recoverable checkpoint 97000 verified on CPU. Seven completed predeclared validation nodes: KL+MSE best at 94695 (KL 0.5305772880, MSE 0.7828317989), value MSE best at 40584 (0.7683896030). No arenas started. Subsequently raw R20 was evaluated only, using identical frozen evaluator, dataset, policy masks and holdout: full KL 0.4451103815 / MSE 0.7552652386 on 641723 positions including 134304 policy labels; fixed4096 subset 0.4162344863 / 0.7634066865. Both lower than MLP; initialization and training history are not controlled, so no architecture-only or strength conclusion. At user stop all checkpoints were retained; later authorized cleanup deleted96 ordinary recovery models, preservinginitial/seven evaluated/latest97000 models and all ledgers/logs/source. Later user authorization separately evaluated the preselected94695 checkpoint against raw R20 in 1000pair greedy: 37.075%, 95% [35.0%,39.175%]. See entity-set-mlp-94695-vs-r20-greedy-2026-10-21; the original training and automatic arenas remain incomplete, and the historical stop record is unchanged.",
       "evidence": [
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/README.md",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/cache_reset_tests.xml",
@@ -351,40 +587,40 @@
         "artifacts/checkpoint_storage_audit_20261021/README.md"
       ],
       "evidence_hashes": {
+        "artifacts/checkpoint_storage_audit_20261021/README.md": "8e584da94c3dd88c6215e7d9a4df3e69e4a899e6c3bed29cc10c505f2d8b12bb",
+        "artifacts/checkpoint_storage_audit_20261021/cleanup.json": "87a7f20fdac99bfde0a65680565545221c30dd2c244e81fcf6215c9f62381f7f",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/README.md": "cfe2a580002c298fa0eea09c59fc8008929a544b3686a653250f17db7dc39879",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/cache_reset_tests.xml": "3c7be624573748f63d443de64249a4c93c997dca291b257ffbb16f315949aa38",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/cache_restart_16g.json": "217383a1f530b20fe17ad2ded8554be5d62b43186fc00205746c7e7d44029009",
+        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/evaluate_r20.py": "c7daca8fccedeee8e4bb990538bb67903a7fedc523d29550ab4ba97cd9206e13",
+        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/execution.json": "6c7b878327cb88a9f79d3ba7eae77db2d6c761b5786b90a66e76ec8d1dd0551b",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/plan.json": "38d15fa9088a117bcf408de96391f91ad04423ed790ac58d2c4f516cf5f46620",
+        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/r20_same_holdout.json": "707a01b5faccba02d8350c461f7517e153f763f8115ff5e77c61faae5a81c8c8",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/results.md": "4c862912a3f9f1538d727ae74a6ac0badb90fb653b81e720bc1fb1b0b29a6d67",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/run.py": "42742c635e4d54bad834fecff89dcddbbc227c26a75d98e472feba3b5c13e08b",
+        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/source.json": "b3ac393ac63783b6bb6a9fc1911932c3dc529309ab66dd14d97bb146fb3c98e8",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/summary.json": "c6328395ee96ca352c4d8416f8311db008b2511e8a6edc08a5eb48c27664d55a",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/tests.xml": "b7673b4948cf3ef258d1ce9108159932ac703c1dacab426553f1be0e57ee0ce1",
+        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/user_stop.json": "2acc88c5e9cb1c1750fdf0b26ae69e94b547eec67167772642ba1b4e377b48fd",
         "artifacts/entity_set_mlp_256x4_offline_80k_20261021/validation.json": "017322e99f06ca0eea9c1bd6e02a71f5dc1d28a38cf7eacb2f665552a5fd7c1b",
+        "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/README.md": "903d50b4982d3b8ca4a7cf81e1eac358c93f910e2c46fff0f6c00f8e1593c860",
+        "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/summary.json": "d44886a7ee413707f378e0192a5c81bbce1cd13a2693e70027196bd33da46d26",
         "configs/entity_set_mlp_v1/offline_80k_lr1e4_20261021.json": "3fcb43c66ecf3adc64212e44163a1c9ac33ff1e9a37e09b7f537089d9504b7f7",
+        "scripts/run_entity_set_mlp_offline_20261021.sh": "f1dfaf9eaa612cabd424b8b84c4a47e563c769a420759d2b5816e0cbfd131fdc",
         "src/splendor/offline_mixed_budget.py": "18f08c3877903883a62c17b068705940a744625df15290971236fa402f29a455",
         "src/splendor/offline_objectives.py": "e89eedde349b1cd16749ec7dddb2c5a90c15a9518a46af84fbb5fabd6d745a32",
         "src/splendor/offline_scratch.py": "ecc260d070dd9c96f629a3dc764916be063d605a036f72fb5280bc261ed6dd23",
-        "tests/test_offline_mixed_budget.py": "12a8aa78882af837a05768cda20abc987dcd4f3bad15e3696257b496184b4a37",
-        "scripts/run_entity_set_mlp_offline_20261021.sh": "f1dfaf9eaa612cabd424b8b84c4a47e563c769a420759d2b5816e0cbfd131fdc",
-        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/user_stop.json": "2acc88c5e9cb1c1750fdf0b26ae69e94b547eec67167772642ba1b4e377b48fd",
-        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/evaluate_r20.py": "c7daca8fccedeee8e4bb990538bb67903a7fedc523d29550ab4ba97cd9206e13",
-        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/r20_same_holdout.json": "707a01b5faccba02d8350c461f7517e153f763f8115ff5e77c61faae5a81c8c8",
-        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/execution.json": "6c7b878327cb88a9f79d3ba7eae77db2d6c761b5786b90a66e76ec8d1dd0551b",
-        "artifacts/entity_set_mlp_256x4_offline_80k_20261021/source.json": "b3ac393ac63783b6bb6a9fc1911932c3dc529309ab66dd14d97bb146fb3c98e8",
-        "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/README.md": "903d50b4982d3b8ca4a7cf81e1eac358c93f910e2c46fff0f6c00f8e1593c860",
-        "artifacts/entity_set_mlp_94695_vs_r20_greedy_20261021/summary.json": "d44886a7ee413707f378e0192a5c81bbce1cd13a2693e70027196bd33da46d26",
-        "artifacts/checkpoint_storage_audit_20261021/cleanup.json": "87a7f20fdac99bfde0a65680565545221c30dd2c244e81fcf6215c9f62381f7f",
-        "artifacts/checkpoint_storage_audit_20261021/README.md": "8e584da94c3dd88c6215e7d9a4df3e69e4a899e6c3bed29cc10c505f2d8b12bb"
+        "tests/test_offline_mixed_budget.py": "12a8aa78882af837a05768cda20abc987dcd4f3bad15e3696257b496184b4a37"
       },
       "historical_source_hashes": {
         "tests/test_offline_mixed_budget.py": "94ecdcf4dc3f39ddf51ad40ad0e4e7e0b96c43e7d85dd722f0c05423a74a7065"
-      }
+      },
+      "id": "entity-set-mlp-offline-80k-2026-10-21",
+      "report": "artifacts/entity_set_mlp_256x4_offline_80k_20261021/README.md",
+      "scope": "Stopped at user request; original 270557-step plan incomplete, latest recoverable checkpoint 97000 verified on CPU. Seven completed predeclared validation nodes: KL+MSE best at 94695 (KL 0.5305772880, MSE 0.7828317989), value MSE best at 40584 (0.7683896030). No arenas started. Subsequently raw R20 was evaluated only, using identical frozen evaluator, dataset, policy masks and holdout: full KL 0.4451103815 / MSE 0.7552652386 on 641723 positions including 134304 policy labels; fixed4096 subset 0.4162344863 / 0.7634066865. Both lower than MLP; initialization and training history are not controlled, so no architecture-only or strength conclusion. At user stop all checkpoints were retained; later authorized cleanup deleted96 ordinary recovery models, preservinginitial/seven evaluated/latest97000 models and all ledgers/logs/source. Later user authorization separately evaluated the preselected94695 checkpoint against raw R20 in 1000pair greedy: 37.075%, 95% [35.0%,39.175%]. See entity-set-mlp-94695-vs-r20-greedy-2026-10-21; the original training and automatic arenas remain incomplete, and the historical stop record is unchanged.",
+      "status": "incomplete"
     },
     {
-      "id": "entity-set-mlp-actor12-2026-10-21",
-      "status": "historical_valid",
-      "report": "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/README.md",
-      "scope": "Historical 855682-parameter actor12 preset, without action cross-attention. Its 154 CPU passes / one CUDA skip and finite actual-preset CPU checks remain scoped to that version. Current preset uses the separately recorded cross64x2 upgrade; original raw JSON/XML unchanged. Frozen configuration: artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/model_256x4_actor12.json. No formal training, strength or throughput result in the implementation record.",
       "evidence": [
         "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/README.md",
         "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/capacity.json",
@@ -403,31 +639,31 @@
         "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/README.md": "4bc3d4dc78bfcddcb44c316411fac010a567e0ba6007c624d953ec3579c31d9c",
         "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/capacity.json": "f1345566469429da7c211bd2270e4ffe295751986f81abda31e8ab7a131d405d",
         "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/cpu_validation.json": "c4d6d2c5076b6cf06528e277d27f23168e2a5e81616b58306ccea936bd741a83",
+        "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/model_256x4_actor12.json": "9019554f02fa691450f886b81a0706fb2cbe6e2e24fc5ec58810aab5487d9052",
         "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/tests.xml": "63cb0d8311cedd53766fc88dfe8492ee11a945dbeadab55b196bce9b0016d5d2",
         "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/validate.py": "65e87f4026879f3bc8e503453d2a504c204c7a76649c48b9f94d7f6d2de89a2a",
+        "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/validation.json": "d5f319689cb1a6a74a040c3e5a5161955bc2e2f298e6518e372092b054c38b6d",
+        "configs/entity_set_mlp_v1/README.md": "b83240e40cd41938b8877b256376af26ab976766eb7be0599615d6a793029343",
+        "configs/entity_set_mlp_v1/model_256x4.json": "8d88af1b758092357c45a4daa29ab89b08d2cfdfe3075c165e0f013924160e4c",
         "src/splendor/entity_set_mlp.py": "ec4c5f2a98d2470723c7fa236fbf07403d00b7a4b072850476917daa97666324",
         "tests/test_entity_set_mlp.py": "646b8121af104a442beb6153df7773d52358e3826f420955f43dbc3fbf3f6566",
-        "tests/test_entity_set_mlp_training.py": "44915010c330b74246bef8db1c4737c76e6cd07f74bff18967c4462ea03a714b",
-        "configs/entity_set_mlp_v1/model_256x4.json": "8d88af1b758092357c45a4daa29ab89b08d2cfdfe3075c165e0f013924160e4c",
-        "configs/entity_set_mlp_v1/README.md": "b83240e40cd41938b8877b256376af26ab976766eb7be0599615d6a793029343",
-        "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/validation.json": "d5f319689cb1a6a74a040c3e5a5161955bc2e2f298e6518e372092b054c38b6d",
-        "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/model_256x4_actor12.json": "9019554f02fa691450f886b81a0706fb2cbe6e2e24fc5ec58810aab5487d9052"
+        "tests/test_entity_set_mlp_training.py": "44915010c330b74246bef8db1c4737c76e6cd07f74bff18967c4462ea03a714b"
       },
       "historical_source_hashes": {
-        "tests/test_entity_set_mlp_training.py": "e0c5feadd9057a85bb071dde98d230f69137d5d76e36729c60c50ed48797e359",
-        "tests/test_entity_set_mlp.py": "94295d6e500717a034079969262e6aca4575eec1bc3809ee1fe9e9a8f1330682",
-        "src/splendor/entity_set_mlp.py": "b58301b0bf94eeb79ccf5d35978423abb2e7e91ca71c3a2788f005eaaf99e620",
-        "configs/entity_set_mlp_v1/model_256x4.json": "9019554f02fa691450f886b81a0706fb2cbe6e2e24fc5ec58810aab5487d9052",
-        "configs/entity_set_mlp_v1/README.md": "45bdbfc13a11a314aee14380f6d5bfcb8c42dc19b5857b51233301abafe5ab35",
+        "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/README.md": "e7717e19e1ae958db566f0cfa441b08724e412979150dc32dd7df5623b5d4d1f",
         "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/validate.py": "c9e1e0f640977eb953b546419813b0878490bb2ed05c0ca5ea74e140646ffeca",
-        "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/README.md": "e7717e19e1ae958db566f0cfa441b08724e412979150dc32dd7df5623b5d4d1f"
-      }
+        "configs/entity_set_mlp_v1/README.md": "45bdbfc13a11a314aee14380f6d5bfcb8c42dc19b5857b51233301abafe5ab35",
+        "configs/entity_set_mlp_v1/model_256x4.json": "9019554f02fa691450f886b81a0706fb2cbe6e2e24fc5ec58810aab5487d9052",
+        "src/splendor/entity_set_mlp.py": "b58301b0bf94eeb79ccf5d35978423abb2e7e91ca71c3a2788f005eaaf99e620",
+        "tests/test_entity_set_mlp.py": "94295d6e500717a034079969262e6aca4575eec1bc3809ee1fe9e9a8f1330682",
+        "tests/test_entity_set_mlp_training.py": "e0c5feadd9057a85bb071dde98d230f69137d5d76e36729c60c50ed48797e359"
+      },
+      "id": "entity-set-mlp-actor12-2026-10-21",
+      "report": "artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/README.md",
+      "scope": "Historical 855682-parameter actor12 preset, without action cross-attention. Its 154 CPU passes / one CUDA skip and finite actual-preset CPU checks remain scoped to that version. Current preset uses the separately recorded cross64x2 upgrade; original raw JSON/XML unchanged. Frozen configuration: artifacts/entity_set_mlp_256x4_20261021/actor_upgrade_12/model_256x4_actor12.json. No formal training, strength or throughput result in the implementation record.",
+      "status": "historical_valid"
     },
     {
-      "id": "entity-set-mlp-256x4-2026-10-21",
-      "status": "historical_valid",
-      "report": "artifacts/entity_set_mlp_256x4_20261021/README.md",
-      "scope": "Historical initial 848418-parameter baseline; 101 CPU tests and finite actual-preset CPU/CUDA checks apply to that configuration only. Current preset enables the separately recorded actor12 upgrade. Frozen original preset: artifacts/entity_set_mlp_256x4_20261021/model_256x4_baseline.json. No formal MLP training, strength or speedup claim.",
       "evidence": [
         "artifacts/entity_set_mlp_256x4_20261021/README.md",
         "artifacts/entity_set_mlp_256x4_20261021/capacity.json",
@@ -448,6 +684,7 @@
         "artifacts/entity_set_mlp_256x4_20261021/capacity.json": "b7ad9fa32e14a2990a467c9f2bcb6355fa42bba7803f902ec15f81dcf3c16610",
         "artifacts/entity_set_mlp_256x4_20261021/cpu_validation.json": "7bc44f00fc666e30485304196044aad47a91c4301ad67271c908836bbdc8a307",
         "artifacts/entity_set_mlp_256x4_20261021/cuda_validation.json": "41d524ba189afa10704a533e458fb0de15284031b2a1d5d3844d72e5af823183",
+        "artifacts/entity_set_mlp_256x4_20261021/model_256x4_baseline.json": "89a3d3ff2756d0c107803357bcb2fc0cf9cdfeb297b9a52627e01ddf323065d0",
         "artifacts/entity_set_mlp_256x4_20261021/tests.xml": "58bb7375c068ef9a78f723bfce521de3d0069d5c09698903c27b810f872c5064",
         "artifacts/entity_set_mlp_256x4_20261021/validate.py": "91b0802ad17ec4ca67e06f12eebea37844a168360af196841c957ff152024aac",
         "artifacts/entity_set_mlp_256x4_20261021/validation.json": "b3811508aef28a728ec81927f934e1611ad215b2a563a35ae6df810070260e71",
@@ -455,8 +692,7 @@
         "configs/entity_set_mlp_v1/model_256x4.json": "8d88af1b758092357c45a4daa29ab89b08d2cfdfe3075c165e0f013924160e4c",
         "src/splendor/entity_set_mlp.py": "ec4c5f2a98d2470723c7fa236fbf07403d00b7a4b072850476917daa97666324",
         "tests/test_entity_set_mlp.py": "646b8121af104a442beb6153df7773d52358e3826f420955f43dbc3fbf3f6566",
-        "tests/test_entity_set_mlp_training.py": "44915010c330b74246bef8db1c4737c76e6cd07f74bff18967c4462ea03a714b",
-        "artifacts/entity_set_mlp_256x4_20261021/model_256x4_baseline.json": "89a3d3ff2756d0c107803357bcb2fc0cf9cdfeb297b9a52627e01ddf323065d0"
+        "tests/test_entity_set_mlp_training.py": "44915010c330b74246bef8db1c4737c76e6cd07f74bff18967c4462ea03a714b"
       },
       "historical_source_hashes": {
         "artifacts/entity_set_mlp_256x4_20261021/README.md": "efb1f5aa2c1b292b27b25fd5c629000058ebff844583003bcf148bfc1a8bf756",
@@ -466,13 +702,13 @@
         "src/splendor/entity_set_mlp.py": "04468b46da620c193bfb5b766958445f8638427f23d07168172095e951ed53b6",
         "tests/test_entity_set_mlp.py": "773c72eeaeaf8cebdfd8ab9ad08d29e146d9a631044535bc992da0a2eafb75eb",
         "tests/test_entity_set_mlp_training.py": "54907a52a4008cb7804b6db1cd46bb5cfdddd8f3e21c6b0685902d7c67914843"
-      }
+      },
+      "id": "entity-set-mlp-256x4-2026-10-21",
+      "report": "artifacts/entity_set_mlp_256x4_20261021/README.md",
+      "scope": "Historical initial 848418-parameter baseline; 101 CPU tests and finite actual-preset CPU/CUDA checks apply to that configuration only. Current preset enables the separately recorded actor12 upgrade. Frozen original preset: artifacts/entity_set_mlp_256x4_20261021/model_256x4_baseline.json. No formal MLP training, strength or speedup claim.",
+      "status": "historical_valid"
     },
     {
-      "id": "entity-attention-r20-s1024n1-vs-greedy-2026-10-21",
-      "report": "artifacts/entity_attention_r20_s1024n1_vs_greedy_20261021/README.md",
-      "status": "valid",
-      "scope": "R20 raw checkpoint fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd; native S1024N1 (total 1024) versus same-model zero-simulation greedy, 1000 seat-swapped pairs under current 12-noble rules. Collector 12-worker GPU pool. Status: complete. Strength on this panel does not establish training improvement.",
       "evidence": [
         "artifacts/entity_attention_r20_s1024n1_vs_greedy_20261021/README.md",
         "artifacts/entity_attention_r20_s1024n1_vs_greedy_20261021/catalog/splendor_cards.csv",
@@ -510,13 +746,13 @@
         "artifacts/entity_attention_r20_s1024n1_vs_greedy_20261021/smoke.json": "041d4c0dac99ac3af052e861e2ef0a328d76616edd42484281813fa765ca5fb7",
         "artifacts/entity_attention_r20_s1024n1_vs_greedy_20261021/smoke.py": "9c485613216920c94a23fbf3ae3db205ad429fda238e0b168841f92571407209",
         "artifacts/entity_attention_r20_s1024n1_vs_greedy_20261021/summary.json": "31019367c104a6c6603c1be16598fcdc513e3f3afa500786c59a4347ad08cf41"
-      }
+      },
+      "id": "entity-attention-r20-s1024n1-vs-greedy-2026-10-21",
+      "report": "artifacts/entity_attention_r20_s1024n1_vs_greedy_20261021/README.md",
+      "scope": "R20 raw checkpoint fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd; native S1024N1 (total 1024) versus same-model zero-simulation greedy, 1000 seat-swapped pairs under current 12-noble rules. Collector 12-worker GPU pool. Status: complete. Strength on this panel does not establish training improvement.",
+      "status": "valid"
     },
     {
-      "id": "search-input-cache-rate-2026-10-21",
-      "report": "artifacts/search_input_cache_rate_20261021/results.md",
-      "status": "valid",
-      "scope": "96 identical baseline roots, 2 seeds, R20 checkpoint; native S1024N1/S256N4/S1024N4 totals 1024/1024/4096 and native_chance total 1024, CPW off. Single-search exact-input potential hit rates 14.62/19.20/20.22/2.69 percent. Shadow observation only; no cache enabled, speed measurement, cross-move estimate or strength conclusion.",
       "evidence": [
         "artifacts/search_input_cache_rate_20261021/README.md",
         "artifacts/search_input_cache_rate_20261021/audit.py",
@@ -548,13 +784,13 @@
         "artifacts/search_input_cache_rate_20261021/summary.json": "7e28b7937b5bd793d4a48358007fccad4b9477a4e8761389fe9b3bd9ce6ff981",
         "artifacts/search_input_cache_rate_20261021/test_probe.py": "37fc2c521acfcff29a32eaa9cc32cff904054411ba2176b5f3c0ad53fed3efba",
         "artifacts/search_input_cache_rate_20261021/validation.json": "c4b972776c1a7d8baa329b612ffc31ee2d3c75620ffa4ee6271380e31bd2ebe5"
-      }
+      },
+      "id": "search-input-cache-rate-2026-10-21",
+      "report": "artifacts/search_input_cache_rate_20261021/results.md",
+      "scope": "96 identical baseline roots, 2 seeds, R20 checkpoint; native S1024N1/S256N4/S1024N4 totals 1024/1024/4096 and native_chance total 1024, CPW off. Single-search exact-input potential hit rates 14.62/19.20/20.22/2.69 percent. Shadow observation only; no cache enabled, speed measurement, cross-move estimate or strength conclusion.",
+      "status": "valid"
     },
     {
-      "id": "entity-attention-r20-s256n4-vs-greedy-2026-10-21",
-      "report": "artifacts/entity_attention_r20_s256n4_vs_greedy_20261021/README.md",
-      "status": "valid",
-      "scope": "R20 raw checkpoint fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd; native S256N4 (total 1024) versus same-model zero-simulation greedy, 1000 seat-swapped pairs under current 12-noble rules. Collector 12-worker GPU pool. Status: complete. Strength on this panel does not establish training improvement.",
       "evidence": [
         "artifacts/entity_attention_r20_s256n4_vs_greedy_20261021/README.md",
         "artifacts/entity_attention_r20_s256n4_vs_greedy_20261021/build_native.py",
@@ -602,13 +838,13 @@
         "artifacts/entity_attention_r20_s256n4_vs_greedy_20261021/summary.json": "6e020327b591eaabff4b31af5575e7a8906a2b7690db757dd6f2396ce1d3d8ed",
         "artifacts/entity_attention_r20_s256n4_vs_greedy_20261021/tests.xml": "c5adcbb7446e67f51b3c6bae2da0353928050924990b6d3e83065a47788648ba",
         "artifacts/entity_attention_r20_s256n4_vs_greedy_20261021/validation.json": "ddf08f926e7a80fe0ead5371d6a50709d164c0b95c6ab2728fa195014b5f2b14"
-      }
+      },
+      "id": "entity-attention-r20-s256n4-vs-greedy-2026-10-21",
+      "report": "artifacts/entity_attention_r20_s256n4_vs_greedy_20261021/README.md",
+      "scope": "R20 raw checkpoint fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd; native S256N4 (total 1024) versus same-model zero-simulation greedy, 1000 seat-swapped pairs under current 12-noble rules. Collector 12-worker GPU pool. Status: complete. Strength on this panel does not establish training improvement.",
+      "status": "valid"
     },
     {
-      "id": "entity-attention-r20-search-stability-fixed128-2026-10-21",
-      "status": "incomplete",
-      "report": "artifacts/entity_attention_r20_search_stability_128_20261021/README.md",
-      "scope": "User-authorized detached fixed-root diagnostic, not strength or optimality. R20 raw model; 96 stage-balanced roots plus 32/192 independently screened disagreement roots, seven candidates and two independent-seed high references, eight seeds each; S*N total budget. Existing ten-noble games replayed with frozen historical catalog; conditional searches use current twelve-noble data. 288 source games and encoded roots verified, 7 tests and two CUDA compiled engineering roots passed. Background progress and final summaries are authoritative.",
       "evidence": [
         "artifacts/entity_attention_r20_search_stability_128_20261021/README.md",
         "artifacts/entity_attention_r20_search_stability_128_20261021/candidate_bank.json",
@@ -646,13 +882,13 @@
         "artifacts/entity_attention_r20_search_stability_128_20261021/source_games.jsonl": "1e4fee599efad096ea4d254104d7d8e5d1f8b69fc9f028856b0a2582f85ea238",
         "artifacts/entity_attention_r20_search_stability_128_20261021/tests.xml": "489f136b88cdfab6f2675d6b63940cf941ae2933b7dbf095c770c83b79241fb0",
         "artifacts/entity_attention_r20_search_stability_128_20261021/validation.json": "22c1ad0221089ae1858e1bec83bda9b039b0194dfb1954b292340a999b20a778"
-      }
+      },
+      "id": "entity-attention-r20-search-stability-fixed128-2026-10-21",
+      "report": "artifacts/entity_attention_r20_search_stability_128_20261021/README.md",
+      "scope": "User-authorized detached fixed-root diagnostic, not strength or optimality. R20 raw model; 96 stage-balanced roots plus 32/192 independently screened disagreement roots, seven candidates and two independent-seed high references, eight seeds each; S*N total budget. Existing ten-noble games replayed with frozen historical catalog; conditional searches use current twelve-noble data. 288 source games and encoded roots verified, 7 tests and two CUDA compiled engineering roots passed. Background progress and final summaries are authoritative.",
+      "status": "incomplete"
     },
     {
-      "id": "noble-pool-bga12-2026-10-21",
-      "status": "valid",
-      "report": "artifacts/noble_pool_bga12_20261021/README.md",
-      "scope": "User-requested normative 12-noble catalog: classic ten plus N11 blue/green/black 3-3-3 and N12 white/red 4-4. Default Python/native/BGA, self-play and evaluation share the catalog; catalog fingerprints pin collection/evaluation resumes. 180 tests passed, 3 conditional CUDA skips; four real-model CPU/CUDA engineering games and checked full replays, no new-rule strength or training claim. Original ten-noble data and binary preserved.",
       "evidence": [
         "artifacts/noble_pool_bga12_20261021/README.md",
         "artifacts/noble_pool_bga12_20261021/build_native.py",
@@ -696,13 +932,13 @@
         "artifacts/noble_pool_bga12_20261021/validate_collection.py": "6dc46510b1f36c49c991f2fafd3890a1bca634c6e4814000da2ddbcbd6761481",
         "artifacts/noble_pool_bga12_20261021/validate_gpu_collection.py": "eaf9c291c0117a54d8ec781d3ed10c4a8aa0ae3872a2359540c3e26a60bd8109",
         "artifacts/noble_pool_bga12_20261021/validation.json": "84ffffe55e71d8050d6fa7b81f786a98843fa89901dc32f2107fe1604dfe87d0"
-      }
+      },
+      "id": "noble-pool-bga12-2026-10-21",
+      "report": "artifacts/noble_pool_bga12_20261021/README.md",
+      "scope": "User-requested normative 12-noble catalog: classic ten plus N11 blue/green/black 3-3-3 and N12 white/red 4-4. Default Python/native/BGA, self-play and evaluation share the catalog; catalog fingerprints pin collection/evaluation resumes. 180 tests passed, 3 conditional CUDA skips; four real-model CPU/CUDA engineering games and checked full replays, no new-rule strength or training claim. Original ten-noble data and binary preserved.",
+      "status": "valid"
     },
     {
-      "id": "entity-attention-r20-chance-s128-vs-greedy-2026-10-21",
-      "report": "artifacts/entity_attention_r20_chance_s128_vs_greedy_20261021/README.md",
-      "status": "valid",
-      "scope": "R20 raw checkpoint fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd; pure sampled-chance S128 versus same-model greedy, 1000 seat-swapped pairs. Status: complete. Strength on this panel does not establish training improvement.",
       "evidence": [
         "artifacts/entity_attention_r20_chance_s128_vs_greedy_20261021/README.md",
         "artifacts/entity_attention_r20_chance_s128_vs_greedy_20261021/config.json",
@@ -734,7 +970,11 @@
         "artifacts/entity_attention_r20_chance_s128_vs_greedy_20261021/smoke.json": "99b8e8b3b45c1ad2cd3ce1769fef84c520859b2f190baf1cc89f8711781c1c08",
         "artifacts/entity_attention_r20_chance_s128_vs_greedy_20261021/smoke.py": "0c8a5c974777d5256ca31d025197b0a0609f4430a06b51fd497332754d520d9a",
         "artifacts/entity_attention_r20_chance_s128_vs_greedy_20261021/summary.json": "ad4e247b4377de7f7f80d68190c0623fd9d5d2ff8213303dfe915baa8a66ed5a"
-      }
+      },
+      "id": "entity-attention-r20-chance-s128-vs-greedy-2026-10-21",
+      "report": "artifacts/entity_attention_r20_chance_s128_vs_greedy_20261021/README.md",
+      "scope": "R20 raw checkpoint fe7b71449b6ada28978c824d3e9e22b851fadf8bebf77261f961d85e27e394bd; pure sampled-chance S128 versus same-model greedy, 1000 seat-swapped pairs. Status: complete. Strength on this panel does not establish training improvement.",
+      "status": "valid"
     },
     {
       "evidence": [
@@ -812,6 +1052,7 @@
         "artifacts/bga_934713322_move18_plan_20261021/execution_probe.json": "dba7fd311fd7ed17afb26391e068966d6b667463b28c5b4c70cf3c3f748115be",
         "artifacts/bga_934713322_move18_plan_20261021/greedy.json": "a92f4fc4b49ca40f68e9a03a8ad9ada2b2c8b5f7ab85b3ec4a54e9694ce83cc5",
         "artifacts/bga_934713322_move18_plan_20261021/input_validation.json": "87189277994ed1b6fe4866bac1c98316f4a8b6a37479ac42432f6a985079af41",
+        "artifacts/bga_934713322_move18_plan_20261021/manifest.json": "967416df80a78dc2e5a5c1d9de35b84bb616ff061304544cb3330ecb9f360dc3",
         "artifacts/bga_934713322_move18_plan_20261021/native_probe.patch": "3a52ecb58d4e7f1f097f9e282fa64758c9454ffd9b78aa4b41a41fb5fd44d389",
         "artifacts/bga_934713322_move18_plan_20261021/probe_build.json": "b758223cc132f5f44163bcca73e091e0fd2d557e5166229b1d825f0302ac8fd4",
         "artifacts/bga_934713322_move18_plan_20261021/progress.json": "1ba2bdec4cf038adedb9295f362413f0e4986452a3633872fe21700245993f4b",
@@ -846,8 +1087,7 @@
         "artifacts/bga_934713322_move18_plan_20261021/source_logs14_18.json": "19f6c632f2b8a4c36c9fa9380ea558484ae4967c3dda27126757ce21a3622343",
         "artifacts/bga_934713322_move18_plan_20261021/summarize.py": "d71ac1c89e9e2cf6c14e4d805910795898be01dae474986bb1e31744b2e2bc39",
         "artifacts/bga_934713322_move18_plan_20261021/summary.json": "57b8caf2461df8094916a65545b18cb461ade42b38cbaa110cca0eb5a8055520",
-        "artifacts/bga_934713322_move18_plan_20261021/validation.json": "8bc9bb0664e6af0bf469b6b1662dd7b144de6d4c2e553de37dfaba2f7a4f2406",
-        "artifacts/bga_934713322_move18_plan_20261021/manifest.json": "967416df80a78dc2e5a5c1d9de35b84bb616ff061304544cb3330ecb9f360dc3"
+        "artifacts/bga_934713322_move18_plan_20261021/validation.json": "8bc9bb0664e6af0bf469b6b1662dd7b144de6d4c2e553de37dfaba2f7a4f2406"
       },
       "id": "bga-934713322-move18-plan-2026-10-21",
       "report": "artifacts/bga_934713322_move18_plan_20261021/README.md",
@@ -912,20 +1152,17 @@
       "evidence_hashes": {
         "artifacts/bga_934713322_move20_061_20261021/README.md": "41b7016b03cde9cc9313f3757812f9f050b8c03ac42acd1327b538fc08b53c18",
         "artifacts/bga_934713322_move20_061_20261021/analyze.py": "647d7b84db24015bc396ebdf3682780d29418d8271fca857ef15fc38fdd7166f",
+        "artifacts/bga_934713322_move20_061_20261021/execution.json": "bad372014e5995874df145597fe12ce64325ad0a3cf530afd67f620dd666dff8",
+        "artifacts/bga_934713322_move20_061_20261021/greedy.json": "1abdb37755bdade4470841e0914aa9fffbaf0fbb112afb25093e18f2e7b47cf9",
         "artifacts/bga_934713322_move20_061_20261021/input_validation.json": "735f04d330616aed279bcdfaef6b922b2286e7552b762ff9a8e3b40094e9a3bb",
         "artifacts/bga_934713322_move20_061_20261021/plan.json": "137105cab69b27175b80b1553299ad94b5e465b8730e1eee7ca84b8ed0de88a6",
-        "artifacts/bga_934713322_move20_061_20261021/execution.json": "bad372014e5995874df145597fe12ce64325ad0a3cf530afd67f620dd666dff8",
-        "artifacts/bga_934713322_move20_061_20261021/root19_snapshot.json": "0c72201ec027ce38a97ade2128d8d749320a1275c0255a9eb55fbb94be976571",
-        "artifacts/bga_934713322_move20_061_20261021/root_snapshot.json": "2de22d0030baa729c21e2c557c9568c83270dea64dec58994d703c457beb8850",
-        "artifacts/bga_934713322_move20_061_20261021/root_history.json": "22c106149bcfeed5f3a21a534da11b59388c146be63442c0e2dede92d03e1398",
-        "artifacts/bga_934713322_move20_061_20261021/root_request.json": "c2d5b575c4c9ef5e4be7cfee44517f478453c004cb8b1e0eaebb39bb335b0511",
-        "artifacts/bga_934713322_move20_061_20261021/source_events.json": "f1a83740d7304c01db37ef15fca5be3db840797a8ff862e0c7a07e45158748a3",
-        "artifacts/bga_934713322_move20_061_20261021/user_observation.json": "d5fcabacd4473fcd47f536b5ae1c7c034e788f9ad3e09339a4a7cac400a61a43",
-        "artifacts/bga_934713322_move20_061_20261021/greedy.json": "1abdb37755bdade4470841e0914aa9fffbaf0fbb112afb25093e18f2e7b47cf9",
         "artifacts/bga_934713322_move20_061_20261021/reference_S1024_seed0.json": "4f87f5e28efbe212d98c1ce4a52c3b674c72ed7c035afdc261dbd7fc4d757de1",
-        "artifacts/bga_934713322_move20_061_20261021/summary.json": "7143db236bfa0ffd22d2b55c85c9cfa61c91529bb31b5c1eb34d6d37e25a26c8",
         "artifacts/bga_934713322_move20_061_20261021/result_validation.json": "92742e4219bfabb63c42803be710906d844f717a0df7ecfd604ac6506f7cf383",
         "artifacts/bga_934713322_move20_061_20261021/results.md": "c2ab81ee20e79e0f11777f7a125298b15c4bceaf7b91a528f5c26360a6b04ca0",
+        "artifacts/bga_934713322_move20_061_20261021/root19_snapshot.json": "0c72201ec027ce38a97ade2128d8d749320a1275c0255a9eb55fbb94be976571",
+        "artifacts/bga_934713322_move20_061_20261021/root_history.json": "22c106149bcfeed5f3a21a534da11b59388c146be63442c0e2dede92d03e1398",
+        "artifacts/bga_934713322_move20_061_20261021/root_request.json": "c2d5b575c4c9ef5e4be7cfee44517f478453c004cb8b1e0eaebb39bb335b0511",
+        "artifacts/bga_934713322_move20_061_20261021/root_snapshot.json": "2de22d0030baa729c21e2c557c9568c83270dea64dec58994d703c457beb8850",
         "artifacts/bga_934713322_move20_061_20261021/search/chance_S1024_N1_seed0.json": "e5b989f6f500239b282e4d4421b246b89ac65af233eae47fcc3b5b94a823eba5",
         "artifacts/bga_934713322_move20_061_20261021/search/chance_S1024_N1_seed1.json": "9dbe0f8776a2f15afe7c4fd28e95ad9eddbbe754b8d18ce589a7728847746779",
         "artifacts/bga_934713322_move20_061_20261021/search/chance_S1024_N1_seed2.json": "d8eb7725576f4e22f6fc2a19a86e7d7186624fa9875f28586c7939168be5e0d4",
@@ -961,7 +1198,10 @@
         "artifacts/bga_934713322_move20_061_20261021/search/native_S4096_N1_seed2.json": "be69348868d0aca5d43777c330aca518f1a6bd448633dd09e4da061d0d65ee0a",
         "artifacts/bga_934713322_move20_061_20261021/search/native_S4096_N4_seed0.json": "8df008877f860d730167bb881aae74f5bd5740505c7e24f594682ea8e99c5fdc",
         "artifacts/bga_934713322_move20_061_20261021/search/native_S4096_N4_seed1.json": "cf42feb18b8ec26d75097e6da4cd66723abb06b798e66f3699ef0b3d7e6d6735",
-        "artifacts/bga_934713322_move20_061_20261021/search/native_S4096_N4_seed2.json": "ed478c400795c0ec3862a8a09ce2e09ca94e9a961d2d954d3805b47222514c1f"
+        "artifacts/bga_934713322_move20_061_20261021/search/native_S4096_N4_seed2.json": "ed478c400795c0ec3862a8a09ce2e09ca94e9a961d2d954d3805b47222514c1f",
+        "artifacts/bga_934713322_move20_061_20261021/source_events.json": "f1a83740d7304c01db37ef15fca5be3db840797a8ff862e0c7a07e45158748a3",
+        "artifacts/bga_934713322_move20_061_20261021/summary.json": "7143db236bfa0ffd22d2b55c85c9cfa61c91529bb31b5c1eb34d6d37e25a26c8",
+        "artifacts/bga_934713322_move20_061_20261021/user_observation.json": "d5fcabacd4473fcd47f536b5ae1c7c034e788f9ad3e09339a4a7cac400a61a43"
       },
       "id": "bga-934713322-move20-061-2026-10-21",
       "report": "artifacts/bga_934713322_move20_061_20261021/README.md",
