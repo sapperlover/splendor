@@ -1,0 +1,255 @@
+{
+  "checkpoints_preserved": [
+    "initial.pt"
+  ],
+  "documentation_previous_hashes": {
+    "README.md": "eb8fd4bab040e331fb69a5fee21964baecb5560484e3447b7283ee7b5296aadc",
+    "artifacts/index.md": "625104a07161bc1ab2d08d6eef33c4885e0971232213f56bdb8439d53d5d099e",
+    "docs/current_project_state_zh-CN.md": "0d14afb2cf4ffe53e1824093e01f1f527264e5b3d2c3c954a2cbbc682f0a5115",
+    "docs/guides/continuation_auxiliary_zh-CN.md": "2f205250ec105150c394e633e16f8cfa582755a9dc522f5ce16d5649662553f5",
+    "docs/guides/training_artifacts_zh-CN.md": "89d7a7f49a92a6dd0a7b85094943730db78643cad300276ac956f9a7ca3e0036",
+    "docs/index.md": "a691f6b4fec02bb72a0e1654efde4c26e97e03d21956b84c8cfbaf520162b21c"
+  },
+  "files_deleted": 0,
+  "launch_before_stop": {
+    "checked_local": "2026-10-23T20:27:40.838426+08:00",
+    "command": [
+      "bash",
+      "scripts/run_attention128_shortterm_value_r21_r37_20261023.sh"
+    ],
+    "cwd": "/home/lc/下载/splendor",
+    "first_update": {
+      "batch_size": 512,
+      "event": "train_step",
+      "round_train_step": 1,
+      "shortterm_eligible_positions": 186.0,
+      "shortterm_positions": 181.0,
+      "total_train_step": 1,
+      "training_mode": "joint_separate_batches"
+    },
+    "initial_checkpoint": {
+      "model_config": {
+        "architecture": "entity_attention_continuation_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "predict_opponent_policy": false,
+        "value_readout": "global_players_market"
+      },
+      "optimizer_entries": 0,
+      "parent": {
+        "auxiliary_seed": 36100000,
+        "kind": "random_initialization",
+        "model_config": {
+          "architecture": "entity_attention_continuation_v1",
+          "dropout": 0.0,
+          "feature_schema_version": "splendor-observation-action-v1",
+          "ffn_hidden": 512,
+          "heads": 4,
+          "hidden": 128,
+          "layers": 2,
+          "market_relations": true,
+          "predict_opponent_policy": false,
+          "value_readout": "global_players_market"
+        },
+        "optimizer": "fresh AdamW",
+        "seed": 43100000
+      },
+      "sha256": "c4a0b94a9bf97cf62f887ce77ab74b3434e928da839123c214fa800351a2d4ee",
+      "total_train_step": 0
+    },
+    "launch_unix": 1792758355.3879309,
+    "launcher_pid": 460408,
+    "launcher_start_ticks": "3816650",
+    "lightweight_recording_checked": true,
+    "log": "runtime/entity_attention_128x2_shortterm_value_r21_r37_20261023/chain.log",
+    "phase": "train",
+    "polling": "none; this was the only startup verification; no further progress checks",
+    "processes": [
+      {
+        "args": [
+          "/home/lc/anaconda3/bin/python",
+          "/home/lc/anaconda3/bin/conda",
+          "run",
+          "--no-capture-output",
+          "-n",
+          "splendor",
+          "env",
+          "PYTHONPATH=src",
+          "OMP_NUM_THREADS=1",
+          "MKL_NUM_THREADS=1",
+          "OPENBLAS_NUM_THREADS=1",
+          "TORCHINDUCTOR_COMPILE_THREADS=1",
+          "python",
+          "-u",
+          "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/run.py"
+        ],
+        "pid": 460408,
+        "role": "launcher",
+        "start_ticks": "3816650",
+        "state": "S"
+      },
+      {
+        "args": [
+          "python",
+          "-u",
+          "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/run.py"
+        ],
+        "pid": 460452,
+        "role": "supervisor",
+        "start_ticks": "3816808",
+        "state": "S"
+      },
+      {
+        "args": [
+          "/home/lc/anaconda3/envs/splendor/bin/python",
+          "-u",
+          "-m",
+          "splendor.offline_continuation",
+          "--config",
+          "/home/lc/下载/splendor/runtime/entity_attention_128x2_shortterm_value_r21_r37_20261023/source/configs/entity_attention_v1/offline_shortterm_value_r21_r37_20261023.json",
+          "--output",
+          "/home/lc/下载/splendor/runs/entity_attention_128x2_shortterm_value_r21_r37_20261023"
+        ],
+        "pid": 460498,
+        "role": "trainer",
+        "start_ticks": "3817350",
+        "state": "R"
+      }
+    ],
+    "progress_at_startup": {
+      "status": "incomplete",
+      "step": 0,
+      "steps_target": 350552
+    },
+    "start_new_session": true,
+    "startup_check": "passed_single_check",
+    "status": "running",
+    "stdin": "DEVNULL",
+    "time_local": "2026-10-23T20:25:55.387922+08:00",
+    "verification_sha256": "e2b595a59b2a33c5357564b4e0d4a4fb8720861bcd9fec385d101d15c3f148c0"
+  },
+  "live_after_stop": {
+    "error": null,
+    "pid": 460452,
+    "status": "interrupted"
+  },
+  "previous_index_entry": {
+    "evidence": [
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/README.md",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/run.py",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/smoke.py",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/plan.json",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/source.json",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/evaluation_templates.json",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/tests.xml",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/gpu_smoke.json",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/verification.json",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/launch.json",
+      "configs/entity_attention_v1/offline_shortterm_value_r21_r37_20261023.json",
+      "scripts/run_attention128_shortterm_value_r21_r37_20261023.sh",
+      "tests/test_offline_r21_r37.py"
+    ],
+    "evidence_hashes": {
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/README.md": "56246aa63478f3f7a997f99823863bacbcdcf963fc63ff5dca7fef27fcbf6f29",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/evaluation_templates.json": "5b8daece5b78f828af2a0f3298fb1063d5b1b9d9e16a5519998c66eb1ca011f7",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/gpu_smoke.json": "1d55be4f01eafb2282652b94d2439a86f45996226ac47ae0cff02c7b64c29049",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/launch.json": "4bbf5f4137dc213c0d39ea839d7d5dd835afafd1acb774f20aeace9704f447d1",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/plan.json": "fbd6b12ef91f4635ca3ab45739683baf0d73d5d0a85378560e8120cfe9615af4",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/run.py": "8ad1110ea367cc4455748a7c0205e30b5cc8d779563a558c990ee46aed0c1ff0",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/smoke.py": "73d221dded8a1c2b16e90878ff161058cfc54a04b403d8fa5b9f812fb2de4010",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/source.json": "bd4b4dc1df3c2dc105f3df5f74426f9ababc69183908960348df518115e753e7",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/tests.xml": "c02cd6fa470d2fd07dafdfac3a04ed2072453af2a5cac342f2ce4fc21378af66",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/verification.json": "e2b595a59b2a33c5357564b4e0d4a4fb8720861bcd9fec385d101d15c3f148c0",
+      "configs/entity_attention_v1/offline_shortterm_value_r21_r37_20261023.json": "59529cc2ac07b6e90b463a7ed191a4b33aba7eddc0ea6cdc23e50a63b572c088",
+      "scripts/run_attention128_shortterm_value_r21_r37_20261023.sh": "5957b66813c0d2b6d310e4c0aa7c11c54a8483f7484bb061df2e853078813ff0",
+      "tests/test_offline_r21_r37.py": "5f4f5c1df32fdf9ba7ab1c1d9a5d2343cdd655d7e3bef8589775005c0e88fc86"
+    },
+    "historical_source_hashes": {
+      "src/splendor/alphazero_recording.py": "ee20f9ddd8325fbd98791f815ebaf3b6bb777e30f1e8c85901e41a30a004472b",
+      "src/splendor/continuation_auxiliary.py": "c1f767597e51c974918b9a0fc13348658748e30180ef5c7caabac92edae18dfd",
+      "src/splendor/hybrid_train.py": "67d71e88ca30929065e1f26b723f630923ffa2b858d56dc54fd8a5c5ff52758c",
+      "src/splendor/offline_continuation.py": "2e26cb54f1a7a4aa29153a7ba56d40ffeace6cd04ec7e3c3aad7347727ddd9b9",
+      "src/splendor/offline_objectives.py": "8934a9634989985cd27ffb1372f6035202a946dafc5c7edc3c5a4849f37581ca",
+      "src/splendor/offline_scratch.py": "e254cd0f22bed1c473becc1a413710c39214bd42c03ce7312579a325330a82ca"
+    },
+    "id": "entity-attention-128x2-shortterm-value-r21-r37-2026-10-23",
+    "report": "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/README.md",
+    "scope": "User-authorized train-select-arena chain launched2026-10-23 20:25 Asia/Singapore. One startup check confirms supervisor460452/trainer460498 alive in train phase, random initial checkpoint step0 with empty AdamW, continuation architecture/no opponent head, first jointB256+B256 update and shortterm labels; no periodic progress polling. Fresh attention128x2+H2/H6/H14 geometric-EMA shortterm value650757params, weight0.25, opponent policy auxiliary0, lr1e-4,16GiB compact cache, original seeds/AdamW/clip and mixed-budget sampler.104000 original source games R21-R31 each4000 plusR32-R37 each10000, labels/paths/splits preserved, one-based absolute64-80 checked per generation by explicit counts mapping; old integer format unchanged. Train93537games/7478428value/1559755policy; holdout10463games/835367value/174056policy.12value exposures maximum350552updates, every5percent full main KL+MSE, stop after3 strict successive increases versus prior percentage point, ties/decreases reset, step0 excluded. Select reached main KL+MSE minimum whole checkpoint before arenas; auxiliary loss excluded. Then only vsrawR37 SHA611f4f4ed18f397b03c79bb3a2beae51e7a77a747883680d9189eed3052a1045: CPU8greedy1000pair then bothS1024N1(total1024)500pair latest searchA W12/A1000/B500/micro128/pipeline2/Bbuckets64,128,256,500/Cbuckets32,48,64,12nobles, pairedDEV seeds and bootstrap. Latest SHA-only reference recording; no .bin/.steps.jsonl/duplicate metrics; offline checkpoints1000steps+all5percent points.80 frozen-source CPU regressions pass, real34source-game/B256 six-update CUDA resume check and two1pair greedy/compiled S2N1 engineering panels pass; no engineering failures or scientific strength conclusion. Old runs/processes/data untouched. Current production progress/results belong to the run and later automatic reports; this entry records launch only.",
+    "status": "incomplete"
+  },
+  "previous_report": {
+    "path": "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/README_before_manual_stop_20261023.md",
+    "sha256": "56246aa63478f3f7a997f99823863bacbcdcf963fc63ff5dca7fef27fcbf6f29"
+  },
+  "processes_after_stop": [
+    {
+      "alive": false,
+      "pid": 460408,
+      "role": "launcher"
+    },
+    {
+      "alive": false,
+      "pid": 460452,
+      "role": "supervisor"
+    },
+    {
+      "alive": false,
+      "pid": 460498,
+      "role": "trainer"
+    }
+  ],
+  "progress_after_stop": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_128x2_shortterm_value_r21_r37_20261023/checkpoints/initial.pt",
+    "replay_identity": {
+      "continuation_auxiliary": {
+        "opponent_policy_weight": 0.0,
+        "protocol": "continuation-ema-h2-h6-h14-opponent-main-v1",
+        "shortterm_value_weight": 0.25
+      },
+      "digest": "2b678235f2c7943b821397d3e55fa772498e580fae137fb2de672a01e26d0d28",
+      "evicted_games": 0,
+      "first_key": [
+        63,
+        0
+      ],
+      "last_key": [
+        79,
+        9999
+      ],
+      "policy_surprise_weighting": null,
+      "protocol": "alphazero-replay-index-v1",
+      "total_games": 104000,
+      "train_games": 93537,
+      "train_positions": 7478428,
+      "validation_games": 10463,
+      "value_auxiliary": null
+    },
+    "status": "incomplete",
+    "step": 0,
+    "steps_target": 350552,
+    "training": {
+      "status": "checkpoint_committed"
+    }
+  },
+  "reason": "User changed instruction to command only; stop the already launched queue and preserve all generated data/checkpoints. Do not restart.",
+  "requested_local": "2026-10-23T20:30:55.949948+08:00",
+  "signal": "SIGINT",
+  "status": "stopped",
+  "target": {
+    "args": [
+      "python",
+      "-u",
+      "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/run.py"
+    ],
+    "pid": 460452,
+    "role": "supervisor",
+    "start_ticks": "3816808",
+    "state": "S"
+  },
+  "verified_local": "2026-10-23T20:31:00.950838+08:00"
+}

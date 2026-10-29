@@ -25,6 +25,7 @@ def _service(tmp_path: Path) -> WebGameService:
     return WebGameService(
         failure_dir=tmp_path / "failures",
         checkpoint_dir=tmp_path / "play_checkpoints",
+        replay_dir=tmp_path / "replays",
     )
 
 
@@ -230,6 +231,7 @@ def test_web_game_uses_configured_search_policy_for_opponent_turn(
     service = WebGameService(
         failure_dir=tmp_path / "failures",
         checkpoint_dir=tmp_path / "play_checkpoints",
+        replay_dir=tmp_path / "replays",
         search_checkpoint=checkpoint,
         search_config=config,
     )
@@ -317,6 +319,7 @@ def test_web_game_runs_real_search_policy_for_opponent_turn(
     service = WebGameService(
         failure_dir=tmp_path / "failures",
         checkpoint_dir=tmp_path / "play_checkpoints",
+        replay_dir=tmp_path / "replays",
         search_checkpoint=checkpoint,
         search_config=config,
     )
@@ -342,6 +345,7 @@ def test_mcts_budget_changes_apply_to_next_search_without_changing_board(
     service = WebGameService(
         checkpoint_dir=tmp_path / "play_checkpoints",
         failure_dir=tmp_path / "failures",
+        replay_dir=tmp_path / "replays",
         mcts_checkpoint=checkpoint,
         mcts_label="第24轮 · θ53898",
     )
@@ -526,3 +530,36 @@ def test_payment_and_finished_game_can_be_undone(tmp_path: Path) -> None:
     restored = service.undo(game_id, revision=payload["revision"])
     assert restored["result"] is None and restored["legalActions"]
     assert service._games[game_id].engine.replay_record.result is None
+
+
+def test_web_autosaves_replay_through_terminal_and_undo(tmp_path: Path) -> None:
+    from splendor.engine import GameEngine, replay_game
+
+    service = _service(tmp_path)
+    payload = service.create_game(opponent="score", human_first=False, seed=100)
+    game_id = payload["gameId"]
+    path = service.replay_dir / f"{game_id}.json"
+    game = service._games[game_id]
+
+    def verify_saved_branch() -> None:
+        saved = GameEngine.restore(path, catalog=service.catalog)
+        rebuilt = replay_game(saved.replay_record, catalog=service.catalog)
+        assert saved.current_state_digest == game.engine.current_state_digest
+        assert rebuilt.current_state_digest == saved.current_state_digest
+        assert saved.replay_record == game.engine.replay_record
+
+    verify_saved_branch()
+    assert game.engine.replay_record.events  # AI-first opening is included.
+    chooser = ScorePolicy()
+    for _ in range(300):
+        if payload["result"] is not None:
+            break
+        index = game.response.legal_actions.index(chooser.choose(game.response))
+        payload = service.apply_action(game_id, revision=payload["revision"], action_index=index)
+    assert payload["result"] is not None
+    verify_saved_branch()
+    assert GameEngine.restore(path).replay_record.result is not None
+    payload = service.undo(game_id, revision=payload["revision"])
+    verify_saved_branch()
+    assert GameEngine.restore(path).replay_record.result is None
+    assert list(service.replay_dir.iterdir()) == [path]

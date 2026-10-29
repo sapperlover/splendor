@@ -1,0 +1,154 @@
+{
+  "client_date": "2026-10-27",
+  "common": {
+    "auxiliaries": "all disabled",
+    "cache_mib": 18432,
+    "early_stopping_increases": 3,
+    "full_pool_warmed": false,
+    "games": 104000,
+    "max_steps": 350552,
+    "training_workers": 4,
+    "validation_percent_step": 5
+  },
+  "config_differences_from_noaux_offline": [
+    "initial_checkpoint",
+    "initial_checkpoint_sha256",
+    "learner.learning_rate for lr2e5"
+  ],
+  "cpu_commands": {
+    "lr1e4": {
+      "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src:. OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python /home/lc/下载/splendor/artifacts/entity_attention_r37_104k_offline_lr_20261027/validate.py lr1e4",
+      "cwd": "runtime/entity_attention_r37_104k_lr1e4_20261027/source"
+    },
+    "lr2e5": {
+      "command": "conda run --no-capture-output -n splendor env PYTHONPATH=src:. OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python /home/lc/下载/splendor/artifacts/entity_attention_r37_104k_offline_lr_20261027/validate.py lr2e5",
+      "cwd": "runtime/entity_attention_r37_104k_lr2e5_20261027/source"
+    }
+  },
+  "evidence_hashes": {
+    "artifacts/entity_attention_r37_104k_lr1e4_20261027/evaluation_templates.json": "5b8daece5b78f828af2a0f3298fb1063d5b1b9d9e16a5519998c66eb1ca011f7",
+    "artifacts/entity_attention_r37_104k_lr1e4_20261027/plan.json": "d4a9bbbd429f2d02a89c90e6712fd8ab206af152327b510adc4f6c94dc21d9d2",
+    "artifacts/entity_attention_r37_104k_lr1e4_20261027/results.md": "640a234b7b3c49845335d2929775de84f3b95e7bf60806206b0f93c74686e030",
+    "artifacts/entity_attention_r37_104k_lr1e4_20261027/run.py": "57a080bc58e9a04537c34f4a4d1cd10504505f428bfae5cc96c17125794ab30e",
+    "artifacts/entity_attention_r37_104k_lr1e4_20261027/source.json": "4c0b6fb443dd37e62286fe977e6d389651e573415618dffce05b5771f8c1f855",
+    "artifacts/entity_attention_r37_104k_lr1e4_20261027/summary.json": "87d3f7b6aae8ce0db8eacfbbf6890fd42a940b3dbbbfe268138c81cfa8a4eac4",
+    "artifacts/entity_attention_r37_104k_lr2e5_20261027/evaluation_templates.json": "5b8daece5b78f828af2a0f3298fb1063d5b1b9d9e16a5519998c66eb1ca011f7",
+    "artifacts/entity_attention_r37_104k_lr2e5_20261027/plan.json": "3011557e0f4cfa7cff729a350a57eccfcef5464ec0548aebeb2b794bbb441741",
+    "artifacts/entity_attention_r37_104k_lr2e5_20261027/results.md": "bd624ff162e413e2ab00fe9d7a64e3aa0ad4413715da7712dd03affbcb0c41d2",
+    "artifacts/entity_attention_r37_104k_lr2e5_20261027/run.py": "4a04a6d1ee7c7bbaca76126cef78ab1fb74c71d5b504e113562f3192f207fb8d",
+    "artifacts/entity_attention_r37_104k_lr2e5_20261027/source.json": "e0adc17dea37fce668b78b264355f1516572d80b7ffa1e89c840f49de79f33ec",
+    "artifacts/entity_attention_r37_104k_lr2e5_20261027/summary.json": "87d3f7b6aae8ce0db8eacfbbf6890fd42a940b3dbbbfe268138c81cfa8a4eac4",
+    "artifacts/entity_attention_r37_104k_offline_lr_20261027/README.md": "c796ffc11f1490c05d0689abe4b1a1ecc0340d621258f1aa36e70a609cf3e5d5",
+    "artifacts/entity_attention_r37_104k_offline_lr_20261027/run.py": "728a7f317d73e61652e09ef5cfbb19de81e42acd120b707f5bd83aaac261d99b",
+    "artifacts/entity_attention_r37_104k_offline_lr_20261027/train.py": "ad83c9d785d40040d2e4f87f59eee2fdc3a88b50ff3d846f0df1337414ad60c6",
+    "artifacts/entity_attention_r37_104k_offline_lr_20261027/validate.py": "ed8287e70ca39373ed6b40837009ae9beba319cfd4c677261f880d955710a16e",
+    "configs/entity_attention_v1/offline_r37_104k_lr1e4_20261027.json": "e3be84ce5d31b5f34238f1a743058943ad3c7132e019a6d7e5c0d9d74c68e08c",
+    "configs/entity_attention_v1/offline_r37_104k_lr2e5_20261027.json": "e027a2215f2ced00e09866cdf0948a9753f4bcb63d2cd69b5952dbc4ab1934df",
+    "scripts/run_r37_104k_offline_lr1e4_20261027.sh": "7849fae12fbba3ae73eada827f61039c7c7af2d3443476cd86b965cea6a41bf7",
+    "scripts/run_r37_104k_offline_lr2e5_20261027.sh": "a6618460fbe26270d97a205362fadefddf6d8036965b541f3d490a64c1523573",
+    "tests/test_r37_offline_lr.py": "05e55ebd346fe9da446aef498646c4442be78b72308723733d0d6f4f584ac07a"
+  },
+  "formal_runs_started": false,
+  "frozen_source_patch_scope": "Only execution code/configuration and the current shared entry, avoiding staged historical raw-data removals; snapshot file hashes cover actual execution.",
+  "git_head": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "git_index_and_ignore_rules_modified": false,
+  "initial_checkpoint": {
+    "path": "/home/lc/下载/splendor/runs/entity_attention_r31_10k_p60k_iteration_20261023/rounds/round-005/checkpoints/final.pt",
+    "sha256": "611f4f4ed18f397b03c79bb3a2beae51e7a77a747883680d9189eed3052a1045"
+  },
+  "initial_test_fixture_issue": "Limited 2-step parent run correctly saves step-000000002.pt, not final.pt. Fixed only the test fixture; all15 regressions now pass.",
+  "initial_test_record": {
+    "path": "runtime/entity_attention_r37_104k_offline_lr_20261027/initial_tests.xml",
+    "sha256": "3ab5b639c7aab3722acc98efd22c826f98098d39c1e1e5b843da92bea0b83a93",
+    "size": 7550,
+    "storage": "local, not versioned"
+  },
+  "interpretation": {
+    "RNG": "original offline initialization/sampling seeds; not parent online RNG",
+    "checkpoint": "original raw R37",
+    "optimizer": "fresh AdamW, as offline defaults",
+    "second_lr_typo": "2e--5 interpreted as 2e-5"
+  },
+  "launcher_verification": "Separate fixed-variant Python launchers preserve the complete actual command in the shared supervisor record; both public prepare commands and supervisor routing tests passed. Training code/core unchanged from CPU verification.",
+  "scope": "User requested two scripts and commands only. No formal training/evaluation, queue or process changes.",
+  "status": "prepared_not_started",
+  "test_command": "conda run --no-capture-output -n splendor env PYTHONPATH=src:. OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q tests/test_r37_offline_lr.py tests/test_offline_early_stopping.py --junitxml=runtime/entity_attention_r37_104k_offline_lr_20261027/tests.xml",
+  "test_record": {
+    "path": "runtime/entity_attention_r37_104k_offline_lr_20261027/tests.xml",
+    "sha256": "32d3d106c7c6befcc72e31ca536d9178f6bc7ced38024becbd916889b799ae4d",
+    "size": 2338,
+    "storage": "local, not versioned"
+  },
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 15
+  },
+  "variants": {
+    "lr1e4": {
+      "cpu_checks": {
+        "R37_weights_bitwise_equal": true,
+        "fresh_AdamW": true,
+        "frozen_core": "/home/lc/下载/splendor/runtime/entity_attention_r37_104k_lr1e4_20261027/source/src/splendor/offline_objectives.py",
+        "frozen_custom_entry": "/home/lc/下载/splendor/runtime/entity_attention_r37_104k_lr1e4_20261027/source/artifacts/entity_attention_r37_104k_offline_lr_20261027/train.py",
+        "original_offline_rng": true,
+        "real_games": 4,
+        "serial_4worker_resume_bitwise": [
+          "weights",
+          "AdamW",
+          "sampling_rng",
+          "Torch_rng",
+          "full_validation"
+        ],
+        "steps_per_path": 4
+      },
+      "cpu_verification": {
+        "path": "runtime/entity_attention_r37_104k_lr1e4_20261027/cpu_validation/verification.json",
+        "sha256": "61792f0b051e3140a55f1f706ea640a7ee539a7e16b4253f1d24efc9193f4af1",
+        "size": 5835,
+        "storage": "local, not versioned"
+      },
+      "formal_checkpoints": 0,
+      "frozen_files_verified": 127,
+      "lr": 0.0001,
+      "name": "entity_attention_r37_104k_lr1e4_20261027",
+      "run_command": "bash scripts/run_r37_104k_offline_lr1e4_20261027.sh",
+      "source_total_train_step": 86423,
+      "status": "prepared_not_started",
+      "train_only_command": "bash scripts/run_r37_104k_offline_lr1e4_20261027.sh train"
+    },
+    "lr2e5": {
+      "cpu_checks": {
+        "R37_weights_bitwise_equal": true,
+        "fresh_AdamW": true,
+        "frozen_core": "/home/lc/下载/splendor/runtime/entity_attention_r37_104k_lr2e5_20261027/source/src/splendor/offline_objectives.py",
+        "frozen_custom_entry": "/home/lc/下载/splendor/runtime/entity_attention_r37_104k_lr2e5_20261027/source/artifacts/entity_attention_r37_104k_offline_lr_20261027/train.py",
+        "original_offline_rng": true,
+        "real_games": 4,
+        "serial_4worker_resume_bitwise": [
+          "weights",
+          "AdamW",
+          "sampling_rng",
+          "Torch_rng",
+          "full_validation"
+        ],
+        "steps_per_path": 4
+      },
+      "cpu_verification": {
+        "path": "runtime/entity_attention_r37_104k_lr2e5_20261027/cpu_validation/verification.json",
+        "sha256": "9d683c136f542427b865ba323bfa224826b868a9005d4d119fbc868bc0f47126",
+        "size": 5848,
+        "storage": "local, not versioned"
+      },
+      "formal_checkpoints": 0,
+      "frozen_files_verified": 127,
+      "lr": 2e-05,
+      "name": "entity_attention_r37_104k_lr2e5_20261027",
+      "run_command": "bash scripts/run_r37_104k_offline_lr2e5_20261027.sh",
+      "source_total_train_step": 86423,
+      "status": "prepared_not_started",
+      "train_only_command": "bash scripts/run_r37_104k_offline_lr2e5_20261027.sh train"
+    }
+  }
+}

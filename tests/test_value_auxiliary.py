@@ -61,7 +61,7 @@ def setup(tmp_path, az_runs):
     config = OfflineObjectiveConfig(manifest=str(manifest), manifest_sha256=sha256(manifest),
                                     initial_checkpoint=str(path), initial_checkpoint_sha256=sha256(path),
                                     first_round=2, last_round=2, expected_games_per_round=3,
-                                    draw_exposures=.02, cache_mib=64, validation_positions=4,
+                                    draw_exposures=.02, cache_mib=64, training_workers=0, validation_positions=4,
                                     value_auxiliary=asdict(ValueAuxiliaryConfig()), learner=cfg)
     return config, parent, samples
 

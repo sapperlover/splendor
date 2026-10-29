@@ -1,6 +1,16 @@
 # R31起点：每轮1万新局、6万池、3000步自迭代
 
-2026-10-23，用户启动后在首轮采集中断，尚无完整新局、训练更新或新模型。本次按要求删除了该次运行与未完成采集产物，改用最新attention采集执行配置，并将训练回放缓存上限提高到16GiB；**重置后未重新启动**。原R31及R22–31历史数据保留。默认无限自迭代，启动及后续恢复使用同一命令：
+2026-10-23后续记录／保存策略已按用户要求更新：默认停写policy/value两份`.bin`和两份`.steps.jsonl`，主指标保持逐步记录；在线改为500步周期点＋七个固定诊断点，正常每轮10个`.pt`文件。当前启动脚本使用`source_recording_checkpoint_20261023`，原六轮快照及全部历史模型／面板保留；[交付与验证](recording_checkpoint_20261023/README.md)、[记录规则](../../docs/guides/training_artifacts_zh-CN.md)。本次未续训或清理旧模型。
+
+2026-10-23归档位置更新：本专题关联`runs/entity_attention_r31_10k_p60k_iteration_20261023`中的34个抽样账本／逐步日志已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。 本分支372个模型及60000局原始采集均留本机，包含324个普通恢复点；当前在线输入检查通过，本次未续训。
+
+2026-10-23新增[六轮全量固定留出自动评测与回补](fixed_holdout_20261023/results.md)：按用户确认固定启动前R26–R31全部2412个原始validation对局，39845个policy／192218个value位置；已补齐R32–R37每轮七节点，共42/42。累计MSE 0.744220→0.737498（Δ−0.006722，95% CI [−0.009866,−0.003570]），KL 0.208406→0.209699；说明value有累计改善，未逐轮稳定收敛。已有轮内2048小面板继续保留，跨轮以新固定面板为准。
+
+自动调用已按用户更正改为[每六轮使用此前六轮完整留出](six_round_holdout_20261023/README.md)：R32–R37用R26–R31，R38–R43自动改用R32–R37，之后依次推进。六轮调度交付时的独立源码快照为`source_six_round_holdout_20261023/`（当前启动发布已由上文替代），原始及静态初版快照不改写；当前无训练进程，本次未续训。六轮调度的历史准备入口为[prepare_six_round_holdout.py](prepare_six_round_holdout.py)，旧`prepare.py`及`prepare_fixed_holdout.py`保留为历史准备身份，勿用于更新当前配置。恢复／单独补齐命令见[评测指南](../../docs/guides/evaluation_zh-CN.md#在线全量固定留出)。
+
+2026-10-23后续进度：重置后已由用户启动，当前原始state记录**完成6轮至谱系R37**，第7轮已建立采集配置。R37对固定R43的greedy1000 pair为68.90%，S1024N1（总1024）搜索500 pair为74.55% [71.75%,77.25%]。原“重置后未重启”仅对应首次准备时点，不再代表当前运行状态。
+
+本次按用户明确要求，将**后续新搜索面板的执行配置改为A**：12 search worker／1000活跃局／B500／microbatch128／owner双槽，B桶[64,128,256,500]、C桶[32,48,64]。采集仍为2000活跃局及原桶列表，训练、greedy、搜索预算／对手／种子／节奏保持不变；变更与验证见[evaluation_a_update_20261023.json](evaluation_a_update_20261023.json)，五种场景的统一说明见[采集与评测指南](../../docs/guides/evaluation_zh-CN.md)。本次不启动或重启任务，不改已冻结面板。默认无限自迭代，启动及后续恢复使用同一命令：
 
 ```bash
 bash scripts/run_r31_10k_p60k_iteration_20261023.sh
@@ -32,7 +42,8 @@ bash scripts/run_r31_10k_p60k_iteration_20261023.sh --check
 | 新局policy／value | 新局使用全部有效高预算policy步；value从活动池全部预算的Train位置均匀抽样 |
 | 淘汰 | 仅超容量时淘汰；先按原seed随机淘汰初始历史整局，之后在线整局FIFO |
 | 缓存 | 16GiB按需compact LRU（17179869184字节），为解码回放缓存容量，不是进程RSS硬上限 |
-| 轮内留出 | 原固定2048位置；0／100／250／500／1000／2000／3000步评价 |
+| 轮内留出 | 原2048位置仅轮内固定、跨轮重抽；0／100／250／500／1000／2000／3000步评价 |
+| 六轮分段留出 | 每六轮固定使用此前六轮完整validation；R38–R43面板为R32–R37的6092局，段内相同七节点全量评价，独立于活动池 |
 | 教师更新 | 每轮3000步完整模型直接成为下一轮教师，不按轮内指标或棋力重新选点 |
 
 | 分支轮次 | 原谱系轮次 | 训练池总局数 | 初始历史／本分支新局 | policy新局配额 |
@@ -51,22 +62,22 @@ bash scripts/run_r31_10k_p60k_iteration_20261023.sh --check
 配置从原R20→R31分支逐字段沿用，更换起点、历史范围／清单、每轮10000局、容量60000、训练3000步及相应轮内留出终点；本次额外更新采集／搜索评测执行参数及16GiB回放缓存。配置见[random_budget_r31_10k_p60k_20261023.json](../../configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json)。
 
 - 新采集及评测继续使用12贵族。75%低预算S128N1（总128），25%高预算S256N4（每世界256×4，总1024）；高预算根噪声比例0.25／Dirichlet alpha0.3，低预算无根噪声。前10个完成回合温度1，随后0；FP/PTP关闭，所有seed沿用原配置。低预算仍不提供policy监督。
-- 采集采用[最新attention候选配置](../collection_tuning_20261022/configs/full_attention_best_4000.json)的完整`execution`：12 search worker／2000活跃局／B500／local microbatch128／shared slots2／owner pipeline2／native-cudagraph、FP32。只复用执行参数，教师、10000局规模、原种子与混合搜索预算保持本分支设置。该候选已有4局工程短测，历史60秒窗口只提示约3–6%吞吐改善，尚非完整轮吞吐结论。
-- 每个本分支轮次对原固定R43锚点greedy1000pair；本分支第3／6……轮另测双方S1024N1（每世界1024×1，总1024）搜索500pair，搜索评测复用上述执行参数且owner单槽。其余配对开局、无根噪声／温度0、checked裁决和bootstrap沿用原协议。搜索节奏按本分支局部轮号，首轮不是“继承旧完成轮列表”后的第32个调度槽。
+- 采集采用[attention采集配置](../collection_tuning_20261022/configs/full_attention_best_4000.json)的完整`execution`：12 search worker／2000活跃局／B500／local microbatch128／shared slots2／owner pipeline2／native-cudagraph、FP32；B桶[16,32,64,128,192,256,384,500]、C桶[16,32,48,64]、等待5ms。已完成6轮每轮10000局，原始summary无采集失败；历史60秒窗口提示约3–6%改善，不作为严格整轮A/B提速结论。
+- 每个本分支轮次对原固定R43锚点greedy1000pair：CPU8 worker、双方零搜索、确定性选点。本分支第3／6／9……轮另测双方S1024N1（每世界1024×1，总1024）搜索500pair。**新面板统一配置A**，1000活跃局／owner双槽／精简B、C桶；已完成R34、R37搜索保留原单槽配置。其余配对开局、无根噪声／温度0、checked裁决和bootstrap沿用原协议。搜索节奏按本分支局部轮号，首轮不是“继承旧完成轮列表”后的第32个调度槽。
 - 完成采集才进入训练，完成训练及该轮既定评测后更新state；未完成轮可在同一命令恢复。`--rounds N`为本分支绝对完成轮数上限；`--max-steps-this-session`只限制新增训练更新，仍可能先执行完整10000局采集，不是只读检查。
 
 ## 实现、验证与产物
 
 `random_budget_iteration.check`原先要求“历史＋首批新局必须等于容量”，现允许小于或等于容量，仍拒绝首批就需要淘汰历史的配置。预检输出新增`first_pool_games`，比例使用实际大小；从尚未满池的轮界创建continuation时也按实际overflow计算保留历史与新数据比例。池保留和实际训练抽样原本已使用实际大小，本次不改变其数值规则，也不新增配置字段或改写旧冻结配置。
 
-执行快照复用R31父分支原有的模型、特征、learner、采集、native扩展及规则文件，**只有`random_budget_iteration.py`被替换**。工作区其他模型／辅助目标改动不纳入此实验快照；差异与完整SHA见[source.json](source.json)。脚本使用同名runtime的冻结源码，配置仍按原机制在新轮界读取允许的执行调整。
+执行快照复用R31父分支原有的模型、特征、learner、采集、native扩展及规则文件，**只有`random_budget_iteration.py`被替换**。工作区其他模型／辅助目标改动不纳入此实验快照；差异与完整SHA见[source.json](source.json)。脚本使用同名runtime的冻结源码，外部配置仍按原机制在新轮界读取允许的执行调整。已经读入当前轮次的模板或已生成的`search_config.json`不热改；下一轮界读到A后，新准备的搜索面板采用A。初始`runs/config.json`及会话／轮次配置保持当时身份，恢复的算法一致性比较允许搜索execution改变。
 
 [tests.xml](tests.xml)记录实际冻结实现下20项回归通过，包含首轮未满、5→6池增长、不提前淘汰、精确恢复与AdamW/RNG继承、未满池轮界continuation、后续随机历史淘汰／在线FIFO、3000步累计配额及正式配置与原协议逐字段核对；工作区原版本验证见[workspace_tests.xml](workspace_tests.xml)。测试使用微型合成池与mock采集，不生成真实对局。[input_check.json](input_check.json)来自交付脚本的实际`--check`调用，确认初始68423步、40k历史、首轮50k／容量60k和policy新数据20%。本次重置后的验证未运行GPU采集、正式训练或棋力评测。
 
-- `runs/entity_attention_r31_10k_p60k_iteration_20261023/`：历史manifest；启动后生成config、state、逐轮采集／回放、池快照、checkpoint、两头抽样账本、留出及轮间评测。
+- `runs/entity_attention_r31_10k_p60k_iteration_20261023/`：初始config、state、逐轮采集／回放、池快照、checkpoint、两头抽样账本、留出及轮间评测；最新进度以state及逐轮原件为准。
 - 同名`runtime/`：冻结执行源码和规则。前台命令进度输出终端，启动后实际完成状态以新run的`state.json`及逐轮产物为准。
-- 本目录：准备脚本、更新后的plan、source身份、输入检查、回归与[verification.json](verification.json)。当前新run仅保留历史输入清单，尚无新的state、模型或轮次产物。
+- 本目录：`prepare.py`、plan、source身份、原输入检查／回归与[verification.json](verification.json)保留首次重置准备版本；它们不回填成A执行记录。当前外部配置的A变更另见[evaluation_a_update_20261023.json](evaluation_a_update_20261023.json)。原准备脚本不是修改现有运行配置的入口，不重新准备／覆盖活动run。
 
-## 本次清除记录
+## 首次重置的历史清除记录
 
 [reset_20261023/record.json](reset_20261023/record.json)记录清除边界、逐文件身份及保留输入。检查时该次进程已退出，owner原始记录为`KeyboardInterrupt`；独占运行锁确认无写入者。删除124个文件、44552317逻辑字节（44797952分配字节，约42.7MiB），包含首轮未完成搜索现场、运行config/state、历史索引副本和会话源码记录；其中完整NPZ及训练checkpoint均为0。未删除原R31或原R22–31对局。旧配置、旧准备身份、原state、采集manifest与owner中断记录的小型副本保存在同目录`previous/`，用于说明本次重置；不保留被要求删除的采集池／失败现场大文件。

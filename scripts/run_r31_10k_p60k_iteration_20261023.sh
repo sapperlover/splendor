@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 task_repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-task_source="$task_repo_root/runtime/entity_attention_r31_10k_p60k_iteration_20261023/source"
+task_source="$task_repo_root/runtime/entity_attention_r31_10k_p60k_iteration_20261023/source_recording_checkpoint_20261023"
 cd "$task_source"
 exec conda run --no-capture-output -n splendor env \
   PYTHONPATH="$task_source/src" OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \

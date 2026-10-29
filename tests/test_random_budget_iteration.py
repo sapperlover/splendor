@@ -2,6 +2,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from types import SimpleNamespace
 import json
+import weakref
 
 import numpy as np
 import pytest
@@ -17,6 +18,10 @@ from splendor.compact_game_cache import CompactGameCache
 from splendor.engine import GameEngine
 from splendor.entity_attention import EntityAttention
 from splendor.features import encode_decision
+from splendor.features import FEATURE_SCHEMA_VERSION
+from splendor.fixed_holdout import FixedHoldout, PROTOCOL as HOLDOUT_PROTOCOL, check_disjoint
+from splendor.six_round_holdout import HoldoutSchedule, check_settings
+from splendor.offline_train import _digest
 from splendor.offline_train import make_index
 from splendor.rng import DeterministicRng
 from splendor.selfplay_data import STATE_FIELDS, collate_selfplay_samples
@@ -62,7 +67,8 @@ def archive(root, round_index, game_id, *, mixed=False):
     target[::width] = 1
     weights = np.array([1, 0, 0, 0] if mixed else [1, 1, 1, 1], dtype=np.float32)
     metadata = {"run_id": f"test-{round_index}", "game_id": game_id, "round_index": round_index,
-                "split": "train" if game_id == 0 else "validation", "terminal_result": {"winner_ids": [0]}}
+                "split": "train" if game_id == 0 else "validation", "terminal_result": {"winner_ids": [0]},
+                "feature_schema_version": FEATURE_SCHEMA_VERSION}
     arrays = {name: np.stack([getattr(encoded, name)] * 4) for name in STATE_FIELDS}
     arrays.update(candidate_features=np.concatenate([encoded.candidate_features] * 4),
         candidate_offsets=np.arange(5, dtype=np.int64)*width, policy_target=target, behavior_policy=target,
@@ -134,10 +140,203 @@ def driver_case(tmp_path, monkeypatch):
         generated[str(root)] = records
         return {"completed_games":2,"missing_games":0}
     def build(runs, **kwargs):
-        return make_index({"games":generated[str(runs[0].root)]}, 1024**2)
+        records = generated[str(runs[0].root)]
+        kwargs["state_path"].write_text(json.dumps({"games": records}))
+        return make_index({"games": records}, 1024**2)
     monkeypatch.setattr(iteration,'generate',collect)
     monkeypatch.setattr(iteration,'build_replay_index',build)
     return cfg
+
+
+def holdout_settings(tmp_path, records):
+    manifest = {"protocol": HOLDOUT_PROTOCOL,
+        "games": [{**g, "archive_sha256": sha256(Path(g["path"]))} for g in records]}
+    manifest["digest"] = _digest(manifest)
+    path = tmp_path / "holdout.json"
+    path.write_text(json.dumps(manifest))
+    return {"manifest": {"path": str(path), "sha256": sha256(path)}, "batch_size": 3}
+
+
+def test_driver_releases_training_arrays_before_evaluation_and_next_collection(tmp_path, monkeypatch):
+    cfg = driver_case(tmp_path, monkeypatch)
+    caches, arrays, boundaries = [], [], []
+
+    class TrackedCache(CompactGameCache):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            caches.append(self)
+
+        def sample(self, *args, **kwargs):
+            sample = super().sample(*args, **kwargs)
+            arrays.append(weakref.ref(sample.arrays["value_target"]))
+            return sample
+
+    monkeypatch.setattr(iteration, "CompactGameCache", TrackedCache)
+    template = {
+        "policy_a": {"kind": "greedy_checkpoint", "name": "candidate", "checkpoint": "generated"},
+        "policy_b": {"kind": "greedy_checkpoint", "name": "anchor", "checkpoint": cfg.initial_checkpoint["path"]},
+        "pairs": 1, "seed_start": 1, "device": "cpu", "workers": 1,
+    }
+    cfg = replace(cfg, evaluation_anchor=cfg.initial_checkpoint,
+                  greedy_evaluation=template, search_evaluation=template, search_evaluation_every_rounds=1)
+
+    def assert_released():
+        assert caches[-1].bytes == caches[-1].entries == 0
+        assert arrays and all(ref() is None for ref in arrays)
+
+    def panel(*args, **kwargs):
+        assert_released()
+        boundaries.append("evaluation")
+        return SimpleNamespace(summary={"passed": True})
+
+    collect = iteration.generate
+
+    def generate(*args, **kwargs):
+        if arrays:
+            assert_released()
+            boundaries.append("collection")
+        return collect(*args, **kwargs)
+
+    monkeypatch.setattr(iteration, "panel", panel)
+    monkeypatch.setattr(iteration, "generate", generate)
+    state = iteration.run(cfg, tmp_path / "released", rounds=2)
+    assert boundaries == ["evaluation", "evaluation", "collection", "evaluation", "evaluation"]
+    assert_released()
+    final = load_alphazero_checkpoint(state["latest_checkpoint"]["path"])
+
+    # The previous cache-retaining behavior is an exact training reference.
+    retain = CompactGameCache.retain
+
+    def retain_warm(self, keys):
+        keys = tuple(keys)
+        return retain(self, keys) if keys else 0
+
+    monkeypatch.setattr(TrackedCache, "retain", retain_warm)
+    monkeypatch.setattr(iteration, "generate", collect)
+    monkeypatch.setattr(iteration, "panel", lambda *args, **kwargs: SimpleNamespace(summary={"passed": True}))
+    reference = iteration.run(cfg, tmp_path / "warm", rounds=2)
+    other = load_alphazero_checkpoint(reference["latest_checkpoint"]["path"])
+    assert final.sampling_rng_state == other.sampling_rng_state
+    torch.testing.assert_close(final.torch_cpu_rng_state, other.torch_cpu_rng_state, rtol=0, atol=0)
+    for key, tensor in final.model_state_dict.items():
+        torch.testing.assert_close(tensor, other.model_state_dict[key], rtol=0, atol=0)
+    for pid, parameters in final.optimizer_state_dict["state"].items():
+        for key, tensor in parameters.items():
+            torch.testing.assert_close(tensor, other.optimizer_state_dict["state"][pid][key], rtol=0, atol=0)
+
+
+def test_full_holdout_matches_joint_loss_and_preserves_model_rng(tmp_path):
+    torch.set_num_threads(1)
+    records = [archive(tmp_path/f"g{i}", 0, i, mixed=True) for i in (1, 2)]
+    settings = holdout_settings(tmp_path, records)
+    observer = FixedHoldout(settings, tmp_path/"run", "cpu")
+    learner = AlphazeroLearner(EntityAttention(), LearnerConfig(device="cpu"), sampling_rng=DeterministicRng(3))
+    learner.model.train()
+    rng = torch.get_rng_state().clone()
+    weights = {k: v.clone() for k, v in learner.model.state_dict().items()}
+    result, rows = observer.evaluate(learner.model)
+    assert result["metrics"]["positions"] == 8
+    assert result["metrics"]["policy_weight"] == 2  # low-budget rows affect value only
+    assert rows.shape == (2, 13)
+    assert learner.model.training
+    assert torch.equal(rng, torch.get_rng_state())
+    for key, value in learner.model.state_dict().items():
+        assert torch.equal(value, weights[key])
+    assert max(map(abs, result["reference_verification"]["differences"].values())) < 5e-5
+    with pytest.raises(ValueError, match="leaked"):
+        check_disjoint(observer.manifest, [{**records[0], "split": "train"}])
+    Path(records[0]["path"]).write_bytes(b"changed")
+    with pytest.raises(ValueError, match="archive changed"):
+        FixedHoldout(settings, tmp_path/"other", "cpu").evaluate(learner.model)
+
+
+def test_driver_holdout_backfill_is_complete_idempotent_and_training_neutral(tmp_path, monkeypatch):
+    cfg = driver_case(tmp_path, monkeypatch)
+    original = [json.loads(line) for line in Path(cfg.history_manifest["path"]).read_text().splitlines()]
+    settings = holdout_settings(tmp_path, [g for g in original if g["split"] == "validation"])
+    enabled = replace(cfg, fixed_holdout=settings)
+    assert iteration.Config.from_dict(enabled.to_dict()) == enabled
+    root = tmp_path/"run"
+    # Start with the legacy driver contract, then enable and recover old nodes.
+    iteration.run(cfg, root, rounds=1)
+    iteration.run(enabled, root, rounds=2, max_steps_this_session=1)
+    state = iteration.run(enabled, root, rounds=2)
+    for r in range(2):
+        assert len(list((root/f"rounds/round-{r:03d}/fixed_holdout").glob("*.json"))) == 3
+    continuous = iteration.run(cfg, tmp_path/"plain", rounds=2)
+    final = load_alphazero_checkpoint(state["latest_checkpoint"]["path"])
+    other = load_alphazero_checkpoint(continuous["latest_checkpoint"]["path"])
+    assert final.sampling_rng_state == other.sampling_rng_state
+    for key, tensor in final.model_state_dict.items():
+        torch.testing.assert_close(tensor, other.model_state_dict[key], rtol=0, atol=0)
+    monkeypatch.setattr(FixedHoldout, "evaluate", lambda *args: pytest.fail("completed holdout rerun"))
+    iteration.run(enabled, root, rounds=2)
+    changed = json.loads(Path(settings["manifest"]["path"]).read_text())
+    changed["description"] = "new panel"
+    changed["digest"] = _digest({k: v for k, v in changed.items() if k != "digest"})
+    replacement = tmp_path/"replacement.json"
+    replacement.write_text(json.dumps(changed))
+    with pytest.raises(ValueError, match="cannot change"):
+        iteration.run(replace(enabled, fixed_holdout={**settings,
+            "manifest": {"path": str(replacement), "sha256": sha256(replacement)}}), root, rounds=2)
+
+
+def test_six_round_boundaries_freeze_all_original_validation_not_active_replay(tmp_path):
+    original = archive(tmp_path/"old", 0, 1, mixed=True)
+    settings = {**holdout_settings(tmp_path, [original]), "block_rounds": 6}
+    output = tmp_path/"run"
+    for r in range(1, 13):
+        stage = output/f"rounds/round-{r-1:03d}"
+        games = [archive(stage/"games", r, i, mixed=True) for i in range(2)]
+        (stage/"collection_index.json").write_text(json.dumps({"games": games}))
+    schedule = HoldoutSchedule(settings, output, "cpu", six_rounds=True)
+    initial = schedule.current.manifest["digest"]
+    for r in (1, 6):
+        assert schedule.for_iteration(r).manifest["digest"] == initial
+    second = schedule.for_iteration(7)
+    assert second.manifest["source_iterations"] == list(range(1, 7))
+    assert second.manifest["evaluated_iterations"] == list(range(7, 13))
+    assert len(second.manifest["games"]) == 6
+    assert {g["round_index"] for g in second.manifest["games"]} == set(range(1, 7))
+    assert all(g["split"] == "validation" for g in second.manifest["games"])
+    assert schedule.for_iteration(12) is second
+    third = schedule.for_iteration(13)
+    assert {g["round_index"] for g in third.manifest["games"]} == set(range(7, 13))
+    resumed = HoldoutSchedule(settings, output, "cpu", six_rounds=True)
+    assert resumed.for_iteration(7).manifest == second.manifest
+    (output/"rounds/round-000/collection_index.json").write_text("changed")
+    with pytest.raises(ValueError, match="collection index changed"):
+        HoldoutSchedule(settings, output, "cpu", six_rounds=True).for_iteration(7)
+    with pytest.raises(ValueError, match="block_rounds=6"):
+        check_settings({**settings, "block_rounds": 5})
+
+
+def test_online_driver_crosses_six_round_boundary_and_resumes_without_changing_training(tmp_path, monkeypatch):
+    cfg = driver_case(tmp_path, monkeypatch)
+    original = [json.loads(line) for line in Path(cfg.history_manifest["path"]).read_text().splitlines()]
+    settings = {**holdout_settings(tmp_path, [g for g in original if g["split"] == "validation"]), "block_rounds": 6}
+    enabled = replace(cfg, six_round_holdout=settings)
+    assert iteration.Config.from_dict(enabled.to_dict()) == enabled
+    with pytest.raises(ValueError, match="choose"):
+        replace(enabled, fixed_holdout=settings)
+    root = tmp_path/"run"
+    iteration.run(enabled, root, rounds=6)
+    iteration.run(enabled, root, rounds=7, max_steps_this_session=1)
+    state = iteration.run(enabled, root, rounds=7)
+    old = json.loads((root/"rounds/round-005/fixed_holdout/step-000000002.json").read_text())
+    new_path = root/"fixed_holdout/blocks/iterations-007-012/rounds/round-006/fixed_holdout/step-000000002.json"
+    new = json.loads(new_path.read_text())
+    assert old["panel_digest"] != new["panel_digest"]
+    assert len(list(new_path.parent.glob("*.json"))) == 3
+    assert state["completed_rounds"][-1]["evaluations"]["fixed_holdout"]["path"] == str(new_path)
+    plain = iteration.run(cfg, tmp_path/"plain", rounds=7)
+    a = load_alphazero_checkpoint(state["latest_checkpoint"]["path"])
+    b = load_alphazero_checkpoint(plain["latest_checkpoint"]["path"])
+    assert a.sampling_rng_state == b.sampling_rng_state
+    for key, value in a.model_state_dict.items():
+        torch.testing.assert_close(value, b.model_state_dict[key], rtol=0, atol=0)
+    monkeypatch.setattr(FixedHoldout, "evaluate", lambda *args: pytest.fail("completed block rerun"))
+    iteration.run(enabled, root, rounds=7)
 
 
 def test_driver_resume_and_optimizer_inheritance_without_launching_collection(tmp_path, monkeypatch):
@@ -163,6 +362,40 @@ def test_driver_resume_and_optimizer_inheritance_without_launching_collection(tm
     assert sha256(Path(state['latest_checkpoint']['path'])) == before
     with pytest.raises(ValueError,match='identical frozen algorithm'):
         iteration.run(replace(cfg,historical_policy_seed=10),root,rounds=2)
+
+
+def test_sparse_checkpoint_union_and_midround_cadence_change_resume_exactly(tmp_path, monkeypatch):
+    cfg = driver_case(tmp_path, monkeypatch)
+    original = [json.loads(line) for line in Path(cfg.history_manifest["path"]).read_text().splitlines()]
+    cfg = replace(cfg, updates_per_round=12, validation_steps=(0, 1, 3, 4, 8, 10, 12),
+                  fixed_holdout=holdout_settings(tmp_path, [g for g in original if g["split"] == "validation"]))
+    sparse = replace(cfg, learner=replace(cfg.learner, checkpoint_every_steps=2))
+    interrupted = tmp_path / "interrupted"
+    iteration.run(cfg, interrupted, rounds=1, max_steps_this_session=5)
+    resumed = iteration.run(sparse, interrupted, rounds=1)
+    continuous = tmp_path / "continuous"
+    state = iteration.run(sparse, continuous, rounds=1)
+    stage = continuous / "rounds/round-000"
+    assert {p.name for p in (stage / "checkpoints").glob("*.pt")} == {
+        "initial.pt", "final.pt", *[f"step-{s:09d}.pt" for s in (1, 2, 3, 4, 6, 8, 10, 12)]}
+    assert {int(p.stem.split("-")[-1]) for p in (stage / "validation").glob("*.json")} == set(cfg.validation_steps)
+    assert len(list((stage / "fixed_holdout").glob("*.json"))) == 7
+    for root in (interrupted, continuous):
+        assert not list(root.rglob("*.bin"))
+        assert not list(root.rglob("*.steps.jsonl"))
+        assert not list((root / "rounds/round-000/usage").rglob("*.metrics.jsonl"))
+    a, b = [load_alphazero_checkpoint(s["latest_checkpoint"]["path"]) for s in (state, resumed)]
+    assert a.learner_config["checkpoint_every_steps"] == b.learner_config["checkpoint_every_steps"] == 2
+    assert a.sampling_rng_state == b.sampling_rng_state
+    assert torch.equal(a.torch_cpu_rng_state, b.torch_cpu_rng_state)
+    for key, tensor in a.model_state_dict.items():
+        torch.testing.assert_close(tensor, b.model_state_dict[key], rtol=0, atol=0)
+    for pid, saved in a.optimizer_state_dict["state"].items():
+        for name, value in saved.items():
+            torch.testing.assert_close(value, b.optimizer_state_dict["state"][pid][name], rtol=0, atol=0)
+    with pytest.raises(ValueError, match="learner configuration"):
+        AlphazeroLearner.resume(state["latest_checkpoint"]["path"], replace(sparse.learner, learning_rate=1e-4),
+            replay_identity=a.replay_identity, round_index=a.round_index, round_steps_target=12)
 
 
 def test_continuation_inherits_pool_optimizer_rng_and_absolute_rounds(tmp_path, monkeypatch):

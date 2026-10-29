@@ -1,6 +1,48 @@
 # 当前项目状态
 
-2026-10-23的[raw R31起点10k／60k池自迭代分支](../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)已按要求清除首次未完成采集及该次运行状态，重置后未重启。检查时进程已退出，原owner记录KeyboardInterrupt；没有完成新局或训练更新。原R31累计68423步及完整AdamW/RNG、R22–R31共40000历史对局保留。每轮10000新局、lr2e-5／3000步，首轮50000局／policy新配额1/5、第二轮60000局／1/3，后续历史随机优先／在线FIFO及固定25%历史policy子集不变。采集更新为最新attention配置12worker／2000活跃局／B500／microbatch128／owner双槽，训练解码回放缓存16GiB；搜索评测复用执行参数但owner单槽，原S256N4总1024／S128N1总128及R43 greedy1000pair／每3个本地轮次搜索500pair不变。局部第1轮对应谱系R32，模型／learner仍用父分支冻结实现，仅替换支持未满池的driver。20项冻结实现合成回归与实际命令`--check`通过；清除明细、旧准备身份与新配置见专题，无正式实验结果。
+2026-10-29按用户更正，新增[固定R37初值104k／lr2e-5的140221步对原R37两组10k评测](../artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/README.md)。该节点完整留出主KL＋MSE为0.9286851476，在当前13个完整节点中最低；训练仍中断于228000步，本任务不续训、不取最新节点。准备串行greedy10000pair→双方S128N1（总128）10000pair；15项回归和CPU根验证通过，仅给命令，正式评测未启动。
+
+2026-10-29完成[R37权重起点、104k池、lr2e-5当前最佳点的独立greedy](../artifacts/entity_attention_r37_104k_lr2e5_best_vs_r37_greedy_20261029/results.md)：固定140221步，对raw R37共1000 pair／2000局，1015胜／14和／971负，得分**51.10%**，95%整pair区间**[49.000%,53.175%]**，未确认提升。CPU8、零搜索、工程错误0；训练记录中断于228000步，本次未恢复或测搜索。
+
+2026-10-27新增[R37初值的两组104k无辅助离线实验](../artifacts/entity_attention_r37_104k_offline_lr_20261027/README.md)：lr1e-4及2e-5，仅加载原R37权重，使用新AdamW和原离线RNG；原数据／split、18GiB／4共享worker、12次曝光及5%完整主KL＋MSE早停选点保持。两组真实CPU有限更新／恢复及实际冻结CLI已验证，仅准备命令，未启动正式训练／评测，不接现有队列。
+
+2026-10-27[五个104k离线best对raw R37十组评测](../artifacts/offline5_vs_r37_10k_20261027/README.md)全部完成，共100000 pair／200000局。固定原选点，无辅助122694步、其余140221步；各模型greedy与双方S128N1（总128）各10000 pair。Greedy辅助组点估计略高；S128N1集中于56.29%–57.10%，未明显拉开。六组原训练、选点和原S1024N1评测也均已完成，见[指标与结果汇总](reports/auxiliary_offline_results_20261027_zh-CN.md)。下方按日期保留准备、停止、等待及发布过程，不作为当前进度。
+
+2026-10-27完成核对：[原104k无辅助实验](../artifacts/entity_attention_128x2_noaux_r21_r37_20261026/README.md)在policy＋得分之后串行完成，210332步早停、选中122694步，主KL0.212048／MSE0.736596；原greedy1000 pair得51.075%，原S1024N1搜索500 pair得57.50%。后继队列execution为complete。
+
+2026-10-27完成核对：[104k policy＋得分辅助实验](../artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/README.md)192804步早停、选中140221步，主KL0.205600／MSE0.734649；原greedy／S1024N1为53.475%／56.80%。原池、初始化、优化器、18GiB／4 worker和辅助0.15／0.25设置按冻结配置。
+
+2026-10-26实现[到终局8路分数归属辅助](guides/score_ownership_zh-CN.md)：self/opponent×一级／二级／三级／贵族的未来新增分；支付前后及终局尾步按决策前状态精确分配。复用continuation模型／cache／4 worker／state-only训练及主指标选点，新增分路误差和编码器梯度；旧配置身份保持。独立仅得分辅助的104k预设已准备，验证边界见[工程记录](../artifacts/score_ownership_20261026/README.md)，policy＋得分组合的正式训练和评测已完成，结果见文首；仅得分辅助预设仍只完成准备与工程验证。
+
+2026-10-25已完成[四组离线普通模型／逐步日志和原80k局池归档](../artifacts/repository_archive_20261025/README.md)：672个普通checkpoint、4份主日志、80000个NPZ，包8.84GiB，净释放11.06GiB。最优／完整留出／initial/final模型和当前在线输入保留；原80k离线复训或完整复核须先恢复本包。下方较早“原80k留本机”是当时记录，当前位置以本批清单为准。
+
+2026-10-25已运行[policy辅助最优离线模型的60k在线分支](../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/README.md)，未接入现有离线队列。起点140221步，完整留出主KL+MSE0.9413569281，原权重／AdamW／全部RNG继承；继续对手policy辅助0.15、短期value关闭，lr2e-5／每轮3000步／10000新局。原R31–R37完整64k历史和原split保留；首采后74k按原seed随机淘汰14k历史至60k，后续随机原始历史优先／在线FIFO。采集12worker／active2000／B500／mb128，评测A active1000／精简桶／owner双槽；用户确认固定raw R37，每轮greedy1000pair、每3本地轮搜索500pair。每六轮完整前六轮留出，首段R32–R37的6092局；原2048轮内面板与500步周期点保留。当前训练器流式统计、state-only传输／批量回读和轻量SHA记录已冻结；在线16GiB LRU，不套用离线固定池4worker。29项相关回归、实际--check及有限真实CPU模型验证见专题；state已提交13轮；第12轮greedy66.075%、S1024N1搜索已完成500 pair得60.20%，第13轮greedy63.75%。第8轮后短期平台迹象较强，不能归因为policy改制收益全部耗尽；见[配对统计](../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/plateau_review_20261025/results.md)。当前入口已切换[训练结束释放LRU／采样引用并归还CPU堆页](../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/cache_release_20261025/README.md)的新冻结发布；下一轮需冷加载。本次未恢复正式运行。
+
+2026-10-24发布记录：按用户要求，104k双辅助及44k仅value已另建执行发布并接入原脚本，本次均18GiB、4 worker、流式累计及传输／同步优化；当前policy仍用上一优化发布。后三项已设为以后新建离线训练的默认，缓存按池大小配置。183项有限回归和两组真实CUDA三次更新逐位对照通过，原计划／replay identity／固定留出保持，749个受保护原件哈希保持。本次未启动正式训练，当前policy恢复点115000步。[发布与命令](../artifacts/offline_training_defaults_20261024/README.md)，[通用默认](guides/offline_execution_zh-CN.md)。下方后两组未接入等为此前时点记录。
+
+2026-10-24发布记录：按用户要求停止当前104k仅policy训练及串行队列，最后提交115000步。已准备流式会话统计、state-only value／辅助传输及指标批量回读的独立发布，87项回归及真实CUDA逐位一致性验证通过；仅给恢复命令，未重启。18GiB／4 worker保持，短测速度改善很小，不能据此声称全池明显提速。[改动、原件及命令](../artifacts/training_streaming_20261024/README.md)。下方11:42等运行状态为此前时点记录。
+
+2026-10-24 11:42恢复核验：当前仅policy组已从102000步继续并提交104000步checkpoint，4 worker读取同一份只读共享池，最近605步miss为0。训练稳态约22.49步/秒，原100000→102000步约3.37步/秒；组合提速约6.68倍，不含一次性预热和验证。共享区16.64GiB，进程树PSS约20.90GiB，系统可用约3.35GiB。[原始核验与适用范围](../artifacts/training_prefetch_20261024/README.md#正式恢复核验2026-10-24-1142)。
+
+2026-10-24后续执行更新：104k仅value辅助已完成并交接到仅policy组。按用户要求暂停后，当前仅policy组改用18GiB缓存和4个共享只读CPU worker，从102000步恢复；独立验证缓存不驱逐训练数据。模型／AdamW／采样RNG在真实checkpoint短测中逐位一致，63项回归通过，热缓存小数据测速约1.16倍，完整池速度以运行记录为准。[执行发布、配置与核验](../artifacts/training_prefetch_20261024/README.md)。原队列及后续两组保持，下面132000步／16GiB／等待首组等描述为此前时点记录。
+
+2026-10-24，用户自行恢复的R21–R37仅value辅助实验在本任务首次核验时正在训练，最近提交132000步；下文2026-10-23“已停止／0步”是当时记录。新增[串行后续三组](../artifacts/entity_attention_auxiliary_queue_20261024/README.md)：104k仅policy辅助0.15 → 104k双辅助0.25／0.15 → 原R21–R31的44k仅value辅助0.25。全部从零、新AdamW、原seed／lr1e-4／16GiB／两头B256／12次曝光／5%完整主KL+MSE早停选点；各自完成对R37 greedy1000pair和搜索A500pair才启动下一组。90项有限回归与3次真实CPU更新／9个S8N1原生根（总72模拟）通过。后续等待原监督chain.lock并严格检查整条流程成功，失败／中断停止；本次不修改当前进程或冻结实现。实际挂起身份见队列launch。
+
+2026-10-23首次准备／停止记录：[attention128仅短期value的R21–R37离线实验](../artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/README.md)，80项回归和真实GPU短验证通过后曾启动；用户随后更正为仅给命令，现已SIGINT停止该队列，保留initial.pt（已提交0步），未重启。104000原局／原split，Train7478428位置／Validation835367位置；从零／新AdamW、lr1e-4、两头B256、16GiB，H2/H6/H14权重0.25、对手policy辅助关闭。12次value曝光上限350552步，每5%完整主KL+MSE连续三次严格上升早停并按最低点固定整个模型，随后只对raw R37 greedy1000pair与配置A搜索500pair。采用当前轻量参考SHA记录；支持逐轮4000／10000局数映射，旧整数格式兼容。当时启动与停止身份见专题launch／verification；该组后续已完成训练、原对战及本次大面板，当前结果见文首。
+
+2026-10-23实现[短期value与对手policy辅助](guides/continuation_auxiliary_zh-CN.md)：KataGo式2／6／14玩家回合指数标签；对手下一主行动4类软CE及购买／保留各自的牌分布，可见牌槽＋不可见类。离线入口`offline_continuation`接通缓存、训练、验证、精确恢复与主KL＋MSE选点；当前在线driver未启用。已有[有限CPU/native工程验证](../artifacts/continuation_auxiliary_20261023/README.md)，未启动正式训练或棋力赛。单候选根无value会使该回合及之前的短期标签屏蔽，日志显式记录覆盖率；旧进展目标仍关闭。
+
+2026-10-23按用户要求，[训练记录与checkpoint策略](guides/training_artifacts_zh-CN.md)已调整：当前在线／近期离线默认停写两份`.bin`、两份`.steps.jsonl`及恢复时的整份指标副本，逐步KL／MSE／梯度等仍在主日志。R31在线改为每500步保存＋0／100／250／500／1000／2000／3000七个诊断点，正常每轮10个模型文件、9个不同节点；新启动快照为`source_recording_checkpoint_20261023`。旧产物、原始run配置及state不回写，不自动续训；[交付与验证](../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/recording_checkpoint_20261023/README.md)。
+
+2026-10-23已完成[五类冷产物T7迁移](../artifacts/repository_archive_20261023/README.md)：223个离线普通checkpoint、1011个抽样账本／逐步日志、76038个旧NPZ，流式包5.8104GB，完整SHA／纳秒mtime校验后净释放13.9211GB。原80k局、父分支46142局、当前60k局及所有未选模型保留；旧局池复训／完整诊断需先恢复归档。本次未启动训练或棋力评测。
+
+2026-10-23按用户更正，在线留出已改为[每六轮固定使用此前六轮](guides/evaluation_zh-CN.md#在线全量固定留出)：R32–R37使用R26–R31；R38–R43改用R32–R37；R44–R49再用R38–R43，依次推进。第二段6092局／101425 policy／485932 value已冻结；原第一段2412局、42节点及累计MSE下降0.006722的结果保留。新启动脚本、配置、恢复补齐已接入，训练不因诊断改变；[验证与产物](../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/six_round_holdout_20261023/README.md)。R20–R31补评因冷checkpoint外置，用户已暂缓，本次未运行；当前无训练进程，未续训。
+
+2026-10-23的[raw R31起点10k／60k池分支](../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)重置后已由用户启动，原始state已完成6轮至谱系R37，第7轮已建立采集配置。R37对固定原R43的greedy1000 pair为68.90%，搜索S1024N1（总1024）500 pair为74.55% [71.75%,77.25%]。原R31累计68423步及完整AdamW/RNG、R22–R31的40k历史起点不变；每轮10000新局／3000步／lr2e-5，首轮50k、第二轮60k，历史policy固定25%子集及随机历史优先／在线FIFO保留。采集继续12worker／active2000／B500／microbatch128／owner双槽和16GiB compact缓存。
+
+按2026-10-23最新要求，[日常及在线新搜索评测统一配置A](guides/evaluation_zh-CN.md)：12 search worker、1000活跃局、B500、local128、owner双槽、B桶[64,128,256,500]、C桶[32,48,64]、等待5ms、shared slots2、FP32/native-cudagraph；默认500 pair、双方S1024N1总1024、无根噪声／温度0。日常greedy与每轮在线greedy保持CPU8 worker／1000 pair，在线搜索节奏仍每3个本地轮次。源配置在新轮界重读后供新面板使用，已有冻结面板与原始结果保持历史身份；本次不启动或重启实验。采集、日常及在线两类评测的配置／种子／命令集中于上述指南。
+
+三组离线候选已另对同R43完成500 pair搜索：[80k/94695为74.05%，44k/59453为70.70%，44k低lr累计63453为72.20%](../artifacts/eval_speed_20261023/README.md)。与R37是共同对手比较，80k与R37得分接近，尚未确认谁更强；不能由此隔离扩池、学习率或12贵族适应收益。三组核心协议／SHA及实际预算一致，错误计数为0；新默认A是已验证可用配置，最优吞吐及提速因果尚未建立。下方历史“未测搜索”指当时或原R20／R31面板，当前对R43的独立补测以本段为准。
 
 2026-10-23用户进一步撤回[全部新增购买结算特征](../artifacts/entity_attention_first_round_20261022/README.md)，包括其中终局标记。已删除购买模块、actor query分支、配置字段及对应首轮候选入口／配置／启动脚本，原关系attention128恢复583682参数；短期进展辅助保持关闭，原有market_relations及value读取不变。旧组合／纯购买候选都未正式训练，准备目录、CPU／CUDA短验证原件及撤回前源码快照保留；历史实验权重须用对应旧快照解释，当前不增加兼容忽略或自动权重转换。未新增终局设计、未启动训练／采集／棋力赛；当前有限验证见撤回记录。
 
@@ -100,7 +142,7 @@
 | 能力／历史阶段 | 证据范围 | 入口 |
 | --- | --- | --- |
 | 双人规则、Observation、数据与学习接口 | Python checked 规则参照；native 为另一个实现，依对应版本回归验证 | [标准规则](splendor_standard_rules_zh-CN.md)、[契约](specs/engine_contract_zh-CN.md)、[学习契约](specs/learning_contract_zh-CN.md) |
-| 本地人机网页（2026-10-11） | 支持固定策略、greedy、固定深度搜索及原生 MCTS；MCTS 的 S/N 预算可开局设置及对局中应用，CPU单线程与训练并行。新增当前玩家视角的模型 value 评估条、逐步悔棋、顶部临时支付／选择栏；第24轮模型命令见指南 | [评测与网页指南](guides/evaluation_zh-CN.md#本地人机网页) |
+| 本地人机网页（2026-10-29） | 支持固定策略、greedy、固定深度搜索及原生 MCTS；预算可开局／局中设置，CPU单线程；有模型value评估条与悔棋。新启动的服务在每次操作和AI回应完成后自动保存完整回放至 `runtime/web_replays/`，悔棋同步当前分支；支持 `--replay-dir`。旧内存服务可用专用脚本无重启导出。policy在线第9轮S1024N4命令见指南 | [评测与网页指南](guides/evaluation_zh-CN.md#本地人机网页) |
 | PPO seed1、AZ seed1 | PPO 5M本轮decisions；AZ5×500及θ1–θ5扩展面板完成，DEV best不等于独立FINAL best | [PPO](reports/ppo_5m_zh-CN.md)、[AZ](reports/alphazero_seed1_zh-CN.md) |
 | 旧θ5的10×1000源数据 | 轮0–9、10000局／12050更新及20个常规面板完成；770870训练／80699留出位置用于早期attention离线学习。终点对旧θ5搜索200pair为46.625% [41.875%,51.250%]，未确认提升；终点对PPO仅完成100/200pair。此次核对保存结果，未新跑对战 | [完成报告](reports/az_theta5_10x1000_zh-CN.md)、[数据统计](../artifacts/entity_attention_v1_20261004/data_summary.json)、[历史准备](archive/next_az_training_zh-CN.md) |
 | 实体注意力离线 | 532738参数、12045步及六个PPO面板完成；final搜索59.5%、greedy61.75%，重复DEV | [指南](guides/entity_attention_offline_zh-CN.md) |

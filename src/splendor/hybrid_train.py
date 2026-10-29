@@ -193,6 +193,10 @@ class HybridConfig:
 
     def to_dict(self):
         values = {"protocol": PROTOCOL, **asdict(self)}
+        if self.offline.training_workers == 4:
+            # Keep existing hybrid config identities when the new offline
+            # execution setting is omitted and takes its default.
+            del values["offline"]["training_workers"]
         values["selfplay"] = self.selfplay.to_dict()
         if not self.online_only:
             del values["online_only"]
@@ -364,15 +368,17 @@ def draw_split_batch(recent_pool, history_pool, rng, batch_size, value_recent_po
 
 
 class HybridReferenceWriter:
-    """Separate existing binary ledgers by source, avoiding cross-run key collisions."""
+    """Keep per-source identities and batch hashes; full audit records are opt-in."""
 
-    def __init__(self, root, session, identity, quotas, sources=("offline", "online")):
+    def __init__(self, root, session, identity, quotas, sources=("offline", "online"),
+                 *, persist_records=False):
         self.counts = quotas
         self.writers = [ReferenceWriter(root / source, session, count,
-                        {"source": source, **identity[source]})
+                        {"source": source, **identity[source]}, persist_records=persist_records)
                         for source, count in zip(sources, quotas)]
         self.path = root / f"{session}.json"
         write_json(self.path, {"protocol": "az-hybrid-reference-sources-v1",
+                              "persist_records": persist_records,
                               "sources": {name: str(writer.path.resolve()) for name, writer in
                                           zip(sources, self.writers)}})
 
@@ -689,8 +695,9 @@ def run_hybrid(config, output, *, resume=False, online_rounds=None, forever=Fals
 
 
 def _algorithm_config(raw):
-    """Keep resume strict except for the two collection batching controls."""
+    """Exclude collection batching and offline worker count from algorithm identity."""
     values = json.loads(json.dumps(raw))
+    values["offline"].pop("training_workers", None)
     for name in COLLECTION_BATCHING_FIELDS:
         values["selfplay"]["execution"].pop(name, None)
     return values

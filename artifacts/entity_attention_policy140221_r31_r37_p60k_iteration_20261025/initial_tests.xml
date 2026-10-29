@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="29" time="21.277" timestamp="2026-10-25T02:14:34.689020+08:00" hostname="lcW"><testcase classname="tests.test_policy_aux_online_iteration" name="test_policy_initial_overflow_preflight_and_legacy_serialization" time="1.174" /><testcase classname="tests.test_policy_aux_online_iteration" name="test_policy_online_rounds_preserve_optimizer_rng_auxiliary_and_exact_resume" time="0.280"><failure message="ValueError: eligible policy pool is empty">policy_case = Config(run_id='tiny', initial_checkpoint={'path': '/tmp/pytest-of-lc/pytest-0/test_policy_online_rounds_pres0/policy_t...ontinuation_auxiliary={'shortterm_value_weight': 0.0, 'opponent_policy_weight': 0.15}, encoder_grad_norm_every_steps=1)
+tmp_path = PosixPath('/tmp/pytest-of-lc/pytest-0/test_policy_online_rounds_pres0')
+
+    def test_policy_online_rounds_preserve_optimizer_rng_auxiliary_and_exact_resume(policy_case, tmp_path):
+        cfg = policy_case
+        root = tmp_path / "segmented"
+&gt;       iteration.run(cfg, root, rounds=2, max_steps_this_session=1)
+
+tests/test_policy_aux_online_iteration.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:376: in run
+    return _run(config, output, original, preflight, rounds, max_steps_this_session, config_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:526: in _run
+    training = run_training_round(learner, steps_target=config.updates_per_round, current_pool=value,
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/alphazero_train.py:883: in run_training_round
+    drawn = (batch_drawer(learner.sampling_rng) if batch_drawer is not None else
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:529: in &lt;lambda&gt;
+    batch_drawer=lambda rng: draw_batch(old_policy, new_policy, value, rng, config.learner.batch_size,
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:293: in draw_batch
+    sample, ref = pool.sample(policy_rng)
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;splendor.random_budget_iteration.PolicyPool object at 0x721cb4d06c60&gt;
+rng = &lt;splendor.rng.DeterministicRng object at 0x721cb4c47bf0&gt;
+
+    def sample(self, rng):
+        if not self._size:
+&gt;           raise ValueError("eligible policy pool is empty")
+E           ValueError: eligible policy pool is empty
+
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:275: ValueError</failure></testcase><testcase classname="tests.test_policy_aux_online_iteration" name="test_policy_auxiliary_six_round_holdout_and_boundary_recovery" time="0.326"><failure message="ValueError: eligible policy pool is empty">policy_case = Config(run_id='tiny', initial_checkpoint={'path': '/tmp/pytest-of-lc/pytest-0/test_policy_auxiliary_six_roun0/policy_t...ontinuation_auxiliary={'shortterm_value_weight': 0.0, 'opponent_policy_weight': 0.15}, encoder_grad_norm_every_steps=1)
+tmp_path = PosixPath('/tmp/pytest-of-lc/pytest-0/test_policy_auxiliary_six_roun0')
+
+    def test_policy_auxiliary_six_round_holdout_and_boundary_recovery(policy_case, tmp_path):
+        cfg = policy_case
+        records = [json.loads(s) for s in Path(cfg.history_manifest["path"]).read_text().splitlines()]
+        settings = {**holdout_settings(tmp_path, [g for g in records if g["split"] == "validation"]), "block_rounds": 6}
+        enabled = replace(cfg, six_round_holdout=settings)
+&gt;       state = iteration.run(enabled, tmp_path / "holdout", rounds=1)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_policy_aux_online_iteration.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:376: in run
+    return _run(config, output, original, preflight, rounds, max_steps_this_session, config_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:526: in _run
+    training = run_training_round(learner, steps_target=config.updates_per_round, current_pool=value,
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/alphazero_train.py:883: in run_training_round
+    drawn = (batch_drawer(learner.sampling_rng) if batch_drawer is not None else
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:529: in &lt;lambda&gt;
+    batch_drawer=lambda rng: draw_batch(old_policy, new_policy, value, rng, config.learner.batch_size,
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:293: in draw_batch
+    sample, ref = pool.sample(policy_rng)
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;splendor.random_budget_iteration.PolicyPool object at 0x721ca6a44140&gt;
+rng = &lt;splendor.rng.DeterministicRng object at 0x721ca6119eb0&gt;
+
+    def sample(self, rng):
+        if not self._size:
+&gt;           raise ValueError("eligible policy pool is empty")
+E           ValueError: eligible policy pool is empty
+
+runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py:275: ValueError</failure></testcase><testcase classname="tests.test_policy_aux_online_iteration" name="test_formal_policy_online_configuration_records_selected_start_history_and_r37_anchor" time="0.001" /><testcase classname="tests.test_random_budget_iteration" name="test_policy_quotas_are_exact_cumulative_sixths" time="0.001" /><testcase classname="tests.test_random_budget_iteration" name="test_random_old_eviction_then_online_fifo_and_no_reentry" time="0.001" /><testcase classname="tests.test_random_budget_iteration" name="test_fixed_policy_subset_sampling_and_unmodified_value_rng" time="0.013" /><testcase classname="tests.test_random_budget_iteration" name="test_full_holdout_matches_joint_loss_and_preserves_model_rng" time="0.029" /><testcase classname="tests.test_random_budget_iteration" name="test_driver_holdout_backfill_is_complete_idempotent_and_training_neutral" time="2.249" /><testcase classname="tests.test_random_budget_iteration" name="test_six_round_boundaries_freeze_all_original_validation_not_active_replay" time="0.093" /><testcase classname="tests.test_random_budget_iteration" name="test_online_driver_crosses_six_round_boundary_and_resumes_without_changing_training" time="6.525" /><testcase classname="tests.test_random_budget_iteration" name="test_driver_resume_and_optimizer_inheritance_without_launching_collection" time="1.816" /><testcase classname="tests.test_random_budget_iteration" name="test_sparse_checkpoint_union_and_midround_cadence_change_resume_exactly" time="1.828" /><testcase classname="tests.test_random_budget_iteration" name="test_continuation_inherits_pool_optimizer_rng_and_absolute_rounds" time="1.436" /><testcase classname="tests.test_random_budget_iteration" name="test_execution_update_resumes_legacy_round_then_uses_new_settings" time="1.725" /><testcase classname="tests.test_random_budget_iteration" name="test_running_driver_reloads_tuning_at_next_round_boundary" time="0.755" /><testcase classname="tests.test_random_budget_iteration" name="test_collection_freeze_rejects_search_budget_changes" time="0.003" /><testcase classname="tests.test_random_budget_iteration" name="test_search_panel_size_execution_update_preserves_training_identity" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_preflight_accepts_initial_gap_and_uses_actual_first_pool_fraction" time="0.060" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_first_two_rounds_grow_to_capacity_and_resume_exactly" time="1.747" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_continuation_from_unfilled_pool_keeps_history_until_overflow" time="0.863" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_pool_warmup_then_random_history_eviction_and_online_fifo" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[10000-50000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[20000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[30000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[40000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[50000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[60000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_formal_r31_configuration_preserves_the_iteration_protocol" time="0.013" /></testsuite></testsuites>

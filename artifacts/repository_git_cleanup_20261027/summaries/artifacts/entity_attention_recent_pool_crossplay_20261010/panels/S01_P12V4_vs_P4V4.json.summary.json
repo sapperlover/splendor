@@ -1,0 +1,563 @@
+{
+  "omitted_fields": [
+    {
+      "count": 200,
+      "json_path": "$.config.game_seeds",
+      "kind": "list",
+      "value_sha256": "ebfde1c23ba2100c3a461399026c1facdacf95bbcd24b299fc14ce0d3342b89a"
+    },
+    {
+      "count": 400,
+      "json_path": "$.execution_stats.games",
+      "kind": "list",
+      "value_sha256": "2ef2eec4ddd67c0c5a2f8d7896960a9225b67b0dc43ecbc042f7459a01772132"
+    },
+    {
+      "count": 200,
+      "json_path": "$.pairs",
+      "kind": "list",
+      "value_sha256": "b424c935625ebedc6ad5e67d3afd8ecca58441b0b20d8ac4c7c61de5c80c2df5"
+    }
+  ],
+  "preserved": {
+    "a_first": {
+      "draws": 4,
+      "games": 200,
+      "losses": 92,
+      "valid_games": 200,
+      "win_rate_score": 0.53,
+      "wins": 104
+    },
+    "a_losses": 175,
+    "a_second": {
+      "draws": 3,
+      "games": 200,
+      "losses": 83,
+      "valid_games": 200,
+      "win_rate_score": 0.5775,
+      "wins": 114
+    },
+    "a_wins": 218,
+    "checkpoint_identity": {
+      "policy_a": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/compositions/final_policy_early_value.pt",
+        "sha256": "4bf89f6a623f963e96fa6cf3c59d435ad36fdf02d621613f42e43aa345caf469"
+      },
+      "policy_b": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+        "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+      }
+    },
+    "completed_games": 400,
+    "completed_pairs": 200,
+    "config": {
+      "adjudicate_deterministic_policy_cycles": true,
+      "bootstrap_resamples": 10000,
+      "bootstrap_seed": 30520000,
+      "device": "cuda",
+      "execution": {
+        "active_games": 100,
+        "actor_projection": false,
+        "backend": "native_batched",
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "inference_mode": "compiled",
+        "max_batch_size": 64,
+        "max_batch_wait_ms": 0.0
+      },
+      "game_seeds": {
+        "_git_omitted_raw": {
+          "count": 200,
+          "json_path": "$.config.game_seeds",
+          "kind": "list",
+          "value_sha256": "ebfde1c23ba2100c3a461399026c1facdacf95bbcd24b299fc14ce0d3342b89a"
+        }
+      },
+      "max_completed_turns": 400,
+      "metadata": {
+        "experiment": "entity_attention_recent_pool_crossplay_20261010",
+        "kind": "search",
+        "models": {
+          "policy_a": {
+            "checkpoint": "runs/entity_attention_recent_pool_20261009/compositions/final_policy_early_value.pt",
+            "sha256": "4bf89f6a623f963e96fa6cf3c59d435ad36fdf02d621613f42e43aa345caf469",
+            "sources": {
+              "policy": {
+                "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/final.pt",
+                "sha256": "9faa66af917c597fbc62b823eeffea14e8403391415ce552d7a4114481d2784a"
+              },
+              "value": {
+                "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+                "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+              }
+            }
+          },
+          "policy_b": {
+            "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+            "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+          }
+        },
+        "panel": "S01_P12V4_vs_P4V4",
+        "protocol": "recent-pool-crossplay-20261010-v1",
+        "seed_scope": "fresh fixed crossplay seeds"
+      },
+      "policy_a": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/compositions/final_policy_early_value.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "mcts_checkpoint",
+        "name": "P12V4",
+        "search_backend": "native",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 14930000,
+          "simulations": 1024
+        }
+      },
+      "policy_b": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "mcts_checkpoint",
+        "name": "P4V4",
+        "search_backend": "native",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 14930000,
+          "simulations": 1024
+        }
+      },
+      "policy_seed_base": 30510000,
+      "workers": 1
+    },
+    "draws": 7,
+    "elapsed_seconds_this_invocation": 1267.258481729,
+    "engineering_truncations": 0,
+    "exceptions": 0,
+    "execution_stats": {
+      "checked_rule_seconds": 20.606261316005657,
+      "games": {
+        "_git_omitted_raw": {
+          "count": 400,
+          "json_path": "$.execution_stats.games",
+          "kind": "list",
+          "value_sha256": "2ef2eec4ddd67c0c5a2f8d7896960a9225b67b0dc43ecbc042f7459a01772132"
+        }
+      },
+      "model_creation_seconds": 0.837271276000024,
+      "models": {
+        "4bf89f6a623f963e96fa6cf3c59d435ad36fdf02d621613f42e43aa345caf469:0": {
+          "actual_candidate_positions": 226907422,
+          "batch_non_inference_seconds": 207.496702714305,
+          "batch_wall_seconds": 672.5931253249721,
+          "decision_latency": {
+            "50": 4.697619541000108,
+            "90": 5.046717070499994,
+            "99": 8.628642522449855
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "1": 3746,
+              "10": 838,
+              "11": 761,
+              "12": 1081,
+              "13": 559,
+              "14": 366,
+              "15": 690,
+              "16": 677,
+              "17": 634,
+              "18": 798,
+              "19": 1049,
+              "2": 3077,
+              "20": 859,
+              "21": 802,
+              "22": 439,
+              "23": 558,
+              "24": 433,
+              "25": 389,
+              "26": 590,
+              "27": 738,
+              "28": 1030,
+              "29": 635,
+              "3": 2670,
+              "30": 666,
+              "31": 856,
+              "32": 887,
+              "33": 893,
+              "34": 1092,
+              "35": 1283,
+              "36": 1641,
+              "37": 1408,
+              "38": 1933,
+              "39": 2335,
+              "4": 1412,
+              "40": 4089,
+              "41": 3147,
+              "42": 5358,
+              "43": 5552,
+              "44": 6854,
+              "45": 11017,
+              "46": 16643,
+              "47": 16523,
+              "48": 17026,
+              "49": 17071,
+              "5": 1515,
+              "50": 25940,
+              "51": 19997,
+              "52": 19935,
+              "53": 14723,
+              "54": 13141,
+              "55": 9200,
+              "56": 9473,
+              "57": 5059,
+              "58": 7030,
+              "59": 1587,
+              "6": 1286,
+              "60": 856,
+              "61": 1938,
+              "62": 686,
+              "63": 354,
+              "64": 582,
+              "7": 1301,
+              "8": 679,
+              "9": 961
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 1.0463595110002188,
+                "policy_value:32": 2.493631108999921,
+                "policy_value:48": 1.691771086000017,
+                "policy_value:64": 1.6609558650000054
+              },
+              "compiled_calls": {
+                "policy_value:16": 3484,
+                "policy_value:32": 143531,
+                "policy_value:48": 127383,
+                "policy_value:64": 2950
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 4328,
+                "unique_graphs": 16
+              },
+              "eager_fallbacks": 0,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled",
+                "policy_value:64": "compiled"
+              }
+            },
+            "d2h_seconds": 10.887073660852366,
+            "feature_seconds": 0.0,
+            "forward_seconds": 394.21734863989275,
+            "h2d_seconds": 10.388402759958126,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 12482521,
+            "mean_batch_size": 45.00670998168366,
+            "physical_model_batches": 277348,
+            "wait_seconds": 49.603597549963865
+          },
+          "native_consume_seconds": 147.95547291595426,
+          "native_fill_seconds": 51.55342122196089,
+          "physical_candidate_positions": 497711856,
+          "policy_rows": 12482521,
+          "root_rows": 13072,
+          "root_start_seconds": 5.274410260981085,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 3484,
+            "32": 143531,
+            "48": 127383,
+            "64": 2950
+          },
+          "width_rows": {
+            "16": 5181,
+            "32": 6471807,
+            "48": 5863936,
+            "64": 141597
+          }
+        },
+        "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec:1": {
+          "actual_candidate_positions": 225513274,
+          "batch_non_inference_seconds": 204.5487305716108,
+          "batch_wall_seconds": 535.8134335069066,
+          "decision_latency": {
+            "50": 4.680788578000147,
+            "90": 5.036257672600049,
+            "99": 8.582557457940021
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "1": 2976,
+              "10": 1079,
+              "11": 974,
+              "12": 672,
+              "13": 822,
+              "14": 656,
+              "15": 829,
+              "16": 747,
+              "17": 1029,
+              "18": 947,
+              "19": 803,
+              "2": 3508,
+              "20": 695,
+              "21": 537,
+              "22": 415,
+              "23": 361,
+              "24": 309,
+              "25": 434,
+              "26": 547,
+              "27": 395,
+              "28": 543,
+              "29": 791,
+              "3": 1791,
+              "30": 1173,
+              "31": 830,
+              "32": 1160,
+              "33": 1315,
+              "34": 1285,
+              "35": 1119,
+              "36": 1363,
+              "37": 1483,
+              "38": 1473,
+              "39": 2875,
+              "4": 1008,
+              "40": 2015,
+              "41": 2740,
+              "42": 8233,
+              "43": 6196,
+              "44": 10638,
+              "45": 10484,
+              "46": 14860,
+              "47": 15859,
+              "48": 20310,
+              "49": 19896,
+              "5": 701,
+              "50": 25924,
+              "51": 16859,
+              "52": 15381,
+              "53": 15424,
+              "54": 15239,
+              "55": 10199,
+              "56": 6329,
+              "57": 5052,
+              "58": 4472,
+              "59": 2381,
+              "6": 1410,
+              "60": 2816,
+              "61": 1273,
+              "62": 790,
+              "63": 306,
+              "64": 232,
+              "7": 1781,
+              "8": 579,
+              "9": 587
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 1.3720591350001996,
+                "policy_value:32": 7.16776212000002,
+                "policy_value:48": 5.87352381200003,
+                "policy_value:64": 1.1414616600000045
+              },
+              "compiled_calls": {
+                "policy_value:16": 3080,
+                "policy_value:32": 141264,
+                "policy_value:48": 128283,
+                "policy_value:64": 3283
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 4328,
+                "unique_graphs": 16
+              },
+              "eager_fallbacks": 0,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled",
+                "policy_value:64": "compiled"
+              }
+            },
+            "d2h_seconds": 10.66863557101317,
+            "feature_seconds": 0.0,
+            "forward_seconds": 287.97796686016125,
+            "h2d_seconds": 10.544373805108648,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 12450428,
+            "mean_batch_size": 45.12496103801964,
+            "physical_model_batches": 275910,
+            "wait_seconds": 22.073726699012695
+          },
+          "native_consume_seconds": 119.4439300459735,
+          "native_fill_seconds": 51.3334605049713,
+          "physical_candidate_positions": 498327696,
+          "policy_rows": 12450428,
+          "root_rows": 13039,
+          "root_start_seconds": 6.171912823989487,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 3080,
+            "32": 141264,
+            "48": 128283,
+            "64": 3283
+          },
+          "width_rows": {
+            "16": 4575,
+            "32": 6354752,
+            "48": 5933002,
+            "64": 158099
+          }
+        }
+      },
+      "scope": "this invocation; mutually exclusive owner host intervals",
+      "sidecar_seconds": 5.092058319998387
+    },
+    "forced_skips": 0,
+    "game_log_root": "/home/lc/下载/splendor/artifacts/entity_attention_recent_pool_crossplay_20261010/panels/S01_P12V4_vs_P4V4.json.games",
+    "illegal_actions": 0,
+    "invariant_failures": 0,
+    "mean_completed_player_turns": 55.375,
+    "mean_decisions": 81.915,
+    "median_completed_player_turns": 56.0,
+    "output": "/home/lc/下载/splendor/artifacts/entity_attention_recent_pool_crossplay_20261010/panels/S01_P12V4_vs_P4V4.json",
+    "paired_bootstrap": {
+      "confidence": 0.95,
+      "estimate": 0.55375,
+      "lower": 0.5075,
+      "pair_count": 200,
+      "resamples": 10000,
+      "seed": 30520000,
+      "upper": 0.6
+    },
+    "paired_bootstrap_unit": "one_paired_seed",
+    "pairs": {
+      "_git_omitted_raw": {
+        "count": 200,
+        "json_path": "$.pairs",
+        "kind": "list",
+        "value_sha256": "b424c935625ebedc6ad5e67d3afd8ecca58441b0b20d8ac4c7c61de5c80c2df5"
+      }
+    },
+    "passed": true,
+    "policy_a_stats": {
+      "changed_action_count": 4875,
+      "decisions": 16356,
+      "determinizations": 13072,
+      "expanded_nodes": 12469449,
+      "feature_seconds": 0.0,
+      "folded_actions": 2556114,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 12482521,
+      "searchable_decisions": 13072,
+      "simulations": 13385728,
+      "single_candidate_decisions": 3284,
+      "state_transitions": 15224126,
+      "terminal_hits": 916279,
+      "total_seconds": 58938.09671370096,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 65685902
+    },
+    "policy_b_stats": {
+      "changed_action_count": 5358,
+      "decisions": 16410,
+      "determinizations": 13039,
+      "expanded_nodes": 12437389,
+      "feature_seconds": 0.0,
+      "folded_actions": 2563062,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 12450428,
+      "searchable_decisions": 13039,
+      "simulations": 13351936,
+      "single_candidate_decisions": 3371,
+      "state_transitions": 15199309,
+      "terminal_hits": 914547,
+      "total_seconds": 58733.38355132497,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 63254936
+    },
+    "policy_cycle_draws": 0,
+    "protocol": "fixed-paired-evaluation-v1",
+    "runtime": {
+      "device": "cuda",
+      "workers": 1
+    },
+    "total_games": 400,
+    "total_pairs": 200,
+    "updated_at": "2026-10-10T03:58:46+0800",
+    "valid_games": 400,
+    "win_rate_score": 0.55375
+  },
+  "raw": {
+    "bytes": 1030856,
+    "path": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/S01_P12V4_vs_P4V4.json",
+    "sha256": "37f98b2da9fe2fcebaaf5b120827aeb59aab19ebd0d3d9397c769670561b764c"
+  },
+  "schema": "splendor-git-artifact-summary-v1",
+  "scope": "Mechanical projection; omitted fields are explicitly marked. Not a complete runtime input."
+}

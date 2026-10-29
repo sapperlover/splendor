@@ -1,0 +1,225 @@
+{
+  "omitted_fields": [
+    {
+      "count": 50,
+      "json_path": "$.pairs",
+      "kind": "list",
+      "value_sha256": "7d8f6d161a12fbdf7247b2d4c0ba1806745161716f13ecaadcc94b312398c49e"
+    }
+  ],
+  "preserved": {
+    "a_first": {
+      "draws": 0,
+      "games": 50,
+      "losses": 22,
+      "valid_games": 50,
+      "win_rate_score": 0.56,
+      "wins": 28
+    },
+    "a_losses": 43,
+    "a_second": {
+      "draws": 1,
+      "games": 50,
+      "losses": 21,
+      "valid_games": 50,
+      "win_rate_score": 0.57,
+      "wins": 28
+    },
+    "a_wins": 56,
+    "checkpoint_identity": {
+      "policy_a": {
+        "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+        "sha256": "e0cba7733de4977cd0a606d35d2f328f47f285a0be81a1bd3895633dd105f97b"
+      },
+      "policy_b": {
+        "path": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "sha256": "009d17d2e9bc0d879142d7ca3ff1777a6f8caa9dda9243c6a2d5eb3538b5d5b0"
+      }
+    },
+    "completed_games": 100,
+    "completed_pairs": 50,
+    "config": {
+      "adjudicate_deterministic_policy_cycles": true,
+      "bootstrap_resamples": 100000,
+      "bootstrap_seed": 9920000,
+      "device": "cpu",
+      "game_seeds": [
+        9900000,
+        9900001,
+        9900002,
+        9900003,
+        9900004,
+        9900005,
+        9900006,
+        9900007,
+        9900008,
+        9900009,
+        9900010,
+        9900011,
+        9900012,
+        9900013,
+        9900014,
+        9900015,
+        9900016,
+        9900017,
+        9900018,
+        9900019,
+        9900020,
+        9900021,
+        9900022,
+        9900023,
+        9900024,
+        9900025,
+        9900026,
+        9900027,
+        9900028,
+        9900029,
+        9900030,
+        9900031,
+        9900032,
+        9900033,
+        9900034,
+        9900035,
+        9900036,
+        9900037,
+        9900038,
+        9900039,
+        9900040,
+        9900041,
+        9900042,
+        9900043,
+        9900044,
+        9900045,
+        9900046,
+        9900047,
+        9900048,
+        9900049
+      ],
+      "max_completed_turns": 400,
+      "metadata": {
+        "note": "both sides determinized PUCT S=1024/N=1, no root noise, temperature 0; same 9900000 seed block as the 500-pair greedy run for direct comparability",
+        "purpose": "az_loop_seed1_round-004_mcts1024_vs_initial_mcts1024_50pair",
+        "theta5_total_train_step": 2982
+      },
+      "policy_a": {
+        "checkpoint": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-004/checkpoints/final.pt",
+        "kind": "mcts_checkpoint",
+        "name": "theta5_mcts",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 9500000,
+          "simulations": 1024
+        }
+      },
+      "policy_b": {
+        "checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "kind": "mcts_checkpoint",
+        "name": "initial5m_mcts",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 9500000,
+          "simulations": 1024
+        }
+      },
+      "policy_seed_base": 9910000,
+      "workers": 8
+    },
+    "draws": 1,
+    "elapsed_seconds_this_invocation": 1773.554208568,
+    "engineering_truncations": 0,
+    "exceptions": 0,
+    "forced_skips": 0,
+    "game_log_root": "/home/lc/下载/splendor/artifacts/az_loop_seed1/mcts_s1024_theta5_vs_initial_50pair.json.games",
+    "illegal_actions": 0,
+    "invariant_failures": 0,
+    "mean_completed_player_turns": 55.52,
+    "mean_decisions": 85.29,
+    "median_completed_player_turns": 56.0,
+    "output": "/home/lc/下载/splendor/artifacts/az_loop_seed1/mcts_s1024_theta5_vs_initial_50pair.json",
+    "paired_bootstrap": {
+      "confidence": 0.95,
+      "estimate": 0.565,
+      "lower": 0.47,
+      "pair_count": 50,
+      "resamples": 100000,
+      "seed": 9920000,
+      "upper": 0.66
+    },
+    "paired_bootstrap_unit": "one_paired_seed",
+    "pairs": {
+      "_git_omitted_raw": {
+        "count": 50,
+        "json_path": "$.pairs",
+        "kind": "list",
+        "value_sha256": "7d8f6d161a12fbdf7247b2d4c0ba1806745161716f13ecaadcc94b312398c49e"
+      }
+    },
+    "passed": true,
+    "policy_a_stats": {
+      "changed_action_count": 1491,
+      "decisions": 4189,
+      "determinizations": 3153,
+      "expanded_nodes": 3014157,
+      "feature_seconds": 1913.7002804730103,
+      "folded_actions": 836422,
+      "inference_seconds": 3429.531379548886,
+      "model_batches": 3017310,
+      "model_positions": 3017310,
+      "searchable_decisions": 3153,
+      "simulations": 3228672,
+      "single_candidate_decisions": 1036,
+      "state_transitions": 3898557,
+      "terminal_hits": 214515,
+      "total_seconds": 6861.767109888995,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 14201429
+    },
+    "policy_b_stats": {
+      "changed_action_count": 1114,
+      "decisions": 4340,
+      "determinizations": 3049,
+      "expanded_nodes": 2818090,
+      "feature_seconds": 1800.5906041132007,
+      "folded_actions": 884160,
+      "inference_seconds": 3215.709748265444,
+      "model_batches": 2821139,
+      "model_positions": 2821139,
+      "searchable_decisions": 3049,
+      "simulations": 3122176,
+      "single_candidate_decisions": 1291,
+      "state_transitions": 3751162,
+      "terminal_hits": 304086,
+      "total_seconds": 6556.238295099998,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 20785263
+    },
+    "policy_cycle_draws": 0,
+    "protocol": "fixed-paired-evaluation-v1",
+    "runtime": {
+      "device": "cpu",
+      "workers": 8
+    },
+    "total_games": 100,
+    "total_pairs": 50,
+    "updated_at": "2026-09-29T10:20:09+0800",
+    "valid_games": 100,
+    "win_rate_score": 0.565
+  },
+  "raw": {
+    "bytes": 256118,
+    "path": "artifacts/az_loop_seed1/evaluations/mcts_s1024_theta5_vs_initial_50pair.json",
+    "sha256": "863c35a27bfe7fc28e7539a28805bb112206e5c511456376ca5e9160d2a99f57"
+  },
+  "schema": "splendor-git-artifact-summary-v1",
+  "scope": "Mechanical projection; omitted fields are explicitly marked. Not a complete runtime input."
+}

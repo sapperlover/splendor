@@ -1,0 +1,164 @@
+{
+  "client_date": "2026-10-29",
+  "commands": {
+    "cpu": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/r37_lr2e5_step140221_vs_r37_10k_20261029/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/validate.py",
+    "prepare": "bash scripts/run_r37_lr2e5_step140221_vs_r37_10k_20261029.sh prepare",
+    "run": "bash scripts/run_r37_lr2e5_step140221_vs_r37_10k_20261029.sh",
+    "status": "bash scripts/run_r37_lr2e5_step140221_vs_r37_10k_20261029.sh status",
+    "tests": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/r37_lr2e5_step140221_vs_r37_10k_20261029/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q -o pythonpath=runtime/r37_lr2e5_step140221_vs_r37_10k_20261029/source/src tests/test_r37_fixed140221_evaluation.py tests/test_offline5_evaluation.py --junitxml=runtime/r37_lr2e5_step140221_vs_r37_10k_20261029/tests.xml"
+  },
+  "common_seeds_match_prior_offline5": true,
+  "cpu_summary": {
+    "CUDA_tested": false,
+    "complete_games": 0,
+    "greedy_roots": 2,
+    "native_roots": 2,
+    "real_models": 2,
+    "total_simulations": 256
+  },
+  "evidence_hashes": {
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/README.md": "76019d245bb6929f3a72e7cc31080b5f9f75c369caff591a598476599913fc6f",
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/configs/01_greedy_step140221_vs_R37.json": "9ebb3598f0314c37577b804d0ea3970e1973c38fc4875ee3d7a8ab6a9c3c39e7",
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/configs/02_search_step140221_vs_R37.json": "ac759b18c84568f933bd87da39fe038129bc68e14db3009dd6db8ecab85bf9db",
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/evaluation_templates.json": "5b8daece5b78f828af2a0f3298fb1063d5b1b9d9e16a5519998c66eb1ca011f7",
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/plan.json": "94be46e5aa4f8295434a9e999c3300abdc4ab3542e936c34cb5a0938cdf9498f",
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/results.md": "814cc26b3ab1c0ebd387480e96fc5d170113d69af79acda46f2af3c77929c2ab",
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/run.py": "750a6788aaff794824f2cb2c2488e8c791c6f700f64e032c2c6458bd2db3422a",
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/source.json": "cc580620e870ce032e007ff4339b46c68490412ae1b6881d18bfd9e5bb0d5db8",
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/summary.json": "f1c71628a36d70a5ca1ed4a05d151882e7b388e6020bd6354af013f6f38073e7",
+    "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/validate.py": "d25934bf53a9cd08648d7bd5a06fc1d14f287a0201a229b23cb655f34a7c1f3e",
+    "scripts/run_r37_lr2e5_step140221_vs_r37_10k_20261029.sh": "5f6b27d1b92e177e41fd178e22bcfd02f9df52f409160ed9e8f60b77eab3be21",
+    "tests/test_r37_fixed140221_evaluation.py": "1f49feeee9c45bfd0ce467cf578524d9360abfc0a25cc7d2460be2e0e4edb537"
+  },
+  "fixed_candidate": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r37_104k_lr2e5_20261027/checkpoints/step-000140221.pt",
+    "experiment": "entity_attention_r37_104k_lr2e5_20261027",
+    "key": "r37_lr2e5_step140221",
+    "model_config": {
+      "architecture": "entity_attention_v1",
+      "dropout": 0.0,
+      "feature_schema_version": "splendor-observation-action-v1",
+      "ffn_hidden": 512,
+      "heads": 4,
+      "hidden": 128,
+      "layers": 2,
+      "market_relations": true,
+      "value_readout": "global_players_market"
+    },
+    "policy_kl": 0.19661209349431433,
+    "selected_step": 140221,
+    "selection_kind": "user_fixed_checkpoint",
+    "selection_objective": 0.9286851475987772,
+    "sha256": "42fbd07c413190389ac5f2cab73ef41ff4a10f5402a13e099a37d49aa3cb6caa",
+    "validation": {
+      "path": "runs/entity_attention_r37_104k_lr2e5_20261027/full_validation/step-000140221.json",
+      "sha256": "d020de0680a3a2df56e72a26a3d1391845cfe1a93ae95442db1ef18567e1fe10"
+    },
+    "value_mse": 0.7320730541044629
+  },
+  "formal_execution_created": false,
+  "formal_panels_created": false,
+  "frozen_files_verified": 125,
+  "local_cpu_record": {
+    "bytes": 867,
+    "path": "runtime/r37_lr2e5_step140221_vs_r37_10k_20261029/cpu_validation.json",
+    "sha256": "ea10477bead6845f3ab3c04c4fff45010ac067b2f7a3621d9a487289c7b570df"
+  },
+  "local_test_record": {
+    "bytes": 2322,
+    "path": "runtime/r37_lr2e5_step140221_vs_r37_10k_20261029/tests.xml",
+    "sha256": "2e5be27451a9a804164b0e676c0e29ef47419118b7c4936021b44b3baa213a68"
+  },
+  "observed_full_validation": {
+    "best": {
+      "KL_plus_MSE": 0.9286851475987772,
+      "step": 140221
+    },
+    "node_count": 13,
+    "nodes": [
+      {
+        "KL_plus_MSE": 0.9407715766700059,
+        "step": 17528
+      },
+      {
+        "KL_plus_MSE": 0.9375901463242521,
+        "step": 35056
+      },
+      {
+        "KL_plus_MSE": 0.9351452813600678,
+        "step": 52583
+      },
+      {
+        "KL_plus_MSE": 0.9354582560223815,
+        "step": 70111
+      },
+      {
+        "KL_plus_MSE": 0.9340775576937294,
+        "step": 87638
+      },
+      {
+        "KL_plus_MSE": 0.9304639982801336,
+        "step": 105166
+      },
+      {
+        "KL_plus_MSE": 0.9303758034592161,
+        "step": 122694
+      },
+      {
+        "KL_plus_MSE": 0.9286851475987772,
+        "step": 140221
+      },
+      {
+        "KL_plus_MSE": 0.9394682980765453,
+        "step": 157749
+      },
+      {
+        "KL_plus_MSE": 0.9310880372756013,
+        "step": 175276
+      },
+      {
+        "KL_plus_MSE": 0.9362512103407945,
+        "step": 192804
+      },
+      {
+        "KL_plus_MSE": 0.9327509719444299,
+        "step": 210332
+      },
+      {
+        "KL_plus_MSE": 0.9326963264704398,
+        "step": 227859
+      }
+    ],
+    "scope": "Observed2026-10-29; candidate remains fixed if future training advances."
+  },
+  "opponent": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r31_10k_p60k_iteration_20261023/rounds/round-005/checkpoints/final.pt",
+    "key": "raw_R37",
+    "model_config": {
+      "architecture": "entity_attention_v1",
+      "dropout": 0.0,
+      "feature_schema_version": "splendor-observation-action-v1",
+      "ffn_hidden": 512,
+      "heads": 4,
+      "hidden": 128,
+      "layers": 2,
+      "market_relations": true,
+      "value_readout": "global_players_market"
+    },
+    "sha256": "611f4f4ed18f397b03c79bb3a2beae51e7a77a747883680d9189eed3052a1045"
+  },
+  "pairs_each": 10000,
+  "panels": 2,
+  "scope": "Script and command only; no formal evaluation, training resume or new queue.",
+  "source_training_files_written": false,
+  "status": "prepared_not_started",
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 15
+  },
+  "total_games": 40000,
+  "total_pairs": 20000,
+  "user_correction": "Fix the about140k best checkpoint, not latest. Exact frozen step140221 and SHA42fbd07c413190389ac5f2cab73ef41ff4a10f5402a13e099a37d49aa3cb6caa; never auto-follow or reselect."
+}

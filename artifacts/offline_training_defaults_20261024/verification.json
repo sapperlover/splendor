@@ -1,0 +1,45 @@
+{
+  "existing_policy_entry": {
+    "checkpoint_step": 115000,
+    "prepared_verified": true,
+    "source": "/home/lc/下载/splendor/runtime/entity_attention_128x2_opponent_policy_r21_r37_20261024/source_streaming_20261024"
+  },
+  "full_pool_capacity_bound": {
+    "both_upper_bound_bytes": 17991526977,
+    "chosen_capacity_bytes": 19327352832,
+    "measured_policy_arena_bytes": 17869150492,
+    "scope": "Includes added shortterm arrays/alignment. The 44k value-only subset removes games/opponent arrays and also fits this conservative bound; not a process-RAM cap."
+  },
+  "protected_files_unchanged": 749,
+  "queue_command": "bash scripts/run_attention128_auxiliary_queue_20261024.sh",
+  "status": "prepared_verified_no_production_start",
+  "time": "2026-10-24T12:29:56.941431+08:00",
+  "variants": {
+    "both104k": {
+      "cache_mib": 18432,
+      "config": "/home/lc/下载/splendor/configs/entity_attention_v1/offline_continuation_r21_r37_prefetch_20261024.json",
+      "fixed_validation_digest": "917334c24cc3a69e368e530f037f6cefce356af1bc9d1f27d8c8730510e599dd",
+      "games": 104000,
+      "original_plan_unchanged": true,
+      "production_checkpoints": 0,
+      "replay_identity_unchanged": true,
+      "snapshot_files_verified": 123,
+      "source": "/home/lc/下载/splendor/runtime/entity_attention_128x2_continuation_r21_r37_20261024/source_offline_defaults_20261024",
+      "steps_target": 350552,
+      "training_workers": 4
+    },
+    "value44k": {
+      "cache_mib": 18432,
+      "config": "/home/lc/下载/splendor/configs/entity_attention_v1/offline_shortterm_value_r21_r31_vs_r37_prefetch_20261024.json",
+      "fixed_validation_digest": "b7d07bc00d1277c7eabfea561199e33ab83c7e49c1598a22b35ee52919da55b5",
+      "games": 44000,
+      "original_plan_unchanged": true,
+      "production_checkpoints": 0,
+      "replay_identity_unchanged": true,
+      "snapshot_files_verified": 123,
+      "source": "/home/lc/下载/splendor/runtime/entity_attention_128x2_shortterm_value_r21_r31_vs_r37_20261024/source_offline_defaults_20261024",
+      "steps_target": 148632,
+      "training_workers": 4
+    }
+  }
+}

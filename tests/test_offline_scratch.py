@@ -42,7 +42,7 @@ def scratch(tmp_path, az_runs, monkeypatch):
     config = ScratchOfflineConfig(manifest=str(manifest), manifest_sha256=sha256(manifest),
         model_config={"architecture":"entity_attention_v1","hidden":16,"heads":2,"layers":1,"ffn_hidden":32},
         first_round=2, last_round=2, expected_games_per_round=3, draw_exposures=20.75*4/n,
-        cache_mib=64, validation_positions=4, validation_percent_step=25,
+        cache_mib=64, training_workers=0, validation_positions=4, validation_percent_step=25,
         learner=LearnerConfig(device="cpu",batch_size=4,history_batch_size=2,validation_batch_size=8,
                               learning_rate=2e-5,checkpoint_every_steps=4))
     return config

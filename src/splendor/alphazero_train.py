@@ -43,13 +43,39 @@ from .alphazero_replay import PositionPool, ReplayReference
 from .opponent_pool import load_frozen_actor_critic_checkpoint
 from .policy_surprise import PolicySurpriseConfig, PolicySurpriseWeighting
 from .rng import DeterministicRng
+from .features import EncodedStateBatch
 from .selfplay_data import SelfPlayBatch, SelfPlaySample, collate_selfplay_samples
 from .value_auxiliary import ValueAuxiliaryConfig, auxiliary_targets
+from .continuation_auxiliary import (ContinuationAuxiliaryConfig, continuation_targets,
+    continuation_loss_sums, continuation_loss, continuation_metrics, continuation_gradient_tasks, continuation_config_identity)
 from .progress_auxiliary import (ProgressAuxiliaryConfig, progress_targets,
                                  progress_loss_sums, progress_metrics)
 
 DEFAULT_DEVICE = "cuda"
 _EPS = torch.finfo(torch.float32).tiny
+
+
+def _gradient_l2_norm(gradients, reference):
+    norms = [gradient.detach().norm(2) for gradient in gradients if gradient is not None]
+    return torch.stack(norms).norm(2) if norms else reference.new_zeros(())
+
+
+def encoder_gradient_metrics(parameters, tasks):
+    """Pre-clip L2 task gradients, without accumulating into parameter .grad."""
+    norms = []
+    for name, (loss, coefficient) in tasks.items():
+        gradients = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
+        norms.append(_gradient_l2_norm(gradients, parameters[0]))
+    metrics = {}
+    for (name, (_, coefficient)), norm in zip(tasks.items(), torch.stack(norms).cpu().tolist() if norms else ()):
+        metrics[f"encoder_grad_norm_{name}"] = norm
+        metrics[f"encoder_grad_norm_{name}_weighted"] = abs(coefficient) * norm
+    return metrics
+
+
+def _cpu_scalar_sums(sums):
+    """Read detached scalar sums with one device-to-host synchronization."""
+    return dict(zip(sums, torch.stack([value.detach() for value in sums.values()]).cpu().tolist()))
 
 
 def label_statistics(batch: SelfPlayBatch) -> dict[str, float | int]:
@@ -332,7 +358,11 @@ class AlphazeroLearner:
 
         resolve_learner_device(config.device)
         payload = load_alphazero_checkpoint(checkpoint, device=config.device)
-        if payload.learner_config != asdict(config):
+        saved_config, requested_config = dict(payload.learner_config), asdict(config)
+        # Storage cadence can change across a resume without changing updates.
+        saved_config.pop("checkpoint_every_steps")
+        requested_config.pop("checkpoint_every_steps")
+        if saved_config != requested_config:
             raise ValueError("checkpoint learner configuration does not match this loop")
         if payload.replay_identity.get("digest") != replay_identity.get("digest"):
             raise ValueError("checkpoint was trained on a different frozen replay index")
@@ -419,6 +449,9 @@ class AlphazeroLearner:
         auxiliary_labels: tuple[np.ndarray, np.ndarray] | None = None,
         progress_auxiliary: ProgressAuxiliaryConfig | None = None,
         progress_labels: tuple[np.ndarray, np.ndarray, np.ndarray] | None = None,
+        continuation_auxiliary: ContinuationAuxiliaryConfig | None = None,
+        continuation_labels: dict[str, np.ndarray] | None = None,
+        record_encoder_grad_norms: bool = False,
     ) -> dict[str, Any]:
         """Joint update with optional separate value samples and one global clip.
 
@@ -434,12 +467,22 @@ class AlphazeroLearner:
             raise ValueError("progress configuration and labels must be supplied together")
         if progress_auxiliary is not None and (value_auxiliary is not None or value_batch is None):
             raise ValueError("progress supervision requires separate value samples and no legacy auxiliary")
+        if (continuation_auxiliary is None) != (continuation_labels is None):
+            raise ValueError("continuation configuration and labels must be supplied together")
+        if continuation_auxiliary is not None and (value_batch is None or value_auxiliary is not None or progress_auxiliary is not None):
+            raise ValueError("continuation supervision requires separate value samples and no legacy auxiliaries")
+        if record_encoder_grad_norms and continuation_auxiliary is None:
+            raise ValueError("encoder task diagnostics require continuation supervision")
         if value_auxiliary is not None:
             if value_batch is not None:
                 raise ValueError("auxiliary offline fitting requires one shared minibatch")
             if self.model.config.predict_score != (value_auxiliary.score_loss_weight > 0):
                 raise ValueError("score head and auxiliary loss configuration disagree")
             logits, values, score_prediction, turns_prediction = self.model.forward_with_auxiliary(batch.decisions)
+        elif value_batch is not None:
+            logits = self.model.policy_logits(batch.decisions)
+            # This value term is replaced by the separate batch below.
+            values = torch.zeros_like(tensors["value_targets"])
         else:
             logits, values = self.model(batch.decisions)
         terms = alphazero_loss_sums(
@@ -452,11 +495,16 @@ class AlphazeroLearner:
             value_weights=tensors["value_weights"],
         )
         if value_batch is not None:
-            value_tensors = _torch_batch(value_batch, self.device)
-            if progress_auxiliary is not None:
-                values, progress_logits = self.model.value_with_progress(value_batch.decisions)
+            value_tensors = {name: torch.as_tensor(getattr(value_batch, name), device=self.device)
+                             for name in ("value_targets", "value_weights")}
+            state_batch = EncodedStateBatch(**{name: getattr(value_batch.decisions, name)
+                for name in EncodedStateBatch.__dataclass_fields__})
+            if continuation_auxiliary is not None:
+                values, continuation_predictions = self.model.value_with_continuation_from_state(state_batch)
+            elif progress_auxiliary is not None:
+                values, progress_logits = self.model.value_with_progress_from_state(state_batch)
             else:
-                values = self.model.value_only(value_batch.decisions)
+                values = self.model.value_from_state(state_batch)
             terms = AlphazeroLossSums(
                 terms.policy_ce_sum, terms.policy_weight_sum,
                 ((values - value_tensors["value_targets"]) ** 2 * value_tensors["value_weights"]).sum(),
@@ -464,12 +512,22 @@ class AlphazeroLearner:
             )
         total = terms.total(self.config)
         auxiliary_metrics = {}
+        auxiliary_sums = None
+        if continuation_auxiliary is not None:
+            sums = continuation_loss_sums(continuation_predictions, continuation_labels,
+                                          value_tensors["value_weights"], continuation_auxiliary)
+            total = total + continuation_loss(sums, continuation_auxiliary)
+            auxiliary_sums = sums
+            if record_encoder_grad_norms:
+                gradient_tasks = {"policy": (terms.policy_loss, self.config.policy_loss_weight),
+                                  "value": (terms.value_loss, self.config.value_loss_weight)}
+                gradient_tasks.update(continuation_gradient_tasks(sums, continuation_auxiliary))
         if progress_auxiliary is not None:
             sums = progress_loss_sums(progress_logits, progress_labels, value_tensors["value_weights"])
             progress_loss = (sums["progress_score_ce_sum"] + sums["progress_bonus_ce_sum"]) / (
                 2 * sums["progress_weight_sum"].clamp_min(_EPS))
             total = total + progress_auxiliary.loss_weight * progress_loss
-            auxiliary_metrics = progress_metrics({key: value.detach() for key, value in sums.items()})
+            auxiliary_sums = sums
         if value_auxiliary is not None:
             score_target, turns_target = [torch.as_tensor(x, device=self.device) for x in auxiliary_labels]
             if score_target.shape != values.shape or turns_target.shape != values.shape:
@@ -477,21 +535,19 @@ class AlphazeroLearner:
             weight = tensors["value_weights"]
             denominator = weight.sum().clamp_min(_EPS)
             turns_loss = ((turns_prediction - turns_target).square() * weight).sum() / denominator
-            auxiliary_metrics = {"remaining_turns_loss": float(turns_loss.detach()),
-                                 "remaining_turns_mse": float(turns_loss.detach()) * value_auxiliary.turns_scale ** 2}
+            auxiliary_sums = {"remaining_turns_loss": turns_loss}
             if value_auxiliary.score_loss_weight > 0:
                 score_loss = ((score_prediction - score_target).square() * weight).sum() / denominator
                 total = total + value_auxiliary.score_loss_weight * score_loss
-                auxiliary_metrics.update(score_loss=float(score_loss.detach()),
-                    score_mse_points=float(score_loss.detach()) * value_auxiliary.score_scale ** 2)
+                auxiliary_sums["score_loss"] = score_loss
             total = total + value_auxiliary.turns_loss_weight * turns_loss
         self.optimizer.zero_grad(set_to_none=True)
         finite = (
             torch.isfinite(logits).all()
-            and torch.isfinite(values).all()
-            and torch.isfinite(total)
-            and torch.isfinite(terms.policy_loss)
-            and torch.isfinite(terms.value_loss)
+            & torch.isfinite(values).all()
+            & torch.isfinite(total)
+            & torch.isfinite(terms.policy_loss)
+            & torch.isfinite(terms.value_loss)
         )
         if not bool(finite):
             raise NonFiniteTrainingError(
@@ -505,7 +561,13 @@ class AlphazeroLearner:
                     "references": [reference.to_dict() for reference in references],
                 },
             )
+        if record_encoder_grad_norms:
+            encoder_parameters = self.model.shared_encoder_parameters()
+            auxiliary_metrics.update(encoder_gradient_metrics(encoder_parameters, gradient_tasks))
         total.backward()
+        if record_encoder_grad_norms:
+            auxiliary_metrics["encoder_grad_norm_total"] = float(_gradient_l2_norm(
+                (parameter.grad for parameter in encoder_parameters), encoder_parameters[0]))
         grad_norm = float(clip_grad_norm_(self.model.parameters(), self.config.max_grad_norm))
         if not math.isfinite(grad_norm):
             raise NonFiniteTrainingError(
@@ -523,10 +585,21 @@ class AlphazeroLearner:
         self.total_train_step += 1
         names = ("policy_loss", "value_loss", "total_loss", "policy_entropy", "policy_weight_sum",
                  "value_weight_sum", "policy_ce_sum", "value_sq_sum", "entropy_sum")
-        scalars = torch.stack((terms.policy_loss, terms.value_loss, total, terms.entropy,
+        scalar_tensors = dict(zip(names, (terms.policy_loss, terms.value_loss, total, terms.entropy,
                                terms.policy_weight_sum, terms.value_weight_sum, terms.policy_ce_sum,
-                               terms.value_sq_sum, terms.entropy_sum)).detach().cpu().tolist()
-        record = dict(zip(names, scalars)) | label_statistics(batch) | {
+                               terms.value_sq_sum, terms.entropy_sum)))
+        scalars = _cpu_scalar_sums(scalar_tensors | (auxiliary_sums or {}))
+        if continuation_auxiliary is not None:
+            auxiliary_metrics.update(continuation_metrics(scalars, continuation_auxiliary))
+        if progress_auxiliary is not None:
+            auxiliary_metrics.update(progress_metrics(scalars))
+        if value_auxiliary is not None:
+            auxiliary_metrics.update(remaining_turns_loss=scalars["remaining_turns_loss"],
+                remaining_turns_mse=scalars["remaining_turns_loss"] * value_auxiliary.turns_scale ** 2)
+            if value_auxiliary.score_loss_weight > 0:
+                auxiliary_metrics.update(score_loss=scalars["score_loss"],
+                    score_mse_points=scalars["score_loss"] * value_auxiliary.score_scale ** 2)
+        record = {name: scalars[name] for name in names} | label_statistics(batch) | {
             "event": "train_step",
             "round_index": self.round_index,
             "round_train_step": self.round_train_step,
@@ -744,12 +817,19 @@ def run_training_round(
     policy_surprise_weighting: PolicySurpriseConfig | None = None,
     value_auxiliary: ValueAuxiliaryConfig | None = None,
     progress_auxiliary: ProgressAuxiliaryConfig | None = None,
+    continuation_auxiliary: ContinuationAuxiliaryConfig | None = None,
+    encoder_grad_norm_every_steps: int = 0,
+    batch_prefetch: Any = None,
     stop_condition: Callable[[], bool] | None = None,
 ) -> dict[str, Any]:
     """Drive one round of optimizer steps and checkpoint every N updates."""
 
     if steps_target < 0:
         raise ValueError("steps_target cannot be negative")
+    if type(encoder_grad_norm_every_steps) is not int or encoder_grad_norm_every_steps < 0:
+        raise ValueError("encoder_grad_norm_every_steps must be a nonnegative integer")
+    if encoder_grad_norm_every_steps and continuation_auxiliary is None:
+        raise ValueError("encoder task diagnostics require continuation supervision")
     if joint_separate_batches and split_grad_norms is not None:
         raise ValueError("joint separate batches use the single global gradient limit")
     weighting_identity = asdict(policy_surprise_weighting) if policy_surprise_weighting is not None else None
@@ -766,6 +846,11 @@ def run_training_round(
         raise ValueError("progress auxiliary differs from checkpoint replay identity")
     if progress_auxiliary is not None and (not joint_separate_batches or value_auxiliary is not None):
         raise ValueError("progress auxiliary requires joint separate batches without legacy auxiliary")
+    continuation_identity = continuation_config_identity(continuation_auxiliary) if continuation_auxiliary is not None else None
+    if learner.replay_identity.get("continuation_auxiliary") != continuation_identity:
+        raise ValueError("continuation auxiliary differs from checkpoint replay identity")
+    if continuation_auxiliary is not None and (not joint_separate_batches or value_auxiliary is not None or progress_auxiliary is not None):
+        raise ValueError("continuation auxiliary requires joint separate batches without legacy auxiliaries")
     if learner.round_steps_target != steps_target:
         raise ValueError("learner step target disagrees with this training round")
     if max_steps_this_session is not None and max_steps_this_session <= 0:
@@ -785,28 +870,45 @@ def run_training_round(
     )
     started = time.perf_counter()
     history_length = 0 if history_pool is None else len(history_pool)
-    step_records: list[dict[str, Any]] = []
+    session_steps = session_positions = 0
+    loss_sum = 0.0
+    first_loss = last_loss = None
     timings = {name: 0.0 for name in ("draw_load", "collate", "update_host", "checkpoint", "validation")}
+    if batch_prefetch is not None:
+        batch_prefetch.start(learner.sampling_rng, session_target - learner.round_train_step)
     while learner.round_train_step < session_target and not (stop_condition and stop_condition()):
         cache_before = current_pool.cache_stats()
         tick = time.perf_counter()
-        drawn = (batch_drawer(learner.sampling_rng) if batch_drawer is not None else
-                 draw_training_batch(current_pool, history_pool, learner.sampling_rng, learner.config))
+        if batch_prefetch is None:
+            drawn = (batch_drawer(learner.sampling_rng) if batch_drawer is not None else
+                     draw_training_batch(current_pool, history_pool, learner.sampling_rng, learner.config))
+        else:
+            drawn, committed_rng, batch, value_batch, prefetched_labels, worker_seconds, worker_pid = batch_prefetch.next()
+            learner.sampling_rng = DeterministicRng.restore(committed_rng)
         draw_seconds = time.perf_counter() - tick
         tick = time.perf_counter()
-        batch = collate_training_samples(drawn.samples)
         weighting_stats = None
+        if batch_prefetch is None:
+            batch = collate_training_samples(drawn.samples)
+            value_batch = (collate_training_samples(drawn.value_samples)
+                           if drawn.value_samples is not None else None)
         if weighter is not None:
             batch, weighting_stats = weighter.apply(batch, drawn.samples, drawn.references[:len(drawn.samples)])
-        value_batch = (collate_training_samples(drawn.value_samples)
-                       if drawn.value_samples is not None else None)
         collate_seconds = time.perf_counter() - tick
         tick = time.perf_counter()
         if joint_separate_batches:
             if value_batch is None:
                 raise ValueError("joint separate batches require explicit value samples")
             progress_kwargs = ({} if progress_auxiliary is None else {
-                "progress_auxiliary": progress_auxiliary, "progress_labels": progress_targets(drawn.value_samples)})
+                "progress_auxiliary": progress_auxiliary,
+                "progress_labels": (progress_targets(drawn.value_samples) if batch_prefetch is None else prefetched_labels)})
+            if continuation_auxiliary is not None:
+                progress_kwargs.update(continuation_auxiliary=continuation_auxiliary,
+                    continuation_labels=(continuation_targets(drawn.value_samples, continuation_auxiliary)
+                                         if batch_prefetch is None else prefetched_labels))
+                step = learner.total_train_step + 1
+                if encoder_grad_norm_every_steps and (step == 1 or step % encoder_grad_norm_every_steps == 0):
+                    progress_kwargs["record_encoder_grad_norms"] = True
             record = learner.train_step(batch, value_batch=value_batch, references=drawn.references, **progress_kwargs)
         else:
             if (value_batch is None) != (split_grad_norms is None):
@@ -814,7 +916,8 @@ def run_training_round(
             auxiliary_kwargs = {}
             if value_auxiliary is not None:
                 auxiliary_kwargs = {"value_auxiliary": value_auxiliary,
-                                    "auxiliary_labels": auxiliary_targets(drawn.samples, value_auxiliary)}
+                                    "auxiliary_labels": (auxiliary_targets(drawn.samples, value_auxiliary)
+                                                         if batch_prefetch is None else prefetched_labels)}
             record = (learner.train_step(batch, references=drawn.references, **auxiliary_kwargs) if value_batch is None else
                       learner.train_split_step(batch, value_batch, references=drawn.references,
                                                policy_max_grad_norm=split_grad_norms[0],
@@ -823,6 +926,9 @@ def run_training_round(
         if weighting_stats is not None:
             record["policy_surprise_weighting"] = weighting_stats
         record["seconds"] = {"draw_load": draw_seconds, "collate": collate_seconds, "update_host": update_seconds}
+        if batch_prefetch is not None:
+            record["prefetch"] = {"workers": batch_prefetch.workers, "worker_pid": worker_pid,
+                                  "worker_collate_seconds": worker_seconds}
         for key, value in record["seconds"].items():
             timings[key] += value
         record["current_positions"] = drawn.current_positions
@@ -852,7 +958,12 @@ def run_training_round(
                 timings["validation"] += time.perf_counter() - tick
         if progress_callback is not None:
             progress_callback(record)
-        step_records.append(record)
+        session_steps += 1
+        session_positions += record["batch_size"]
+        loss_sum += record["total_loss"]
+        if first_loss is None:
+            first_loss = record["total_loss"]
+        last_loss = record["total_loss"]
     tick = time.perf_counter()
     validation = learner.evaluate_samples(validation_samples)
     timings["validation"] += time.perf_counter() - tick
@@ -860,7 +971,6 @@ def run_training_round(
     validation["event"] = "validation"
     validation["round_index"] = learner.round_index
     _append_jsonl(metrics_path, validation)
-    losses = [record["total_loss"] for record in step_records]
     elapsed = time.perf_counter() - started
     timings["remainder"] = elapsed - sum(timings.values())
     return {
@@ -869,17 +979,17 @@ def run_training_round(
         # Cumulative round progress, so a resumed session never double-counts
         # optimizer steps that were already committed by an earlier session.
         "steps_completed": learner.round_train_step,
-        "steps_this_session": len(step_records),
+        "steps_this_session": session_steps,
         "history_pool_positions": history_length,
         "checkpoint_every_steps": learner.config.checkpoint_every_steps,
         "metrics_path": str(metrics_path.resolve()),
-        "mean_total_loss": sum(losses) / len(losses) if losses else None,
-        "first_total_loss": losses[0] if losses else None,
-        "last_total_loss": losses[-1] if losses else None,
+        "mean_total_loss": loss_sum / session_steps if session_steps else None,
+        "first_total_loss": first_loss,
+        "last_total_loss": last_loss,
         "validation": validation,
         "replay_cache": current_pool.cache_stats(),
         "training_seconds": elapsed,
         "phase_seconds_this_session": timings,
-        "steps_per_second_this_session": len(step_records) / elapsed,
-        "positions_per_second_this_session": sum(record["batch_size"] for record in step_records) / elapsed,
+        "steps_per_second_this_session": session_steps / elapsed,
+        "positions_per_second_this_session": session_positions / elapsed,
     }

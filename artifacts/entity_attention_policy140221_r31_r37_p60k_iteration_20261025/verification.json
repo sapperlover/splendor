@@ -1,0 +1,92 @@
+{
+  "check_command": "bash scripts/run_policy140221_r31_r37_p60k_iteration_20261025.sh --check",
+  "command": "bash scripts/run_policy140221_r31_r37_p60k_iteration_20261025.sh",
+  "cpu_engineering": {
+    "batch_size": 16,
+    "execution_copy_note": "CPU engineering copy changes only saved learner_config.device cuda->cpu. Formal command reads the original selected CUDA checkpoint without any rewrite.",
+    "inference_auxiliary_calls": 0,
+    "native_roots": 3,
+    "search_per_root": "S8N1 total8",
+    "source_games": 7,
+    "total_simulations": 24,
+    "updates": 2,
+    "weights_optimizer_sampling_torch_rng_inherited_exact": true
+  },
+  "date": "2026-10-25",
+  "evidence_hashes": {
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/README.md": "b17e537310def503c63a17942449183f1aa6e0d5485a534ec3eaeac4008dffc5",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/cpu_validation.json": "739a78ac665521647c1213cc58d02be4854d821e57cc92a87b2344ed0a2be986",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/fixture_logging_tests.xml": "12b8c709a98715c08c500a605d56f79d789d3cb073b3f722c0199183ce64bc55",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/initial_holdout.json": "be44257de385a16e75a2b8a02e9d000d3b80a5a6e4509a741e5a46b345d616d6",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/initial_tests.xml": "73816c027b49591d9544addba4fc46568694ba4d1dfe6ac8c0e28e9a5746d3af",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/input_check.json": "66d9ee735e2c4b69b92dcacdbbaa3453696d8ecaa807965d5c948d30d5c848c9",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/plan.json": "8bf22b687c3ea3dd8de84deabdbe9d9a5598d0690895bb4c396b415778d48764",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/prepare.py": "dd3302d738e66e13023a01ef6456be582872b36c5109ba298f3b87ce38044942",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source.json": "8e68fc6f664503e10b903a85de03b6c5684865c17cc703dd6cc11f90f75eccbe",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/tests.xml": "32d3482c0be96ef39cd9f976a487ac9df07c2246a0358c6fffd7c783d1eb72e1",
+    "artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/validate.py": "87f94ad3ae3d33dd42268413f0a2177dfa0c80dc285835df217a0083ab7ce77a"
+  },
+  "existing_process_signals_sent": 0,
+  "existing_queue_modified": false,
+  "frozen_files_verified": 120,
+  "frozen_modules": {
+    "splendor.alphazero_train": "/home/lc/下载/splendor/runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/alphazero_train.py",
+    "splendor.compact_game_cache": "/home/lc/下载/splendor/runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/compact_game_cache.py",
+    "splendor.continuation_auxiliary": "/home/lc/下载/splendor/runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/continuation_auxiliary.py",
+    "splendor.random_budget_iteration": "/home/lc/下载/splendor/runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/random_budget_iteration.py",
+    "splendor.six_round_holdout": "/home/lc/下载/splendor/runtime/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/source/src/splendor/six_round_holdout.py"
+  },
+  "git_head": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "initial_history": "Full64k R31-R37 original manifest; new10k then explicit original-history random eviction14k to capacity60k, new-policy share1/6. Existing initial-overflow rejection preserved unless flagtrue.",
+  "initial_holdout_population": {
+    "games_count": 6092,
+    "policy_positions": 101425,
+    "value_positions": 485932
+  },
+  "launcher_sha256": "9667850ef66ac3cdb73bf753c9cbcde606c030df795c3bb2ed7d34ef487f6971",
+  "online_execution": "Current streaming statistics/state-only value-auxiliary transfers/batched scalar readback/hash-only usage; original online16GiB LRU/synchronous draw. Offline fixed-pool4worker default not applied to changing online replay.",
+  "preflight": {
+    "continuation_auxiliary": {
+      "opponent_policy_weight": 0.15,
+      "protocol": "continuation-ema-h2-h6-h14-opponent-main-v1",
+      "shortterm_value_weight": 0.0
+    },
+    "first_evicted_history_games": 14000,
+    "first_new_policy_fraction": 0.16666666666666666,
+    "first_pool_games": 60000,
+    "games_per_iteration": 10000,
+    "historical_games": 64000,
+    "historical_policy_fraction": 0.25,
+    "historical_train_games": 57511,
+    "inherited_completed_rounds": 0,
+    "initial_step": 140221,
+    "learning_rate": 2e-05,
+    "policy_batch": 256,
+    "pool_capacity": 60000,
+    "source_rounds": [
+      74,
+      80
+    ],
+    "updates": 3000,
+    "value_batch": 256
+  },
+  "production_started": false,
+  "scope": "Prepared executable frozen chain and finite CPU/synthetic/native verification only. No production collection, online updates, official arenas or GPU experiments launched; no strength conclusion for this new branch.",
+  "starting_checkpoint": {
+    "path": "/home/lc/下载/splendor/runs/entity_attention_128x2_opponent_policy_r21_r37_20261024/checkpoints/step-000140221.pt",
+    "sha256": "e4edeb20e8caa3c1abec0146d3757594dd6e0428bd833badd0cb3915c2299a9f"
+  },
+  "status": "prepared_not_started",
+  "test_setup_corrections": "Synthetic four-decision history initially had only1 eligible policy point, floor25percent was0; fixed fixture with4 eligible points, retaining initial_tests.xml. Then restricted metric assertions to train_step rows instead of session events; fixture_logging_tests.xml retained. Final29 regressions pass without altering formal subset rules.",
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 29
+  },
+  "user_clarifications": {
+    "continue_policy_auxiliary_weight": 0.15,
+    "delivery": "command only; no launch or queue change",
+    "fixed_arena_opponent": "raw R37"
+  }
+}

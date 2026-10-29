@@ -1,0 +1,323 @@
+--- before/src/splendor/score_ownership.py
++++ after/src/splendor/score_ownership.py
+@@ -12,6 +12,8 @@
+ OUTPUT_NAMES = tuple(f"{role}_{source}" for role in ("self", "opponent")
+                      for source in ("tier1", "tier2", "tier3", "noble"))
+ NOBLE_POINT_VALUES = tuple(sorted({noble.points for noble in load_default_catalog().nobles}))
++DIAGNOSTIC_GROUPS = ("all", "phase_main_action", "phase_payment", "phase_return_tokens",
++                     "phase_choose_noble", "non_payment", "stage_early", "stage_middle", "stage_late")
+ 
+ 
+ def game_score_ownership_targets(arrays, metadata):
+@@ -99,6 +101,84 @@
+             "score_ownership": (score_ownership_loss(sums), coefficient)}
+ 
+ 
++@torch.no_grad()
++def score_ownership_diagnostic_sums(predictions, labels, value_weights, global_features):
++    """Validation-only sufficient statistics; never affect loss or sampling.
++
++    Each baseline is the best constant per output on the complete evaluated
++    population (or group), not a mean fitted separately in each minibatch.
++    Natural-point moments use float64 to preserve between-batch variation.
++    """
++    prediction = predictions["score_ownership"].detach().to(torch.float64) * SCORE_SCALE
++    target = torch.as_tensor(labels["score_ownership_target"], device=prediction.device, dtype=torch.float64)
++    features = np.asarray(global_features)
++    phases = features[:, [G.index("phase_" + name) for name in
++                         ("main_action", "payment", "return_tokens", "choose_noble")]].argmax(1)
++    # These are current public scores, not future outcome or game-length bins.
++    leading_score = np.rint(np.maximum(features[:, G.index("self_score_scaled")],
++                                      features[:, G.index("opponent_score_scaled")]) * SCALES.player_score)
++    masks = np.stack((np.ones(len(features), dtype=bool), *(phases == i for i in range(4)),
++                      phases != 1, leading_score < 5, (leading_score >= 5) & (leading_score < 10),
++                      leading_score >= 10), axis=1)
++    weights = torch.as_tensor(masks, device=prediction.device, dtype=torch.float64)
++    weights = (weights * value_weights[:, None]).T
++    error = prediction - target
++    counts = weights.sum(1)
++    sq = weights @ error.square().mean(1)
++    absolute = weights @ error.abs().mean(1)
++    target_sums, target_sq_sums = weights @ target, weights @ target.square()
++    sums = {}
++    for i, group in enumerate(DIAGNOSTIC_GROUPS):
++        prefix = f"score_ownership_diagnostic_{group}"
++        sums.update({f"{prefix}_weight_sum": counts[i], f"{prefix}_sq_sum": sq[i],
++                     f"{prefix}_abs_sum": absolute[i]})
++        for j, name in enumerate(OUTPUT_NAMES):
++            sums[f"{prefix}_{name}_target_sum"] = target_sums[i, j]
++            sums[f"{prefix}_{name}_target_sq_sum"] = target_sq_sums[i, j]
++    prediction_sums = weights[0] @ prediction
++    zero_sums = weights[0] @ (target == 0).to(torch.float64)
++    for j, name in enumerate(OUTPUT_NAMES):
++        sums[f"score_ownership_diagnostic_{name}_prediction_sum"] = prediction_sums[j]
++        sums[f"score_ownership_diagnostic_{name}_zero_sum"] = zero_sums[j]
++    return sums
++
++
++def _diagnostic_metrics(sums):
++    if "score_ownership_diagnostic_all_weight_sum" not in sums:
++        return {}
++    result = {}
++    for group in DIAGNOSTIC_GROUPS:
++        raw = f"score_ownership_diagnostic_{group}"
++        prefix = "score_ownership" if group == "all" else f"score_ownership_{group}"
++        n = float(sums[f"{raw}_weight_sum"])
++        # Empty groups are absent evidence, not perfect zero-error predictions.
++        mse = float(sums[f"{raw}_sq_sum"]) / n if n else None
++        mae = float(sums[f"{raw}_abs_sum"]) / n if n else None
++        zeros, constants = [], []
++        for name in OUTPUT_NAMES:
++            mean = float(sums[f"{raw}_{name}_target_sum"]) / n if n else None
++            zero = float(sums[f"{raw}_{name}_target_sq_sum"]) / n if n else None
++            constant = max(0., zero - mean**2) if n else None
++            zeros.append(zero)
++            constants.append(constant)
++            if group == "all":
++                output = f"score_ownership_{name}"
++                result[f"{output}_target_mean_points"] = mean
++                result[f"{output}_prediction_mean_points"] = (
++                    float(sums[f"score_ownership_diagnostic_{name}_prediction_sum"]) / n if n else None)
++                result[f"{output}_target_zero_fraction"] = (
++                    float(sums[f"score_ownership_diagnostic_{name}_zero_sum"]) / n if n else None)
++                result[f"{output}_zero_mse_points"] = zero
++                result[f"{output}_constant_mse_points"] = constant
++        zero = sum(zeros) / len(OUTPUT_NAMES) if n else None
++        constant = sum(constants) / len(OUTPUT_NAMES) if n else None
++        result.update({f"{prefix}_zero_mse_points": zero, f"{prefix}_constant_mse_points": constant,
++                       f"{prefix}_constant_skill": 1 - mse / constant if constant else None})
++        if group != "all":
++            result.update({f"{prefix}_positions": n, f"{prefix}_mse_points": mse, f"{prefix}_mae_points": mae})
++    return result
++
++
+ def score_ownership_metrics(sums):
+     n = max(float(sums["score_ownership_weight_sum"]), 1e-12)
+     result = {}
+@@ -107,5 +187,5 @@
+         result[f"score_ownership_{name}_mae_points"] = float(sums[f"score_ownership_{name}_abs_sum"]) / n * SCORE_SCALE
+     mse = sum(result[f"score_ownership_{name}_mse_points"] for name in OUTPUT_NAMES) / len(OUTPUT_NAMES)
+     mae = sum(result[f"score_ownership_{name}_mae_points"] for name in OUTPUT_NAMES) / len(OUTPUT_NAMES)
+-    return result | {"score_ownership_loss": mse / SCORE_SCALE**2, "score_ownership_mse_points": mse,
++    return result | _diagnostic_metrics(sums) | {"score_ownership_loss": mse / SCORE_SCALE**2, "score_ownership_mse_points": mse,
+                      "score_ownership_mae_points": mae, "score_ownership_positions": float(sums["score_ownership_weight_sum"])}
+--- before/src/splendor/offline_objectives.py
++++ after/src/splendor/offline_objectives.py
+@@ -231,9 +231,18 @@
+         with torch.inference_mode():
+             if continuation_auxiliary is not None:
+                 logits, values, predictions = learner.model.forward_with_continuation(batch.decisions)
+-                sums = continuation_loss_sums(predictions, continuation_targets(samples, continuation_auxiliary),
++                labels = continuation_targets(samples, continuation_auxiliary)
++                sums = continuation_loss_sums(predictions, labels,
+                                               tensors["value_weights"], continuation_auxiliary)
+-                totals.update({key: float(value) for key, value in sums.items()})
++                if continuation_auxiliary.score_ownership_weight > 0:
++                    from .score_ownership import score_ownership_diagnostic_sums
++                    from .alphazero_train import _cpu_scalar_sums
++                    sums.update(score_ownership_diagnostic_sums(predictions, labels, tensors["value_weights"],
++                        batch.decisions.global_features))
++                    # One scalar readback for the added validation statistics.
++                    totals.update(_cpu_scalar_sums(sums))
++                else:
++                    totals.update({key: float(value) for key, value in sums.items()})
+             elif progress_auxiliary is not None:
+                 logits, values, predictions = learner.model.forward_with_progress(batch.decisions)
+                 sums = progress_loss_sums(predictions, progress_targets(samples), tensors["value_weights"])
+--- before/tests/test_score_ownership.py
++++ after/tests/test_score_ownership.py
+@@ -1,4 +1,5 @@
+ from dataclasses import asdict, replace
++from collections import Counter
+ import json
+ 
+ import numpy as np
+@@ -14,7 +15,8 @@
+ from splendor.engine import GameEngine
+ from splendor.features import CARD_FEATURE_NAMES as C, GLOBAL_FEATURE_NAMES as G, SCALES, encode_decision
+ from splendor.offline_continuation import ContinuationOfflineConfig, run, select_checkpoint
+-from splendor.score_ownership import OUTPUT_NAMES, game_score_ownership_targets, score_ownership_metrics
++from splendor.score_ownership import (OUTPUT_NAMES, game_score_ownership_targets, score_ownership_metrics,
++    score_ownership_diagnostic_sums, score_ownership_loss_sums, score_ownership_loss)
+ from splendor.selfplay_data import STATE_FIELDS, SelfPlaySample, collate_selfplay_samples
+ 
+ 
+@@ -229,6 +231,7 @@
+ 
+ def test_four_worker_offline_updates_resume_state_transport_and_selection(tmp_path, monkeypatch):
+     import splendor.offline_objectives as entry
++    import splendor.score_ownership as ownership
+     monkeypatch.setattr(entry, "source_identity", lambda *_: {"test": True})
+     arrays, meta = model_and_batch()
+     manifest_rows = []
+@@ -249,7 +252,10 @@
+         model_config={"architecture":"entity_attention_v1", "hidden":16, "heads":2, "layers":1, "ffn_hidden":32},
+         learner=LearnerConfig(device="cpu", batch_size=4, history_batch_size=2, validation_batch_size=8, checkpoint_every_steps=2))
+     serial, parallel = tmp_path/"serial", tmp_path/"parallel"
+-    run(cfg, serial)
++    # Compare the old validation path to diagnostics plus four-worker/resume.
++    with monkeypatch.context() as baseline:
++        baseline.setattr(ownership, "score_ownership_diagnostic_sums", lambda *args: {})
++        run(cfg, serial)
+     run(replace(cfg, training_workers=4), parallel, max_steps_this_session=2)
+     run(replace(cfg, training_workers=4), parallel)
+     a, b = [load_alphazero_checkpoint(path/"checkpoints/final.pt") for path in (serial, parallel)]
+@@ -261,12 +267,112 @@
+         for key, value in state.items():
+             torch.testing.assert_close(value, b.optimizer_state_dict["state"][pid][key], rtol=0, atol=0)
+     metrics = read_json(parallel/"full_validation/step-000000006.json")["metrics"]
++    baseline_metrics = read_json(serial/"full_validation/step-000000006.json")["metrics"]
++    for key, value in baseline_metrics.items():
++        assert metrics[key] == value, key
+     assert metrics["score_ownership_positions"] == 24
++    assert metrics["value_weight_sum"] == 24
++    assert metrics["score_ownership_phase_payment_positions"] == 10
++    assert metrics["score_ownership_non_payment_positions"] == 14
++    assert "score_ownership_constant_mse_points" in metrics
++    fixed_curve = [json.loads(line) for line in (parallel/"validation_curve.jsonl").read_text().splitlines()]
++    assert all("score_ownership_constant_mse_points" in point["metrics"] for point in fixed_curve)
+     assert all(f"score_ownership_{name}_mse_points" in metrics for name in OUTPUT_NAMES)
+     selected = select_checkpoint(replace(cfg, training_workers=4), parallel)
+     assert selected["selection_objective"] == pytest.approx(min(
+         row["metrics"]["policy_kl"] + row["metrics"]["value_loss"] for row in selected["candidates"]))
+     logged = [json.loads(line) for line in (parallel/"training_metrics.jsonl").read_text().splitlines()]
+     assert [row["total_train_step"] for row in logged if "encoder_grad_norm_score_ownership" in row] == [1, 2, 4, 6]
++    assert logged and all("score_ownership_constant_mse_points" not in row for row in logged)
+     prefetch = read_json(parallel/"prefetch_progress.json")
+     assert prefetch["workers"] == 4 and 0 < prefetch["arena_bytes"] < 8*1024**2
++
++
++def diagnostic_inputs():
++    # Unequal weights, all decision phases, exact score-bin boundaries and a
++    # zero-weight outlier make per-batch averaging visibly incorrect.
++    target = np.arange(8)[None, :] + np.array([0, 2, 4, 6, 100])[:, None]
++    labels = {"score_ownership_target": target.astype(np.int16)}
++    weights = torch.tensor([1., 2., .5, 3., 0.])
++    prediction = torch.tensor((target + np.array([1, -2, 3, -4, 500])[:, None]) / 15,
++                              dtype=torch.float32, requires_grad=True)
++    g = np.zeros((5, len(G)), np.float32)
++    for i, phase in enumerate(("main_action", "payment", "return_tokens", "choose_noble", "payment")):
++        g[i, G.index("phase_" + phase)] = 1
++    g[:, G.index("self_score_scaled")] = np.array([4, 5, 10, 0, 15]) / 15
++    g[:, G.index("opponent_score_scaled")] = np.array([3, 0, 0, 9, 0]) / 15
++    return {"score_ownership": prediction}, labels, weights, g
++
++
++def test_diagnostic_baselines_weighted_groups_and_batch_partition_independence():
++    predictions, labels, weights, g = diagnostic_inputs()
++
++    def summarize(chunks):
++        total = Counter()
++        for indices in chunks:
++            p = {key: value[indices] for key, value in predictions.items()}
++            y = {key: value[indices] for key, value in labels.items()}
++            sums = score_ownership_loss_sums(p, y, weights[indices])
++            sums.update(score_ownership_diagnostic_sums(p, y, weights[indices], g[indices]))
++            total.update({key: float(value.detach()) for key, value in sums.items()})
++        return score_ownership_metrics(total)
++
++    full = summarize([np.arange(5)])
++    split = summarize([np.arange(1), np.arange(1, 3), np.arange(3, 5)])
++    assert full.keys() == split.keys()
++    for key in full:
++        assert split[key] == pytest.approx(full[key], abs=2e-5), key
++    w = weights.numpy().astype(float)
++    target = labels["score_ownership_target"].astype(float)
++    pred = predictions["score_ownership"].detach().numpy().astype(float) * 15
++    mean = np.average(target, axis=0, weights=w)
++    zero = np.average(target**2, axis=0, weights=w)
++    constant = np.average((target-mean)**2, axis=0, weights=w)
++    for j, name in enumerate(OUTPUT_NAMES):
++        prefix = "score_ownership_" + name
++        assert full[prefix+"_target_mean_points"] == pytest.approx(mean[j])
++        assert full[prefix+"_prediction_mean_points"] == pytest.approx(np.average(pred[:, j], weights=w))
++        assert full[prefix+"_target_zero_fraction"] == pytest.approx(np.average(target[:, j] == 0, weights=w))
++        assert full[prefix+"_zero_mse_points"] == pytest.approx(zero[j])
++        assert full[prefix+"_constant_mse_points"] == pytest.approx(constant[j])
++    assert full["score_ownership_constant_mse_points"] == pytest.approx(constant.mean())
++    assert full["score_ownership_zero_mse_points"] == pytest.approx(zero.mean())
++    model_mse = np.average((pred-target)**2, axis=0, weights=w).mean()
++    assert full["score_ownership_constant_skill"] == pytest.approx(1-model_mse/constant.mean())
++    expected = {"phase_main_action": 1, "phase_payment": 2, "phase_return_tokens": .5,
++                "phase_choose_noble": 3, "non_payment": 4.5,
++                "stage_early": 1, "stage_middle": 5, "stage_late": .5}
++    for group, n in expected.items():
++        assert full[f"score_ownership_{group}_positions"] == n
++    # The actual payment remains in the training loss and its gradient.
++    grad, = torch.autograd.grad(score_ownership_loss(score_ownership_loss_sums(predictions, labels, weights)),
++                                predictions["score_ownership"])
++    assert grad[1].abs().sum() > 0 and grad[-1].abs().sum() == 0
++
++
++def test_diagnostics_are_detached_leave_loss_rng_and_samples_unchanged_and_empty_groups_null():
++    predictions, labels, weights, g = diagnostic_inputs()
++    before = {key: value.copy() for key, value in labels.items()}
++    rng = torch.get_rng_state().clone()
++    sums = score_ownership_loss_sums(predictions, labels, weights)
++    loss_before = score_ownership_loss(sums)
++    grad_before, = torch.autograd.grad(loss_before, predictions["score_ownership"], retain_graph=True)
++    diagnostics = score_ownership_diagnostic_sums(predictions, labels, weights, g)
++    assert all(not value.requires_grad for value in diagnostics.values())
++    loss_after = score_ownership_loss(sums | diagnostics)
++    grad_after, = torch.autograd.grad(loss_after, predictions["score_ownership"])
++    torch.testing.assert_close(loss_before, loss_after, rtol=0, atol=0)
++    torch.testing.assert_close(grad_before, grad_after, rtol=0, atol=0)
++    assert torch.equal(rng, torch.get_rng_state())
++    for key in before:
++        np.testing.assert_array_equal(labels[key], before[key])
++    p = {key: value[:1] for key, value in predictions.items()}
++    y = {key: value[:1] for key, value in labels.items()}
++    small = score_ownership_loss_sums(p, y, weights[:1])
++    small.update(score_ownership_diagnostic_sums(p, y, weights[:1], g[:1]))
++    metrics = score_ownership_metrics({key: float(value.detach()) for key, value in small.items()})
++    assert metrics["score_ownership_phase_payment_positions"] == 0
++    assert metrics["score_ownership_phase_payment_mse_points"] is None
++    assert metrics["score_ownership_phase_payment_constant_mse_points"] is None
++    assert metrics["score_ownership_constant_skill"] is None  # one sample: zero constant variance
++    assert metrics["score_ownership_stage_late_positions"] == 0
+--- before/docs/guides/score_ownership_zh-CN.md
++++ after/docs/guides/score_ownership_zh-CN.md
+@@ -51,6 +51,32 @@
+ 
+ 每步及固定／完整验证记录8路自然单位MSE（分²）／MAE（分），另记平均 `score_ownership_loss`、`score_ownership_mse_points`、`score_ownership_mae_points`、有效value权重 `score_ownership_positions`。共享编码器梯度沿用首步及每100步采样，记录8个分支及合计的加权前／后范数；每路系数为score_ownership_weight/8，合计为score_ownership_weight。标量沿用批量回读。零权重batch的辅助loss可微为0。选点与早停仍使用完整留出的主policy KL＋主终局value MSE。
+ 
++## 验证诊断（2026-10-26补充）
++
++按用户最终要求，**支付状态继续参与本辅助训练**，原标签、样本池、抽样顺序、损失、权重及其他目标保持原样。以下信息只在固定子集和完整留出验证中增加；不添加逐步诊断日志，不额外读取训练池、不额外执行网络前向，也不参与选点／早停。既有保存的验证结果不自动回填，新增字段从下一次实际验证开始产生。原任务protocol、checkpoint和replay身份保持。
++
++每路新增 `score_ownership_<输出名>_target_mean_points`、`prediction_mean_points`、`target_zero_fraction`，分别表示带value权重的标签均值、预测均值和零标签比例；沿用原8路MSE／MAE，帮助识别只学到均值或大量零标签的情况。
++
++两种MSE基线均以自然分数为单位，并给出各路和八路平均：
++
++- `zero_mse_points`：始终预测0的MSE，即 `E[y²]`。
++- `constant_mse_points`：在**当前完整评估集合**上，每路始终预测该路均值的最优常数MSE，即 `E[y²]-E[y]²`。这是评估集合的常数基线，不是训练集拟合的均值，也不影响模型训练；同一固定面板的标签及权重不变时，该基线跨checkpoint固定。
++- `constant_skill`：八路平均的 `1-MSE_model/MSE_constant`；0表示与常数基线相当，正数表示更好，负数表示更差。常数误差为0时记JSON `null`，不制造比值。
++
++模型与基线都按相同有效value权重统计；所有原始分子、目标一／二阶矩和权重分母先跨batch累计，再求均值及方差，不平均batch均值或batch内方差。诊断使用float64矩，GPU标量合并为一次回读。未改变原训练loss和梯度的计算精度与算式。
++
++分组统计提供 `score_ownership_<分组>_{positions,mse_points,mae_points,zero_mse_points,constant_mse_points,constant_skill}`；每组常数基线使用该组自己的各路均值：
++
++| 分组 | 定义 |
++| --- | --- |
++| `phase_main_action`／`phase_payment`／`phase_return_tokens`／`phase_choose_noble` | 按当前决策阶段分别统计，保留全部支付样本 |
++| `non_payment` | 仅为诊断汇总排除支付阶段，便于与全体误差比较，不筛除训练样本 |
++| `stage_early` | 当前双方最高分小于5 |
++| `stage_middle` | 当前双方最高分至少5、但小于10 |
++| `stage_late` | 当前双方最高分至少10 |
++
++前中后期按当前公开分数划分，不使用未来终局或实际剩余回合。`positions`是有效value权重和；空组权重为0、误差与基线为JSON `null`。总体、阶段和前中后期是不同切片，不可重复相加。验证与原训练逐位一致性的有限回归见[诊断交付](../../artifacts/score_ownership_20261026/diagnostics/README.md)。
++
+ ## 新配置与运行
+ 
+ [`offline_score_ownership_r21_r37_20261026.json`](../../configs/entity_attention_v1/offline_score_ownership_r21_r37_20261026.json)采用现有R21–R37共104000局、原整局split与原主标签：93537局训练／10463局验证，共7478428／835367个决策；从零attention128、两路B256、新AdamW、lr1e-4、最多12次value曝光／350552步、每5%完整留出／三次严格上升早停。只启用本辅助，未启动正式训练。
+--- before/artifacts/score_ownership_20261026/README.md
++++ after/artifacts/score_ownership_20261026/README.md
+@@ -1,6 +1,8 @@
+ # 分数归属辅助目标工程验证
+ 
+ 2026-10-26实现。[任务、时点、8输出、归一化和命令](../../docs/guides/score_ownership_zh-CN.md)。本目录只保存有限工程验证，不代表模型或棋力收益。
++
++同日追加[验证诊断](diagnostics/README.md)：各路标签／预测均值、零标签比例、零预测和评估集合最优常数MSE基线，以及决策阶段、前中后期误差。按用户最终要求保留支付样本，原训练标签、损失、抽样和其他目标不变；原始`tests.xml`、`smoke.json`、`verification.json`保留初次实现时的源码身份和结果，当前补充的验证另存diagnostics，不覆盖历史证据。
+ 
+ 新增测试覆盖：仅统计未来新增分、玩家相对视角、三个等级及双方贵族、零分保留牌的购买、支付／贵族结算时点、末步及中途自动单贵族领取、forced skip／平局、损坏数据明确失败、15分缩放与8路平均MSE、梯度、旧模型／旧身份兼容以及三辅助组合。独立的微型离线链路比较串行训练与4 worker共享池中断恢复，检查model／AdamW／采样RNG逐位一致、分路指标、梯度采样点和主KL＋MSE选点；源码继续使用流式统计、state-only传输和批量标量回读。
+ 

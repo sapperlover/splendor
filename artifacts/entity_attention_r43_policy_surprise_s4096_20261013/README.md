@@ -1,5 +1,7 @@
 # R43：固定 4k S4096 的 Policy Surprise Weighting
 
+2026-10-23归档位置更新：本专题关联`runs/entity_attention_r43_policy_surprise_s4096_20261013`中的6个抽样账本／逐步日志已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。
+
 用户指定：只使用现有4000局S4096/N1，policy与value使用同一固定池。从**原R43**（72898步）出发，各做1000步加权／不加权对照；原AdamW、Torch与采样RNG、lr2e-5、B256、统一clip1和loss系数1:1保留。没有新采集、重新搜索或改value结构。数据来自原S4096分支第44–47代，教师是R43–R46，不能称为统一由R43重新标注的数据。
 
 2026-10-13已完成，结果入口：[results.md](results.md)、[summary.json](summary.json)。逐代来源、原整局Train/Validation划分、checkpoint哈希与种子见[配置](../../configs/entity_attention_v1/r43_policy_surprise_s4096_fixed4k_20261013.json)及`plan.json`。重型NPZ和checkpoint仍位于`runs/`。

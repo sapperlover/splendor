@@ -1,6 +1,26 @@
 # 文档导航
 
-[R31起点10k新局／60k池自迭代（仅命令）](../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)：R22–R31的40k历史，首轮50k、第二轮60k，lr2e-5／每轮3000步；采集2000活跃局／microbatch128、16GiB回放缓存，原混合预算与评测协议；已清除首次未完成采集，未重启。
+[近期辅助目标完成结果](reports/auxiliary_offline_results_20261027_zh-CN.md)：六组原训练／选点／对战已完成，新增五模型greedy及S128N1各10000 pair十组也已完成；含在线13轮和已完成的人类棋谱／支付诊断入口。
+
+[到终局分数归属辅助](guides/score_ownership_zh-CN.md)：双方×三个牌等级和贵族的8路新增分，时点、损失、兼容性、执行配置及有限验证。
+
+[Policy辅助140221步起点的60k在线自迭代](../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/README.md)：R31–R37历史64k，继续policy辅助0.15，每轮10k／3000步／lr2e-5；固定raw R37、采集较优设置／搜索A。已提交13轮，第12轮greedy66.075%、完整搜索60.20%，第13轮greedy63.75%；当前入口训练结束释放CPU缓存。见[平台分析](../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/plateau_review_20261025/results.md)。
+
+[离线训练执行默认](guides/offline_execution_zh-CN.md)：2026-10-24起新任务默认流式累计、4 worker共享只读供数及传输／同步优化，缓存依池配置；后续三组已用优化发布完成训练和原两组对战；当时后两组各18GiB。[实际入口与183项回归／CUDA短验证](../artifacts/offline_training_defaults_20261024/README.md)。
+
+[当前实验后的三个串行辅助消融](../artifacts/entity_attention_auxiliary_queue_20261024/README.md)：104k仅policy、104k双辅助、44k仅value；沿用主KL+MSE早停及R37两组对战，监督锁与成功状态决定接续。
+
+[第21–37轮104k局attention128＋仅短期value离线训练](../artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/README.md)：从零、lr1e-4，5%完整主KL+MSE早停选点；对raw R37 greedy1000pair后搜索A500pair，最新轻量记录；已完成训练和原两组对战，选中140221步；后续10000 pair面板也已完成。
+
+[短期value与对手policy辅助目标](guides/continuation_auxiliary_zh-CN.md)：指数标签公式、玩家回合口径、两层软CE、可见牌／未知类、覆盖限制及独立离线运行命令。
+
+[训练记录与checkpoint规则](guides/training_artifacts_zh-CN.md)：当前在线／近期离线停写双份抽样账本与双份逐步日志，保留主指标和身份／batch摘要；R31在线500步保存＋七个固定诊断点，恢复边界与旧冻结入口说明。
+
+[在线全量固定留出](guides/evaluation_zh-CN.md#在线全量固定留出)：每六轮使用此前六轮的全部原始validation，段内固定；每轮七节点自动评测／恢复补齐；[R32–R37共42节点回补结果](../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/results.md)。
+
+[当前采集与评测配置](guides/evaluation_zh-CN.md)：并列整理在线采集、日常greedy／搜索、在线greedy／搜索。当前采集active2000／原B、C桶；日常及在线新搜索统一A（12worker／active1000／B500／microbatch128／owner双槽／精简B、C桶），纯greedy默认CPU8 worker／1000 pair；搜索默认500 pair，双方S1024N1总1024。可执行日常模板和记录命令见指南。
+
+[R31起点10k新局／60k池自迭代](../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)：R22–R31的40k历史、lr2e-5／每轮3000步、16GiB compact缓存；首轮50k、第二轮60k，已完成6轮至谱系R37。采集配置保持，后续搜索A在新轮界读入后用于新面板；原state、旧面板及准备记录不改写。
 
 [新增购买结算方案已撤回](../artifacts/entity_attention_first_round_20261022/README.md)：2026-10-23删除全部新增派生特征及专用候选入口，原关系attention128恢复583682参数；短期进展辅助保持关闭。历史准备、工程验证、冗余审查与撤回快照见专题，未启动正式训练。
 
@@ -44,7 +64,7 @@
 | --- | --- |
 | 搜索算法、后端与推理 | [搜索](guides/search_zh-CN.md)、[native 构建](guides/native_search_zh-CN.md)、[多 worker GPU](guides/multiworker_gpu_zh-CN.md) |
 | 数据格式、采集与恢复 | [自对弈数据](guides/selfplay_data_zh-CN.md) |
-| 训练与恢复 | [AZ 循环](guides/alphazero_zh-CN.md)、[实体注意力离线学习](guides/entity_attention_offline_zh-CN.md) |
+| 训练与恢复 | [离线执行默认](guides/offline_execution_zh-CN.md)、[AZ 循环](guides/alphazero_zh-CN.md)、[实体注意力离线学习](guides/entity_attention_offline_zh-CN.md) |
 | R43 起点 S4096/N1、policy 2k／value 6k | [连续自迭代配置、时限与恢复](../artifacts/entity_attention_r43_s4096_p2k_v6k_20261013/README.md)：保持 lr2e-5、1000 局／1000 步和联合更新，单次 8 小时会话 |
 | R43起点同历史池离线（完成） | [流程与命令](../artifacts/entity_attention_r43_history_pool_20261012/README.md)、[完成结果](../artifacts/entity_attention_r43_history_pool_20261012/results.md)：48776步、5组greedy／4组搜索及独立500pair均完成；选中＋24388步独立确认为50.50% [47.35%,53.70%]，未确认收益；前置R24离线候选对R43为51.25%，区间跨50% |
 | R24起点历史池离线（完成） | [完整流程](../artifacts/entity_attention_r24_history_pool_20261012/README.md)、[结果](../artifacts/entity_attention_r24_history_pool_20261012/results.md)：选中＋24388步，对原R24独立500pair为54.00% [50.80%,57.10%]；尚未由此证明超过R43 |

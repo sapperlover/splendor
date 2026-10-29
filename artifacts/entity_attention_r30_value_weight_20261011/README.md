@@ -1,5 +1,7 @@
 # 第29轮起点：value loss权重0.25与0
 
+2026-10-23归档位置更新：本专题关联`runs/entity_attention_r30_value_weight_20261011`中的8个抽样账本／逐步日志已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。
+
 最新状态见[结果表](results.md)，完整统计见[summary.json](summary.json)。复算汇总：`conda run --no-capture-output -n splendor env PYTHONPATH=src python artifacts/entity_attention_r30_value_weight_20261011/analyze.py`。
 
 两条**独立分支**均从绝对第29轮终点（global 58898）出发，恢复原第30轮开训checkpoint的模型、AdamW及RNG；分别将value loss权重从1改为0.25、0。执行顺序：0.25训练及对战完成后，再训练及对战0。权重0分支不接续0.25分支。

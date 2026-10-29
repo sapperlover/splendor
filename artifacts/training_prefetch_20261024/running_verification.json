@@ -1,0 +1,170 @@
+{
+  "time": "2026-10-24T11:42:15.982063+08:00",
+  "status": "running_verified",
+  "live": {
+    "child_pid": 390167,
+    "command": [
+      "/home/lc/anaconda3/envs/splendor/bin/python",
+      "-u",
+      "-m",
+      "splendor.offline_continuation",
+      "--config",
+      "/home/lc/下载/splendor/runtime/entity_attention_128x2_opponent_policy_r21_r37_20261024/source_prefetch_20261024/configs/entity_attention_v1/offline_opponent_policy_r21_r37_prefetch_20261024.json",
+      "--output",
+      "/home/lc/下载/splendor/runs/entity_attention_128x2_opponent_policy_r21_r37_20261024"
+    ],
+    "phase": "train",
+    "pid": 390119,
+    "status": "running"
+  },
+  "queue": {
+    "active_experiment": "entity_attention_128x2_opponent_policy_r21_r37_20261024",
+    "child_pid": 390092,
+    "command": [
+      "bash",
+      "scripts/run_attention128_policy104k_20261024.sh"
+    ],
+    "completed": [],
+    "jobs": [
+      "entity_attention_128x2_opponent_policy_r21_r37_20261024",
+      "entity_attention_128x2_continuation_r21_r37_20261024",
+      "entity_attention_128x2_shortterm_value_r21_r31_vs_r37_20261024"
+    ],
+    "pid": 390091,
+    "predecessor": "entity_attention_128x2_shortterm_value_r21_r37_20261023",
+    "predecessor_checks": [
+      {
+        "checkpoint_sha256": "c10557938107b83b13ba4807bdd8599994e47053e859fbd6518f0fd4019fb41b",
+        "experiment": "entity_attention_128x2_shortterm_value_r21_r37_20261023",
+        "panels": [
+          {
+            "pairs": 1000,
+            "panel": "greedy_vs_R37",
+            "sha256": "792ae875416489a188359223094c70aeb7b665f06ba72d777aa6c45c6856936f"
+          },
+          {
+            "pairs": 500,
+            "panel": "search_S1024N1_vs_R37",
+            "sha256": "e58ec65272cbec875cc00df5eb8ddbf8841fd9f83266a5688ddd1e43905ef0b1"
+          }
+        ],
+        "selected_step": 140221
+      }
+    ],
+    "started_unix": 1792812785.1407135,
+    "status": "running"
+  },
+  "shared_cache": {
+    "arena_bytes": 17869150492,
+    "payload_bytes": 17764760952,
+    "status": "ready",
+    "warmup_seconds": 379.482726096001,
+    "worker_pids": [
+      394985,
+      394986,
+      394987,
+      394988
+    ],
+    "workers": 4
+  },
+  "shared_mappings": [
+    {
+      "pid": 390167,
+      "permissions": "rw-s",
+      "inode": "23508"
+    },
+    {
+      "pid": 394985,
+      "permissions": "r--s",
+      "inode": "23508"
+    },
+    {
+      "pid": 394986,
+      "permissions": "r--s",
+      "inode": "23508"
+    },
+    {
+      "pid": 394987,
+      "permissions": "r--s",
+      "inode": "23508"
+    },
+    {
+      "pid": 394988,
+      "permissions": "r--s",
+      "inode": "23508"
+    }
+  ],
+  "memory_kib": [
+    {
+      "pid": 390167,
+      "Rss": 20667124,
+      "Pss": 6651137,
+      "Pss_Shmem": 3637968,
+      "Private_Dirty": 2766944
+    },
+    {
+      "pid": 394985,
+      "Rss": 17371872,
+      "Pss": 3814420,
+      "Pss_Shmem": 3455581,
+      "Private_Dirty": 321868
+    },
+    {
+      "pid": 394986,
+      "Rss": 17366584,
+      "Pss": 3811332,
+      "Pss_Shmem": 3453610,
+      "Private_Dirty": 320696
+    },
+    {
+      "pid": 394987,
+      "Rss": 17384756,
+      "Pss": 3816108,
+      "Pss_Shmem": 3457605,
+      "Private_Dirty": 321336
+    },
+    {
+      "pid": 394988,
+      "Rss": 17392664,
+      "Pss": 3817736,
+      "Pss_Shmem": 3458825,
+      "Private_Dirty": 321784
+    }
+  ],
+  "process_tree_pss_GiB": 20.895703315734863,
+  "steps": [
+    103869,
+    104473
+  ],
+  "recent_training": {
+    "n": 605,
+    "cache_misses": 0,
+    "worker_pids_seen": [
+      394985,
+      394986,
+      394987,
+      394988
+    ],
+    "mean_phase_seconds": {
+      "draw_load": 0.005198023524070409,
+      "collate": 2.907303571778019e-07,
+      "update_host": 0.03946639955377405
+    }
+  },
+  "checkpoint_intervals": [
+    {
+      "steps": [
+        103000,
+        104000
+      ],
+      "wall_seconds": 44.46141266822815,
+      "updates_per_second": 22.49141311505367
+    }
+  ],
+  "protected_files_unchanged": 234,
+  "meminfo": {
+    "MemTotal": "32597832 kB",
+    "MemAvailable": "3516476 kB",
+    "SwapTotal": "0 kB"
+  }
+}

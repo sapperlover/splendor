@@ -544,6 +544,9 @@ def model_config_from_dict(config: dict[str, Any] | ActorCriticConfig):
     if architecture == "entity_attention_progress_v1":
         from .progress_auxiliary import EntityAttentionProgressConfig
         return EntityAttentionProgressConfig(**values)
+    if architecture == "entity_attention_continuation_v1":
+        from .continuation_auxiliary import EntityAttentionContinuationConfig
+        return EntityAttentionContinuationConfig(**values)
     if architecture == "entity_attention_policy_value_v1":
         from .entity_attention import EntityAttentionPolicyValueConfig
         return EntityAttentionPolicyValueConfig(**values)
@@ -555,6 +558,9 @@ def build_actor_critic(config: dict[str, Any] | ActorCriticConfig) -> ActorCriti
     parsed = model_config_from_dict(config)
     if isinstance(parsed, ActorCriticConfig):
         return ActorCritic(parsed)
+    from .continuation_auxiliary import EntityAttentionContinuation, EntityAttentionContinuationConfig
+    if isinstance(parsed, EntityAttentionContinuationConfig):
+        return EntityAttentionContinuation(parsed)
     from .progress_auxiliary import EntityAttentionProgress, EntityAttentionProgressConfig
     if isinstance(parsed, EntityAttentionProgressConfig):
         return EntityAttentionProgress(parsed)

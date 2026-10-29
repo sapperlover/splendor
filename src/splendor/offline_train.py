@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import copy
 import fcntl
 import hashlib
 import json
@@ -11,6 +12,7 @@ import shutil
 import sys
 import time
 from collections import Counter
+from contextlib import ExitStack
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -22,7 +24,8 @@ from .alphazero_checkpoint import load_alphazero_checkpoint
 from .alphazero_recording import (ReferenceWriter, append_json, read_json, sha256,
                                   source_identity, summarize_references, write_json)
 from .alphazero_replay import PositionPool, ReplayGame, ReplayIndex
-from .alphazero_train import AlphazeroLearner, LearnerConfig, metric_ratios, run_training_round
+from .alphazero_train import AlphazeroLearner, LearnerConfig, draw_training_batch, metric_ratios, run_training_round
+from .compact_game_cache import CompactGameCache
 from .rng import DeterministicRng
 
 
@@ -38,6 +41,7 @@ class OfflineConfig:
     validation_seed: int = 13120000
     validation_positions: int = 4096
     replay_cache_bytes: int = 4 * 1024**3
+    training_workers: int = 4
     games_per_round: int | None = None
     full_validation_at_end: bool = True
     learner: LearnerConfig = field(default_factory=lambda: LearnerConfig(checkpoint_every_steps=1000))
@@ -50,6 +54,8 @@ class OfflineConfig:
                 raise ValueError(f"{name} must be a positive integer")
         if self.validation_positions > 4096:
             raise ValueError("fixed validation subset is limited to 4096 positions")
+        if type(self.training_workers) is not int or self.training_workers < 0:
+            raise ValueError("training_workers must be a nonnegative integer")
         if self.games_per_round is not None and (type(self.games_per_round) is not int or self.games_per_round <= 0):
             raise ValueError("games_per_round must be positive or null")
         if self.learner.max_steps_per_round is not None:
@@ -175,13 +181,13 @@ def run_offline(config: OfflineConfig, output: Path, *, resume=False, max_steps_
                                                    or replay_cache_bytes_override <= 0):
         raise ValueError("replay cache override must be a positive integer byte count")
     output.mkdir(parents=True, exist_ok=True)
-    with (output / ".lock").open("a") as lock:
+    with (output / ".lock").open("a") as lock, ExitStack() as cleanup:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return _run_offline(config, output, resume=resume, max_steps_this_session=max_steps_this_session,
-                            replay_cache_bytes_override=replay_cache_bytes_override)
+                            replay_cache_bytes_override=replay_cache_bytes_override, cleanup=cleanup)
 
 
-def _run_offline(config, output, *, resume, max_steps_this_session, replay_cache_bytes_override):
+def _run_offline(config, output, *, resume, max_steps_this_session, replay_cache_bytes_override, cleanup):
     started = time.perf_counter()
     torch.set_num_threads(1)
     frozen_config = json.loads(json.dumps(asdict(config)))
@@ -189,7 +195,8 @@ def _run_offline(config, output, *, resume, max_steps_this_session, replay_cache
     if config_path.exists():
         if not resume:
             raise ValueError("offline run exists; use --resume or a new output")
-        if read_json(config_path) != frozen_config:
+        if ({k: v for k, v in read_json(config_path).items() if k != "training_workers"}
+                != {k: v for k, v in frozen_config.items() if k != "training_workers"}):
             raise ValueError("offline resume requires the identical frozen configuration")
         dataset = read_json(data_path)
         for source in dataset["sources"]:
@@ -209,7 +216,9 @@ def _run_offline(config, output, *, resume, max_steps_this_session, replay_cache
         raise ValueError("frozen dataset identity mismatch")
     cache_bytes = config.replay_cache_bytes if replay_cache_bytes_override is None else replay_cache_bytes_override
     index = make_index(dataset, cache_bytes)
-    print(f"离线 LRU 容量 {cache_bytes / 1024**2:g} MiB（冻结配置 {config.replay_cache_bytes / 1024**2:g} MiB）", flush=True)
+    if config.training_workers:
+        index.cache = CompactGameCache(cache_bytes)
+    print(f"离线训练池容量 {cache_bytes / 1024**2:g} MiB（冻结配置 {config.replay_cache_bytes / 1024**2:g} MiB）", flush=True)
     pool = PositionPool(index.split_games("train"), index.cache, "offline-all-train")
     if not len(pool):
         raise ValueError("selected data has no training positions")
@@ -220,6 +229,19 @@ def _run_offline(config, output, *, resume, max_steps_this_session, replay_cache
     fixed = read_json(fixed_path)
     if fixed["digest"] != _digest(fixed["references"]):
         raise ValueError("frozen validation references identity mismatch")
+    prefetch = None
+    if config.training_workers:
+        from .training_prefetch import SharedReadonlyPrefetch
+        prefetch = SharedReadonlyPrefetch(index,
+            lambda rng: draw_training_batch(pool, None, rng, config.learner), config.training_workers,
+            progress=lambda row: print("共享训练缓存 " + json.dumps(row, ensure_ascii=False), flush=True))
+        cleanup.callback(prefetch.close)
+        write_json(output / "prefetch_progress.json", {"status": "ready", "workers": config.training_workers,
+            "worker_pids": [worker.pid for worker in prefetch.pool._pool],
+            "payload_bytes": index.cache.bytes, "arena_bytes": prefetch.used_bytes,
+            "warmup_seconds": prefetch.warmup_seconds})
+        index = copy.copy(index)
+        index.cache = CompactGameCache(256 * 1024**2)
     checkpoints = output / "checkpoints"
     checkpoints.mkdir(exist_ok=True)
     steps = sorted(checkpoints.glob("step-*.pt"))
@@ -269,6 +291,7 @@ def _run_offline(config, output, *, resume, max_steps_this_session, replay_cache
                "torch": torch.__version__, "device": config.learner.device, "model_config": asdict(learner.model.config),
                "cuda_device": torch.cuda.get_device_name(learner.device) if learner.device.type == "cuda" else None,
                "replay_cache_capacity_bytes": cache_bytes,
+               "training_workers": config.training_workers,
                "parameter_count": learner.model.trainable_parameter_count()})
     writer = ReferenceWriter(output / "usage", session_id, config.learner.batch_size, identity)
     try:
@@ -276,6 +299,7 @@ def _run_offline(config, output, *, resume, max_steps_this_session, replay_cache
             validation_samples=(), validation_games=0, checkpoint_dir=checkpoints,
             metrics_path=output / "training_metrics.jsonl", reference_writer=writer,
             checkpoint_callback=validate_and_publish, max_steps_this_session=max_steps_this_session,
+            batch_prefetch=prefetch,
             progress_callback=lambda row: print(f"离线训练 {row['round_train_step']}/{config.max_steps} loss={row['total_loss']:.5f}", flush=True)
                 if row['round_train_step'] % min(100, config.learner.checkpoint_every_steps) == 0 else None)
     finally:
@@ -283,6 +307,7 @@ def _run_offline(config, output, *, resume, max_steps_this_session, replay_cache
         append_json(output / "sessions.jsonl", {"session_id": session_id, "seconds": time.perf_counter() - started,
                     "scope": "setup, training and fixed-subset validation; excludes final holdout and usage summary",
                     "replay_cache_capacity_bytes": cache_bytes,
+                    "training_workers": config.training_workers,
                     "step": learner.round_train_step, "peak_allocated_bytes": torch.cuda.max_memory_allocated()
                     if config.learner.device == "cuda" else None,
                     "peak_reserved_bytes": torch.cuda.max_memory_reserved() if config.learner.device == "cuda" else None})
@@ -303,7 +328,8 @@ def _run_offline(config, output, *, resume, max_steps_this_session, replay_cache
     result.update(complete=complete, train_positions=len(pool), average_draw_exposure=learner.round_train_step * config.learner.batch_size / len(pool),
                   session_id=session_id, session_total_seconds=time.perf_counter() - started,
                   model_config=asdict(learner.model.config), parameter_count=learner.model.trainable_parameter_count(),
-                  validation=curve[-1]["metrics"], replay_cache=index.cache.stats(), dataset_digest=dataset["digest"])
+                  validation=curve[-1]["metrics"], replay_cache=pool.cache_stats(),
+                  validation_cache=index.cache.stats(), dataset_digest=dataset["digest"])
     write_json(output / "training.json", result)
     return result
 

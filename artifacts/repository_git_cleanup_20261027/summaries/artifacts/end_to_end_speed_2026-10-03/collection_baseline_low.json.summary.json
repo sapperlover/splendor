@@ -1,0 +1,874 @@
+{
+  "omitted_fields": [
+    {
+      "count": 495,
+      "json_path": "$.result.summary.inference.batch_size_histogram",
+      "kind": "dict",
+      "value_sha256": "4ae4ab13fae2d99602f06224ebf7b9899577165959266463866b0c1493297f27"
+    },
+    {
+      "count": 1000,
+      "json_path": "$.result.summary.statistics_game_ids",
+      "kind": "list",
+      "value_sha256": "b1c32e2197c96b83093960b247b9a8eac730c9527f14fa7691c116b77d679a63"
+    },
+    {
+      "count": 495,
+      "json_path": "$.result.checked_replay.inference.batch_size_histogram",
+      "kind": "dict",
+      "value_sha256": "4ae4ab13fae2d99602f06224ebf7b9899577165959266463866b0c1493297f27"
+    },
+    {
+      "count": 1000,
+      "json_path": "$.result.checked_replay.statistics_game_ids",
+      "kind": "list",
+      "value_sha256": "b1c32e2197c96b83093960b247b9a8eac730c9527f14fa7691c116b77d679a63"
+    },
+    {
+      "count": 1000,
+      "json_path": "$.result.milestones",
+      "kind": "list",
+      "value_sha256": "b6aa5eb99dadac964b288e69784cd1c1d0446bff93fd35d9d1b7121671a2462d"
+    },
+    {
+      "count": 86550,
+      "json_path": "$.result.status.decision_latencies_ms",
+      "kind": "list",
+      "value_sha256": "79cfd2c615e6ea197e08663a30a0fe53d7725e05c144942b722110862e27ca97"
+    },
+    {
+      "count": 495,
+      "json_path": "$.result.status.gpu_owner.inference.batch_size_histogram",
+      "kind": "dict",
+      "value_sha256": "4ae4ab13fae2d99602f06224ebf7b9899577165959266463866b0c1493297f27"
+    },
+    {
+      "count": 126,
+      "json_path": "$.result.status.gpu_owner.workers[0].game_ids",
+      "kind": "list",
+      "value_sha256": "483ed77897f43d303ea1eed60300910897a5cefac7f29ed02734c2d532fb315c"
+    },
+    {
+      "count": 126,
+      "json_path": "$.result.status.gpu_owner.workers[1].game_ids",
+      "kind": "list",
+      "value_sha256": "3d4e795d581d3612c208de0562a19f7f43402198e81f242ed1095a990c58e7c8"
+    },
+    {
+      "count": 126,
+      "json_path": "$.result.status.gpu_owner.workers[2].game_ids",
+      "kind": "list",
+      "value_sha256": "957b78ba8a1e5bcb94ef6c060f34c32a61533241abe017b444023019d38346e0"
+    },
+    {
+      "count": 126,
+      "json_path": "$.result.status.gpu_owner.workers[3].game_ids",
+      "kind": "list",
+      "value_sha256": "81063ebcbe71283b4478bba3d2416489ff4675a68289846c0411f486118a9fb8"
+    },
+    {
+      "count": 124,
+      "json_path": "$.result.status.gpu_owner.workers[4].game_ids",
+      "kind": "list",
+      "value_sha256": "95006f82ce57a5fb4982a2a52344843dc96264d99828ba76696d351a15ec0691"
+    },
+    {
+      "count": 124,
+      "json_path": "$.result.status.gpu_owner.workers[5].game_ids",
+      "kind": "list",
+      "value_sha256": "b938bff7fe7ec96822ff14b8a423c577550c5be1f804a9fa5d497681a1946c09"
+    },
+    {
+      "count": 124,
+      "json_path": "$.result.status.gpu_owner.workers[6].game_ids",
+      "kind": "list",
+      "value_sha256": "2c59396fb4afe3c57a6bae18afad3e72c12faebf57fb6a3f0023d5810ead3eb4"
+    },
+    {
+      "count": 124,
+      "json_path": "$.result.status.gpu_owner.workers[7].game_ids",
+      "kind": "list",
+      "value_sha256": "54a6e65f6a910b920bb0229ac339c3386861f663428ecbfccc1028b0f8d8ef3d"
+    },
+    {
+      "count": 495,
+      "json_path": "$.result.status.inference.batch_size_histogram",
+      "kind": "dict",
+      "value_sha256": "4ae4ab13fae2d99602f06224ebf7b9899577165959266463866b0c1493297f27"
+    },
+    {
+      "count": 1000,
+      "json_path": "$.result.status.statistics_game_ids",
+      "kind": "list",
+      "value_sha256": "b1c32e2197c96b83093960b247b9a8eac730c9527f14fa7691c116b77d679a63"
+    }
+  ],
+  "preserved": {
+    "affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "command": [
+      "scripts/run_speed_validation.py",
+      "collection",
+      "--config",
+      "configs/speed_2026-10-03/collection_baseline.json",
+      "--run",
+      "runtime/end_to_end_speed_2026-10-03/collection_baseline_low",
+      "--record",
+      "artifacts/end_to_end_speed_2026-10-03/collection_baseline_low.json",
+      "--instrument"
+    ],
+    "config": {
+      "add_root_noise": true,
+      "checkpoint": "runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+      "execution": {
+        "active_games_per_worker": 1,
+        "actor_projection": true,
+        "backend": "native_cuda_pool",
+        "batch_interface": "native",
+        "candidate_buckets": [
+          16,
+          32,
+          48
+        ],
+        "engine_mode": "fast",
+        "inference_mode": "compiled",
+        "local_microbatch": 64,
+        "max_batch_size": 500,
+        "max_batch_wait_ms": 5,
+        "native_transport": "reused",
+        "precision": "float32",
+        "search_workers": 8,
+        "shared_candidate_width": 256,
+        "shared_slots": 1,
+        "torch_threads": 1,
+        "total_active_games": 500,
+        "workers": 1
+      },
+      "max_completed_turns": 400,
+      "num_games": 1000,
+      "protocol": "mcts-selfplay-v2",
+      "round_index": 0,
+      "run_id": "speed_baseline_1000",
+      "search_config": {
+        "c_puct": 1.5,
+        "determinizations": 1,
+        "dirichlet_alpha": 0.3,
+        "fold_forced_phases": true,
+        "max_simulation_transitions": 512,
+        "root_noise_fraction": 0.25,
+        "seed": 9500000,
+        "simulations": 1024
+      },
+      "seed": 12347000,
+      "split_seed": 12348000,
+      "temperature_schedule": {
+        "late_temperature": 0.0,
+        "opening_completed_turns": 10,
+        "opening_temperature": 1.0
+      },
+      "validation_fraction": 0.1
+    },
+    "cpu_count": 16,
+    "cuda_build": "13.0",
+    "end_unix": 1791027568.3080175,
+    "extension": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/baseline_source/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so",
+    "extension_sha256": "94986fb4ffaa7c1d8f01437d885f2b11e5599ad85ad878a73a10eaa8bdd9b4b7",
+    "instrument": true,
+    "python": "3.12.14",
+    "resources": "artifacts/end_to_end_speed_2026-10-03/collection_baseline_low.resources.json",
+    "result": {
+      "aggregate_inference": {
+        "last:1": {
+          "batches": 500,
+          "inference_wall_seconds": 1.124008222005159,
+          "rows": 500
+        },
+        "last:10": {
+          "batches": 6675,
+          "inference_wall_seconds": 18.59344923601566,
+          "rows": 26514
+        },
+        "last:100": {
+          "batches": 15018,
+          "inference_wall_seconds": 34.305208983036664,
+          "rows": 367778
+        },
+        "last:8": {
+          "batches": 6114,
+          "inference_wall_seconds": 17.281122229014727,
+          "rows": 21257
+        },
+        "session": {
+          "batches": 148068,
+          "inference_wall_seconds": 495.86946016804677,
+          "rows": 59940914
+        },
+        "width:16": {
+          "batches": 670,
+          "inference_wall_seconds": 1.5515464010022697,
+          "rows": 1412
+        },
+        "width:256": {
+          "batches": 11952,
+          "inference_wall_seconds": 141.25386530098967,
+          "rows": 5373196
+        },
+        "width:32": {
+          "batches": 23556,
+          "inference_wall_seconds": 61.210048016015435,
+          "rows": 7768112
+        },
+        "width:48": {
+          "batches": 111890,
+          "inference_wall_seconds": 291.8540004500394,
+          "rows": 46798194
+        }
+      },
+      "checked_replay": {
+        "batch_failure_game_ids": [],
+        "batch_failures": 0,
+        "compile_failure_policy": "fallback",
+        "completed_games": 1000,
+        "cpu_peak_rss_kib": 1275632,
+        "data_bytes": 44933579,
+        "decision_latency": {
+          "count": 86550,
+          "max_ms": 16422.724517000006,
+          "p50_ms": 11097.574103999932,
+          "p95_ms": 15617.113403000076
+        },
+        "draws": 18,
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "expected_games": 1000,
+        "failed_games": 0,
+        "games_per_wall_second": 0.5861945813514532,
+        "gpu_peak_bytes": 312386560,
+        "inference": {
+          "batch_size_histogram": {
+            "_git_omitted_raw": {
+              "count": 495,
+              "json_path": "$.result.checked_replay.inference.batch_size_histogram",
+              "kind": "dict",
+              "value_sha256": "4ae4ab13fae2d99602f06224ebf7b9899577165959266463866b0c1493297f27"
+            }
+          },
+          "d2h_seconds": 18.711698395955864,
+          "feature_seconds": 0.0,
+          "forward_seconds": 293.2747828879003,
+          "h2d_seconds": 35.190999986029965,
+          "logical_model_positions": 59940914,
+          "mean_batch_size": 404.8201772158738,
+          "physical_model_batches": 148068,
+          "wait_seconds": 117.24137744201448
+        },
+        "logical_model_positions": 59940914,
+        "missing_games": 0,
+        "native_batch_batches": 1088068,
+        "native_batch_rows": 59940914,
+        "native_compute_seconds": 905.469368329,
+        "native_consume_seconds": 0.0,
+        "native_encoding_seconds": 0.0,
+        "native_fill_seconds": 856.1492807980592,
+        "native_policy_rows": 59940914,
+        "native_root_rows": 64373,
+        "native_value_rows": 0,
+        "native_wide_batches": 12510,
+        "p0_wins": 503,
+        "p1_wins": 479,
+        "peak_active_games": 500,
+        "peak_inflight_rows": 63,
+        "peak_pending_requests": 63,
+        "pipeline_slots": 1,
+        "policy_samples": 64373,
+        "policy_samples_per_wall_second": 37.735103785337095,
+        "protocol": "mcts-selfplay-v2",
+        "queue_wait_seconds": 10121.353620721213,
+        "real_rule_seconds": 36.19640189002371,
+        "root_encoding_seconds": 73.74722469698577,
+        "samples": 86550,
+        "search_rule_seconds": 226.404701749,
+        "search_seconds_sum": 761798.4549768767,
+        "semantic_fingerprint": "e7e7f11e0873be424e4026f9e7a7c32752aa5cfebc6432fa09c95727f0c9e50a",
+        "simulations": 65917952,
+        "simulations_per_wall_second": 38640.746276185186,
+        "statistics_complete": true,
+        "statistics_game_ids": {
+          "_git_omitted_raw": {
+            "count": 1000,
+            "json_path": "$.result.checked_replay.statistics_game_ids",
+            "kind": "list",
+            "value_sha256": "b1c32e2197c96b83093960b247b9a8eac730c9527f14fa7691c116b77d679a63"
+          }
+        },
+        "statistics_missing_game_ids": [],
+        "statistics_scope": "collection_session",
+        "wall_seconds": 1705.9181913529999,
+        "worker_collection_wall_seconds_max": 1704.4942283619998,
+        "worker_compile": [
+          {
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 0.0012047290001646616,
+                "policy_value:32": 2.7903461079999943,
+                "policy_value:48": 1.2901538490000348
+              },
+              "compiled_calls": {
+                "policy_value:16": 670,
+                "policy_value:32": 23556,
+                "policy_value:48": 111890
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 393,
+                "unique_graphs": 3
+              },
+              "eager_fallbacks": 11952,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled"
+              }
+            },
+            "inference": {
+              "actor_projection": true,
+              "candidate_buckets": [
+                16,
+                32,
+                48
+              ],
+              "compile_failure_policy": "fallback",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "worker_id": "gpu_owner"
+          }
+        ],
+        "worker_initialization_seconds_sum": 0.012386474999857455,
+        "write_seconds": 33.24977906499407
+      },
+      "checked_replay_seconds": 35.06986809099999,
+      "delivery_seconds": 1749.63377242,
+      "main_seconds": 1714.563904329,
+      "milestones": {
+        "_git_omitted_raw": {
+          "count": 1000,
+          "json_path": "$.result.milestones",
+          "kind": "list",
+          "value_sha256": "b6aa5eb99dadac964b288e69784cd1c1d0446bff93fd35d9d1b7121671a2462d"
+        }
+      },
+      "status": {
+        "compile_failure_policy": "fallback",
+        "cpu_peak_rss_kib": 1275632,
+        "decision_latencies_ms": {
+          "_git_omitted_raw": {
+            "count": 86550,
+            "json_path": "$.result.status.decision_latencies_ms",
+            "kind": "list",
+            "value_sha256": "79cfd2c615e6ea197e08663a30a0fe53d7725e05c144942b722110862e27ca97"
+          }
+        },
+        "decision_latency": {
+          "count": 86550,
+          "max_ms": 16422.724517000006,
+          "p50_ms": 11097.574103999932,
+          "p95_ms": 15617.113403000076
+        },
+        "gpu_owner": {
+          "actual_active_limit": 500,
+          "actual_search_workers": 8,
+          "batch_wait_reasons": {
+            "deadline": 72341,
+            "drain": 0,
+            "full": 75727
+          },
+          "batches_full": 75727,
+          "batches_waited": 72341,
+          "benchmark": null,
+          "global_max_batch": 500,
+          "gpu_peak_bytes": 312386560,
+          "inference": {
+            "batch_size_histogram": {
+              "_git_omitted_raw": {
+                "count": 495,
+                "json_path": "$.result.status.gpu_owner.inference.batch_size_histogram",
+                "kind": "dict",
+                "value_sha256": "4ae4ab13fae2d99602f06224ebf7b9899577165959266463866b0c1493297f27"
+              }
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 0.0012047290001646616,
+                "policy_value:32": 2.7903461079999943,
+                "policy_value:48": 1.2901538490000348
+              },
+              "compiled_calls": {
+                "policy_value:16": 670,
+                "policy_value:32": 23556,
+                "policy_value:48": 111890
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 393,
+                "unique_graphs": 3
+              },
+              "eager_fallbacks": 11952,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled"
+              }
+            },
+            "d2h_seconds": 18.711698395955864,
+            "feature_seconds": 0.0,
+            "forward_seconds": 293.2747828879003,
+            "h2d_seconds": 35.190999986029965,
+            "inference": {
+              "actor_projection": true,
+              "candidate_buckets": [
+                16,
+                32,
+                48
+              ],
+              "compile_failure_policy": "fallback",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 59940914,
+            "mean_batch_size": 404.8201772158738,
+            "physical_model_batches": 148068,
+            "wait_seconds": 117.24137744201448
+          },
+          "local_microbatch": 64,
+          "owner_cpu_peak_rss_kib": 1275632,
+          "owner_cpu_seconds": 1205.302426,
+          "owner_dispatch_seconds": 34.16461918402615,
+          "owner_gather_seconds": 355.0261111099778,
+          "owner_initialization_seconds": 1.0202719860001253,
+          "owner_wait_coalesce_seconds": 505.48017681231295,
+          "owner_wait_input_seconds": 269.5070750079633,
+          "padding_positions": 1836773508,
+          "peak_ready_rows": 500,
+          "requested_active_games": 500,
+          "requested_search_workers": 8,
+          "shared_bytes": 45196288,
+          "shared_slots_per_worker": 1,
+          "width_histogram": {
+            "16": 1412,
+            "256": 5373196,
+            "32": 7768112,
+            "48": 46798194
+          },
+          "workers": [
+            {
+              "completed_simulations": 8245248,
+              "cpu_seconds": 430.904979,
+              "game_ids": {
+                "_git_omitted_raw": {
+                  "count": 126,
+                  "json_path": "$.result.status.gpu_owner.workers[0].game_ids",
+                  "kind": "list",
+                  "value_sha256": "483ed77897f43d303ea1eed60300910897a5cefac7f29ed02734c2d532fb315c"
+                }
+              },
+              "in_progress_simulations_at_exit": 0,
+              "peak_active_games": 63,
+              "queue_backpressure_seconds": 3.6629086490711416,
+              "wait_result_seconds": 1305.0852705530326,
+              "worker_id": 0
+            },
+            {
+              "completed_simulations": 8328192,
+              "cpu_seconds": 434.146641,
+              "game_ids": {
+                "_git_omitted_raw": {
+                  "count": 126,
+                  "json_path": "$.result.status.gpu_owner.workers[1].game_ids",
+                  "kind": "list",
+                  "value_sha256": "3d4e795d581d3612c208de0562a19f7f43402198e81f242ed1095a990c58e7c8"
+                }
+              },
+              "in_progress_simulations_at_exit": 0,
+              "peak_active_games": 63,
+              "queue_backpressure_seconds": 3.679687853926225,
+              "wait_result_seconds": 1276.8003461559852,
+              "worker_id": 1
+            },
+            {
+              "completed_simulations": 8213504,
+              "cpu_seconds": 426.78753,
+              "game_ids": {
+                "_git_omitted_raw": {
+                  "count": 126,
+                  "json_path": "$.result.status.gpu_owner.workers[2].game_ids",
+                  "kind": "list",
+                  "value_sha256": "957b78ba8a1e5bcb94ef6c060f34c32a61533241abe017b444023019d38346e0"
+                }
+              },
+              "in_progress_simulations_at_exit": 0,
+              "peak_active_games": 63,
+              "queue_backpressure_seconds": 3.49552338103058,
+              "wait_result_seconds": 1212.4358153180535,
+              "worker_id": 2
+            },
+            {
+              "completed_simulations": 8352768,
+              "cpu_seconds": 436.50671600000004,
+              "game_ids": {
+                "_git_omitted_raw": {
+                  "count": 126,
+                  "json_path": "$.result.status.gpu_owner.workers[3].game_ids",
+                  "kind": "list",
+                  "value_sha256": "81063ebcbe71283b4478bba3d2416489ff4675a68289846c0411f486118a9fb8"
+                }
+              },
+              "in_progress_simulations_at_exit": 0,
+              "peak_active_games": 63,
+              "queue_backpressure_seconds": 3.592544536993273,
+              "wait_result_seconds": 1261.942826119971,
+              "worker_id": 3
+            },
+            {
+              "completed_simulations": 8095744,
+              "cpu_seconds": 421.342982,
+              "game_ids": {
+                "_git_omitted_raw": {
+                  "count": 124,
+                  "json_path": "$.result.status.gpu_owner.workers[4].game_ids",
+                  "kind": "list",
+                  "value_sha256": "95006f82ce57a5fb4982a2a52344843dc96264d99828ba76696d351a15ec0691"
+                }
+              },
+              "in_progress_simulations_at_exit": 0,
+              "peak_active_games": 62,
+              "queue_backpressure_seconds": 3.483277598126051,
+              "wait_result_seconds": 1211.6174719010703,
+              "worker_id": 4
+            },
+            {
+              "completed_simulations": 8229888,
+              "cpu_seconds": 429.688743,
+              "game_ids": {
+                "_git_omitted_raw": {
+                  "count": 124,
+                  "json_path": "$.result.status.gpu_owner.workers[5].game_ids",
+                  "kind": "list",
+                  "value_sha256": "b938bff7fe7ec96822ff14b8a423c577550c5be1f804a9fa5d497681a1946c09"
+                }
+              },
+              "in_progress_simulations_at_exit": 0,
+              "peak_active_games": 62,
+              "queue_backpressure_seconds": 3.539838390997602,
+              "wait_result_seconds": 1249.1678191409553,
+              "worker_id": 5
+            },
+            {
+              "completed_simulations": 8156160,
+              "cpu_seconds": 427.680856,
+              "game_ids": {
+                "_git_omitted_raw": {
+                  "count": 124,
+                  "json_path": "$.result.status.gpu_owner.workers[6].game_ids",
+                  "kind": "list",
+                  "value_sha256": "2c59396fb4afe3c57a6bae18afad3e72c12faebf57fb6a3f0023d5810ead3eb4"
+                }
+              },
+              "in_progress_simulations_at_exit": 0,
+              "peak_active_games": 62,
+              "queue_backpressure_seconds": 3.5991312699788978,
+              "wait_result_seconds": 1295.0853071010279,
+              "worker_id": 6
+            },
+            {
+              "completed_simulations": 8296448,
+              "cpu_seconds": 434.631397,
+              "game_ids": {
+                "_git_omitted_raw": {
+                  "count": 124,
+                  "json_path": "$.result.status.gpu_owner.workers[7].game_ids",
+                  "kind": "list",
+                  "value_sha256": "54a6e65f6a910b920bb0229ac339c3386861f663428ecbfccc1028b0f8d8ef3d"
+                }
+              },
+              "in_progress_simulations_at_exit": 0,
+              "peak_active_games": 62,
+              "queue_backpressure_seconds": 3.70428940002148,
+              "wait_result_seconds": 1309.2187644311175,
+              "worker_id": 7
+            }
+          ]
+        },
+        "gpu_peak_bytes": 312386560,
+        "inference": {
+          "batch_size_histogram": {
+            "_git_omitted_raw": {
+              "count": 495,
+              "json_path": "$.result.status.inference.batch_size_histogram",
+              "kind": "dict",
+              "value_sha256": "4ae4ab13fae2d99602f06224ebf7b9899577165959266463866b0c1493297f27"
+            }
+          },
+          "d2h_seconds": 18.711698395955864,
+          "feature_seconds": 0.0,
+          "forward_seconds": 293.2747828879003,
+          "h2d_seconds": 35.190999986029965,
+          "logical_model_positions": 59940914,
+          "mean_batch_size": 404.8201772158738,
+          "physical_model_batches": 148068,
+          "wait_seconds": 117.24137744201448
+        },
+        "native_batch_batches": 1088068,
+        "native_batch_rows": 59940914,
+        "native_compute_seconds": 905.469368329,
+        "native_consume_seconds": 0.0,
+        "native_encoding_seconds": 0.0,
+        "native_fill_seconds": 856.1492807980592,
+        "native_policy_rows": 59940914,
+        "native_root_rows": 64373,
+        "native_value_rows": 0,
+        "native_wide_batches": 12510,
+        "peak_active_games": 500,
+        "peak_inflight_rows": 63,
+        "peak_pending_requests": 63,
+        "pipeline_slots": 1,
+        "queue_backpressure_seconds": 28.75720108014525,
+        "queue_wait_seconds": 10121.353620721213,
+        "real_rule_seconds": 36.19640189002371,
+        "root_encoding_seconds": 73.74722469698577,
+        "search_rule_seconds": 226.404701749,
+        "statistics_game_ids": {
+          "_git_omitted_raw": {
+            "count": 1000,
+            "json_path": "$.result.status.statistics_game_ids",
+            "kind": "list",
+            "value_sha256": "b1c32e2197c96b83093960b247b9a8eac730c9527f14fa7691c116b77d679a63"
+          }
+        },
+        "statistics_scope": "collection_session",
+        "wait_result_seconds": 10121.353620721213,
+        "wall_seconds": 1705.9181913529999,
+        "worker_collection_wall_seconds_max": 1704.4942283619998,
+        "worker_compile": [
+          {
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 0.0012047290001646616,
+                "policy_value:32": 2.7903461079999943,
+                "policy_value:48": 1.2901538490000348
+              },
+              "compiled_calls": {
+                "policy_value:16": 670,
+                "policy_value:32": 23556,
+                "policy_value:48": 111890
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 393,
+                "unique_graphs": 3
+              },
+              "eager_fallbacks": 11952,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled"
+              }
+            },
+            "inference": {
+              "actor_projection": true,
+              "candidate_buckets": [
+                16,
+                32,
+                48
+              ],
+              "compile_failure_policy": "fallback",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "worker_id": "gpu_owner"
+          }
+        ],
+        "worker_cpu_seconds": [
+          421.342982,
+          426.78753,
+          429.688743,
+          436.50671600000004,
+          434.146641,
+          427.680856,
+          430.904979,
+          434.631397
+        ],
+        "worker_initialization_seconds_sum": 0.012386474999857455,
+        "write_seconds": 33.24977906499407
+      },
+      "summary": {
+        "batch_failure_game_ids": [],
+        "batch_failures": 0,
+        "compile_failure_policy": "fallback",
+        "completed_games": 1000,
+        "cpu_peak_rss_kib": 1275632,
+        "data_bytes": 44933579,
+        "decision_latency": {
+          "count": 86550,
+          "max_ms": 16422.724517000006,
+          "p50_ms": 11097.574103999932,
+          "p95_ms": 15617.113403000076
+        },
+        "draws": 18,
+        "engineering_truncations": 0,
+        "exceptions": 0,
+        "expected_games": 1000,
+        "failed_games": 0,
+        "games_per_wall_second": 0.5861945813514532,
+        "gpu_peak_bytes": 312386560,
+        "inference": {
+          "batch_size_histogram": {
+            "_git_omitted_raw": {
+              "count": 495,
+              "json_path": "$.result.summary.inference.batch_size_histogram",
+              "kind": "dict",
+              "value_sha256": "4ae4ab13fae2d99602f06224ebf7b9899577165959266463866b0c1493297f27"
+            }
+          },
+          "d2h_seconds": 18.711698395955864,
+          "feature_seconds": 0.0,
+          "forward_seconds": 293.2747828879003,
+          "h2d_seconds": 35.190999986029965,
+          "logical_model_positions": 59940914,
+          "mean_batch_size": 404.8201772158738,
+          "physical_model_batches": 148068,
+          "wait_seconds": 117.24137744201448
+        },
+        "logical_model_positions": 59940914,
+        "missing_games": 0,
+        "native_batch_batches": 1088068,
+        "native_batch_rows": 59940914,
+        "native_compute_seconds": 905.469368329,
+        "native_consume_seconds": 0.0,
+        "native_encoding_seconds": 0.0,
+        "native_fill_seconds": 856.1492807980592,
+        "native_policy_rows": 59940914,
+        "native_root_rows": 64373,
+        "native_value_rows": 0,
+        "native_wide_batches": 12510,
+        "p0_wins": 503,
+        "p1_wins": 479,
+        "peak_active_games": 500,
+        "peak_inflight_rows": 63,
+        "peak_pending_requests": 63,
+        "pipeline_slots": 1,
+        "policy_samples": 64373,
+        "policy_samples_per_wall_second": 37.735103785337095,
+        "protocol": "mcts-selfplay-v2",
+        "queue_wait_seconds": 10121.353620721213,
+        "real_rule_seconds": 36.19640189002371,
+        "root_encoding_seconds": 73.74722469698577,
+        "samples": 86550,
+        "search_rule_seconds": 226.404701749,
+        "search_seconds_sum": 761798.4549768767,
+        "semantic_fingerprint": "e7e7f11e0873be424e4026f9e7a7c32752aa5cfebc6432fa09c95727f0c9e50a",
+        "simulations": 65917952,
+        "simulations_per_wall_second": 38640.746276185186,
+        "statistics_complete": true,
+        "statistics_game_ids": {
+          "_git_omitted_raw": {
+            "count": 1000,
+            "json_path": "$.result.summary.statistics_game_ids",
+            "kind": "list",
+            "value_sha256": "b1c32e2197c96b83093960b247b9a8eac730c9527f14fa7691c116b77d679a63"
+          }
+        },
+        "statistics_missing_game_ids": [],
+        "statistics_scope": "collection_session",
+        "wall_seconds": 1705.9181913529999,
+        "worker_collection_wall_seconds_max": 1704.4942283619998,
+        "worker_compile": [
+          {
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 0.0012047290001646616,
+                "policy_value:32": 2.7903461079999943,
+                "policy_value:48": 1.2901538490000348
+              },
+              "compiled_calls": {
+                "policy_value:16": 670,
+                "policy_value:32": 23556,
+                "policy_value:48": 111890
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 393,
+                "unique_graphs": 3
+              },
+              "eager_fallbacks": 11952,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled"
+              }
+            },
+            "inference": {
+              "actor_projection": true,
+              "candidate_buckets": [
+                16,
+                32,
+                48
+              ],
+              "compile_failure_policy": "fallback",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "worker_id": "gpu_owner"
+          }
+        ],
+        "worker_initialization_seconds_sum": 0.012386474999857455,
+        "write_seconds": 33.24977906499407
+      },
+      "worker_widths": []
+    },
+    "script_sha256": "4ea428bf4048a5a500cacb2ca5e3f05772526a1cd929ec05f0f77e8c8c5a6307",
+    "source": "/home/lc/下载/splendor/runtime/end_to_end_speed_2026-10-03/baseline_source/src/splendor/multiworker_gpu.py",
+    "start_unix": 1791025818.6553066,
+    "threads": {
+      "MKL_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    },
+    "torch": "2.14.0+cu130"
+  },
+  "raw": {
+    "bytes": 3289186,
+    "path": "artifacts/end_to_end_speed_2026-10-03/collection_baseline_low.json",
+    "sha256": "8133762c5bdda98ab893d3354d928a5c2e225db97437c75e5e8fab913ef096ea"
+  },
+  "schema": "splendor-git-artifact-summary-v1",
+  "scope": "Mechanical projection; omitted fields are explicitly marked. Not a complete runtime input."
+}

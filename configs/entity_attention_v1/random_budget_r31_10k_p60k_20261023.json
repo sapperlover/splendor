@@ -40,7 +40,7 @@
   "last_round": 74,
   "learner": {
     "batch_size": 256,
-    "checkpoint_every_steps": 50,
+    "checkpoint_every_steps": 500,
     "device": "cuda",
     "history_batch_size": 128,
     "learning_rate": 2e-05,
@@ -67,18 +67,13 @@
       "actor_projection": false,
       "backend": "native_cuda_pool",
       "batch_buckets": [
-        16,
-        32,
         64,
         128,
-        192,
         256,
-        384,
         500
       ],
       "batch_interface": "native",
       "candidate_buckets": [
-        16,
         32,
         48,
         64
@@ -91,13 +86,13 @@
       "max_batch_size": 500,
       "max_batch_wait_ms": 5,
       "native_transport": "reused",
-      "pipeline_slots": 1,
+      "pipeline_slots": 2,
       "precision": "float32",
       "search_workers": 12,
       "shared_candidate_width": 256,
       "shared_slots": 2,
       "torch_threads": 1,
-      "total_active_games": 2000,
+      "total_active_games": 1000,
       "workers": 1
     },
     "pairs": 500,
@@ -208,6 +203,14 @@
       "opening_temperature": 1.0
     },
     "validation_fraction": 0.1
+  },
+  "six_round_holdout": {
+    "batch_size": 512,
+    "block_rounds": 6,
+    "manifest": {
+      "path": "/home/lc/下载/splendor/artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/manifest.json",
+      "sha256": "77c84875a4e2c4abb7f3f1d8008916dd3035903f470235b8cd3fb266d17c9142"
+    }
   },
   "updates_per_round": 3000,
   "validation_positions": 2048,

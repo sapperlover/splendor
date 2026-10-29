@@ -1,5 +1,7 @@
 # policy 组 clip 阈值回放探针（2026-10-09）
 
+2026-10-23归档位置更新：本专题关联`runs/entity_attention_clip_sweep_20261009`中的10个抽样账本／逐步日志已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。
+
 在 16500 步冻结起点上逐条重放分头训练第 20 新轮（round-019）已记录的抽样账本、模型与 AdamW/RNG 状态，只改变 **policy 组**（共享 trunk + policy head）的 `max_grad_norm`；critic head 的裁剪固定 1.0，学习率取 2.5e-5 或 1e-4。每个节点先用 100 步账本，再用独立冻结的 50 步扩展账本延伸到 125/150 步。入口是 [probe.py](probe.py)，复用了 [formal_lr_step 探针](../entity_attention_formal_lr_step_20261007/experiment.py)的账本、恢复与诊断函数；没有修改任何其他文件。
 
 ## 口径

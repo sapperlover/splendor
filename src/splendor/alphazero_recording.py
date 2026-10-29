@@ -110,37 +110,48 @@ def environment_identity() -> dict[str, Any]:
 
 
 class ReferenceWriter:
-    """Little-endian int64 [step,round,game,decision]; fsync before checkpoint."""
-    def __init__(self, root: Path, session_id: str, batch_size: int, identity: Mapping[str, Any]):
+    """Batch hashes, with optional exact int64 references and attempt logs."""
+    def __init__(self, root: Path, session_id: str, batch_size: int, identity: Mapping[str, Any],
+                 *, persist_records: bool = True):
         root.mkdir(parents=True, exist_ok=True)
-        self.path = root / f"{session_id}.bin"
-        self.handle = self.path.open("ab")
-        self.metrics_handle = self.path.with_suffix(".steps.jsonl").open("a", encoding="utf-8")
-        write_json(self.path.with_suffix(".json"), {"format": "az-reference-i64le-v1", "columns": ["step", "round", "game", "decision"],
+        self.persist_records = persist_records
+        self.path = root / f"{session_id}{'.bin' if persist_records else '.json'}"
+        self.handle = self.path.open("ab") if persist_records else None
+        self.metrics_handle = (self.path.with_suffix(".steps.jsonl").open("a", encoding="utf-8")
+                               if persist_records else None)
+        write_json(self.path.with_suffix(".json"), {
+                   "format": "az-reference-i64le-v1" if persist_records else "az-reference-sha256-only-v1",
+                   "columns": ["step", "round", "game", "decision"],
                    "batch_size": batch_size, "session_id": session_id, **identity})
 
     def append(self, step: int, references: Any) -> str:
         rows = np.asarray([(step, r.round_index, r.game_id, r.decision_index) for r in references], dtype="<i8")
         data = rows.tobytes()
-        self.handle.write(data)
+        if self.persist_records:
+            self.handle.write(data)
         return hashlib.sha256(data).hexdigest()
 
     def flush(self) -> None:
+        if not self.persist_records:
+            return
         self.handle.flush()
         os.fsync(self.handle.fileno())
         self.metrics_handle.flush()
         os.fsync(self.metrics_handle.fileno())
 
     def record_step(self, record: Mapping[str, Any]) -> None:
-        self.metrics_handle.write(json.dumps(dict(record), sort_keys=True, allow_nan=False) + "\n")
+        if self.persist_records:
+            self.metrics_handle.write(json.dumps(dict(record), sort_keys=True, allow_nan=False) + "\n")
 
     def close(self) -> None:
-        self.flush()
-        self.handle.close()
-        self.metrics_handle.close()
+        if self.persist_records:
+            self.flush()
+            self.handle.close()
+            self.metrics_handle.close()
 
     def archive_metrics(self, path: Path) -> None:
-        shutil.copyfile(path, self.path.with_suffix(".metrics.jsonl"))
+        if self.persist_records:
+            shutil.copyfile(path, self.path.with_suffix(".metrics.jsonl"))
 
 
 def summarize_references(root: Path, committed_step: int, round_index: int, pools: Mapping[str, int]) -> dict[str, Any]:

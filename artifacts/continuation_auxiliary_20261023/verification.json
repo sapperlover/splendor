@@ -1,0 +1,127 @@
+{
+  "created_at": "2026-10-23T10:35:37.734222+00:00",
+  "git_head": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "preparations": [
+    {
+      "absolute_rounds": [
+        64,
+        74
+      ],
+      "dataset_digest": "3baf37ed9bd59c85e61426cb75d1af75c0f6c9e59c4200aef967f0259bfc1625",
+      "fixed_validation_digest": "b7d07bc00d1277c7eabfea561199e33ab83c7e49c1598a22b35ee52919da55b5",
+      "formal_training_started": false,
+      "games": 44000,
+      "initialization": {
+        "auxiliary_seed": 36100000,
+        "kind": "random_initialization",
+        "model_config": {
+          "architecture": "entity_attention_continuation_v1",
+          "dropout": 0.0,
+          "feature_schema_version": "splendor-observation-action-v1",
+          "ffn_hidden": 512,
+          "heads": 4,
+          "hidden": 128,
+          "layers": 2,
+          "market_relations": true,
+          "predict_opponent_policy": false,
+          "value_readout": "global_players_market"
+        },
+        "optimizer": "fresh AdamW",
+        "seed": 43100000
+      },
+      "path": "runtime/continuation_auxiliary_20261023/prepare_shortterm",
+      "plan_sha256": "a417b3f127f7386df9a4a4285b668f346121da10e8874b20dce998c94e86a3cd",
+      "sampling": {
+        "policy_batch_size": 256,
+        "policy_draw_exposure": 57.30019290919413,
+        "protocol": "policy-high-value-all-v1",
+        "update": "one joint AdamW update and one global gradient clip per policy/value batch pair",
+        "value_batch_size": 256,
+        "value_draw_exposure": 12.000075690772917
+      },
+      "splits": {
+        "train": {
+          "games": 39629,
+          "policy_positions": 664043,
+          "positions": 3170796
+        },
+        "validation": {
+          "games": 4371,
+          "policy_positions": 72631,
+          "positions": 349435
+        }
+      },
+      "steps_target": 148632
+    },
+    {
+      "absolute_rounds": [
+        64,
+        74
+      ],
+      "dataset_digest": "3baf37ed9bd59c85e61426cb75d1af75c0f6c9e59c4200aef967f0259bfc1625",
+      "fixed_validation_digest": "b7d07bc00d1277c7eabfea561199e33ab83c7e49c1598a22b35ee52919da55b5",
+      "formal_training_started": false,
+      "games": 44000,
+      "initialization": {
+        "auxiliary_seed": 36100000,
+        "kind": "random_initialization",
+        "model_config": {
+          "architecture": "entity_attention_continuation_v1",
+          "dropout": 0.0,
+          "feature_schema_version": "splendor-observation-action-v1",
+          "ffn_hidden": 512,
+          "heads": 4,
+          "hidden": 128,
+          "layers": 2,
+          "market_relations": true,
+          "predict_opponent_policy": true,
+          "value_readout": "global_players_market"
+        },
+        "optimizer": "fresh AdamW",
+        "seed": 43100000
+      },
+      "path": "runtime/continuation_auxiliary_20261023/prepare_combined",
+      "plan_sha256": "d8a69383adde1a572202c80f2b2f0d4e101c4f4c0c7c1c6f2deeed9927d3111a",
+      "sampling": {
+        "policy_batch_size": 256,
+        "policy_draw_exposure": 57.30019290919413,
+        "protocol": "policy-high-value-all-v1",
+        "update": "one joint AdamW update and one global gradient clip per policy/value batch pair",
+        "value_batch_size": 256,
+        "value_draw_exposure": 12.000075690772917
+      },
+      "splits": {
+        "train": {
+          "games": 39629,
+          "policy_positions": 664043,
+          "positions": 3170796
+        },
+        "validation": {
+          "games": 4371,
+          "policy_positions": 72631,
+          "positions": 349435
+        }
+      },
+      "steps_target": 148632
+    }
+  ],
+  "scope": "139 finite CPU regressions; two real-pool preparations; three archived games, one CPU update, three S8N1 native roots; no formal training/strength experiment",
+  "smoke_sha256": "3329ff7addfb24686dc80d3e023787cd686a46eef6026ceaaae871ccf612f0d0",
+  "source_sha256": {
+    "/home/lc/下载/splendor/scripts/validate_continuation_auxiliary.py": "959326a7b8d3a94bc60dafc6601865ba939195788ce51fb5ccf6d67c3b74d010",
+    "src/splendor/actor_critic.py": "8ffc9fe0c335c01cc97d93d913535331ace9bd3898ef6747dbe6f541b4ae5232",
+    "src/splendor/alphazero_train.py": "2c90bc6587ac36379b42b009b20e65af640499d1f12ef71989702e85242900bc",
+    "src/splendor/compact_game_cache.py": "d2f320dca4440b69e64bb52131b902c808a65ad0e707f86cec6d3de3855f2103",
+    "src/splendor/continuation_auxiliary.py": "99ba7c1cab3ecc56a3fe981cf235f0c27e89b2f29c85370e02796b600aef2d94",
+    "src/splendor/offline_continuation.py": "f193ddec16184745f3a1cce7ac9209f1afeef6d03d67952884a3e6e8035ce542",
+    "src/splendor/offline_objectives.py": "47daec8eac729673b30bc667d5680a1652d27bbc7c4389d4621d28e26b073343",
+    "src/splendor/opponent_policy.py": "0ee1da8ba6089f2fc04a78b12f393cfea6031e93449d1b2aeec9e1ec5c535e37"
+  },
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 139
+  },
+  "tests_sha256": "626fc83fee99476c7ac6ba183a007a7f3432c399a5b59fa0c822b117677700f3"
+}

@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-29",
+  "status": "complete",
+  "scope": "User-requested independent greedy evaluation of current full-holdout best against raw R37; no training resume or search",
+  "candidate_step": 140221,
+  "best_objective": 0.9286851475987772,
+  "candidate": {
+    "path": "/home/lc/下载/splendor/runs/entity_attention_r37_104k_lr2e5_20261027/checkpoints/step-000140221.pt",
+    "sha256": "42fbd07c413190389ac5f2cab73ef41ff4a10f5402a13e099a37d49aa3cb6caa"
+  },
+  "opponent": {
+    "path": "/home/lc/下载/splendor/runs/entity_attention_r31_10k_p60k_iteration_20261023/rounds/round-005/checkpoints/final.pt",
+    "sha256": "611f4f4ed18f397b03c79bb3a2beae51e7a77a747883680d9189eed3052a1045"
+  },
+  "selection_rule": "minimum full validation primary KL+MSE among completed validation points at launch; ties earlier step",
+  "latest_validation_step_at_launch": 227859,
+  "selected_full_validation": {
+    "path": "runs/entity_attention_r37_104k_lr2e5_20261027/full_validation/step-000140221.json",
+    "sha256": "d020de0680a3a2df56e72a26a3d1391845cfe1a93ae95442db1ef18567e1fe10"
+  },
+  "config_sha256": "6f63ceb6441b960d9183a626f6c21a147aeec3e7e0c3691b5eb00b2f1c1957dc",
+  "git_head": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "command": [
+    "conda",
+    "run",
+    "--no-capture-output",
+    "-n",
+    "splendor",
+    "env",
+    "PYTHONPATH=runtime/entity_attention_r37_104k_lr2e5_20261027/source/src",
+    "OMP_NUM_THREADS=1",
+    "MKL_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "python",
+    "-u",
+    "-m",
+    "splendor.evaluation",
+    "--config",
+    "artifacts/entity_attention_r37_104k_lr2e5_best_vs_r37_greedy_20261029/config.json",
+    "--output",
+    "runtime/entity_attention_r37_104k_lr2e5_best_vs_r37_greedy_20261029/evaluation.json",
+    "--progress-every",
+    "100",
+    "--summary-every",
+    "100"
+  ],
+  "resume": "Append --resume to the identical command; keep runtime sidecars",
+  "raw_output": "runtime/entity_attention_r37_104k_lr2e5_best_vs_r37_greedy_20261029/evaluation.json",
+  "stdout_log": "runtime/entity_attention_r37_104k_lr2e5_best_vs_r37_greedy_20261029/evaluation.log",
+  "source_manifest": "artifacts/entity_attention_r37_104k_lr2e5_best_vs_r37_greedy_20261029/source.json",
+  "result_summary": {
+    "path": "artifacts/entity_attention_r37_104k_lr2e5_best_vs_r37_greedy_20261029/summary.json",
+    "sha256": "e57f600a149971c09b14986a8921235ca756f5394103029163c7534f7def8a5b"
+  },
+  "passed": true
+}

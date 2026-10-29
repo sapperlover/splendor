@@ -1,0 +1,107 @@
+{
+  "cache_mib": 18432,
+  "client_date": "2026-10-26",
+  "commands": {
+    "cpu": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/entity_attention_128x2_noaux_r21_r37_20261026/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/entity_attention_128x2_noaux_r21_r37_20261026/validate.py",
+    "prepare": "bash scripts/run_attention128_noaux104k_20261026.sh prepare",
+    "serial": "bash scripts/run_attention128_noaux104k_queue_20261026.sh",
+    "standalone": "bash scripts/run_attention128_noaux104k_20261026.sh",
+    "tests": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/entity_attention_128x2_noaux_r21_r37_20261026/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q -o pythonpath=runtime/entity_attention_128x2_noaux_r21_r37_20261026/source/src tests/test_noaux104k_queue.py tests/test_offline_early_stopping.py tests/test_offline_mixed_budget.py tests/test_continuation_ablation_queue.py --junitxml=artifacts/entity_attention_128x2_noaux_r21_r37_20261026/tests.xml"
+  },
+  "config_difference": {
+    "all_other_fields_identical": true,
+    "removed": [
+      "continuation_auxiliary",
+      "encoder_grad_norm_every_steps"
+    ]
+  },
+  "cpu_check": {
+    "actual_supervisor_module_route_verified_for": [
+      "train",
+      "select"
+    ],
+    "decisions": 336,
+    "four_worker_resume_bitwise": [
+      "model",
+      "AdamW",
+      "sampling_rng",
+      "Torch_rng",
+      "full_validation"
+    ],
+    "full_104k_warmup": false,
+    "native_roots": 3,
+    "native_total_simulations": 24,
+    "real_games": 4,
+    "steps_per_path": 4
+  },
+  "evidence_hashes": {
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/README.md": "2fa2169e2f83c63192a44982cba8c90553dec6ca948bc3f16d3435cef34c1680",
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/cpu_validation.json": "7102bb0d9a4b4a45d85bf0604a075a43f77802f8704e760cf759e227706076f8",
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/evaluation_templates.json": "5b8daece5b78f828af2a0f3298fb1063d5b1b9d9e16a5519998c66eb1ca011f7",
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/initial_tests.xml": "ccad8a9eabc9a2b4b898506059b9a9136d2375e5b5460c2e3999f5db111c99d4",
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/parent_preservation.json": "b26f54375b45a70ae796bbd18e229e5a73d9f525846e952a39826aff8e7d195c",
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/plan.json": "4a27f74c1d74536b8d03ed61cebb2bea63e1a40d1df4b1229a8554cf1a8cbffd",
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/run.py": "ad9f225e5718e4994e63e4e2249a2f89a10c4c7b12905b0f5508eeb6a2a4b743",
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/source.json": "14e81c425e6f6c670b2afb5a0f4a70de1ccd41f986eb68ecb40532c04ff1ff5a",
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/tests.xml": "430f56821a3994b5d28ec4b2e2d15ab5e1dfd71a4892f1ee59865e4db46ac440",
+    "artifacts/entity_attention_128x2_noaux_r21_r37_20261026/validate.py": "176badab729a8e4c335e70b7b00b1b782a3ae9d01f7f40a2baec6d1213343919",
+    "artifacts/entity_attention_noaux104k_queue_20261026/README.md": "f7e1ca87c83c1489d6a4797c7e81ef2ab29dad89eb0beb14abec8cd7cbeb663d",
+    "artifacts/entity_attention_noaux104k_queue_20261026/launch.json": "161ef063bb8eff896a1a64a160b16ba965bc9fe92a54a67f2a03d008a49e7fa1",
+    "artifacts/entity_attention_noaux104k_queue_20261026/plan.json": "316b74da5dfbb6937e32199f00510d48d72c9d2e2c42fb39a37a86b9f383f7f6",
+    "artifacts/entity_attention_noaux104k_queue_20261026/serial_queue.py": "130d539a3e980c081d7f3b13295805826e8cc7bea4fb198c9e112f8cb1de41c7",
+    "configs/entity_attention_v1/offline_noaux_r21_r37_20261026.json": "cfca6f0678deac93ff53caeccb8e496e533ff39b951ec0e3424ebb8197653462",
+    "scripts/run_attention128_noaux104k_20261026.sh": "bfd5a5c44f687a3b93745138919effdc054273e4a3350110db5d0a2aefb31a1d",
+    "scripts/run_attention128_noaux104k_queue_20261026.sh": "d3ba47029d3ceb1e92acf1d1f1c11c9b6511a53ec064eba6f03d9ef0260347af",
+    "tests/test_continuation_ablation_queue.py": "3e131a1755b193f23c6bee5323251c53381492cbe17d4b776e1de18e5fce3b5b",
+    "tests/test_noaux104k_queue.py": "889066d90171016408361b1b7856de519cbfb4c226599e21271e949e2793656b"
+  },
+  "formal_successor_checkpoints": 0,
+  "formal_successor_progress_exists": false,
+  "git_head": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "initial_test_failure": "A historical queue test read completed real experiments and skipped fake subprocesses. Fixed only the test ROOT to tmp_path; rerun33/33 passed. Runtime queue code unchanged.",
+  "parameters": 583682,
+  "predecessor_protected_files_unchanged": true,
+  "queue": {
+    "client_date": "2026-10-26",
+    "command": [
+      "bash",
+      "scripts/run_attention128_noaux104k_queue_20261026.sh"
+    ],
+    "cwd": "/home/lc/下载/splendor",
+    "log": "/home/lc/下载/splendor/runtime/entity_attention_noaux104k_queue_20261026/queue.log",
+    "observed_state": {
+      "active_experiment": null,
+      "completed": [],
+      "jobs": [
+        "entity_attention_128x2_noaux_r21_r37_20261026"
+      ],
+      "pid": 76148,
+      "predecessor": "entity_attention_128x2_policy_score_r21_r37_20261026",
+      "predecessor_checks": [],
+      "started_unix": 1793011045.1334672,
+      "status": "waiting"
+    },
+    "pid": 76105,
+    "plan_sha256": "316b74da5dfbb6937e32199f00510d48d72c9d2e2c42fb39a37a86b9f383f7f6",
+    "predecessor": "entity_attention_128x2_policy_score_r21_r37_20261026",
+    "predecessor_supervisor_lock_held_at_launch": true,
+    "queue_lock_held": true,
+    "queue_pid": 76148,
+    "runner_sha256": "130d539a3e980c081d7f3b13295805826e8cc7bea4fb198c9e112f8cb1de41c7",
+    "scope": "User-requested successor queue. Wait for full successful predecessor train/select/greedy/search before launching noaux104k. No signals or changes to predecessor.",
+    "start_unix": 1793011043.5456707,
+    "status": "waiting"
+  },
+  "same_original_pool_split_fixed_validation_and_schedule": true,
+  "scope": "User-requested no-auxiliary fresh104k offline experiment, serially after policy+score full successful train/select/greedy/search. Passive queue started; no successor formal updates or arenas yet.",
+  "source_snapshot_files_verified": 125,
+  "status": "queued_waiting",
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 33
+  },
+  "training_module": "splendor.offline_early_stopping",
+  "training_workers": 4
+}

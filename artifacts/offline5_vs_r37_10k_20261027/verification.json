@@ -1,0 +1,94 @@
+{
+  "actual_modules_frozen": true,
+  "all_original_selected_checkpoint_and_record_hashes_unchanged": true,
+  "client_date": "2026-10-27",
+  "commands": {
+    "cpu": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/offline5_vs_r37_10k_20261027/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/offline5_vs_r37_10k_20261027/validate.py",
+    "prepare": "bash scripts/run_offline5_vs_r37_10k_20261027.sh prepare",
+    "run": "bash scripts/run_offline5_vs_r37_10k_20261027.sh",
+    "status": "bash scripts/run_offline5_vs_r37_10k_20261027.sh status",
+    "tests": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/offline5_vs_r37_10k_20261027/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q -o pythonpath=runtime/offline5_vs_r37_10k_20261027/source/src tests/test_offline5_evaluation.py tests/test_paired_statistics.py tests/test_evaluation_3a.py::test_fixed_evaluation_retries_only_unscored_pairs_and_preserves_failures tests/test_evaluation_pool.py::test_pool_dual_models_match_checked_serial_and_resume --junitxml=artifacts/offline5_vs_r37_10k_20261027/tests.xml"
+  },
+  "cpu_checks": {
+    "CUDA_tested": false,
+    "complete_matches": 0,
+    "native_roots": 6,
+    "real_checkpoints": 6,
+    "simulations_each": 128,
+    "strict_loading": true,
+    "total_simulations": 768,
+    "training_auxiliary_inference_calls": 0
+  },
+  "evidence_hashes": {
+    "artifacts/offline5_vs_r37_10k_20261027/README.md": "f18dd58f612d6c82e3be99fee5639d378e8b9aa19107bcccf8ff0966e26a9196",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/01_greedy_value_vs_R37.json": "0c010323f2e6a9923ceb583e684bf9d9ce06a94a95e332f20fff37517f7e1fe4",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/02_greedy_value_policy_vs_R37.json": "05b7a248b8db590ee0af36d341e27dd2382414d9ed244d774d366ffdced3a6e7",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/03_greedy_policy_vs_R37.json": "669a331990c8df4271e953c9712b201e0e639669072e47d27f0d5d768eed8f52",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/04_greedy_noaux_vs_R37.json": "db93faa268232399eac7569ad5c111340aed86f0223056011fa644490ff32756",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/05_greedy_policy_score_vs_R37.json": "d8097cf61e3db07f21ff2e14bbbd5abc0c3823682cf8fdca3a2bc0b1ede8c81f",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/06_search_value_vs_R37.json": "e322ae1407f17305d62e991c740c0aff938e636f7a93511f33c5039e58125900",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/07_search_value_policy_vs_R37.json": "53892be2b1c160b4b1f1587dace856cd6fded3de76b653bca72bd2528ac15c0d",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/08_search_policy_vs_R37.json": "784629cf4541be724954664a6502a84bccedeb27695050880c8d9edd78af1692",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/09_search_noaux_vs_R37.json": "eb62d6bda733debb26dc71cca6ae8587b2536ad106d0b8a937ddf5a9b0191edf",
+    "artifacts/offline5_vs_r37_10k_20261027/configs/10_search_policy_score_vs_R37.json": "bd6d18d4569caf3e0c8d43c7ab858d7bff6cf85a028ea5d39323cc216887f552",
+    "artifacts/offline5_vs_r37_10k_20261027/cpu_validation.json": "cb418b0d59503e050089b6f314649e5b91c2399cf06810a40948d5b6368a665a",
+    "artifacts/offline5_vs_r37_10k_20261027/evaluation_templates.json": "5b8daece5b78f828af2a0f3298fb1063d5b1b9d9e16a5519998c66eb1ca011f7",
+    "artifacts/offline5_vs_r37_10k_20261027/plan.json": "843a1e64c0578bf62ff423b066c03da4ab1f67e027cad75399ebc8885306e5fa",
+    "artifacts/offline5_vs_r37_10k_20261027/results.md": "545191ca27f2d6acad5e572cf92eca9638028d323b717832a28341447dc38bc8",
+    "artifacts/offline5_vs_r37_10k_20261027/run.py": "9624c98539e54cec7fb7f8e198c2b669369e1829221c2fa63ebcbc1decc8db06",
+    "artifacts/offline5_vs_r37_10k_20261027/selections/noaux.json": "ed9201e61cacb39e7f7a619276c2ed5f450b9dcf45f3357d27f044d59552e680",
+    "artifacts/offline5_vs_r37_10k_20261027/selections/policy.json": "734144743c39dcd80d310a65d4aadfb0e2cf3c9ab8be869f04b54648ef1c4232",
+    "artifacts/offline5_vs_r37_10k_20261027/selections/policy_score.json": "ae15f661acbba452d44e2544dacffe0632453738637fe0a30f0e4403e61653c3",
+    "artifacts/offline5_vs_r37_10k_20261027/selections/value.json": "d70e0e68faecd1b71e0a455c02b7c052d566b0e87388308993d718a3f9a48bf8",
+    "artifacts/offline5_vs_r37_10k_20261027/selections/value_policy.json": "bdefa1d183dc06f97ebbfbdee07fd6ef878c93069576a4a3f5fe1ab2d355c0d3",
+    "artifacts/offline5_vs_r37_10k_20261027/source.json": "975b40748ad823c3a0d57c9a25d16815007ec3d014ba462349ffb02e6c587177",
+    "artifacts/offline5_vs_r37_10k_20261027/status_readonly_fix_20261027.json": "9f2fdb0e9d4359af9a0da283de3f23070f2b13abaf7491a2fc234c4cc9c5fbb6",
+    "artifacts/offline5_vs_r37_10k_20261027/summary.json": "ef96e4f73278faf0847955d6eca5bba1fa524033a2fafc9c75393b4bde13ea42",
+    "artifacts/offline5_vs_r37_10k_20261027/tests.xml": "0b1250a8e1d176cc6a9f23f3a857a55de3e23e7307ddcdcaa3f8be6e99c558f0",
+    "artifacts/offline5_vs_r37_10k_20261027/validate.py": "e1fe85824dd17bd7c6c7d859a597ab4e2effd8c973daa44d3a5e47451cba5a5d",
+    "scripts/run_offline5_vs_r37_10k_20261027.sh": "ba2c2692f768ed6e54f1266e758faae83fcbe0bcd992521f7758b3bc3ff8e4ae",
+    "tests/test_offline5_evaluation.py": "c309c0562a379fcf2629f3701b05f19a708f5e88897e6b9bd462984bea0bc68e"
+  },
+  "execution": {
+    "greedy": "CPU8, zero search",
+    "search": "configuration A; CUDA pool12workers,active1000,B500,mb128,pipeline2; S128N1 both sides"
+  },
+  "formal_execution_exists": false,
+  "formal_panel_directory_exists": false,
+  "git_head": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "model_order": [
+    "value",
+    "value_policy",
+    "policy",
+    "noaux",
+    "policy_score"
+  ],
+  "order": "All five greedy, then all five both-S128N1 total128, strictly serial",
+  "pairs_per_panel": 10000,
+  "panels": 10,
+  "scope": "Command-only delivery. No formal evaluation, training, new queue or user-process changes.",
+  "selected_steps": {
+    "noaux": 122694,
+    "policy": 140221,
+    "policy_score": 140221,
+    "value": 140221,
+    "value_policy": 140221
+  },
+  "source_snapshot_files_verified": 132,
+  "status": "prepared_not_started",
+  "status_readonly_fix": {
+    "previous_release_metadata": "runtime/offline5_vs_r37_10k_20261027/status_readonly_fix_20261027/before/artifacts/offline5_vs_r37_10k_20261027/verification.json",
+    "report": "artifacts/offline5_vs_r37_10k_20261027/status_readonly_fix_20261027.json",
+    "sha256": "9f2fdb0e9d4359af9a0da283de3f23070f2b13abaf7491a2fc234c4cc9c5fbb6",
+    "status": "verified"
+  },
+  "supervisor_lock_released": true,
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 19
+  },
+  "total_games": 200000,
+  "total_pairs": 100000
+}

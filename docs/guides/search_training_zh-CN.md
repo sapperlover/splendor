@@ -1,6 +1,10 @@
 # 搜索预算随机化、Forced Playouts 与 Policy Target Pruning
 
-2026-10-23的[raw R31起点、10k新局／60k池／3000步新分支](../../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)已按要求清除首次未完成采集，重置后未重启。历史用原R22–R31的40k完整局，首轮50k即可训练、第二轮满60k；lr2e-5，采集采用最新12worker／2000活跃局／B500／microbatch128，训练回放缓存16GiB。仍沿用原S256N4总1024／S128N1总128、policy历史25%子集、噪声／温度及R43评测协议。`random_budget_iteration`前置检查现支持未满池及其continuation，实际配额以活动池大小计算。
+2026-10-25新增[离线policy辅助模型起点的60k分支](../../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/README.md)。`random_budget_iteration`现支持按一基历史轮号映射局数，以及显式`initial_history_eviction=true`允许首批超容量按原机制淘汰；旧默认仍拒绝。配置`continuation_auxiliary`将模型头、原标签、缓存、replay身份与训练loss接通，主policy历史固定25%子集／新局配额不改。该新分支继续辅助0.15并固定对raw R37，已训练12轮、greedy66.075%，第12轮搜索973/1000局后中断。在线driver现于完整轮final保存后释放训练LRU及采样引用，通过GC／glibc malloc_trim归还空闲页；当前入口已接入独立发布，旧冻结发布保留。完整留出面板和小型policy资格索引仍常驻，下一轮训练需冷加载。见[发布与验证](../../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/cache_release_20261025/README.md)及[平台分析](../../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/plateau_review_20261025/results.md)；本次未恢复正式运行。
+
+2026-10-23当前R31在线保存策略改为500步周期点＋0／100／250／500／1000／2000／3000固定点；当前在线／近期离线停写双份抽样与逐步明细，主指标继续逐步记录。采集与评测预算不因记录策略改变，见[训练产物规则](training_artifacts_zh-CN.md)。
+
+2026-10-23的[raw R31起点、10k新局／60k池／3000步分支](../../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)已完成6轮至谱系R37，第7轮已建立采集配置。历史用R22–R31的40k完整局，首轮50k即可训练、第二轮满60k；lr2e-5、16GiB compact回放缓存。**采集保持**12worker／active2000／B500／microbatch128／owner双槽、B桶[16,32,64,128,192,256,384,500]、C桶[16,32,48,64]，等待5ms；75% S128N1总128、25% S256N4总1024，原噪声／温度、policy历史25%子集及淘汰不变。采集执行与日常／在线评测分开：新搜索评测统一配置A，active1000／精简B、C桶／owner双槽；在线greedy仍CPU8 worker／1000 pair，每3个本地轮次搜索500 pair。完整五场景参数、种子和命令见[统一评测指南](evaluation_zh-CN.md)。
 
 [37423步起点的4k局／24k池持续迭代](../../artifacts/entity_attention_random_budget_iteration_20261019/README.md)已完成20轮；初版“未启动”状态已过时。2026-10-22另设[第20轮继承续跑分支](../../artifacts/entity_attention_r20_s256n4_noble12_iteration_20261022/README.md)：25%高预算S256N4（总1024）、75%低预算S128N1（总128），新采集用12贵族；继承AdamW/RNG及24k活动池，FP/PTP关闭。
 

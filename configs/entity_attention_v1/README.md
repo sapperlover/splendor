@@ -1,6 +1,42 @@
 # Entity attention v1 配置
 
-2026-10-23新增[random_budget_r31_10k_p60k_20261023.json](random_budget_r31_10k_p60k_20261023.json)：raw R31完整模型／AdamW／RNG起点，历史为R22–R31共40k局（原round_index64–73，配置65–74），每轮10k、池上限60k、lr2e-5／3000步；首轮50k不淘汰，第二轮满60k，后续沿用原淘汰与配额。新分支局部第1轮为原谱系R32，不导入旧24k活动池／完成轮列表。原混合预算、学习与R43评测协议不变；采集更新为最新12worker／2000活跃局／B500／microbatch128，搜索评测同执行参数但owner单槽，回放缓存16GiB。已清除首次未完成采集，重置后未重启；[命令、池增长、清除记录和冻结来源](../../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)。
+2026-10-27新增[`offline_r37_104k_lr1e4_20261027.json`](offline_r37_104k_lr1e4_20261027.json)与[`offline_r37_104k_lr2e5_20261027.json`](offline_r37_104k_lr2e5_20261027.json)：相同104k无辅助离线预设，仅增加原R37权重身份并设对应lr；新AdamW／原离线种子，18GiB／4 worker、350552步上限、5%主KL＋MSE早停选点保持。[命令与验证](../../artifacts/entity_attention_r37_104k_offline_lr_20261027/README.md)，未启动正式训练。
+
+2026-10-27完成状态：[六组原离线实验及五模型大面板](../../docs/reports/auxiliary_offline_results_20261027_zh-CN.md)均已完成，policy＋得分和无辅助不再是准备／等待状态；policy在线已提交13轮，第12轮搜索完成。下方按日期记录原配置发布过程；仅得分辅助的独立预设仍未执行正式训练。
+
+2026-10-26新增[`offline_noaux_r21_r37_20261026.json`](offline_noaux_r21_r37_20261026.json)：原104k池，从零583682参数基础attention128，无任何辅助目标；与policy＋得分组相比仅移除continuation辅助及其梯度诊断字段，lr1e-4／18GiB／4共享worker／预算／验证／早停／选点保持。[串行命令与验证](../../artifacts/entity_attention_128x2_noaux_r21_r37_20261026/README.md)。
+
+2026-10-26新增[`offline_policy_score_r21_r37_20261026.json`](offline_policy_score_r21_r37_20261026.json)：与policy104k实际prefetch配置相比仅新增得分归属辅助0.25，policy辅助0.15、短期value关闭；原104k池／split、从零128×2、新AdamW、lr1e-4、18GiB／4 worker、5%完整主KL＋MSE早停选点保持。[脚本、命令与验证](../../artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/README.md)，未启动正式训练。
+
+2026-10-26新增[`offline_score_ownership_r21_r37_20261026.json`](offline_score_ownership_r21_r37_20261026.json)：104k原池，仅启用双方×四类未来新增分的8路归属回归，权重0.25；沿用offline_continuation，4 worker共享供数、17GiB（按同池旧arena上界核算）、流式／state-only／批量回读。已准备身份与有限验证，未启动正式训练；[定义与命令](../../docs/guides/score_ownership_zh-CN.md)。
+
+2026-10-25存储更新：使用原80000局池的配置运行前，须先从[归档20261025](../../artifacts/repository_archive_20261025/README.md)恢复原始NPZ；四组完成辅助实验的普通模型／主日志也在本批。配置身份、关键模型及当前在线初始64k／新采集输入保持，不改写冻结配置。
+
+2026-10-25新增[random_budget_policy140221_r31_r37_p60k_20261025.json](random_budget_policy140221_r31_r37_p60k_20261025.json)：仅policy辅助最优离线140221步全量继承AdamW/RNG，在线lr2e-5、3000步／新10k／容量60k；历史R31–R37共64k使用逐轮4000／10000映射，`initial_history_eviction=true`首轮淘汰14k历史。继续policy辅助0.15，固定raw R37，采集较优设置／评测A，六轮全量留出沿用。[命令及验证](../../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/README.md)；已训练12轮，第12轮搜索中断。缓存容量仍16GiB，完整轮训练后释放，实际脚本已换独立发布，不增加算法配置字段；见[缓存生命周期](../../artifacts/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/cache_release_20261025/README.md)。
+
+2026-10-24发布记录：后两组已使用`offline_continuation_r21_r37_prefetch_20261024.json`和`offline_shortterm_value_r21_r31_vs_r37_prefetch_20261024.json`，本次均18GiB／4 worker，启用流式统计和传输优化。新建离线默认采用后三项，缓存按池大小配置；原16GiB配置与冻结计划保持。[实际发布与命令](../../artifacts/offline_training_defaults_20261024/README.md)，[通用默认](../../docs/guides/offline_execution_zh-CN.md)。下方后两组未切换等说明为此前任务记录。
+
+2026-10-24发布记录：当前policy104k组与队列已停止在115000步，流式统计／传输优化发布继续沿用下方18GiB／4 worker配置，无算法配置变更。本次只准备命令，未重启；[实际冻结发布与恢复](../../artifacts/training_streaming_20261024/README.md)。
+
+2026-10-24执行配置：`offline_opponent_policy_r21_r37_prefetch_20261024.json`为当前仅policy组的18GiB／4 worker恢复配置，算法字段沿用原预设；原16GiB配置保留为历史身份。[恢复与共享只读供数](../../artifacts/training_prefetch_20261024/README.md)。
+
+2026-10-24新增`offline_opponent_policy_r21_r37_20261024.json`（104k，value辅助0／policy辅助0.15）、`offline_continuation_r21_r37_20261024.json`（104k，0.25／0.15）与`offline_shortterm_value_r21_r31_vs_r37_20261024.json`（原44k，0.25／0）。其余复制当前104k仅value预设；44k仍为12次value曝光，预算自动148632步，三组均对raw R37做greedy1000pair后搜索A500pair。[串行顺序、开关与冻结身份](../../artifacts/entity_attention_auxiliary_queue_20261024/README.md)。
+
+2026-10-23新增[offline_shortterm_value_r21_r37_20261023.json](offline_shortterm_value_r21_r37_20261023.json)：R21–R37共104k原对局，一基绝对轮64–80，每轮局数映射4000／10000；从零attention128＋H2/H6/H14短期value权重0.25、对手policy辅助0，lr1e-4，16GiB，两头B256，350552步／5%主KL+MSE早停选点。随后对raw R37 greedy1000pair、最新A搜索500pair；[实现、命令与启动身份](../../artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/README.md)。
+
+两份continuation离线配置新增`encoder_grad_norm_every_steps=100`，记录首步及每100步的逐任务共享编码器梯度；1逐步记录、0关闭。对手覆盖率、未知牌质量比例和条件CE每步及各验证集合均记录，分母定义见[诊断字段](../../docs/guides/continuation_auxiliary_zh-CN.md#训练与验证诊断2026-10-23追加)。
+
+2026-10-23新增[`offline_shortterm_value_r21_r31_20261023.json`](offline_shortterm_value_r21_r31_20261023.json)与[`offline_continuation_r21_r31_20261023.json`](offline_continuation_r21_r31_20261023.json)，均由`python -m splendor.offline_continuation`执行：前者仅2／6／14玩家回合指数value（权重0.25），后者另加两层对手policy（权重0.15）。44k原池、原split、B256双batch／lr1e-4／12次曝光／三次上升早停；只准备配置并完成[有限验证](../../artifacts/continuation_auxiliary_20261023/README.md)，未运行正式训练。覆盖限制、参数量、恢复及命令见[专题](../../docs/guides/continuation_auxiliary_zh-CN.md)。
+
+2026-10-23记录策略更新：R31在线`checkpoint_every_steps`改为500，仍强制保存并评估0／100／250／500／1000／2000／3000七节点；当前在线／近期离线默认停写双份`.bin`和双份`.steps.jsonl`，每步主指标保留。详见[记录规则](../../docs/guides/training_artifacts_zh-CN.md)，历史配置与产物不回写。
+
+当前在线配置使用`six_round_holdout`：第一段manifest路径＋SHA、batch512、block_rounds6。R32–R37使用R26–R31留出，R38–R43改用R32–R37留出，之后每六轮推进；每轮七节点全量评价、恢复自动补齐。初版永久固定面板设置`fixed_holdout`已由此替代；[定义与执行](../../docs/guides/evaluation_zh-CN.md#在线全量固定留出)。
+
+2026-10-23当前配置：[random_budget_r31_10k_p60k_20261023.json](random_budget_r31_10k_p60k_20261023.json)从raw R31完整模型／AdamW／RNG起步，R22–R31历史40k、每轮10k新局、容量60k、lr2e-5／3000步、16GiB compact缓存。已完成6轮至谱系R37，第7轮已建立采集配置；首次重置后的“未重启”状态已过时。采集继续12worker／active2000／B500／microbatch128／owner双槽，历史固定25%policy子集／淘汰／配额不变。**后续新搜索面板改为配置A**：12worker／active1000／B500／microbatch128／owner双槽，B桶[64,128,256,500]、C桶[32,48,64]；greedy仍CPU8 worker／1000 pair，每3个本地轮次搜索500 pair。新轮界读取源配置，旧面板保持冻结参数；[运行与变更记录](../../artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md)。
+
+日常评测新增可执行示例：[evaluation_greedy_r43.json](evaluation_greedy_r43.json)为CPU8 worker／1000 pair零搜索；[evaluation_search_a_r43.json](evaluation_search_a_r43.json)为双方S1024N1（总1024）／500 pair／GPU配置A。示例候选固定R37、对手固定原R43，实际比较前复制模板、明确更换模型及输出路径；不自动追踪最新模型。采集、日常greedy／搜索、在线greedy／搜索的完整对照及命令见[统一指南](../../docs/guides/evaluation_zh-CN.md)。
+
+下方按日期保留的旧分支单槽、已取消搜索及首次准备状态属于历史配置／当时范围，不作为当前默认。2026-10-23三组离线候选已另对R43完成500 pair搜索，结果见[独立补测](../../artifacts/eval_speed_20261023/README.md)；它不补写原R20／R31搜索面板。
 
 2026-10-23撤回新增购买结算关系方案，删除专用`offline_first_round_r21_r31_20261022.json`及入口／启动脚本。原583682参数关系attention128、现有离线与在线配置保持原配方，短期进展辅助关闭；旧组合／纯特征准备及删除前配置见[历史记录](../../artifacts/entity_attention_first_round_20261022/README.md)。
 

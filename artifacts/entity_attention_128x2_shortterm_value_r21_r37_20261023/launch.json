@@ -1,0 +1,126 @@
+{
+  "checked_local": "2026-10-23T20:27:40.838426+08:00",
+  "command": [
+    "bash",
+    "scripts/run_attention128_shortterm_value_r21_r37_20261023.sh"
+  ],
+  "cwd": "/home/lc/下载/splendor",
+  "first_update": {
+    "batch_size": 512,
+    "event": "train_step",
+    "round_train_step": 1,
+    "shortterm_eligible_positions": 186.0,
+    "shortterm_positions": 181.0,
+    "total_train_step": 1,
+    "training_mode": "joint_separate_batches"
+  },
+  "initial_checkpoint": {
+    "model_config": {
+      "architecture": "entity_attention_continuation_v1",
+      "dropout": 0.0,
+      "feature_schema_version": "splendor-observation-action-v1",
+      "ffn_hidden": 512,
+      "heads": 4,
+      "hidden": 128,
+      "layers": 2,
+      "market_relations": true,
+      "predict_opponent_policy": false,
+      "value_readout": "global_players_market"
+    },
+    "optimizer_entries": 0,
+    "parent": {
+      "auxiliary_seed": 36100000,
+      "kind": "random_initialization",
+      "model_config": {
+        "architecture": "entity_attention_continuation_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "predict_opponent_policy": false,
+        "value_readout": "global_players_market"
+      },
+      "optimizer": "fresh AdamW",
+      "seed": 43100000
+    },
+    "sha256": "c4a0b94a9bf97cf62f887ce77ab74b3434e928da839123c214fa800351a2d4ee",
+    "total_train_step": 0
+  },
+  "last_committed_step": 0,
+  "latest_instruction": "Command only; no automatic start.",
+  "launch_unix": 1792758355.3879309,
+  "launcher_pid": 460408,
+  "launcher_start_ticks": "3816650",
+  "lightweight_recording_checked": true,
+  "log": "runtime/entity_attention_128x2_shortterm_value_r21_r37_20261023/chain.log",
+  "phase": "stopped",
+  "polling": "none; this was the only startup verification; no further progress checks",
+  "processes": [
+    {
+      "args": [
+        "/home/lc/anaconda3/bin/python",
+        "/home/lc/anaconda3/bin/conda",
+        "run",
+        "--no-capture-output",
+        "-n",
+        "splendor",
+        "env",
+        "PYTHONPATH=src",
+        "OMP_NUM_THREADS=1",
+        "MKL_NUM_THREADS=1",
+        "OPENBLAS_NUM_THREADS=1",
+        "TORCHINDUCTOR_COMPILE_THREADS=1",
+        "python",
+        "-u",
+        "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/run.py"
+      ],
+      "pid": 460408,
+      "role": "launcher",
+      "start_ticks": "3816650",
+      "state": "S"
+    },
+    {
+      "args": [
+        "python",
+        "-u",
+        "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/run.py"
+      ],
+      "pid": 460452,
+      "role": "supervisor",
+      "start_ticks": "3816808",
+      "state": "S"
+    },
+    {
+      "args": [
+        "/home/lc/anaconda3/envs/splendor/bin/python",
+        "-u",
+        "-m",
+        "splendor.offline_continuation",
+        "--config",
+        "/home/lc/下载/splendor/runtime/entity_attention_128x2_shortterm_value_r21_r37_20261023/source/configs/entity_attention_v1/offline_shortterm_value_r21_r37_20261023.json",
+        "--output",
+        "/home/lc/下载/splendor/runs/entity_attention_128x2_shortterm_value_r21_r37_20261023"
+      ],
+      "pid": 460498,
+      "role": "trainer",
+      "start_ticks": "3817350",
+      "state": "R"
+    }
+  ],
+  "progress_at_startup": {
+    "status": "incomplete",
+    "step": 0,
+    "steps_target": 350552
+  },
+  "restarted": false,
+  "start_new_session": true,
+  "startup_check": "passed_single_check",
+  "status": "interrupted_by_user",
+  "stdin": "DEVNULL",
+  "stop_record": "artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/manual_stop_20261023.json",
+  "time_local": "2026-10-23T20:25:55.387922+08:00",
+  "verification_sha256": "e2b595a59b2a33c5357564b4e0d4a4fb8720861bcd9fec385d101d15c3f148c0"
+}

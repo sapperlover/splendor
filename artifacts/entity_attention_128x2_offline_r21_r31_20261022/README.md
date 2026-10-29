@@ -1,5 +1,11 @@
 # Attention128：第21–31轮固定池、连续上升早停与R20/R31对战
 
+2026-10-23归档位置更新：本专题关联`runtime/entity_attention_128x2_offline_r21_r31_20261022`中的5个抽样账本／逐步日志已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。
+
+2026-10-23归档位置更新：本专题关联`runs/entity_attention_128x2_offline_r21_r31_20261022`中的83个普通checkpoint、5个抽样账本／逐步日志已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。
+
+2026-10-23后续独立补测：原选定59453步模型对原R43，双方S1024N1（总1024）、12贵族、500 pair搜索得70.70% [67.80%,73.60%]；[配置与原始结果](../eval_speed_20261023/README.md)。这是新输出目录下的R43面板，不补跑或改写下方已取消的原R20／R31搜索，训练仍停止。后续日常／在线新搜索采用[配置A](../../docs/guides/evaluation_zh-CN.md)。
+
 2026-10-22最新指令：用户要求停止训练，直接执行两组greedy。已向原监督进程发送SIGINT并确认监督／训练子进程退出，保留84000步恢复点；原148632步预算未完成，也未触发自动早停。对战前按11个已完成百分比节点的完整留出KL＋MSE固定**59453步整个checkpoint**（KL0.227124、MSE0.768013、联合0.995137）。对raw R20／R31各1000pair greedy均已完成，原两组搜索取消；范围变更及候选身份见[manual_stop_greedy_plan.json](manual_stop_greedy_plan.json)、[selected_candidate.json](selected_candidate.json)，结果见[results.md](results.md)。原训练启动事实及中断记录继续保留在launch／execution中。
 
 两组greedy均已完成，共4000局：

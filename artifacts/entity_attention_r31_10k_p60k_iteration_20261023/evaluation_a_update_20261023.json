@@ -1,0 +1,287 @@
+{
+  "current_defaults": {
+    "greedy": {
+      "device": "cpu",
+      "pairs": 1000,
+      "workers": 8
+    },
+    "search": {
+      "budget": "S1024N1, total1024 per searchable decision per side",
+      "device": "cuda",
+      "execution": {
+        "active_games_per_worker": 1,
+        "actor_projection": false,
+        "backend": "native_cuda_pool",
+        "batch_buckets": [
+          64,
+          128,
+          256,
+          500
+        ],
+        "batch_interface": "native",
+        "candidate_buckets": [
+          32,
+          48,
+          64
+        ],
+        "compile_failure_policy": "fail_fast",
+        "compile_mode": "native-cudagraph",
+        "engine_mode": "fast",
+        "inference_mode": "compiled",
+        "local_microbatch": 128,
+        "max_batch_size": 500,
+        "max_batch_wait_ms": 5,
+        "native_transport": "reused",
+        "pipeline_slots": 2,
+        "precision": "float32",
+        "search_workers": 12,
+        "shared_candidate_width": 256,
+        "shared_slots": 2,
+        "torch_threads": 1,
+        "total_active_games": 1000,
+        "workers": 1
+      },
+      "pairs": 500
+    }
+  },
+  "daily_presets": [
+    {
+      "path": "configs/entity_attention_v1/evaluation_greedy_r43.json",
+      "sha256": "6e5eea7301c0959fa18dd235db12eb4c638d1b6acc38caa3ad73fd5bd0bbe907"
+    },
+    {
+      "path": "configs/entity_attention_v1/evaluation_search_a_r43.json",
+      "sha256": "37ba64fc4c065442070ee28bc7efdf46b2fa5a3e7bf1cc54d86abe68a417d6f1"
+    }
+  ],
+  "effective_boundary": "Driver reads source JSON at the next iteration boundary; newly prepared search panels after that use A. Current iteration templates and any existing search_config.json remain frozen. On the current three-local-round cadence the next scheduled search is local9/lineageR40 if no earlier search panel exists.",
+  "git_head_before_changes": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "historical_preparation": "prepare.py, plan.json, source.json, input_check.json, verification.json and their frozen runtime copies describe the initial reset preparation, not this later execution update.",
+  "observed_state": {
+    "completed_R37_search_profile": "old p1, original buckets, actual active1000; retained unchanged",
+    "completed_branch_iterations": 6,
+    "latest_lineage": "R37",
+    "next_stage_created": "round-006"
+  },
+  "online_config": {
+    "changes": [
+      {
+        "after": [
+          64,
+          128,
+          256,
+          500
+        ],
+        "before": [
+          16,
+          32,
+          64,
+          128,
+          192,
+          256,
+          384,
+          500
+        ],
+        "field": "search_evaluation.execution.batch_buckets"
+      },
+      {
+        "after": [
+          32,
+          48,
+          64
+        ],
+        "before": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "field": "search_evaluation.execution.candidate_buckets"
+      },
+      {
+        "after": 2,
+        "before": 1,
+        "field": "search_evaluation.execution.pipeline_slots"
+      },
+      {
+        "after": 1000,
+        "before": 2000,
+        "field": "search_evaluation.execution.total_active_games"
+      }
+    ],
+    "current_sha256": "4962c6d97df8d9a3856e034f54e9941a6d750c21d194e7dd99f857051a1f5dba",
+    "path": "configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json",
+    "previous_sha256": "8530e494dcef412b8b50ab2aed51f836206cf016dd5d597cb091a79d13675aad"
+  },
+  "prior_evidence_hashes": [
+    {
+      "current_sha256": "b6e9aac19314586a296c5b222fe4ca46d61c430d6f9b7a6a134f1bf760977838",
+      "entry_id": "entity-attention-r31-10k-p60k-iteration-2026-10-23",
+      "path": "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/README.md",
+      "previous_sha256": "ffb3924d004a996b170c7a81f9eedf9193fbba1fe7177d0a5843c2d027c5d8e6"
+    },
+    {
+      "current_sha256": "4962c6d97df8d9a3856e034f54e9941a6d750c21d194e7dd99f857051a1f5dba",
+      "entry_id": "entity-attention-r31-10k-p60k-iteration-2026-10-23",
+      "path": "configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json",
+      "previous_sha256": "8530e494dcef412b8b50ab2aed51f836206cf016dd5d597cb091a79d13675aad"
+    },
+    {
+      "current_sha256": "66dded60d4c7614a3f388048bfaecb8aaf95d3ad6c68e3b548023111e54f814c",
+      "entry_id": "entity-attention-r31-10k-p60k-iteration-2026-10-23",
+      "path": "tests/test_random_budget_pool_warmup.py",
+      "previous_sha256": "879844a7fe6740d2edfb1eab4e6cb31b383d17b0e78874fd6e48c9b29b6c4fe2"
+    },
+    {
+      "current_sha256": "22fada6ff818c5d7cf785eb3d2b5fb04e5758db499fe0b6dbeb5cedfc749c12d",
+      "entry_id": "entity-attention-128x2-r21-r31-lr2e5-2026-10-22",
+      "path": "artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/README.md",
+      "previous_sha256": "56a9fd566dd701c3d7d2c813a9db539e89de2a2e1cdbd33b709e36d338d682d1"
+    },
+    {
+      "current_sha256": "87f324ee9144a76e14730bc042b8ad04aca2265f2ad572b641b2d4d627349b7b",
+      "entry_id": "entity-attention-128x2-offline-r21-r31-2026-10-22",
+      "path": "artifacts/entity_attention_128x2_offline_r21_r31_20261022/README.md",
+      "previous_sha256": "aaca260b52d1dfa9dad3998739d88dcb2e8b888dffc0405649fa6859581b2d73"
+    },
+    {
+      "current_sha256": "260dc6a87bffc53d26d0970c3ff93433d3b1ddf1641f0989d9109f51defeca30",
+      "entry_id": "entity-attention-128x2-offline-80k-2026-10-21",
+      "path": "artifacts/entity_attention_128x2_offline_80k_20261021/README.md",
+      "previous_sha256": "3814874315cdf610a019f87098ee1828ff32e89c633b38d502ed37cc97573561"
+    }
+  ],
+  "profile_source": {
+    "path": "artifacts/eval_speed_20261023/configs/full_80k_94695_optA.json",
+    "sha256": "9eb0c4152e63f7ea776abb09dc01365a96311b23d0ac2995f1ad3f5a6fc15b5c"
+  },
+  "protocol": "evaluation-execution-a-adoption-v1",
+  "recorded_at": "2026-10-23T15:21:26+08:00",
+  "scope": "User requested current online search and daily search use A; document collection, daily greedy/search and online greedy/search. No production workload launched or restarted. Historical branch configs, run/config.json, prepared panels, raw results and frozen source remain historical records.",
+  "unchanged_collection": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_buckets": [
+      16,
+      32,
+      64,
+      128,
+      192,
+      256,
+      384,
+      500
+    ],
+    "batch_interface": "native",
+    "candidate_buckets": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "compile_mode": "native-cudagraph",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 128,
+    "max_batch_size": 500,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "pipeline_slots": 2,
+    "precision": "float32",
+    "search_workers": 12,
+    "shared_candidate_width": 256,
+    "shared_slots": 2,
+    "torch_threads": 1,
+    "total_active_games": 2000,
+    "workers": 1
+  },
+  "verification": {
+    "collection_and_greedy_unchanged": true,
+    "config_changes": [
+      {
+        "after": [
+          64,
+          128,
+          256,
+          500
+        ],
+        "before": [
+          16,
+          32,
+          64,
+          128,
+          192,
+          256,
+          384,
+          500
+        ],
+        "field": "search_evaluation.execution.batch_buckets"
+      },
+      {
+        "after": [
+          32,
+          48,
+          64
+        ],
+        "before": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "field": "search_evaluation.execution.candidate_buckets"
+      },
+      {
+        "after": 2,
+        "before": 1,
+        "field": "search_evaluation.execution.pipeline_slots"
+      },
+      {
+        "after": 1000,
+        "before": 2000,
+        "field": "search_evaluation.execution.total_active_games"
+      }
+    ],
+    "daily_checkpoints_exist": true,
+    "daily_greedy_parsed": true,
+    "daily_search_A_parsed_and_pool_validated": true,
+    "frozen_algorithm_identity_preserved": true,
+    "online_config_parsed": true,
+    "preflight": {
+      "first_new_policy_fraction": 0.2,
+      "first_pool_games": 50000,
+      "games_per_iteration": 10000,
+      "historical_games": 40000,
+      "historical_policy_fraction": 0.25,
+      "historical_train_games": 36013,
+      "inherited_completed_rounds": 0,
+      "initial_step": 68423,
+      "learning_rate": 2e-05,
+      "policy_batch": 256,
+      "pool_capacity": 60000,
+      "source_rounds": [
+        65,
+        74
+      ],
+      "updates": 3000,
+      "value_batch": 256
+    },
+    "preflight_command": "bash scripts/run_r31_10k_p60k_iteration_20261023.sh --check",
+    "preflight_exit_code": 0,
+    "profile_matches_completed_A": true,
+    "regression_command": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q tests/test_random_budget_iteration.py tests/test_random_budget_pool_warmup.py --junitxml=artifacts/entity_attention_r31_10k_p60k_iteration_20261023/evaluation_a_tests_20261023.xml",
+    "regression_report": {
+      "path": "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/evaluation_a_tests_20261023.xml",
+      "sha256": "76d8d5bb6e7fe092af18987e1d7c25edbb55b2de4b811201c0a4146a1abcb086"
+    },
+    "regressions": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 20
+    },
+    "runtime_driver_matches_workspace": true,
+    "source_snapshot_files_verified": 109
+  }
+}

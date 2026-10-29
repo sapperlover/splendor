@@ -521,3 +521,49 @@ def test_metrics_file_is_reconciled_after_interrupted_round(az_runs, tmp_path):
     assert sum(record["event"] == "validation" for record in records) == 1
     assert records[-1]["event"] == "validation"
     assert result["steps_completed"] == 4 and result["steps_this_session"] == 2
+    session = step_records[-2:]
+    assert result["mean_total_loss"] == sum(row["total_loss"] for row in session) / 2
+    assert result["first_total_loss"] == session[0]["total_loss"]
+    assert result["last_total_loss"] == session[-1]["total_loss"]
+    assert result["positions_per_second_this_session"] == sum(row["batch_size"] for row in session) / result["training_seconds"]
+
+
+@pytest.mark.parametrize("updates", [0, 4, 10000])
+def test_round_summary_streams_without_retaining_step_records(monkeypatch, tmp_path, updates):
+    from types import SimpleNamespace
+    import weakref
+    import splendor.alphazero_train as training
+
+    class Record(dict):
+        pass
+
+    alive = weakref.WeakValueDictionary()
+    peak = 0
+    learner = SimpleNamespace(config=LearnerConfig(device="cpu", checkpoint_every_steps=20000),
+        replay_identity={}, round_steps_target=3 + updates, round_train_step=3, round_index=0,
+        sampling_rng=None, evaluate_samples=lambda samples: {}, save=lambda *args, **kwargs: None)
+
+    def train_step(*args, **kwargs):
+        nonlocal peak
+        learner.round_train_step += 1
+        row = Record(total_loss=learner.round_train_step / 8, batch_size=7)
+        alive[learner.round_train_step] = row
+        peak = max(peak, len(alive))
+        return row
+
+    learner.train_step = train_step
+    pool = SimpleNamespace(cache_stats=lambda: dict(hits=0, misses=0, decode_count=0, decoded_bytes=0, load_seconds=0))
+    drawn = SimpleNamespace(samples=(), value_samples=None, references=(),
+        current_positions=7, history_positions=0, source_positions=None)
+    monkeypatch.setattr(training, "collate_training_samples", lambda samples: None)
+    monkeypatch.setattr(training, "_append_jsonl", lambda *args: None)
+    result = run_training_round(learner, steps_target=3 + updates, current_pool=pool, history_pool=None,
+        validation_samples=[], validation_games=0, checkpoint_dir=tmp_path / "ckpt",
+        metrics_path=tmp_path / "metrics.jsonl", batch_drawer=lambda rng: drawn)
+    assert peak <= 2 and len(alive) == 0
+    assert result["steps_completed"] == 3 + updates
+    assert result["steps_this_session"] == updates
+    assert result["first_total_loss"] == (4 / 8 if updates else None)
+    assert result["last_total_loss"] == ((3 + updates) / 8 if updates else None)
+    assert result["mean_total_loss"] == ((7 + updates) / 16 if updates else None)
+    assert result["positions_per_second_this_session"] == 7 * updates / result["training_seconds"]

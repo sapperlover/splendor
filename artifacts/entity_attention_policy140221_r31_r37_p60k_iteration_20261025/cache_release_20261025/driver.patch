@@ -1,0 +1,42 @@
+--- source/src/splendor/random_budget_iteration.py
++++ source_cache_release_20261025/src/splendor/random_budget_iteration.py
+@@ -7,6 +7,7 @@
+ import json
+ import uuid
+ from collections import Counter
++import ctypes
+ from dataclasses import asdict, dataclass
+ from pathlib import Path
+ 
+@@ -318,6 +319,13 @@
+ 
+ def _emit(event, **kwargs):
+     print(json.dumps({"event": event, **kwargs}, ensure_ascii=False), flush=True)
++
++
++def _trim_cpu_heap():
++    """Return freed NumPy cache pages on this Linux/glibc training entry."""
++    trim = ctypes.CDLL(None).malloc_trim
++    trim.argtypes, trim.restype = (ctypes.c_size_t,), ctypes.c_int
++    return bool(trim(0))
+ 
+ 
+ def _fixed_collection_config(raw):
+@@ -545,8 +553,16 @@
+         final = checkpoints / "final.pt"
+         if not final.exists():
+             learner.save(final)
+-        del learner
++        # Evaluation and the next collection do not consume training arrays.
++        # Drop sampled views as well as the LRU's references before collecting.
++        released_bytes = cache.bytes
++        released_games = cache.retain(())
++        del learner, index, old_policy, new_policy, value, validation
++        del validation_draws, validation_samples, observe
+         _release_inference_memory()
++        heap_trimmed = _trim_cpu_heap()
++        _emit("training_cache_released", iteration=r+1, released_games=released_games,
++              released_bytes=released_bytes, cache_bytes=cache.bytes, heap_trimmed=heap_trimmed)
+         evaluations = {}
+         if fixed_holdout is not None:
+             result_path = fixed_holdout.output / "rounds" / f"round-{r:03d}" / "fixed_holdout" / f"step-{config.updates_per_round:09d}.json"

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="29" time="22.414" timestamp="2026-10-25T02:15:52.071008+08:00" hostname="lcW"><testcase classname="tests.test_policy_aux_online_iteration" name="test_policy_initial_overflow_preflight_and_legacy_serialization" time="0.851" /><testcase classname="tests.test_policy_aux_online_iteration" name="test_policy_online_rounds_preserve_optimizer_rng_auxiliary_and_exact_resume" time="1.631"><failure message="assert False&#10; +  where False = all(&lt;generator object test_policy_online_rounds_preserve_optimizer_rng_auxiliary_and_exact_resume.&lt;locals&gt;.&lt;genexpr&gt; at 0x7207e7840040&gt;)">policy_case = Config(run_id='tiny', initial_checkpoint={'path': '/tmp/pytest-of-lc/pytest-1/test_policy_online_rounds_pres0/policy_t...ontinuation_auxiliary={'shortterm_value_weight': 0.0, 'opponent_policy_weight': 0.15}, encoder_grad_norm_every_steps=1)
+tmp_path = PosixPath('/tmp/pytest-of-lc/pytest-1/test_policy_online_rounds_pres0')
+
+    def test_policy_online_rounds_preserve_optimizer_rng_auxiliary_and_exact_resume(policy_case, tmp_path):
+        cfg = policy_case
+        root = tmp_path / "segmented"
+        iteration.run(cfg, root, rounds=2, max_steps_this_session=1)
+        initial = load_alphazero_checkpoint(root / "rounds/round-000/checkpoints/initial.pt")
+        teacher = load_alphazero_checkpoint(cfg.initial_checkpoint["path"])
+        assert initial.total_train_step == teacher.total_train_step
+        assert initial.sampling_rng_state == teacher.sampling_rng_state
+        torch.testing.assert_close(initial.torch_cpu_rng_state, teacher.torch_cpu_rng_state, rtol=0, atol=0)
+        for key, value in teacher.model_state_dict.items():
+            torch.testing.assert_close(value, initial.model_state_dict[key], rtol=0, atol=0)
+        for pid, state in teacher.optimizer_state_dict["state"].items():
+            for key, value in state.items():
+                torch.testing.assert_close(value, initial.optimizer_state_dict["state"][pid][key], rtol=0, atol=0)
+        assert initial.learner_config["learning_rate"] == 2e-5
+        first = read_json(root / "rounds/round-000/replay_snapshot.json")
+        assert len(first["games"]) == 6 and len(first["evicted_games"]) == 2
+        assert first["historical_games"] == 4 and first["new_games"] == 2
+        state = iteration.run(cfg, root, rounds=2)
+        continuous = iteration.run(cfg, tmp_path / "continuous", rounds=2)
+        a, b = [load_alphazero_checkpoint(s["latest_checkpoint"]["path"]) for s in (state, continuous)]
+        assert a.total_train_step == b.total_train_step == teacher.total_train_step+4
+        assert a.sampling_rng_state == b.sampling_rng_state
+        for key, value in a.model_state_dict.items():
+            torch.testing.assert_close(value, b.model_state_dict[key], rtol=0, atol=0)
+        for pid, params in a.optimizer_state_dict["state"].items():
+            for key, value in params.items():
+                torch.testing.assert_close(value, b.optimizer_state_dict["state"][pid][key], rtol=0, atol=0)
+        for path in root.glob("rounds/*/training_metrics.jsonl"):
+            updates = [json.loads(line) for line in path.read_text().splitlines()]
+&gt;           assert all("opponent_policy_loss" in row and "shortterm_loss" not in row for row in updates)
+E           assert False
+E            +  where False = all(&lt;generator object test_policy_online_rounds_preserve_optimizer_rng_auxiliary_and_exact_resume.&lt;locals&gt;.&lt;genexpr&gt; at 0x7207e7840040&gt;)
+
+tests/test_policy_aux_online_iteration.py:131: AssertionError</failure></testcase><testcase classname="tests.test_policy_aux_online_iteration" name="test_policy_auxiliary_six_round_holdout_and_boundary_recovery" time="0.623" /><testcase classname="tests.test_policy_aux_online_iteration" name="test_formal_policy_online_configuration_records_selected_start_history_and_r37_anchor" time="0.001" /><testcase classname="tests.test_random_budget_iteration" name="test_policy_quotas_are_exact_cumulative_sixths" time="0.002" /><testcase classname="tests.test_random_budget_iteration" name="test_random_old_eviction_then_online_fifo_and_no_reentry" time="0.001" /><testcase classname="tests.test_random_budget_iteration" name="test_fixed_policy_subset_sampling_and_unmodified_value_rng" time="0.013" /><testcase classname="tests.test_random_budget_iteration" name="test_full_holdout_matches_joint_loss_and_preserves_model_rng" time="0.035" /><testcase classname="tests.test_random_budget_iteration" name="test_driver_holdout_backfill_is_complete_idempotent_and_training_neutral" time="2.380" /><testcase classname="tests.test_random_budget_iteration" name="test_six_round_boundaries_freeze_all_original_validation_not_active_replay" time="0.095" /><testcase classname="tests.test_random_budget_iteration" name="test_online_driver_crosses_six_round_boundary_and_resumes_without_changing_training" time="6.418" /><testcase classname="tests.test_random_budget_iteration" name="test_driver_resume_and_optimizer_inheritance_without_launching_collection" time="1.822" /><testcase classname="tests.test_random_budget_iteration" name="test_sparse_checkpoint_union_and_midround_cadence_change_resume_exactly" time="1.850" /><testcase classname="tests.test_random_budget_iteration" name="test_continuation_inherits_pool_optimizer_rng_and_absolute_rounds" time="1.403" /><testcase classname="tests.test_random_budget_iteration" name="test_execution_update_resumes_legacy_round_then_uses_new_settings" time="1.740" /><testcase classname="tests.test_random_budget_iteration" name="test_running_driver_reloads_tuning_at_next_round_boundary" time="0.745" /><testcase classname="tests.test_random_budget_iteration" name="test_collection_freeze_rejects_search_budget_changes" time="0.003" /><testcase classname="tests.test_random_budget_iteration" name="test_search_panel_size_execution_update_preserves_training_identity" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_preflight_accepts_initial_gap_and_uses_actual_first_pool_fraction" time="0.060" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_first_two_rounds_grow_to_capacity_and_resume_exactly" time="1.706" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_continuation_from_unfilled_pool_keeps_history_until_overflow" time="0.831" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_pool_warmup_then_random_history_eviction_and_online_fifo" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[10000-50000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[20000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[30000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[40000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[50000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_3000_step_policy_quotas_use_actual_pool_size[60000-60000]" time="0.001" /><testcase classname="tests.test_random_budget_pool_warmup" name="test_formal_r31_configuration_preserves_the_iteration_protocol" time="0.013" /></testsuite></testsuites>

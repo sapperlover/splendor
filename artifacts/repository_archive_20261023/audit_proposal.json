@@ -1,0 +1,148 @@
+{
+  "scope": "read-only audit, no repository file changes, no T7 writes, no file moving/deletion; candidates require manifest freeze before execution",
+  "units": "decimal GB; allocated unique local inode bytes; archived symlinks excluded; compression not estimated",
+  "priority": {
+    "files": 1558,
+    "allocated_bytes": 12921626624,
+    "checkpoint_count": 547,
+    "checkpoint_allocated_bytes": 3884154880,
+    "ledger_count": 1011,
+    "ledger_allocated_bytes": 9037471744,
+    "groups": {
+      "recent_training_ledger": {
+        "files": 15,
+        "allocated": 4908109824
+      },
+      "recent_ordinary_checkpoint": {
+        "files": 223,
+        "allocated": 1583443968
+      },
+      "historical_ledger_review": {
+        "files": 962,
+        "allocated": 3742261248
+      },
+      "current_completed_training_ledger": {
+        "files": 34,
+        "allocated": 387100672
+      },
+      "current_ordinary_checkpoint": {
+        "files": 324,
+        "allocated": 2300710912
+      }
+    }
+  },
+  "optional_old_npz": {
+    "files": 76038,
+    "allocated_bytes": 3616669696,
+    "consequence": "old branch offline training/full diagnostics require T7 restore"
+  },
+  "old80k_pool": {
+    "files": 80000,
+    "allocated_bytes": 4536467456,
+    "previous_user_preference": "keep local; not part of priority batch"
+  },
+  "required_current_history": {
+    "games": 40000,
+    "allocated_bytes": 2468093952,
+    "why": "random_budget_iteration.check stats ALL40k before resume even after replay eviction"
+  },
+  "required_current_branch_npz": {
+    "files": 60042,
+    "allocated_bytes": 3700002816,
+    "why": "60k active game pool plus42 diagnostic NPZ; prev-six-round panels and replay"
+  },
+  "keep_models": [
+    "current per-round initial, six scheduled step nodes, final:48files total",
+    "raw R20, R31, original R43 anchors",
+    "recent offline full-validation nodes + selected94695/59453/4000 + latest135279/84000/10000",
+    "previously explicitly-kept MLP9 and Cross64 seven; review separately"
+  ],
+  "keep_metadata": [
+    "current config/state, complete collection/replay indices and manifests, current frozen runtime/native/catalog",
+    "artifacts/docs and original result/CI/code evidence; no bulk archiving of tracked reports"
+  ],
+  "t7": {
+    "mounted": true,
+    "existing_packages": [
+      "archive-20261012.tar.zst",
+      "archive-20261019.tar.zst",
+      "archive-20261021.tar.zst",
+      "archive-20261022.tar.zst"
+    ],
+    "free": "approximately1.4TB"
+  },
+  "dedup_validation": [
+    {
+      "policy": "runs/entity_attention_128x2_offline_80k_20261021/references/policy/1792589828130402089.steps.jsonl",
+      "value": "runs/entity_attention_128x2_offline_80k_20261021/references/value/1792589828130402089.steps.jsonl",
+      "bytes_each": 223039775,
+      "allocated_duplicate": 223047680,
+      "identical": true,
+      "policy_sha256": "db8448d9d77ce3bc86b7d1eec2bd99ed398ea44515bd7b52283e3738aa765195",
+      "value_sha256": "db8448d9d77ce3bc86b7d1eec2bd99ed398ea44515bd7b52283e3738aa765195"
+    },
+    {
+      "policy": "runs/entity_attention_128x2_offline_80k_20261021/references/policy/1792589828130402089.bin",
+      "value": "runs/entity_attention_128x2_offline_80k_20261021/references/value/1792589828130402089.bin",
+      "bytes_each": 1111203840,
+      "allocated_duplicate": 0,
+      "identical": false,
+      "policy_sha256": "ddc44b8504074890bbf8cc7288f5fcdc81abf33dc2231f133b205478521796ef",
+      "value_sha256": "561a39c61dc65dddd19e5ca99b4aab42a212a2ce46d6aad56362ffb4422b7a63"
+    },
+    {
+      "policy": "runs/entity_attention_128x2_offline_r21_r31_20261022/references/policy/1792664451944280940.bin",
+      "value": "runs/entity_attention_128x2_offline_r21_r31_20261022/references/value/1792664451944280940.bin",
+      "bytes_each": 693321728,
+      "allocated_duplicate": 0,
+      "identical": false,
+      "policy_sha256": "84e74b0509371f71b571c722ea2cab27c17a3e19b93e1f11f07f1afb41f69c2f",
+      "value_sha256": "1b396cef76a9661d6e194a919509362f7d1a50684ab73617e0b9cdba4fd248dc"
+    },
+    {
+      "policy": "runs/entity_attention_128x2_offline_r21_r31_20261022/references/policy/1792664451944280940.steps.jsonl",
+      "value": "runs/entity_attention_128x2_offline_r21_r31_20261022/references/value/1792664451944280940.steps.jsonl",
+      "bytes_each": 138916099,
+      "allocated_duplicate": 138924032,
+      "identical": true,
+      "policy_sha256": "a466be86aa428450705cbfed1752ca40850322e5d6c266a28cc697c2fa39e365",
+      "value_sha256": "a466be86aa428450705cbfed1752ca40850322e5d6c266a28cc697c2fa39e365"
+    },
+    {
+      "policy": "runs/entity_attention_128x2_r21_r31_lr2e5_20261022/references/policy/1792671851365369431.steps.jsonl",
+      "value": "runs/entity_attention_128x2_r21_r31_lr2e5_20261022/references/value/1792671851365369431.steps.jsonl",
+      "bytes_each": 16411074,
+      "allocated_duplicate": 16416768,
+      "identical": true,
+      "policy_sha256": "9e07ddbfb1dd5d152b0b03cc4db49672231d668e8fea6e0aaa95b7f681a23181",
+      "value_sha256": "9e07ddbfb1dd5d152b0b03cc4db49672231d668e8fea6e0aaa95b7f681a23181"
+    },
+    {
+      "policy": "runs/entity_attention_128x2_r21_r31_lr2e5_20261022/references/policy/1792671851365369431.bin",
+      "value": "runs/entity_attention_128x2_r21_r31_lr2e5_20261022/references/value/1792671851365369431.bin",
+      "bytes_each": 81920000,
+      "allocated_duplicate": 0,
+      "identical": false,
+      "policy_sha256": "884f86d180c84e212979ffd13733c354f3b8a181e4fd76e184348f2357ea1a77",
+      "value_sha256": "ad1b4f2eeb47607ecea908f489d7e626e1b917e38d21686f862d6b871f7d9e37"
+    },
+    {
+      "policy": "runs/entity_set_mlp_256x4_offline_80k_20261021/references/policy/1792581530148879224.bin",
+      "value": "runs/entity_set_mlp_256x4_offline_80k_20261021/references/value/1792581530148879224.bin",
+      "bytes_each": 795893760,
+      "allocated_duplicate": 0,
+      "identical": false,
+      "policy_sha256": "99c9de3b28a50b2260dc3bc34638d37b4ce704d13443bb619dfd9f280ed2deea",
+      "value_sha256": "3d93c3cc9cbeb13a392e8ed51468d13fdad284885e849e4008bb28ca09e9c5fb"
+    },
+    {
+      "policy": "runs/entity_set_mlp_256x4_offline_80k_20261021/references/policy/1792581530148879224.steps.jsonl",
+      "value": "runs/entity_set_mlp_256x4_offline_80k_20261021/references/value/1792581530148879224.steps.jsonl",
+      "bytes_each": 159701645,
+      "allocated_duplicate": 159707136,
+      "identical": true,
+      "policy_sha256": "f7de5dd5f0bafeac76d7ad1abcf205e4a9db668f7c8cebb24065f895b98ba9b9",
+      "value_sha256": "f7de5dd5f0bafeac76d7ad1abcf205e4a9db668f7c8cebb24065f895b98ba9b9"
+    }
+  ]
+}

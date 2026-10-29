@@ -36,7 +36,7 @@ def mixed(tmp_path, monkeypatch):
     manifest.write_text("".join(json.dumps(r) + "\n" for r in rows))
     return MixedBudgetOfflineConfig(manifest=str(manifest), manifest_sha256=sha256(manifest),
         first_round=1, last_round=2, expected_games_per_round=2, draw_exposures=2.5,
-        cache_mib=8, validation_positions=8, validation_percent_step=25,
+        cache_mib=8, training_workers=0, validation_positions=8, validation_percent_step=25,
         model_config={"architecture": "entity_set_mlp_v1", "card_hidden": 8, "noble_hidden": 4,
             "state_hidden": 16, "residual_blocks": 2, "actor_hidden": 8, "critic_hidden": 8,
             "market_relations": True, "action_bottleneck": 4, "multiplicative_interaction": True,
@@ -60,7 +60,7 @@ def test_prepare_and_sampling_keep_complete_policy_batch_and_all_value_steps(mix
     assert any(ref.decision_index != 0 for ref in draw.references[128:])
 
 
-def test_joint_training_exact_resume_separate_ledgers_and_percentage_selection(mixed, tmp_path):
+def test_joint_training_exact_resume_without_ledgers_and_percentage_selection(mixed, tmp_path):
     full, resumed = tmp_path / "full", tmp_path / "resumed"
     run(mixed, full)
     run(mixed, resumed, max_steps_this_session=1)
@@ -80,8 +80,15 @@ def test_joint_training_exact_resume_separate_ledgers_and_percentage_selection(m
     assert len(updates) == 5
     assert all(m["policy_weight_sum"] == m["value_weight_sum"] == 4 for m in updates)
     assert all(m["training_mode"] == "joint_separate_batches" and m["batch_size"] == 8 for m in updates)
-    for ledger in (resumed / "references/policy").glob("*.bin"):
-        assert np.all(np.fromfile(ledger, dtype="<i8").reshape(-1, 4)[:, 3] == 0)
+    for root in (full, resumed):
+        assert not list(root.rglob("*.bin"))
+        assert not list(root.rglob("*.steps.jsonl"))
+        assert not list((root / "references").rglob("*.metrics.jsonl"))
+        sessions = [read_json(p) for p in (root / "references/policy").glob("*.json")]
+        assert sessions and all(s["format"] == "az-reference-sha256-only-v1" for s in sessions)
+    full_updates = [json.loads(line) for line in (full / "training_metrics.jsonl").read_text().splitlines()
+                    if json.loads(line)["event"] == "train_step"]
+    assert [r["reference_sha256"] for r in updates] == [r["reference_sha256"] for r in full_updates]
     selected = select_checkpoint(mixed, resumed)
     assert selected["selected_step"] in [2, 3, 4, 5]
     assert read_json(resumed / "plan.json")["sampling"]["protocol"] == mixed.sampling_protocol

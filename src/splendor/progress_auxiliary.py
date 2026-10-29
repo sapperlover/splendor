@@ -14,7 +14,8 @@ import torch
 from torch.nn import functional as F
 
 from .entity_attention import EntityAttention, EntityAttentionConfig, _value_head
-from .features import GLOBAL_FEATURE_NAMES as G, SCALES
+from .actor_critic import tensorize_state
+from .features import EncodedStateBatch, GLOBAL_FEATURE_NAMES as G, SCALES
 
 HORIZONS = (2, 4)
 SCORE_CLASSES = 17
@@ -55,6 +56,14 @@ class EntityAttentionProgress(EntityAttention):
 
     def value_with_progress(self, batch):
         state = self.encode_state(self._prepare(batch))
+        return self.critic(state).squeeze(-1), self.progress_head(state)
+
+    def value_with_progress_from_state(self, batch):
+        prepared = (tensorize_state(batch, device=self.device)
+                    if isinstance(batch, EncodedStateBatch) else batch.to(self.device))
+        if prepared.feature_schema_version != self.config.feature_schema_version:
+            raise ValueError("batch feature schema version does not match model configuration")
+        state = self.encode_state(prepared)
         return self.critic(state).squeeze(-1), self.progress_head(state)
 
     def forward_with_progress(self, batch):

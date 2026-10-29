@@ -1,9 +1,16 @@
 # 配置入口
 
+2026-10-24新增[离线执行默认](../docs/guides/offline_execution_zh-CN.md)：当前源码各离线入口缺省使用4 worker、流式统计及传输优化，缓存按池大小设置。后两组实际执行配置为18GiB／4 worker，原16GiB配置保留历史身份；[发布及配置链接](../artifacts/offline_training_defaults_20261024/README.md)。
+
+短期value／两层对手policy的两份44k离线配置在[attention目录](entity_attention_v1/README.md)，使用`offline_continuation`入口；[定义及命令](../docs/guides/continuation_auxiliary_zh-CN.md)。现行在线配置未启用，未启动正式训练。
+
+当前R31在线配置的`learner.checkpoint_every_steps=500`，七个`validation_steps`不变、独立强制保存；当前在线／近期离线默认停写双份抽样与逐步明细，见[训练记录规则](../docs/guides/training_artifacts_zh-CN.md)。旧冻结配置保留原周期。
+
 配置按现有实现家族保留稳定路径，避免改变历史 manifest、实验身份和恢复命令；同目录中的 production、smoke、benchmark 用文件名和下表区分。
 
 | 用途 | 路径 | 状态 |
 | --- | --- | --- |
+| 当前日常greedy／搜索A | [greedy](entity_attention_v1/evaluation_greedy_r43.json)、[搜索A](entity_attention_v1/evaluation_search_a_r43.json) | 固定R37对R43示例；CPU8／1000 pair与GPU A／500 pair；[参数与命令](../docs/guides/evaluation_zh-CN.md) |
 | Python AZ 主配置 | `alphazero_loop.json` | 对应已有 5x500 完成 run，原冻结 config 在 runs 中 |
 | 旧θ5起点10×1000 | `az_theta5_10x1000/` | 原准备配置/命令保留，十轮源run已完成；不据此替代其棋力评测结论 |
 | 实体注意力与离线对照 | `entity_attention_v1/` | 新旧离线、smoke、混合面板；支持8 GiB离线缓存执行覆盖；[离线专题](../docs/guides/entity_attention_offline_zh-CN.md) |

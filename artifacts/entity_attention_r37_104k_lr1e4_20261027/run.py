@@ -1,0 +1,5 @@
+"""R37 weights, original104k offline configuration, lr1e-4."""
+from artifacts.entity_attention_r37_104k_offline_lr_20261027.run import configured_entry
+
+if __name__ == "__main__":
+    raise SystemExit(configured_entry("lr1e4").main())

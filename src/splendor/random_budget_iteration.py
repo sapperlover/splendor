@@ -7,6 +7,7 @@ import hashlib
 import json
 import uuid
 from collections import Counter
+import ctypes
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -19,6 +20,9 @@ from .alphazero_recording import read_json, sha256, source_identity, write_json
 from .alphazero_replay import PositionPool, ReplayRun, build_replay_index
 from .alphazero_train import AlphazeroLearner, DrawnBatch, LearnerConfig, run_training_round
 from .compact_game_cache import CompactGameCache
+from .continuation_auxiliary import ContinuationAuxiliaryConfig, continuation_config_identity
+from .fixed_holdout import check_disjoint, read_manifest
+from .six_round_holdout import HoldoutSchedule, check_settings
 from .hybrid_train import HybridReferenceWriter, _release_inference_memory
 from .offline_train import _digest, make_index
 from .pool_iteration import panel
@@ -42,7 +46,7 @@ class Config:
     historical_policy_seed: int
     first_round: int = 24
     last_round: int = 43
-    expected_games_per_round: int = 1000
+    expected_games_per_round: int | dict[str, int] = 1000
     new_games_per_round: int = 4000
     replay_max_games: int = 24000
     updates_per_round: int = 1000
@@ -56,11 +60,28 @@ class Config:
     evaluation_anchor: dict | None = None
     search_evaluation_every_rounds: int = 3
     continuation_state: dict | None = None
+    fixed_holdout: dict | None = None
+    six_round_holdout: dict | None = None
+    initial_history_eviction: bool = False
+    continuation_auxiliary: dict | None = None
+    encoder_grad_norm_every_steps: int = 0
 
     def __post_init__(self):
+        if self.fixed_holdout is not None and self.six_round_holdout is not None:
+            raise ValueError("choose fixed_holdout or six_round_holdout")
         if not self.run_id or not 1 <= self.first_round <= self.last_round:
             raise ValueError("invalid run/source rounds")
-        for name in ("expected_games_per_round", "new_games_per_round", "replay_max_games",
+        from .offline_objectives import expected_round_game_counts
+        expected_round_game_counts(self.first_round, self.last_round, self.expected_games_per_round)
+        if type(self.initial_history_eviction) is not bool:
+            raise ValueError("initial_history_eviction must be boolean")
+        if self.continuation_auxiliary is not None:
+            ContinuationAuxiliaryConfig(**self.continuation_auxiliary)
+        if type(self.encoder_grad_norm_every_steps) is not int or self.encoder_grad_norm_every_steps < 0:
+            raise ValueError("encoder_grad_norm_every_steps must be a nonnegative integer")
+        if self.encoder_grad_norm_every_steps and self.continuation_auxiliary is None:
+            raise ValueError("encoder diagnostics require continuation auxiliary")
+        for name in ("new_games_per_round", "replay_max_games",
                      "updates_per_round", "cache_bytes", "validation_positions", "search_evaluation_every_rounds"):
             if type(getattr(self, name)) is not int or getattr(self, name) <= 0:
                 raise ValueError(f"{name} must be a positive integer")
@@ -69,8 +90,6 @@ class Config:
             raise ValueError("invalid historical policy fraction, validation size or replay capacity")
         if self.validation_steps != tuple(sorted(set(self.validation_steps))) or self.validation_steps[0] != 0 or self.validation_steps[-1] != self.updates_per_round:
             raise ValueError("validation steps must include zero/final in increasing order")
-        if any(s % self.learner.checkpoint_every_steps for s in self.validation_steps):
-            raise ValueError("validation steps must align with checkpoint cadence")
         search = self.selfplay.search_config
         if search.get("forced_playouts", 0) != 0 or search.get("policy_target_pruning", False):
             raise ValueError("this experiment requires forced playouts and pruning disabled")
@@ -92,32 +111,57 @@ class Config:
         raw = json.loads(json.dumps({"protocol": PROTOCOL, **asdict(self)}))
         if self.continuation_state is None:
             raw.pop("continuation_state")
+        if self.fixed_holdout is None:
+            raw.pop("fixed_holdout")
+        if self.six_round_holdout is None:
+            raw.pop("six_round_holdout")
+        if not self.initial_history_eviction:
+            raw.pop("initial_history_eviction")
+        if self.continuation_auxiliary is None:
+            raw.pop("continuation_auxiliary")
+        if not self.encoder_grad_norm_every_steps:
+            raw.pop("encoder_grad_norm_every_steps")
         return raw
 
 
 def check(config):
     """Read-only preflight; no archive decoding, collection or training."""
     ExecutionConfig(**config.selfplay.execution)
+    if config.fixed_holdout is not None:
+        read_manifest(config.fixed_holdout)
+    if config.six_round_holdout is not None:
+        check_settings(config.six_round_holdout)
     for identity in (config.initial_checkpoint, config.history_manifest):
         if sha256(Path(identity["path"])) != identity["sha256"]:
             raise ValueError(f"frozen input changed: {identity['path']}")
     records = [json.loads(line) for line in Path(config.history_manifest["path"]).read_text().splitlines()]
     records = [g for g in records if config.first_round - 1 <= g["round_index"] < config.last_round]
     counts = Counter(g["round_index"] for g in records)
-    if set(counts) != set(range(config.first_round - 1, config.last_round)) or set(counts.values()) != {config.expected_games_per_round}:
+    from .offline_objectives import expected_round_game_counts
+    if dict(counts) != expected_round_game_counts(config.first_round, config.last_round, config.expected_games_per_round):
         raise ValueError("historical round/game count mismatch")
     if len({_key(g) for g in records}) != len(records):
         raise ValueError("duplicate historical game key")
     first_pool_games = len(records) + config.new_games_per_round
-    if first_pool_games > config.replay_max_games:
+    first_evicted_history_games = max(0, first_pool_games-config.replay_max_games)
+    if first_evicted_history_games and not config.initial_history_eviction:
         raise ValueError("first round exceeds replay capacity and would evict historical games")
+    first_pool_games = min(first_pool_games, config.replay_max_games)
     for game in records:
         stat = Path(game["path"]).stat()
         if (stat.st_size, stat.st_mtime_ns) != (game["size"], game["mtime_ns"]):
             raise ValueError(f"historical archive changed: {game['path']}")
     payload = load_alphazero_checkpoint(config.initial_checkpoint["path"])
-    if payload.model_config.get("architecture") != "entity_attention_v1":
-        raise ValueError("this branch requires the model without auxiliary heads")
+    if config.continuation_auxiliary is None:
+        if payload.model_config.get("architecture") != "entity_attention_v1":
+            raise ValueError("this branch requires the model without auxiliary heads")
+    else:
+        auxiliary = ContinuationAuxiliaryConfig(**config.continuation_auxiliary)
+        if (payload.model_config.get("architecture") != "entity_attention_continuation_v1"
+                or payload.model_config.get("predict_opponent_policy", False) != (auxiliary.opponent_policy_weight > 0)
+                or payload.model_config.get("predict_shortterm_value", True) != (auxiliary.shortterm_value_weight > 0)
+                or payload.model_config.get("predict_score_ownership", False) != (auxiliary.score_ownership_weight > 0)):
+            raise ValueError("initial checkpoint heads differ from continuation auxiliary")
     for template in (config.greedy_evaluation, config.search_evaluation):
         if template is not None:
             from .evaluation import FixedEvaluationConfig
@@ -156,6 +200,7 @@ def check(config):
         original_keys = {_key(g) for g in records}
         original_count = sum(_key(g) in original_keys for g in games)
         overflow = max(0, len(games) + config.new_games_per_round - config.replay_max_games)
+        first_evicted_history_games = min(original_count, overflow)
         first_pool_games = min(config.replay_max_games, len(games) + config.new_games_per_round)
         first_new_policy_fraction = 1 - max(0, original_count-overflow) / first_pool_games
     return sorted(records, key=_key), {"initial_step": payload.total_train_step,
@@ -167,7 +212,10 @@ def check(config):
         "value_batch": config.learner.batch_size, "updates": config.updates_per_round,
         "learning_rate": config.learner.learning_rate,
         "historical_policy_fraction": config.historical_policy_fraction,
-        "first_new_policy_fraction": first_new_policy_fraction}
+        "first_new_policy_fraction": first_new_policy_fraction,
+        **({"first_evicted_history_games": first_evicted_history_games} if config.initial_history_eviction else {}),
+        **({"continuation_auxiliary": continuation_config_identity(ContinuationAuxiliaryConfig(**config.continuation_auxiliary))}
+           if config.continuation_auxiliary is not None else {})}
 
 
 def _key(game):
@@ -274,6 +322,13 @@ def _emit(event, **kwargs):
     print(json.dumps({"event": event, **kwargs}, ensure_ascii=False), flush=True)
 
 
+def _trim_cpu_heap():
+    """Return freed NumPy cache pages on this Linux/glibc training entry."""
+    trim = ctypes.CDLL(None).malloc_trim
+    trim.argtypes, trim.restype = (ctypes.c_size_t,), ctypes.c_int
+    return bool(trim(0))
+
+
 def _fixed_collection_config(raw):
     values = json.loads(json.dumps(raw))
     for name in COLLECTION_TUNING_FIELDS:
@@ -283,6 +338,13 @@ def _fixed_collection_config(raw):
 
 def _algorithm_config(raw):
     values = json.loads(json.dumps(raw))
+    # Scheduled diagnostic nodes are saved separately from periodic recovery.
+    values["learner"].pop("checkpoint_every_steps")
+    values.pop("encoder_grad_norm_every_steps", None)
+    # A fixed diagnostic panel changes neither replay nor learner updates.
+    # Its immutable identity is checked separately in FixedHoldout.
+    values.pop("fixed_holdout", None)
+    values.pop("six_round_holdout", None)
     values["selfplay"] = _fixed_collection_config(raw["selfplay"])
     # Evaluation size and inference execution do not alter the learner/replay.
     # Each prepared panel keeps its own immutable configuration when resumed.
@@ -340,7 +402,14 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
     write_json(output / "source" / session / "identity.json", source_identity(Path.cwd(), output / "source" / session))
     original_keys = {_key(g) for g in original}
     eligibility_cache = {}
-    cache = CompactGameCache(config.cache_bytes)
+    auxiliary = (ContinuationAuxiliaryConfig(**config.continuation_auxiliary)
+                 if config.continuation_auxiliary is not None else None)
+    cache = CompactGameCache(config.cache_bytes, continuation_auxiliary=auxiliary)
+    holdout_settings = config.six_round_holdout if config.six_round_holdout is not None else config.fixed_holdout
+    holdout_schedule = (HoldoutSchedule(holdout_settings, output, config.learner.device,
+                        six_rounds=config.six_round_holdout is not None) if holdout_settings is not None else None)
+    if holdout_schedule is not None:
+        holdout_schedule.backfill(state["completed_rounds"], config.validation_steps)
     while rounds is None or len(state["completed_rounds"]) < rounds:
         if budget is not None and budget <= 0:
             break
@@ -349,8 +418,11 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
             updated = Config.from_dict(read_json(Path(config_path)))
             if _algorithm_config(updated.to_dict()) != _algorithm_config(config.to_dict()):
                 raise ValueError("runtime update requires identical frozen algorithm configuration")
+            if (updated.fixed_holdout, updated.six_round_holdout) != (config.fixed_holdout, config.six_round_holdout):
+                raise ValueError("changing fixed holdout requires restarting at a checkpoint boundary")
             ExecutionConfig(**updated.selfplay.execution)
             config = updated
+        fixed_holdout = holdout_schedule.for_iteration(r+1) if holdout_schedule is not None else None
         write_json(output / "source" / session / f"config-iteration-{r+1:03d}.json", config.to_dict())
         data_round = config.last_round + r
         stage = output / "rounds" / f"round-{r:03d}"
@@ -386,6 +458,8 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
             stat = game.path.stat()
             new_records.append(game.to_dict() | {"size": stat.st_size, "mtime_ns": stat.st_mtime_ns})
         active, removed = retain_games(previous, new_records, original_keys, config, data_round)
+        if fixed_holdout is not None:
+            check_disjoint(fixed_holdout.manifest, active)
         for game in active:
             stat = Path(game["path"]).stat()
             if (stat.st_size, stat.st_mtime_ns) != (game["size"], game["mtime_ns"]):
@@ -418,6 +492,9 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
               new_games=new_games, policy_new_fraction=snapshot["policy_new_fraction"],
               policy_positions=snapshot["policy_positions"], value_positions=len(value))
         identity = {"protocol": PROTOCOL, "digest": snapshot["digest"]}
+        if auxiliary is not None:
+            identity.update(continuation_auxiliary=continuation_config_identity(auxiliary),
+                digest=_digest({"snapshot": snapshot["digest"], "continuation_auxiliary": continuation_config_identity(auxiliary)}))
         checkpoints = stage / "checkpoints"
         saved = sorted(checkpoints.glob("step-*.pt"))
         if saved or (checkpoints / "initial.pt").exists():
@@ -433,6 +510,8 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
         references = [ref.to_dict() for _, ref in validation_draws]
         write_json(stage / "validation_references.json", {"references": references, "digest": _digest(references)})
         def observe(current, checkpoint):
+            if fixed_holdout is not None:
+                fixed_holdout.observe(current.model, checkpoint, r+1, current.round_train_step)
             path = stage / "validation" / f"step-{current.round_train_step:09d}.json"
             if path.exists():
                 if read_json(path)["checkpoint_sha256"] != sha256(checkpoint):
@@ -444,6 +523,11 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
                 "scope": "fixed pooled validation positions; policy metrics use positive archive weights, value uses all"})
         if learner.round_train_step == 0:
             observe(learner, checkpoints / "initial.pt")
+        elif fixed_holdout is not None:
+            # Recover diagnostic nodes saved before a session was interrupted.
+            holdout_schedule.backfill([{"iteration": r+1,
+                "snapshot": {"path": str(snapshot_path), "sha256": sha256(snapshot_path)}}],
+                [s for s in config.validation_steps if s <= learner.round_train_step])
         writer = HybridReferenceWriter(stage / "usage", session, {"policy": identity, "value": identity},
             (config.learner.batch_size, config.learner.batch_size), ("policy", "value"))
         before = learner.round_train_step
@@ -454,6 +538,8 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
                 batch_drawer=lambda rng: draw_batch(old_policy, new_policy, value, rng, config.learner.batch_size,
                     learner.round_train_step+1, new_games, len(active), original_keys),
                 joint_separate_batches=True, checkpoint_steps=config.validation_steps,
+                continuation_auxiliary=auxiliary,
+                encoder_grad_norm_every_steps=config.encoder_grad_norm_every_steps,
                 checkpoint_callback=lambda current, path: observe(current, path) if current.round_train_step in config.validation_steps else None,
                 max_steps_this_session=budget,
                 progress_callback=lambda row: _emit("train_progress", iteration=r+1, step=row["round_train_step"],
@@ -468,9 +554,21 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
         final = checkpoints / "final.pt"
         if not final.exists():
             learner.save(final)
-        del learner
+        # Evaluation and the next collection do not consume training arrays.
+        # Drop sampled views as well as the LRU's references before collecting.
+        released_bytes = cache.bytes
+        released_games = cache.retain(())
+        del learner, index, old_policy, new_policy, value, validation
+        del validation_draws, validation_samples, observe
         _release_inference_memory()
+        heap_trimmed = _trim_cpu_heap()
+        _emit("training_cache_released", iteration=r+1, released_games=released_games,
+              released_bytes=released_bytes, cache_bytes=cache.bytes, heap_trimmed=heap_trimmed)
         evaluations = {}
+        if fixed_holdout is not None:
+            result_path = fixed_holdout.output / "rounds" / f"round-{r:03d}" / "fixed_holdout" / f"step-{config.updates_per_round:09d}.json"
+            evaluations["fixed_holdout"] = {"path": str(result_path), "sha256": sha256(result_path),
+                "panel_digest": fixed_holdout.manifest["digest"], "metrics": read_json(result_path)["metrics"]}
         for name, template, due in (("greedy", config.greedy_evaluation, True),
                 ("search", config.search_evaluation, (r+1) % config.search_evaluation_every_rounds == 0)):
             if template is not None and due:

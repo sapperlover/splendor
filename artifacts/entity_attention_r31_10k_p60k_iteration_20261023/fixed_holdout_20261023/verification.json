@@ -1,0 +1,65 @@
+{
+  "archived_result_files_verified": 84,
+  "commands": {
+    "backfill": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/entity_attention_r31_10k_p60k_iteration_20261023/source_fixed_holdout_20261023/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -u -m splendor.fixed_holdout --config configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json --output runs/entity_attention_r31_10k_p60k_iteration_20261023",
+    "driver_check": "bash scripts/run_r31_10k_p60k_iteration_20261023.sh --check",
+    "driver_resume_without_training": "bash scripts/run_r31_10k_p60k_iteration_20261023.sh --rounds 6",
+    "prepare": "conda run -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/entity_attention_r31_10k_p60k_iteration_20261023/prepare_fixed_holdout.py",
+    "summarize": "conda run -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/entity_attention_r31_10k_p60k_iteration_20261023/summarize_fixed_holdout.py",
+    "tests": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q tests/test_random_budget_iteration.py tests/test_random_budget_pool_warmup.py --junitxml=artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/tests.xml"
+  },
+  "completed_at": "2026-10-23T07:45:26.366728+00:00",
+  "completed_nodes": 42,
+  "execution": {
+    "mode": "complete holdout FP32 eager forward; CPU-resident panel; GPU minibatches512",
+    "strength_games_launched": false,
+    "training_process_present_before_work": false,
+    "training_restarted": false
+  },
+  "exit_codes": {
+    "backfill": 0,
+    "driver_check": 0,
+    "driver_resume_without_training": 0,
+    "prepare": 0,
+    "summarize": 0,
+    "tests": 0
+  },
+  "files": {
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/environment.json": "3126cdad85a53900f2281a31f9ef356868e20fd57fbe047acebe551a5cf16fbc",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/manifest.json": "77c84875a4e2c4abb7f3f1d8008916dd3035903f470235b8cd3fb266d17c9142",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/runtime_source.json": "14479af76c9b292ccc39fda44f102de3b53d5c57abc079deb93f003d3eeea22f",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/summary.json": "6cda28b1a1bfa385f1f873b5dccb28a9ddfa218effeed815ba379eddf168323a",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/tests.xml": "98b744f15a4b9f4c90c27a49d104b7afb2d6d9c834cea43f9cbe71d232c8e8bb",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/prepare_fixed_holdout.py": "956879e9bce76c3724f58ca127f527fe25a9b019f377bfeb43a1eefbd5d1e0cc",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/summarize_fixed_holdout.py": "89c09fea5004141838194789b41ae144a207cb52f900f77df6dc172fe1476568",
+    "configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json": "980552f90b49d8f053137f27e2d48466ecd976700ef2e34feb3df0360e03a17b",
+    "scripts/run_r31_10k_p60k_iteration_20261023.sh": "dd9267a92588d56ef4f5be53a3ea7338b7fc9a5d1177ee99e69af2f90f45f918"
+  },
+  "history_note": "First CPU test pass preceded configuration enablement; after enablement the old full-config equality assertion needed the intentional fixed_holdout field assertion. Final22/22 passed.",
+  "holdout": {
+    "games": 2412,
+    "policy_positions": 39845,
+    "training_disjoint_rounds": 6,
+    "value_positions": 192218
+  },
+  "new_runtime_files_verified": 110,
+  "original_checkpoint_identities_verified": 42,
+  "original_frozen_run_config_preserved": "8530e494dcef412b8b50ab2aed51f836206cf016dd5d597cb091a79d13675aad",
+  "original_runtime_files_unchanged": 109,
+  "runtime_changed_files": [
+    "src/splendor/fixed_holdout.py",
+    "src/splendor/random_budget_iteration.py"
+  ],
+  "source_snapshots": {
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/source/fixed_holdout.py": "9f4bd280c354fd24a0d303a4039384e2f6ecb592ef51c08e5bd35c17262fa37b",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/fixed_holdout_20261023/source/random_budget_iteration.py": "03ee0e7171c2b73f49051b7112d53f3a24eb9c56c431feadac48255b0ee69cff"
+  },
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 22
+  },
+  "training_algorithm_unchanged": true,
+  "training_state_unchanged": true
+}

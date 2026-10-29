@@ -408,6 +408,7 @@ class WebGameService:
         *,
         failure_dir: Path | None = None,
         checkpoint_dir: Path | None = None,
+        replay_dir: Path | None = None,
         search_checkpoint: Path | None = None,
         search_config: SearchConfig | None = None,
         mcts_checkpoint: Path | None = None,
@@ -416,6 +417,7 @@ class WebGameService:
     ) -> None:
         self.catalog = load_default_catalog()
         self.failure_dir = failure_dir or Path.cwd() / "web_failures"
+        self.replay_dir = (replay_dir or Path.cwd() / "runtime" / "web_replays").resolve()
         self.checkpoint_dir = (checkpoint_dir or _DEFAULT_CHECKPOINT_ROOT).resolve()
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         if search_checkpoint is None and search_config is not None:
@@ -606,7 +608,11 @@ class WebGameService:
         game_id = uuid.uuid4().hex
         with self._lock:
             self._games[game_id] = game
+            self._save_game(game_id, game)
         return _game_payload(game_id, game)
+
+    def _save_game(self, game_id: str, game: _WebGame) -> None:
+        game.engine.save(self.replay_dir / f"{game_id}.json")
 
     def set_search_budget(self, game_id: str, budget: dict[str, Any]) -> dict[str, Any]:
         with self._lock:
@@ -646,6 +652,7 @@ class WebGameService:
             game.response = self._apply_and_record(game, action)
             game.revision += 1
             self._advance_opponent(game)
+            self._save_game(game_id, game)
             return _game_payload(game_id, game)
 
     def undo(self, game_id: str, *, revision: int) -> dict[str, Any]:
@@ -665,6 +672,7 @@ class WebGameService:
             del game.history[previous.history_length:]
             # Never reuse an old revision: a delayed pre-undo click must remain stale.
             game.revision += 1
+            self._save_game(game_id, game)
             return _game_payload(game_id, game)
 
     def _apply_and_record(
@@ -788,6 +796,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--checkpoint-dir", type=Path, default=_DEFAULT_CHECKPOINT_ROOT)
+    parser.add_argument("--replay-dir", type=Path, default=Path("runtime/web_replays"),
+                        help="automatically save the current game and replay after each completed request")
     parser.add_argument("--mcts-checkpoint", type=Path, help="add a native MCTS opponent with adjustable S/N budgets")
     parser.add_argument("--mcts-label", help="display name for the MCTS checkpoint")
     parser.add_argument("--mcts-simulations", type=int, default=1024)
@@ -857,6 +867,7 @@ def main(argv: list[str] | None = None) -> int:
         (args.host, args.port),
         WebGameService(
             checkpoint_dir=args.checkpoint_dir,
+            replay_dir=args.replay_dir,
             search_checkpoint=args.search_checkpoint,
             search_config=search_config,
             mcts_checkpoint=args.mcts_checkpoint,
@@ -865,6 +876,7 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     print(f"Splendor web UI: http://{args.host}:{args.port}", flush=True)
+    print(f"Local replays: {args.replay_dir.resolve()}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

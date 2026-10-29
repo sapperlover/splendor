@@ -1,0 +1,561 @@
+{
+  "omitted_fields": [
+    {
+      "count": 128,
+      "json_path": "$.result.steps",
+      "kind": "list",
+      "value_sha256": "31acd25a476a7cec1f41478ce74c59b84131f7d8a275c4d9fccd5b14847e84a1"
+    },
+    {
+      "count": 128,
+      "json_path": "$.sessions[0].result.steps",
+      "kind": "list",
+      "value_sha256": "31acd25a476a7cec1f41478ce74c59b84131f7d8a275c4d9fccd5b14847e84a1"
+    }
+  ],
+  "preserved": {
+    "affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "command": [
+      "scripts/run_speed_validation.py",
+      "learner",
+      "--config",
+      "runs/az_loop_seed1/config.json",
+      "--run",
+      "runtime/end_to_end_speed_2026-10-03/learner_2048",
+      "--record",
+      "artifacts/end_to_end_speed_2026-10-03/learner_2048.json",
+      "--cache-mib",
+      "2048",
+      "--warmup-steps",
+      "8",
+      "--steps",
+      "128"
+    ],
+    "config": {
+      "config": {
+        "evaluation": {
+          "adjudicate_deterministic_policy_cycles": true,
+          "device": "cpu",
+          "greedy_vs_initial": {
+            "pairs": 20,
+            "policy_seed_base": 9410000,
+            "search_config": null,
+            "seed_start": 9310000
+          },
+          "mcts_vs_parent": {
+            "pairs": 10,
+            "policy_seed_base": 9400000,
+            "search_config": {
+              "c_puct": 1.5,
+              "determinizations": 1,
+              "dirichlet_alpha": 0.3,
+              "fold_forced_phases": true,
+              "max_simulation_transitions": 512,
+              "root_noise_fraction": 0.0,
+              "seed": 9300000,
+              "simulations": 1024
+            },
+            "seed_start": 9300000
+          },
+          "workers": 8
+        },
+        "initial_checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+        "learner": {
+          "batch_size": 256,
+          "checkpoint_every_steps": 100,
+          "device": "cuda",
+          "history_batch_size": 128,
+          "learning_rate": 0.0001,
+          "max_grad_norm": 1.0,
+          "max_steps_per_round": null,
+          "policy_loss_weight": 1.0,
+          "steps_per_new_position": 4.0,
+          "validation_batch_size": 256,
+          "value_loss_weight": 1.0,
+          "weight_decay": 0.0001
+        },
+        "new_games_per_round": 500,
+        "num_rounds": 5,
+        "protocol": "alphazero-loop-v1",
+        "replay_cache_bytes": 268435456,
+        "replay_max_games": 3000,
+        "run_id": "az_loop_seed1",
+        "seeds": {
+          "collection": 9500000,
+          "sampling": 9502000,
+          "split": 9501000
+        },
+        "selfplay": {
+          "add_root_noise": true,
+          "execution": {
+            "active_games_per_worker": 4,
+            "backend": "batched_cpu",
+            "engine_mode": "fast",
+            "max_batch_size": 4,
+            "max_batch_wait_ms": 2,
+            "precision": "float32",
+            "torch_threads": 1,
+            "workers": 8
+          },
+          "max_completed_turns": 400,
+          "protocol": "mcts-selfplay-v2",
+          "search_config": {
+            "c_puct": 1.5,
+            "determinizations": 1,
+            "dirichlet_alpha": 0.3,
+            "fold_forced_phases": true,
+            "max_simulation_transitions": 512,
+            "root_noise_fraction": 0.25,
+            "seed": 9500000,
+            "simulations": 1024
+          },
+          "temperature_schedule": {
+            "late_temperature": 0.0,
+            "opening_completed_turns": 10,
+            "opening_temperature": 1.0
+          },
+          "validation_fraction": 0.1
+        }
+      },
+      "fingerprint": "8d506f458375c09a268bb9a429acaab8c5d7055c64fb4cc1865efbff18fa9ec9",
+      "protocol": "alphazero-loop-v1"
+    },
+    "cpu_count": 16,
+    "cuda_build": "13.0",
+    "end_unix": 1791029535.707661,
+    "extension": "/home/lc/下载/splendor/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so",
+    "extension_sha256": "94986fb4ffaa7c1d8f01437d885f2b11e5599ad85ad878a73a10eaa8bdd9b4b7",
+    "gpu_device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "instrument": false,
+    "meminfo": {
+      "MemAvailable": "26097756 kB",
+      "MemTotal": "32597820 kB"
+    },
+    "python": "3.12.14",
+    "resources": "artifacts/end_to_end_speed_2026-10-03/learner_2048.session-1.resources.json",
+    "result": {
+      "cache_mib": 2048,
+      "cache_total": {
+        "decoded_bytes": 1469024060,
+        "hits": 32578,
+        "misses": 2238
+      },
+      "checkpoint_validation": {
+        "calls": {
+          "checkpoint": 1,
+          "validation": 1
+        },
+        "cuda_stream_seconds": {},
+        "host_wall_seconds": {
+          "checkpoint": 0.006677129999843601,
+          "validation": 0.08100673900025868
+        }
+      },
+      "cuda_stream_seconds": {},
+      "device": "cuda",
+      "diagnostic_script_sha256": "8dfc1739848a2998d73e9cfee36af718c23251807c5c29d06a5ca65ecd692052",
+      "exclusive_host_wall_seconds": {
+        "backward": 0.20130199500272283,
+        "collate": 0.6348010690026058,
+        "completion_wait": 0.003232079006920685,
+        "draw": 3.6202139130018622,
+        "feature_h2d": 0.08902790099818958,
+        "forward": 0.1723374840012184,
+        "gradient_clip": 0.04527254099775746,
+        "loss": 0.033430728006351274,
+        "measurement_and_loop_remainder": 0.038971918977949827,
+        "metrics_write": 0.016961685005298932,
+        "optimizer": 0.07866706599907047,
+        "target_h2d": 0.024028995993830904,
+        "train_step_remainder": 0.1032592090050457
+      },
+      "gpu_peak_bytes": 100985856,
+      "index_seconds": 0.9523814760004825,
+      "initialization_seconds": 0.7864357479993487,
+      "learner_config": {
+        "batch_size": 256,
+        "checkpoint_every_steps": 100,
+        "device": "cuda",
+        "history_batch_size": 128,
+        "learning_rate": 0.0001,
+        "max_grad_norm": 1.0,
+        "max_steps_per_round": null,
+        "policy_loss_weight": 1.0,
+        "steps_per_new_position": 4.0,
+        "validation_batch_size": 256,
+        "value_loss_weight": 1.0,
+        "weight_decay": 0.0001
+      },
+      "main_seconds": 11.414569716000187,
+      "measured_steps": 128,
+      "measured_wall_seconds": 5.061506584998824,
+      "parent_checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+        "sha256": "c4e85e27c1242c640c1504fe10d158a7817efd6c0ceed7e165dbb8b68aa26e7c"
+      },
+      "peak_rss_kib": 3136320,
+      "production_cache_stats": {
+        "cache_bytes": 1501268854,
+        "capacity_bytes": 2147483648,
+        "decode_count": 2289,
+        "decoded_bytes": 1501268854,
+        "entries": 2289,
+        "hits": 36853,
+        "load_seconds": 7.571927941970898,
+        "misses": 2289
+      },
+      "profiler_enabled": false,
+      "reference_sequence_sha256": "6549bb79f055154528923c7538bfb789b53e43762dc0380e564b60ee5c303a40",
+      "replay_identity": {
+        "digest": "b13060726f79b8f5bfdbca7d20457cd467c5947bd9c4e2fd7e0d1ca35f565f46",
+        "evicted_games": 0,
+        "first_key": [
+          0,
+          0
+        ],
+        "last_key": [
+          4,
+          499
+        ],
+        "protocol": "alphazero-replay-index-v1",
+        "total_games": 2500,
+        "train_games": 2238,
+        "train_positions": 190660,
+        "validation_games": 262
+      },
+      "round": 4,
+      "sampling_seed": 7472986141618057342,
+      "scope": "isolated updates, actual frozen replay and parent optimizer; no production run modified",
+      "steps": {
+        "_git_omitted_raw": {
+          "count": 128,
+          "json_path": "$.result.steps",
+          "kind": "list",
+          "value_sha256": "31acd25a476a7cec1f41478ce74c59b84131f7d8a275c4d9fccd5b14847e84a1"
+        }
+      },
+      "top_train_step_functions": [],
+      "torch_gpu_allocator": {
+        "allocated_at_end_bytes": 17305600,
+        "max_allocated_bytes": 100985856,
+        "max_reserved_bytes": 165675008,
+        "reserved_at_end_bytes": 165675008
+      },
+      "validation": {
+        "available": true,
+        "policy_entropy": 1.915087422682661,
+        "policy_loss": 1.9510519509584638,
+        "positions": 4326,
+        "value_loss": 0.7249484209897504
+      },
+      "validation_prepare_seconds": 0.15800009599934128,
+      "warmup_seconds": 4.34879889900003,
+      "warmup_steps": 8
+    },
+    "row_statistics": null,
+    "script_sha256": "6855409ad32e8d8eb22943f148d77b0b35b237ce4f87bdafc2aecc0f6c33a28e",
+    "session_number": 1,
+    "sessions": [
+      {
+        "affinity": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "command": [
+          "scripts/run_speed_validation.py",
+          "learner",
+          "--config",
+          "runs/az_loop_seed1/config.json",
+          "--run",
+          "runtime/end_to_end_speed_2026-10-03/learner_2048",
+          "--record",
+          "artifacts/end_to_end_speed_2026-10-03/learner_2048.json",
+          "--cache-mib",
+          "2048",
+          "--warmup-steps",
+          "8",
+          "--steps",
+          "128"
+        ],
+        "config": {
+          "config": {
+            "evaluation": {
+              "adjudicate_deterministic_policy_cycles": true,
+              "device": "cpu",
+              "greedy_vs_initial": {
+                "pairs": 20,
+                "policy_seed_base": 9410000,
+                "search_config": null,
+                "seed_start": 9310000
+              },
+              "mcts_vs_parent": {
+                "pairs": 10,
+                "policy_seed_base": 9400000,
+                "search_config": {
+                  "c_puct": 1.5,
+                  "determinizations": 1,
+                  "dirichlet_alpha": 0.3,
+                  "fold_forced_phases": true,
+                  "max_simulation_transitions": 512,
+                  "root_noise_fraction": 0.0,
+                  "seed": 9300000,
+                  "simulations": 1024
+                },
+                "seed_start": 9300000
+              },
+              "workers": 8
+            },
+            "initial_checkpoint": "/home/lc/下载/splendor/runs/5c_main_seed1/checkpoints/local_005000000_lifetime_005512112.pt",
+            "learner": {
+              "batch_size": 256,
+              "checkpoint_every_steps": 100,
+              "device": "cuda",
+              "history_batch_size": 128,
+              "learning_rate": 0.0001,
+              "max_grad_norm": 1.0,
+              "max_steps_per_round": null,
+              "policy_loss_weight": 1.0,
+              "steps_per_new_position": 4.0,
+              "validation_batch_size": 256,
+              "value_loss_weight": 1.0,
+              "weight_decay": 0.0001
+            },
+            "new_games_per_round": 500,
+            "num_rounds": 5,
+            "protocol": "alphazero-loop-v1",
+            "replay_cache_bytes": 268435456,
+            "replay_max_games": 3000,
+            "run_id": "az_loop_seed1",
+            "seeds": {
+              "collection": 9500000,
+              "sampling": 9502000,
+              "split": 9501000
+            },
+            "selfplay": {
+              "add_root_noise": true,
+              "execution": {
+                "active_games_per_worker": 4,
+                "backend": "batched_cpu",
+                "engine_mode": "fast",
+                "max_batch_size": 4,
+                "max_batch_wait_ms": 2,
+                "precision": "float32",
+                "torch_threads": 1,
+                "workers": 8
+              },
+              "max_completed_turns": 400,
+              "protocol": "mcts-selfplay-v2",
+              "search_config": {
+                "c_puct": 1.5,
+                "determinizations": 1,
+                "dirichlet_alpha": 0.3,
+                "fold_forced_phases": true,
+                "max_simulation_transitions": 512,
+                "root_noise_fraction": 0.25,
+                "seed": 9500000,
+                "simulations": 1024
+              },
+              "temperature_schedule": {
+                "late_temperature": 0.0,
+                "opening_completed_turns": 10,
+                "opening_temperature": 1.0
+              },
+              "validation_fraction": 0.1
+            }
+          },
+          "fingerprint": "8d506f458375c09a268bb9a429acaab8c5d7055c64fb4cc1865efbff18fa9ec9",
+          "protocol": "alphazero-loop-v1"
+        },
+        "cpu_count": 16,
+        "cuda_build": "13.0",
+        "end_unix": 1791029535.707661,
+        "extension": "/home/lc/下载/splendor/src/splendor/_native_search.cpython-312-x86_64-linux-gnu.so",
+        "extension_sha256": "94986fb4ffaa7c1d8f01437d885f2b11e5599ad85ad878a73a10eaa8bdd9b4b7",
+        "gpu_device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+        "instrument": false,
+        "meminfo": {
+          "MemAvailable": "26097756 kB",
+          "MemTotal": "32597820 kB"
+        },
+        "python": "3.12.14",
+        "resources": "artifacts/end_to_end_speed_2026-10-03/learner_2048.session-1.resources.json",
+        "result": {
+          "cache_mib": 2048,
+          "cache_total": {
+            "decoded_bytes": 1469024060,
+            "hits": 32578,
+            "misses": 2238
+          },
+          "checkpoint_validation": {
+            "calls": {
+              "checkpoint": 1,
+              "validation": 1
+            },
+            "cuda_stream_seconds": {},
+            "host_wall_seconds": {
+              "checkpoint": 0.006677129999843601,
+              "validation": 0.08100673900025868
+            }
+          },
+          "cuda_stream_seconds": {},
+          "device": "cuda",
+          "diagnostic_script_sha256": "8dfc1739848a2998d73e9cfee36af718c23251807c5c29d06a5ca65ecd692052",
+          "exclusive_host_wall_seconds": {
+            "backward": 0.20130199500272283,
+            "collate": 0.6348010690026058,
+            "completion_wait": 0.003232079006920685,
+            "draw": 3.6202139130018622,
+            "feature_h2d": 0.08902790099818958,
+            "forward": 0.1723374840012184,
+            "gradient_clip": 0.04527254099775746,
+            "loss": 0.033430728006351274,
+            "measurement_and_loop_remainder": 0.038971918977949827,
+            "metrics_write": 0.016961685005298932,
+            "optimizer": 0.07866706599907047,
+            "target_h2d": 0.024028995993830904,
+            "train_step_remainder": 0.1032592090050457
+          },
+          "gpu_peak_bytes": 100985856,
+          "index_seconds": 0.9523814760004825,
+          "initialization_seconds": 0.7864357479993487,
+          "learner_config": {
+            "batch_size": 256,
+            "checkpoint_every_steps": 100,
+            "device": "cuda",
+            "history_batch_size": 128,
+            "learning_rate": 0.0001,
+            "max_grad_norm": 1.0,
+            "max_steps_per_round": null,
+            "policy_loss_weight": 1.0,
+            "steps_per_new_position": 4.0,
+            "validation_batch_size": 256,
+            "value_loss_weight": 1.0,
+            "weight_decay": 0.0001
+          },
+          "main_seconds": 11.414569716000187,
+          "measured_steps": 128,
+          "measured_wall_seconds": 5.061506584998824,
+          "parent_checkpoint": {
+            "path": "/home/lc/下载/splendor/runs/az_loop_seed1/rounds/round-003/checkpoints/final.pt",
+            "sha256": "c4e85e27c1242c640c1504fe10d158a7817efd6c0ceed7e165dbb8b68aa26e7c"
+          },
+          "peak_rss_kib": 3136320,
+          "production_cache_stats": {
+            "cache_bytes": 1501268854,
+            "capacity_bytes": 2147483648,
+            "decode_count": 2289,
+            "decoded_bytes": 1501268854,
+            "entries": 2289,
+            "hits": 36853,
+            "load_seconds": 7.571927941970898,
+            "misses": 2289
+          },
+          "profiler_enabled": false,
+          "reference_sequence_sha256": "6549bb79f055154528923c7538bfb789b53e43762dc0380e564b60ee5c303a40",
+          "replay_identity": {
+            "digest": "b13060726f79b8f5bfdbca7d20457cd467c5947bd9c4e2fd7e0d1ca35f565f46",
+            "evicted_games": 0,
+            "first_key": [
+              0,
+              0
+            ],
+            "last_key": [
+              4,
+              499
+            ],
+            "protocol": "alphazero-replay-index-v1",
+            "total_games": 2500,
+            "train_games": 2238,
+            "train_positions": 190660,
+            "validation_games": 262
+          },
+          "round": 4,
+          "sampling_seed": 7472986141618057342,
+          "scope": "isolated updates, actual frozen replay and parent optimizer; no production run modified",
+          "steps": {
+            "_git_omitted_raw": {
+              "count": 128,
+              "json_path": "$.sessions[0].result.steps",
+              "kind": "list",
+              "value_sha256": "31acd25a476a7cec1f41478ce74c59b84131f7d8a275c4d9fccd5b14847e84a1"
+            }
+          },
+          "top_train_step_functions": [],
+          "torch_gpu_allocator": {
+            "allocated_at_end_bytes": 17305600,
+            "max_allocated_bytes": 100985856,
+            "max_reserved_bytes": 165675008,
+            "reserved_at_end_bytes": 165675008
+          },
+          "validation": {
+            "available": true,
+            "policy_entropy": 1.915087422682661,
+            "policy_loss": 1.9510519509584638,
+            "positions": 4326,
+            "value_loss": 0.7249484209897504
+          },
+          "validation_prepare_seconds": 0.15800009599934128,
+          "warmup_seconds": 4.34879889900003,
+          "warmup_steps": 8
+        },
+        "row_statistics": null,
+        "script_sha256": "6855409ad32e8d8eb22943f148d77b0b35b237ce4f87bdafc2aecc0f6c33a28e",
+        "session_number": 1,
+        "source": "/home/lc/下载/splendor/src/splendor/multiworker_gpu.py",
+        "start_unix": 1791029524.1064653,
+        "threads": {
+          "MKL_NUM_THREADS": "1",
+          "OMP_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1"
+        },
+        "torch": "2.14.0+cu130"
+      }
+    ],
+    "source": "/home/lc/下载/splendor/src/splendor/multiworker_gpu.py",
+    "start_unix": 1791029524.1064653,
+    "threads": {
+      "MKL_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    },
+    "torch": "2.14.0+cu130"
+  },
+  "raw": {
+    "bytes": 424767,
+    "path": "artifacts/end_to_end_speed_2026-10-03/learner_2048.json",
+    "sha256": "f3c3fffd8701398ff2c507b1a585e56a692a0d90da4795c6b06f983ee3106080"
+  },
+  "schema": "splendor-git-artifact-summary-v1",
+  "scope": "Mechanical projection; omitted fields are explicitly marked. Not a complete runtime input."
+}

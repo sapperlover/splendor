@@ -1,0 +1,103 @@
+{
+  "catalog_files": {
+    "splendor_cards.csv": "e53d99cfb70517be6cf747f4bdc7961d3d27f3e1626fa3383e8bc185dc8d10e3",
+    "splendor_config.json": "98128f9629d692044fbe27d4005e6c380203764db2f9ed85405de8367e484e3f",
+    "splendor_nobles.csv": "32634495be8b44bc7c0efacec7465f47e36f15fd54196a5f327601acc8b974b3"
+  },
+  "catalog_fingerprint": "084574b026e41ad6e5c64dfe36d74fb84a7604f6a0b0eb0ab59227c32a7ff17b",
+  "experiment": "r37_lr2e5_step140221_vs_r37_10k_20261029",
+  "models": [
+    {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r37_104k_lr2e5_20261027/checkpoints/step-000140221.pt",
+      "experiment": "entity_attention_r37_104k_lr2e5_20261027",
+      "key": "r37_lr2e5_step140221",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "value_readout": "global_players_market"
+      },
+      "policy_kl": 0.19661209349431433,
+      "selected_step": 140221,
+      "selection_kind": "user_fixed_checkpoint",
+      "selection_objective": 0.9286851475987772,
+      "sha256": "42fbd07c413190389ac5f2cab73ef41ff4a10f5402a13e099a37d49aa3cb6caa",
+      "validation": {
+        "path": "runs/entity_attention_r37_104k_lr2e5_20261027/full_validation/step-000140221.json",
+        "sha256": "d020de0680a3a2df56e72a26a3d1391845cfe1a93ae95442db1ef18567e1fe10"
+      },
+      "value_mse": 0.7320730541044629
+    }
+  ],
+  "opponent": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r31_10k_p60k_iteration_20261023/rounds/round-005/checkpoints/final.pt",
+    "key": "raw_R37",
+    "model_config": {
+      "architecture": "entity_attention_v1",
+      "dropout": 0.0,
+      "feature_schema_version": "splendor-observation-action-v1",
+      "ffn_hidden": 512,
+      "heads": 4,
+      "hidden": 128,
+      "layers": 2,
+      "market_relations": true,
+      "value_readout": "global_players_market"
+    },
+    "sha256": "611f4f4ed18f397b03c79bb3a2beae51e7a77a747883680d9189eed3052a1045"
+  },
+  "pairs_per_panel": 10000,
+  "panels": [
+    {
+      "config": {
+        "path": "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/configs/01_greedy_step140221_vs_R37.json",
+        "sha256": "9ebb3598f0314c37577b804d0ea3970e1973c38fc4875ee3d7a8ab6a9c3c39e7"
+      },
+      "id": "01_greedy_step140221_vs_R37",
+      "kind": "greedy",
+      "model": "r37_lr2e5_step140221",
+      "output": "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/panels/01_greedy_step140221_vs_R37.json",
+      "pairs": 10000
+    },
+    {
+      "config": {
+        "path": "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/configs/02_search_step140221_vs_R37.json",
+        "sha256": "ac759b18c84568f933bd87da39fe038129bc68e14db3009dd6db8ecab85bf9db"
+      },
+      "id": "02_search_step140221_vs_R37",
+      "kind": "search",
+      "model": "r37_lr2e5_step140221",
+      "output": "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/panels/02_search_step140221_vs_R37.json",
+      "pairs": 10000
+    }
+  ],
+  "progress_every": 100,
+  "runner": {
+    "path": "artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/run.py",
+    "sha256": "750a6788aaff794824f2cb2c2488e8c791c6f700f64e032c2c6458bd2db3422a"
+  },
+  "scope": "Original R37-initialized104k/lr2e-5 checkpoint140221 vs rawR37. Greedy10000pair, then bothS128N1(total128each)10000pair, same seed bank as prior offline5 comparison. Strictly serial and resumable full pairs. No training or dependency on training completion/selection.json.",
+  "seeds": {
+    "bootstrap_seed": 47340000,
+    "game_seed_end": 47279999,
+    "game_seed_start": 47270000,
+    "policy_seed_base": 47300000,
+    "search_seed": 47330000
+  },
+  "selection": "User-fixed step140221 (about140k), not the latest checkpoint; never auto-reselect",
+  "shared_runner": {
+    "path": "artifacts/offline5_vs_r37_10k_20261027/run.py",
+    "sha256": "9624c98539e54cec7fb7f8e198c2b669369e1829221c2fa63ebcbc1decc8db06"
+  },
+  "summary_every": 1000,
+  "total_games": 40000,
+  "total_pairs": 20000,
+  "training_plan": {
+    "path": "artifacts/entity_attention_r37_104k_lr2e5_20261027/plan.json",
+    "sha256": "3011557e0f4cfa7cff729a350a57eccfcef5464ec0548aebeb2b794bbb441741"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "actual_training_imports_frozen": true,
+  "cache_capacity_basis": {
+    "path": "artifacts/score_ownership_20261026/verification.json",
+    "sha256": "2a78e981035b5840fcc7a471401b89b87dbfc2bffb3ec79373f9f7f76ec48a57"
+  },
+  "client_date": "2026-10-26",
+  "commands": {
+    "full": "bash scripts/run_attention128_policy_score104k_20261026.sh",
+    "prepare": "bash scripts/run_attention128_policy_score104k_20261026.sh prepare",
+    "real_data": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/entity_attention_128x2_policy_score_r21_r37_20261026/source/src:runtime/entity_attention_128x2_policy_score_r21_r37_20261026/source OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/validate.py",
+    "regression": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/entity_attention_128x2_policy_score_r21_r37_20261026/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q -o pythonpath=runtime/entity_attention_128x2_policy_score_r21_r37_20261026/source/src tests/test_score_ownership.py tests/test_continuation_auxiliary.py tests/test_continuation_diagnostics.py tests/test_offline_early_stopping.py --junitxml=artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/tests.xml",
+    "train_only": "bash scripts/run_attention128_policy_score104k_20261026.sh train"
+  },
+  "config_difference_from_previous_policy_execution": {
+    "continuation_auxiliary.score_ownership_weight": 0.25
+  },
+  "entry_and_evaluation_template_check": "entry_check.json; syntactic checkpoint fixture only, no model selected or evaluated",
+  "evidence_hashes": {
+    "artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/README.md": "f25ba088a72674c6439a740b54347d2b4fcca3230d9c60723c8058b846bc84da",
+    "artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/cpu_validation.json": "cfe132cb8a767d7c28a72e7bea39c5f96bb54820fc4272bf0d1ea118da7c9d61",
+    "artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/entry_check.json": "d8eeb80dd806c021303fa45a73cdc5e44447e1af7bea2b7006850634ab6f82f0",
+    "artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/plan.json": "77a4dc841ac98a967510d9ff87839ea7a4bac7fa6e52b59503aeb143e0da5f30",
+    "artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/run.py": "6f73b8d1e21992b9c82c3446896cdad4e736f0e743bac2aff4979b895ad740c0",
+    "artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/source.json": "cb873aa1263e3c5465ff99713a57fd61eea919c07f952c1ef5e739b22c9d51d1",
+    "artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/tests.xml": "1de1f1740fc81d12f20405f79662e16c2278a928306fce78b7ac2eed0ca5a5fd",
+    "artifacts/entity_attention_128x2_policy_score_r21_r37_20261026/validate.py": "622c74067398a1c9b3a6cf8ff3d1ccc80af9a29558f24042df7be3305542921e",
+    "configs/entity_attention_v1/offline_policy_score_r21_r37_20261026.json": "40da87920d523d2c43955a7852417fbf8563199a87b01b8a658acf469cb884f0",
+    "scripts/run_attention128_policy_score104k_20261026.sh": "93c2a30517fe5386d2e3393f41fa93e5c11ca63273402215a8e6407f10da006b"
+  },
+  "finite_real_data_check": {
+    "decisions": 336,
+    "full_104k_warmup": false,
+    "games": 4,
+    "native_roots": 3,
+    "serial_and_four_worker_resume_bitwise": true,
+    "steps_per_path": 4,
+    "total_simulations": 24
+  },
+  "formal_checkpoints": 0,
+  "formal_output_files": [
+    "config.json",
+    "dataset.json",
+    "fixed_validation.json",
+    "plan.json"
+  ],
+  "formal_progress_exists": false,
+  "git_head": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "lightweight_recording_checked": true,
+  "pool": "Original 104k R21-R37 NPZ, labels, whole-game splits, manifest digest unchanged",
+  "scope": "Script and frozen configuration only; no formal training, collection, arena or queue/process change.",
+  "source_snapshot_files_verified": 125,
+  "status": "prepared_not_started",
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 54
+  },
+  "weights": {
+    "opponent_policy": 0.15,
+    "score_ownership": 0.25,
+    "shortterm_value": 0
+  }
+}

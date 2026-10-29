@@ -1,0 +1,173 @@
+{
+  "all_eight_targets_match_checked_inventory": true,
+  "cache_capacity": {
+    "configured_bytes": 18253611008,
+    "full_pool_warmed": false,
+    "old_arena_is_upper_bound": true,
+    "old_policy_label_bytes_per_position": 180,
+    "ownership_label_bytes_per_position": 16,
+    "same_pool_old_policy_arena_bytes": 17869150492,
+    "training_workers": 4
+  },
+  "checked_oracle_decisions": 243,
+  "client_date": "2026-10-26",
+  "config": {
+    "auxiliary_initialization_seed": 36100000,
+    "cache_mib": 17408,
+    "continuation_auxiliary": {
+      "opponent_policy_weight": 0.0,
+      "protocol": "continuation-ema-h2-h6-h14-opponent-main-v1",
+      "score_ownership_weight": 0.25,
+      "shortterm_value_weight": 0.0
+    },
+    "draw_exposures": 12.0,
+    "early_stopping_increases": 3,
+    "encoder_grad_norm_every_steps": 100,
+    "expected_games_per_round": {
+      "64": 4000,
+      "65": 4000,
+      "66": 4000,
+      "67": 4000,
+      "68": 4000,
+      "69": 4000,
+      "70": 4000,
+      "71": 4000,
+      "72": 4000,
+      "73": 4000,
+      "74": 4000,
+      "75": 10000,
+      "76": 10000,
+      "77": 10000,
+      "78": 10000,
+      "79": 10000,
+      "80": 10000
+    },
+    "first_round": 64,
+    "initialization_seed": 43100000,
+    "last_round": 80,
+    "learner": {
+      "batch_size": 256,
+      "checkpoint_every_steps": 1000,
+      "device": "cuda",
+      "history_batch_size": 128,
+      "learning_rate": 0.0001,
+      "max_grad_norm": 1.0,
+      "max_steps_per_round": null,
+      "policy_loss_weight": 1.0,
+      "steps_per_new_position": 4.0,
+      "validation_batch_size": 256,
+      "value_loss_weight": 1.0,
+      "weight_decay": 0.0001
+    },
+    "manifest": "/home/lc/下载/splendor/runs/entity_attention_128x2_shortterm_value_r21_r37_20261023/inputs/pool_games.jsonl",
+    "manifest_sha256": "267e37ae3ba06f47d54b696794994221737776a1304f9ff75d42e327bede18d5",
+    "model_config": {
+      "architecture": "entity_attention_v1",
+      "dropout": 0.0,
+      "ffn_hidden": 512,
+      "heads": 4,
+      "hidden": 128,
+      "layers": 2,
+      "market_relations": true,
+      "value_readout": "global_players_market"
+    },
+    "policy_surprise_weighting": null,
+    "sampling_protocol": "policy-high-value-all-v1",
+    "sampling_seed": 43110000,
+    "training_workers": 4,
+    "validation_percent_step": 5,
+    "validation_positions": 4096,
+    "validation_seed": 43120000,
+    "value_auxiliary": null
+  },
+  "config_sha256": "4947289d9f55886bfbaaeb9f75bc5138eb31cad91713163ef4a3819cbe96b4f8",
+  "created_at": "2026-10-26T04:21:13.136407+00:00",
+  "git_head": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "plan_path": "runtime/score_ownership_20261026/prepare/plan.json",
+  "plan_sha256": "01a58cb764288ef4c19ba5be7f7546f78838722fededa7817f9fbbd813d0b88b",
+  "prepared_plan": {
+    "absolute_rounds": [
+      64,
+      80
+    ],
+    "games": 104000,
+    "initialization": {
+      "auxiliary_seed": 36100000,
+      "kind": "random_initialization",
+      "model_config": {
+        "architecture": "entity_attention_continuation_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "predict_opponent_policy": false,
+        "predict_score_ownership": true,
+        "predict_shortterm_value": false,
+        "value_readout": "global_players_market"
+      },
+      "optimizer": "fresh AdamW",
+      "seed": 43100000
+    },
+    "sampling": {
+      "policy_batch_size": 256,
+      "policy_draw_exposure": 57.53551807815971,
+      "protocol": "policy-high-value-all-v1",
+      "update": "one joint AdamW update and one global gradient clip per policy/value batch pair",
+      "value_batch_size": 256,
+      "value_draw_exposure": 12.000023534357755
+    },
+    "splits": {
+      "train": {
+        "games": 93537,
+        "policy_positions": 1559755,
+        "positions": 7478428
+      },
+      "validation": {
+        "games": 10463,
+        "policy_positions": 174056,
+        "positions": 835367
+      }
+    },
+    "steps_target": 350552
+  },
+  "result_sha256": {
+    "resume_rng.xml": "9bf2af5a40df858d67f0342a96244206c21b13629b6bd0c61ae2675ba5625b9b",
+    "smoke.json": "862a534d5d6e7c6681d850712dc559d392caf9298d9f65c30daf1b7ade1c8d9a",
+    "tests.xml": "0da7de8ee565dbf8c3650770c9abfc9f2f709178272795f0f803ad7fbe17cb58"
+  },
+  "scope": "8-output remaining-score source auxiliary; finite CPU tests and real-game checked oracle, no formal training or strength conclusion",
+  "source_sha256": {
+    "scripts/validate_continuation_auxiliary.py": "181a2b33868f23cfad7a06f93718317e0f3221df28f4b40aef9f43ae94773f22",
+    "src/splendor/actor_critic.py": "8ffc9fe0c335c01cc97d93d913535331ace9bd3898ef6747dbe6f541b4ae5232",
+    "src/splendor/alphazero_train.py": "aa4fa0c5f6d225f0ab505654d1690a45eaa8dafb06dc1dfdd2a8639ddb657ca9",
+    "src/splendor/compact_game_cache.py": "d2f320dca4440b69e64bb52131b902c808a65ad0e707f86cec6d3de3855f2103",
+    "src/splendor/continuation_auxiliary.py": "c3e9b274e740500f6184c011dbe7ed68aa4622016929b66b07d4502663a62684",
+    "src/splendor/entity_attention.py": "744ca3dba4985c6859c5ea221d74f18d92d6c801cc7db651b7f89639c7df4cbb",
+    "src/splendor/offline_continuation.py": "336809c5774558136a50a32fe44b3abeb57d811c71d6bf8ec6dec7b1f282333c",
+    "src/splendor/offline_objectives.py": "15f679e7470e6b9dc44467ab23514711dd6d990689b150414c67e7d5f803fe8d",
+    "src/splendor/opponent_policy.py": "7a9ded74e1851a324932a9220f968c06acd91506903f029c3b8aef8cb01e1a83",
+    "src/splendor/random_budget_iteration.py": "b488a667a7a0f56efcdb39039d98a21dc3a9d2d27720cfe6a1ee107b3000a386",
+    "src/splendor/score_ownership.py": "2086eab7a786ffa83bf6aec250fa437d9a9e7d0c68ad77d458f71acce2689984",
+    "src/splendor/training_prefetch.py": "d88b7ad00c9613e888f50e9363e23e2c15afca1deffbc9c268e6b95c4a2f2dcf",
+    "tests/test_continuation_auxiliary.py": "7baeb83ed0b5f15aada2c29ad28bfe9e93b0ad2608159f33e616943b585ae2e0",
+    "tests/test_policy_aux_online_iteration.py": "4bb593a315f45bf774926b9acd3238ac39dd825f221458a5f8201f4f26c817bf",
+    "tests/test_score_ownership.py": "f2806e4cda9dde8880b091852d0f4b23fbd00ae0c35b266adb6f20ba1a7d4e36"
+  },
+  "tests": {
+    "resume_rng.xml": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1
+    },
+    "tests.xml": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 131
+    }
+  }
+}

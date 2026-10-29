@@ -136,7 +136,8 @@ def test_prepared_config_and_historical_fingerprint_compatible(tmp_path):
     assert not worlds["round-009-vs-theta5.json"] & worlds["round-002-vs-theta5.json"]
 
 
-def test_interrupted_training_reference_ledger_and_updates_resume_exactly(az_runs, tmp_path):
+@pytest.mark.parametrize("persist_records", [True, False])
+def test_interrupted_training_reference_ledger_and_updates_resume_exactly(az_runs, tmp_path, persist_records):
     checkpoint, first, _ = az_runs
     index = build_replay_index([first], max_games=3, cache_bytes=16 * 1024**2)
     pool = index.position_pool(split="train", round_index=0)
@@ -147,7 +148,7 @@ def test_interrupted_training_reference_ledger_and_updates_resume_exactly(az_run
     run_training_round(expected, steps_target=4, current_pool=pool, history_pool=None, validation_samples=[], validation_games=0,
                        checkpoint_dir=tmp_path / "baseline", metrics_path=tmp_path / "baseline.jsonl")
     actual = fresh()
-    writer = ReferenceWriter(tmp_path / "usage", "interrupted", 4, {})
+    writer = ReferenceWriter(tmp_path / "usage", "interrupted", 4, {}, persist_records=persist_records)
     def stop(record):
         if record["round_train_step"] == 3:
             raise KeyboardInterrupt("unit test interruption after uncommitted step")
@@ -158,19 +159,24 @@ def test_interrupted_training_reference_ledger_and_updates_resume_exactly(az_run
         finally:
             writer.close()
     actual = AlphazeroLearner.resume(tmp_path / "resume/step-000000002.pt", config, replay_identity=index.identity(), round_index=0, round_steps_target=4)
-    writer = ReferenceWriter(tmp_path / "usage", "resumed", 4, {})
+    writer = ReferenceWriter(tmp_path / "usage", "resumed", 4, {}, persist_records=persist_records)
     try:
         run_training_round(actual, steps_target=4, current_pool=pool, history_pool=None, validation_samples=[], validation_games=0,
                            checkpoint_dir=tmp_path / "resume", metrics_path=tmp_path / "metrics.jsonl", reference_writer=writer)
     finally:
         writer.close()
-    usage = summarize_references(tmp_path / "usage", 4, 0, {"current": len(pool), "history": 0})
-    assert usage["committed_draws"] == 16
-    assert usage["repeated_or_uncommitted_draws"] == 4
+    if persist_records:
+        usage = summarize_references(tmp_path / "usage", 4, 0, {"current": len(pool), "history": 0})
+        assert usage["committed_draws"] == 16
+        assert usage["repeated_or_uncommitted_draws"] == 4
+    else:
+        assert {p.name for p in (tmp_path / "usage").iterdir()} == {"interrupted.json", "resumed.json"}
+        assert read_json(writer.path)["format"] == "az-reference-sha256-only-v1"
     assert all(torch.equal(a, b) for a, b in zip(expected.model.parameters(), actual.model.parameters()))
     assert expected.sampling_rng.snapshot() == actual.sampling_rng.snapshot()
     records = [json.loads(line) for line in (tmp_path / "metrics.jsonl").read_text().splitlines()]
     assert [r["round_train_step"] for r in records if r["event"] == "train_step"] == [1, 2, 3, 4]
+    assert all(len(r["reference_sha256"]) == 64 for r in records if r["event"] == "train_step")
 
 
 def test_recorded_loop_calls_diagnostics_and_noop_resume(tmp_path, monkeypatch):

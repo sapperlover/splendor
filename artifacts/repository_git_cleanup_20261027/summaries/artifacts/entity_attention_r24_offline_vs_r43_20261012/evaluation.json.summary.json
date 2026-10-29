@@ -1,0 +1,543 @@
+{
+  "omitted_fields": [
+    {
+      "count": 200,
+      "json_path": "$.config.game_seeds",
+      "kind": "list",
+      "value_sha256": "376cc17db3582ab5895503943e322c7f079b5bf45117aa54c4adb0a1d81d1c75"
+    },
+    {
+      "count": 400,
+      "json_path": "$.execution_stats.games",
+      "kind": "list",
+      "value_sha256": "10d2881721a6617d6d5f1781803b6ef58ddfded7bc3ed8b95bd7d07b992a687b"
+    },
+    {
+      "count": 200,
+      "json_path": "$.pairs",
+      "kind": "list",
+      "value_sha256": "6e638c8d193985995d6a89c0c5c8864f4ebdc50d299f8c522ce0751560cf5675"
+    }
+  ],
+  "preserved": {
+    "a_first": {
+      "draws": 1,
+      "games": 200,
+      "losses": 98,
+      "valid_games": 200,
+      "win_rate_score": 0.5075,
+      "wins": 101
+    },
+    "a_losses": 194,
+    "a_second": {
+      "draws": 1,
+      "games": 200,
+      "losses": 96,
+      "valid_games": 200,
+      "win_rate_score": 0.5175,
+      "wins": 103
+    },
+    "a_wins": 204,
+    "checkpoint_identity": {
+      "policy_a": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_r24_history_pool_20261012/checkpoints/step-000024388.pt",
+        "sha256": "deccdc296869a1ceff10b0a6394b9349938e7a26073aa7998130d563696eeeb2"
+      },
+      "policy_b": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+        "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+      }
+    },
+    "completed_games": 400,
+    "completed_pairs": 200,
+    "config": {
+      "adjudicate_deterministic_policy_cycles": true,
+      "bootstrap_resamples": 10000,
+      "bootstrap_seed": 35820000,
+      "device": "cuda",
+      "execution": {
+        "active_games": 100,
+        "actor_projection": false,
+        "backend": "native_batched",
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "inference_mode": "compiled",
+        "max_batch_size": 64,
+        "max_batch_wait_ms": 0.0
+      },
+      "game_seeds": {
+        "_git_omitted_raw": {
+          "count": 200,
+          "json_path": "$.config.game_seeds",
+          "kind": "list",
+          "value_sha256": "376cc17db3582ab5895503943e322c7f079b5bf45117aa54c4adb0a1d81d1c75"
+        }
+      },
+      "max_completed_turns": 400,
+      "metadata": {
+        "additional_training_step": 24388,
+        "candidate_sha256": "deccdc296869a1ceff10b0a6394b9349938e7a26073aa7998130d563696eeeb2",
+        "experiment": "entity_attention_r24_offline_vs_r43_20261012",
+        "opponent_sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14",
+        "panel": "predeclared independent-openers R24+24388 vs original R43"
+      },
+      "policy_a": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r24_history_pool_20261012/checkpoints/step-000024388.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "mcts_checkpoint",
+        "name": "R24_history_step24388",
+        "search_backend": "native",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 35830000,
+          "simulations": 1024
+        }
+      },
+      "policy_b": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "mcts_checkpoint",
+        "name": "original_R43",
+        "search_backend": "native",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 35830000,
+          "simulations": 1024
+        }
+      },
+      "policy_seed_base": 35810000,
+      "workers": 1
+    },
+    "draws": 2,
+    "elapsed_seconds_this_invocation": 1882.4583692479973,
+    "engineering_truncations": 0,
+    "exceptions": 0,
+    "execution_stats": {
+      "checked_rule_seconds": 31.025069685270864,
+      "games": {
+        "_git_omitted_raw": {
+          "count": 400,
+          "json_path": "$.execution_stats.games",
+          "kind": "list",
+          "value_sha256": "10d2881721a6617d6d5f1781803b6ef58ddfded7bc3ed8b95bd7d07b992a687b"
+        }
+      },
+      "model_creation_seconds": 0.9014991859985457,
+      "models": {
+        "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14:1": {
+          "actual_candidate_positions": 214659025,
+          "batch_non_inference_seconds": 360.4513112887835,
+          "batch_wall_seconds": 891.2114613976919,
+          "decision_latency": {
+            "50": 6.010744680499556,
+            "90": 8.957688651899298,
+            "99": 10.187990479559339
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "1": 4983,
+              "10": 704,
+              "11": 583,
+              "12": 826,
+              "13": 628,
+              "14": 535,
+              "15": 815,
+              "16": 576,
+              "17": 273,
+              "18": 384,
+              "19": 473,
+              "2": 3091,
+              "20": 569,
+              "21": 546,
+              "22": 622,
+              "23": 894,
+              "24": 723,
+              "25": 535,
+              "26": 421,
+              "27": 433,
+              "28": 483,
+              "29": 487,
+              "3": 2014,
+              "30": 483,
+              "31": 777,
+              "32": 915,
+              "33": 536,
+              "34": 494,
+              "35": 420,
+              "36": 314,
+              "37": 447,
+              "38": 884,
+              "39": 2446,
+              "4": 1965,
+              "40": 2154,
+              "41": 3759,
+              "42": 3668,
+              "43": 6305,
+              "44": 8327,
+              "45": 11387,
+              "46": 14682,
+              "47": 16285,
+              "48": 20088,
+              "49": 21411,
+              "5": 1477,
+              "50": 25249,
+              "51": 23288,
+              "52": 16783,
+              "53": 16710,
+              "54": 10774,
+              "55": 11514,
+              "56": 6953,
+              "57": 5829,
+              "58": 6804,
+              "59": 4167,
+              "6": 1176,
+              "60": 2495,
+              "61": 2513,
+              "62": 773,
+              "63": 350,
+              "64": 253,
+              "7": 964,
+              "8": 925,
+              "9": 1180
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 0.632249132002471,
+                "policy_value:32": 1.1737381749990163,
+                "policy_value:48": 1.1582615890001762,
+                "policy_value:64": 1.3105674449980143
+              },
+              "compiled_calls": {
+                "policy_value:16": 3072,
+                "policy_value:32": 139341,
+                "policy_value:48": 132441,
+                "policy_value:64": 4668
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 2865,
+                "unique_graphs": 15
+              },
+              "eager_fallbacks": 0,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled",
+                "policy_value:64": "compiled"
+              }
+            },
+            "d2h_seconds": 18.574181904761645,
+            "feature_seconds": 0.0,
+            "forward_seconds": 472.8742334080671,
+            "h2d_seconds": 17.6626823364968,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 12730449,
+            "mean_batch_size": 45.543638783351575,
+            "physical_model_batches": 279522,
+            "wait_seconds": 21.64905245958289
+          },
+          "native_consume_seconds": 198.20293630198285,
+          "native_fill_seconds": 84.11735647710157,
+          "physical_candidate_positions": 514170128,
+          "policy_rows": 12730449,
+          "root_rows": 13371,
+          "root_start_seconds": 7.462467331788503,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 3072,
+            "32": 139341,
+            "48": 132441,
+            "64": 4668
+          },
+          "width_rows": {
+            "16": 4144,
+            "32": 6274976,
+            "48": 6223779,
+            "64": 227550
+          }
+        },
+        "deccdc296869a1ceff10b0a6394b9349938e7a26073aa7998130d563696eeeb2:0": {
+          "actual_candidate_positions": 214054251,
+          "batch_non_inference_seconds": 356.5678447121136,
+          "batch_wall_seconds": 898.0424280082589,
+          "decision_latency": {
+            "50": 5.9782453309981065,
+            "90": 8.928308858001401,
+            "99": 10.147319259251162
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "1": 4351,
+              "10": 1072,
+              "11": 1038,
+              "12": 1077,
+              "13": 1083,
+              "14": 734,
+              "15": 473,
+              "16": 744,
+              "17": 511,
+              "18": 398,
+              "19": 909,
+              "2": 4008,
+              "20": 733,
+              "21": 343,
+              "22": 374,
+              "23": 290,
+              "24": 523,
+              "25": 699,
+              "26": 513,
+              "27": 468,
+              "28": 464,
+              "29": 704,
+              "3": 1636,
+              "30": 438,
+              "31": 536,
+              "32": 634,
+              "33": 479,
+              "34": 651,
+              "35": 710,
+              "36": 667,
+              "37": 784,
+              "38": 1391,
+              "39": 3023,
+              "4": 2128,
+              "40": 2843,
+              "41": 5008,
+              "42": 7826,
+              "43": 6899,
+              "44": 7905,
+              "45": 12898,
+              "46": 12307,
+              "47": 17796,
+              "48": 17065,
+              "49": 23808,
+              "5": 1058,
+              "50": 25018,
+              "51": 21279,
+              "52": 19253,
+              "53": 15386,
+              "54": 13215,
+              "55": 10154,
+              "56": 7131,
+              "57": 5135,
+              "58": 2772,
+              "59": 3195,
+              "6": 633,
+              "60": 1318,
+              "61": 1814,
+              "62": 534,
+              "63": 275,
+              "64": 270,
+              "7": 895,
+              "8": 401,
+              "9": 817
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 1.007991184000275,
+                "policy_value:32": 2.3207967950002057,
+                "policy_value:48": 1.5372286420024466,
+                "policy_value:64": 1.3148592809993715
+              },
+              "compiled_calls": {
+                "policy_value:16": 2698,
+                "policy_value:32": 148166,
+                "policy_value:48": 125003,
+                "policy_value:64": 3627
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 2865,
+                "unique_graphs": 15
+              },
+              "eager_fallbacks": 0,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled",
+                "policy_value:64": "compiled"
+              }
+            },
+            "d2h_seconds": 18.771662146675226,
+            "feature_seconds": 0.0,
+            "forward_seconds": 483.3632351990964,
+            "h2d_seconds": 18.36148384322223,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 12610474,
+            "mean_batch_size": 45.11894351935999,
+            "physical_model_batches": 279494,
+            "wait_seconds": 20.978202107151446
+          },
+          "native_consume_seconds": 196.12127233220963,
+          "native_fill_seconds": 82.99548493756447,
+          "physical_candidate_positions": 500992880,
+          "policy_rows": 12610474,
+          "root_rows": 13264,
+          "root_start_seconds": 7.549174982035765,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 2698,
+            "32": 148166,
+            "48": 125003,
+            "64": 3627
+          },
+          "width_rows": {
+            "16": 3888,
+            "32": 6686760,
+            "48": 5744657,
+            "64": 175169
+          }
+        }
+      },
+      "scope": "this invocation; mutually exclusive owner host intervals",
+      "sidecar_seconds": 2.2025393940348295
+    },
+    "forced_skips": 0,
+    "game_log_root": "/home/lc/下载/splendor/artifacts/entity_attention_r24_offline_vs_r43_20261012/evaluation.json.games",
+    "illegal_actions": 0,
+    "invariant_failures": 0,
+    "mean_completed_player_turns": 55.305,
+    "mean_decisions": 80.625,
+    "median_completed_player_turns": 56.0,
+    "output": "/home/lc/下载/splendor/artifacts/entity_attention_r24_offline_vs_r43_20261012/evaluation.json",
+    "paired_bootstrap": {
+      "confidence": 0.95,
+      "estimate": 0.5125,
+      "lower": 0.46125,
+      "pair_count": 200,
+      "resamples": 10000,
+      "seed": 35820000,
+      "upper": 0.56375
+    },
+    "paired_bootstrap_unit": "one_paired_seed",
+    "pairs": {
+      "_git_omitted_raw": {
+        "count": 200,
+        "json_path": "$.pairs",
+        "kind": "list",
+        "value_sha256": "6e638c8d193985995d6a89c0c5c8864f4ebdc50d299f8c522ce0751560cf5675"
+      }
+    },
+    "passed": true,
+    "policy_a_stats": {
+      "changed_action_count": 4391,
+      "decisions": 16176,
+      "determinizations": 13264,
+      "expanded_nodes": 12597210,
+      "feature_seconds": 0.0,
+      "folded_actions": 2451827,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 12610474,
+      "searchable_decisions": 13264,
+      "simulations": 13582336,
+      "single_candidate_decisions": 2912,
+      "state_transitions": 15257003,
+      "terminal_hits": 985126,
+      "total_seconds": 87362.73021919347,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 71247080
+    },
+    "policy_b_stats": {
+      "changed_action_count": 4431,
+      "decisions": 16074,
+      "determinizations": 13371,
+      "expanded_nodes": 12717078,
+      "feature_seconds": 0.0,
+      "folded_actions": 2276801,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 12730449,
+      "searchable_decisions": 13371,
+      "simulations": 13691904,
+      "single_candidate_decisions": 2703,
+      "state_transitions": 15200461,
+      "terminal_hits": 974826,
+      "total_seconds": 88499.73808047303,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 72772943
+    },
+    "policy_cycle_draws": 0,
+    "protocol": "fixed-paired-evaluation-v1",
+    "runtime": {
+      "device": "cuda",
+      "workers": 1
+    },
+    "total_games": 400,
+    "total_pairs": 200,
+    "updated_at": "2026-10-12T15:49:35+0800",
+    "valid_games": 400,
+    "win_rate_score": 0.5125
+  },
+  "raw": {
+    "bytes": 1039613,
+    "path": "artifacts/entity_attention_r24_offline_vs_r43_20261012/evaluation.json",
+    "sha256": "6ea26474727f4b3269f04d78c6e324c80cb34e452928459355172cbec6e35806"
+  },
+  "schema": "splendor-git-artifact-summary-v1",
+  "scope": "Mechanical projection; omitted fields are explicitly marked. Not a complete runtime input."
+}

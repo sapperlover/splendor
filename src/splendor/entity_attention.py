@@ -178,6 +178,14 @@ class EntityAttention(ActorCritic):
     def _role(self, kind: int, owner: int = 0, tier: int = 0) -> Tensor:
         return self.type_embedding.weight[kind] + self.owner_embedding.weight[owner] + self.tier_embedding.weight[tier]
 
+    def shared_encoder_parameters(self):
+        """State encoder only; exclude action queries and all prediction heads."""
+        modules = (self.context_encoder, self.player_encoder, self.card_encoder, self.noble_encoder,
+                   self.type_embedding, self.owner_embedding, self.tier_embedding, self.blocks)
+        if self.config.market_relations:
+            modules += (self.market_relation_encoder,)
+        return tuple(parameter for module in modules for parameter in module.parameters())
+
     def encode_state(self, batch: TorchDecisionBatch | TorchStateBatch) -> tuple[Tensor, Tensor]:
         global_features = batch.global_features
         tokens = [

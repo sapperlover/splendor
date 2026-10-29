@@ -1,0 +1,294 @@
+{
+  "omitted_fields": [
+    {
+      "count": 100,
+      "json_path": "$.config.game_seeds",
+      "kind": "list",
+      "value_sha256": "b84b7c11c1c9ad4ecaa10fa97d0ee5c0589d4a4c4598264c7524c1649fee343b"
+    },
+    {
+      "count": 200,
+      "json_path": "$.execution_stats.games",
+      "kind": "list",
+      "value_sha256": "7356067919032f897703f2cfd25312bcd674653f6007c7ac40d9510d0f3cb7a8"
+    },
+    {
+      "count": 200,
+      "json_path": "$.execution_stats.models.dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4:0.inference.batch_size_histogram",
+      "kind": "dict",
+      "value_sha256": "4695d8adedaaf47683f7bebb117901fdc8c3480201c019d217c5a41fa461211a"
+    },
+    {
+      "count": 100,
+      "json_path": "$.pairs",
+      "kind": "list",
+      "value_sha256": "b55c482db9cbe40ad535a72253873027274f5d3c6e994bc185a68fa42e4d97b3"
+    }
+  ],
+  "preserved": {
+    "a_first": {
+      "draws": 1,
+      "games": 100,
+      "losses": 74,
+      "valid_games": 100,
+      "win_rate_score": 0.255,
+      "wins": 25
+    },
+    "a_losses": 137,
+    "a_second": {
+      "draws": 0,
+      "games": 100,
+      "losses": 63,
+      "valid_games": 100,
+      "win_rate_score": 0.37,
+      "wins": 37
+    },
+    "a_wins": 62,
+    "checkpoint_identity": {
+      "policy_a": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+        "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+      },
+      "policy_b": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+        "sha256": "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4"
+      }
+    },
+    "completed_games": 200,
+    "completed_pairs": 100,
+    "config": {
+      "adjudicate_deterministic_policy_cycles": true,
+      "bootstrap_resamples": 10000,
+      "bootstrap_seed": 16790000,
+      "device": "cuda",
+      "execution": {
+        "active_games": 200,
+        "actor_projection": false,
+        "backend": "native_batched",
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "inference_mode": "eager",
+        "max_batch_size": 200,
+        "max_batch_wait_ms": 0
+      },
+      "game_seeds": {
+        "_git_omitted_raw": {
+          "count": 100,
+          "json_path": "$.config.game_seeds",
+          "kind": "list",
+          "value_sha256": "b84b7c11c1c9ad4ecaa10fa97d0ee5c0589d4a4c4598264c7524c1649fee343b"
+        }
+      },
+      "max_completed_turns": 400,
+      "metadata": {
+        "behavior_temperature": 0,
+        "diagnostic_reference": "artifacts/entity_attention_chance_search_20261007/manifest.json",
+        "network_weights_identical": true,
+        "purpose": "Frozen-model sampled-chance versus determinized PUCT strength check, equal S1024 total; 100 paired game seeds",
+        "root_noise": false
+      },
+      "policy_a": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+        "kind": "mcts_checkpoint",
+        "name": "chance_16500_s1024",
+        "search_backend": "native_chance",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 16740000,
+          "simulations": 1024
+        }
+      },
+      "policy_b": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_split_p4_v15_from_round50_seed1/rounds/round-019/checkpoints/final.pt",
+        "kind": "mcts_checkpoint",
+        "name": "determinized_16500_s1024",
+        "search_backend": "native",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 16740000,
+          "simulations": 1024
+        }
+      },
+      "policy_seed_base": 16780000,
+      "workers": 1
+    },
+    "draws": 1,
+    "elapsed_seconds_this_invocation": 551.3714528540002,
+    "engineering_truncations": 0,
+    "exceptions": 0,
+    "execution_stats": {
+      "checked_rule_seconds": 19.8437363240173,
+      "games": {
+        "_git_omitted_raw": {
+          "count": 200,
+          "json_path": "$.execution_stats.games",
+          "kind": "list",
+          "value_sha256": "7356067919032f897703f2cfd25312bcd674653f6007c7ac40d9510d0f3cb7a8"
+        }
+      },
+      "model_creation_seconds": 0.16313512699980492,
+      "models": {
+        "dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4:0": {
+          "actual_candidate_positions": 230107439,
+          "batch_non_inference_seconds": 250.85058793980488,
+          "batch_wall_seconds": 490.416388040961,
+          "decision_latency": {
+            "50": 8.122682065999925,
+            "90": 8.844369148000169,
+            "99": 8.977001584799927
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "_git_omitted_raw": {
+                "count": 200,
+                "json_path": "$.execution_stats.models.dbfbe066144a485d15ec633aa87c85ac27864f142183725b86562e4ba44ed2c4:0.inference.batch_size_histogram",
+                "kind": "dict",
+                "value_sha256": "4695d8adedaaf47683f7bebb117901fdc8c3480201c019d217c5a41fa461211a"
+              }
+            },
+            "compile": {},
+            "d2h_seconds": 3.1211123839839274,
+            "feature_seconds": 0.0,
+            "forward_seconds": 144.29110670506043,
+            "h2d_seconds": 4.257349892070351,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "eager",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 12611378,
+            "mean_batch_size": 160.36848931841303,
+            "physical_model_batches": 78640,
+            "wait_seconds": 87.89623112004142
+          },
+          "native_consume_seconds": 270.5565503670132,
+          "native_fill_seconds": 50.07815879603527,
+          "physical_candidate_positions": 536042144,
+          "policy_rows": 12611378,
+          "root_rows": 12938,
+          "root_start_seconds": 8.328953263989888,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 2445,
+            "32": 27577,
+            "48": 47321,
+            "64": 1297
+          },
+          "width_rows": {
+            "16": 6020,
+            "32": 4508599,
+            "48": 7907620,
+            "64": 189139
+          }
+        }
+      },
+      "scope": "this invocation; mutually exclusive owner host intervals",
+      "sidecar_seconds": 0.892187286997796
+    },
+    "forced_skips": 0,
+    "game_log_root": "/home/lc/下载/splendor/artifacts/entity_attention_chance_strength_20261007/evaluation.json.games",
+    "illegal_actions": 0,
+    "invariant_failures": 0,
+    "mean_completed_player_turns": 55.78,
+    "mean_decisions": 81.655,
+    "median_completed_player_turns": 56.0,
+    "output": "/home/lc/下载/splendor/artifacts/entity_attention_chance_strength_20261007/evaluation.json",
+    "paired_bootstrap": {
+      "confidence": 0.95,
+      "estimate": 0.3125,
+      "lower": 0.245,
+      "pair_count": 100,
+      "resamples": 10000,
+      "seed": 16790000,
+      "upper": 0.385
+    },
+    "paired_bootstrap_unit": "one_paired_seed",
+    "pairs": {
+      "_git_omitted_raw": {
+        "count": 100,
+        "json_path": "$.pairs",
+        "kind": "list",
+        "value_sha256": "b55c482db9cbe40ad535a72253873027274f5d3c6e994bc185a68fa42e4d97b3"
+      }
+    },
+    "passed": true,
+    "policy_a_stats": {
+      "changed_action_count": 2153,
+      "decisions": 8220,
+      "determinizations": 6475,
+      "expanded_nodes": 6443202,
+      "feature_seconds": 0.0,
+      "folded_actions": 3694336,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 6449677,
+      "searchable_decisions": 6475,
+      "simulations": 6630400,
+      "single_candidate_decisions": 1745,
+      "state_transitions": 19968130,
+      "terminal_hits": 187198,
+      "total_seconds": 50478.11540110399,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 16273794
+    },
+    "policy_b_stats": {
+      "changed_action_count": 2127,
+      "decisions": 8111,
+      "determinizations": 6463,
+      "expanded_nodes": 6155238,
+      "feature_seconds": 0.0,
+      "folded_actions": 1263369,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 6161701,
+      "searchable_decisions": 6463,
+      "simulations": 6618112,
+      "single_candidate_decisions": 1648,
+      "state_transitions": 7508088,
+      "terminal_hits": 462874,
+      "total_seconds": 48600.66516570498,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 31821428
+    },
+    "policy_cycle_draws": 0,
+    "protocol": "fixed-paired-evaluation-v1",
+    "runtime": {
+      "device": "cuda",
+      "workers": 1
+    },
+    "total_games": 200,
+    "total_pairs": 100,
+    "updated_at": "2026-10-07T10:21:42+0800",
+    "valid_games": 200,
+    "win_rate_score": 0.3125
+  },
+  "raw": {
+    "bytes": 525744,
+    "path": "artifacts/entity_attention_chance_strength_20261007/evaluation.json",
+    "sha256": "6f630aa69bd862529a403c2d45eb763f6f574d804d2a89216d04adccd61005b0"
+  },
+  "schema": "splendor-git-artifact-summary-v1",
+  "scope": "Mechanical projection; omitted fields are explicitly marked. Not a complete runtime input."
+}

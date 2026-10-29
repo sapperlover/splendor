@@ -1,5 +1,17 @@
 # 实体注意力模型与离线搜索经验学习
 
+2026-10-25存储更新：[原80000局池及四组已完成辅助实验的普通checkpoint／逐步日志已外置](../../artifacts/repository_archive_20261025/README.md)。原80k池的离线训练／全量复核需先恢复NPZ；旧普通节点／曲线复核需恢复对应模型／日志，续写前恢复为真实文件。R21–R37的104k池及当前在线初始64k／新采集数据、关键模型保持本机；本页训练执行默认不变。
+
+2026-10-24，未来新建离线统一默认流式累计、4 worker共享只读供数及传输／同步优化，缓存按池大小配置；已覆盖普通、旧辅助、PSW、混合预算、续训、早停和continuation入口。[通用设置与恢复](offline_execution_zh-CN.md)。当前队列后两组均已另建18GiB／4 worker发布并接入，未启动正式训练；[实际发布与验证](../../artifacts/offline_training_defaults_20261024/README.md)。
+
+2026-10-24新增[当前实验后的三个串行消融](../../artifacts/entity_attention_auxiliary_queue_20261024/README.md)，仅改变辅助开关和指定44k范围；主policy／终局value保持1/1。value辅助0时不注册头／生成标签／计算loss或诊断，policy-only与双辅助的对手头初始权重一致。旧模型缺`predict_shortterm_value`默认true，当前运行的冻结实现不改。各组完整训练／选点／R37 greedy1000pair／搜索A500pair成功后，阻塞队列再启动下一组。
+
+2026-10-23正式流程新增[104k局R21–R37仅短期value实验](../../artifacts/entity_attention_128x2_shortterm_value_r21_r37_20261023/README.md)：从零attention128＋H2/H6/H14辅助0.25，对手policy辅助关闭，lr1e-4；沿用16GiB、两头B256和12次value曝光上限，每5%完整主KL+MSE三次严格上升早停、最低节点对R37 greedy1000pair后搜索A500pair。最新轻量记录不写大抽样账本。`expected_games_per_round`可为正整数或覆盖全部一基绝对轮号的JSON映射，如`{"74":4000,"75":10000}`，总数相同但分轮不符仍拒绝；未改旧整数冻结身份。
+
+2026-10-23新增独立`offline_continuation`入口，支持2／6／14玩家回合短期value，以及对手下一主行动的类型／购买牌／保留牌辅助；[标签、覆盖率与命令](continuation_auxiliary_zh-CN.md)。两份新配置从零训练并以主KL＋MSE选点，未启动正式实验，旧短期进展任务仍关闭。
+
+2026-10-23记录策略：当前`offline_objectives`／`offline_mixed_budget`及`hybrid_train`默认不再写两份抽样`.bin`、两份`.steps.jsonl`及恢复时完整指标副本；每步训练指标、batch摘要及小型身份JSON保留。原`offline_train`精确覆盖审计和已冻结历史源码沿用旧行为，旧实验不会自动升级；见[训练产物规则](training_artifacts_zh-CN.md)。
+
 2026-10-23[新增购买结算方案已撤回](../../artifacts/entity_attention_first_round_20261022/README.md)：删除新增购买／贵族／终局派生特征及专用offline_first_round入口、配置和启动脚本。当前使用既有attention与offline_early_stopping／offline_finetune等入口；短期进展辅助保持关闭。原组合／纯购买准备与短验证保留历史身份，不用当前代码直接恢复这些历史实验模型。
 
 2026-10-22的[同44k池最低节点lr2e-5续训](../../artifacts/entity_attention_128x2_r21_r31_lr2e5_20261022/README.md)已在新增10000步触发三次联合指标上升早停，选中新增4000步／累计63453步。原59453步继承AdamW/RNG、每2000步完整留出、两头B256和原标签／split不变；原训练命令仍只训练＋选点，已完成后返回。用户后续独立授权对R31做1000pair greedy，同原R31面板开局，评测命令、原始结果及核验见专题；不恢复训练或运行搜索。
@@ -91,7 +103,7 @@ with open("configs/entity_attention_v1/model_256x4.json") as source:
 
 `best_validation_kl.json` 只引用固定子集 KL 最低节点，同时保留其 value 指标，不能称作最强棋力模型。中断恢复校验冻结配置、数据元信息和归档 size/mtime，复用原已记录 archive hash，不重新 checked replay/计算全量 archive hash。恢复模型、optimizer、采样 RNG、Torch RNG 和已提交步数；舍弃未提交日志/引用后续训，不重复累计步骤。
 
-每步指标见 `training_metrics.jsonl`，验证曲线见 `validation_curve.jsonl`，引用曝光见 `usage.json` 和 `usage/`。每次调用保留 `source/<session>/` 源码快照、代码身份和命令，`sessions.jsonl` 记录设置/训练/固定验证耗时与显存峰值；全留出耗时在 `full_validation.json`，本次调用总耗时在 `training.json.session_total_seconds`。cache 统计为当前进程统计，resume 后重新计数；累计曝光来自已提交引用。
+原`offline_train`链路的每步指标见 `training_metrics.jsonl`，验证曲线见 `validation_curve.jsonl`，精确引用曝光见 `usage.json` 和 `usage/`；当前近期离线链路按本页顶部轻量记录规则。每次调用保留 `source/<session>/` 源码快照、代码身份和命令，`sessions.jsonl` 记录设置/训练/固定验证耗时与显存峰值；全留出耗时在 `full_validation.json`，本次调用总耗时在 `training.json.session_total_seconds`。cache 统计为当前进程统计，resume 后重新计数；累计曝光来自已提交引用。
 
 ## 执行命令
 

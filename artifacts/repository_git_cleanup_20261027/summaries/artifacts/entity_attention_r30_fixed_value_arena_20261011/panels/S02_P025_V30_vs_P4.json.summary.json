@@ -1,0 +1,561 @@
+{
+  "omitted_fields": [
+    {
+      "count": 200,
+      "json_path": "$.config.game_seeds",
+      "kind": "list",
+      "value_sha256": "f4f28fd09a1ad810c9e53fa79a74f00259baef0e6947e07387108ca0da269598"
+    },
+    {
+      "count": 400,
+      "json_path": "$.execution_stats.games",
+      "kind": "list",
+      "value_sha256": "0ddbc413122a0096dfde50b30b5c3911e657a4097afa6867b14308e40b3638c4"
+    },
+    {
+      "count": 200,
+      "json_path": "$.pairs",
+      "kind": "list",
+      "value_sha256": "c48a6cdea5ec8d85dec253ed57a64da4606ad38514925a0187d3e5640f5a9e7d"
+    }
+  ],
+  "preserved": {
+    "a_first": {
+      "draws": 2,
+      "games": 200,
+      "losses": 75,
+      "valid_games": 200,
+      "win_rate_score": 0.62,
+      "wins": 123
+    },
+    "a_losses": 138,
+    "a_second": {
+      "draws": 1,
+      "games": 200,
+      "losses": 63,
+      "valid_games": 200,
+      "win_rate_score": 0.6825,
+      "wins": 136
+    },
+    "a_wins": 259,
+    "checkpoint_identity": {
+      "policy_a": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_r30_fixed_value_arena_20261011/compositions/S02_P025_V30_vs_P4.pt",
+        "sha256": "a2a1b6cc502932504db6eefef401fcb99c1b578e01817d21f1ba0e350a1d95f6"
+      },
+      "policy_b": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+        "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+      }
+    },
+    "completed_games": 400,
+    "completed_pairs": 200,
+    "config": {
+      "adjudicate_deterministic_policy_cycles": true,
+      "bootstrap_resamples": 10000,
+      "bootstrap_seed": 32720000,
+      "device": "cuda",
+      "execution": {
+        "active_games": 100,
+        "actor_projection": false,
+        "backend": "native_batched",
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "inference_mode": "compiled",
+        "max_batch_size": 64,
+        "max_batch_wait_ms": 0.0
+      },
+      "game_seeds": {
+        "_git_omitted_raw": {
+          "count": 200,
+          "json_path": "$.config.game_seeds",
+          "kind": "list",
+          "value_sha256": "f4f28fd09a1ad810c9e53fa79a74f00259baef0e6947e07387108ca0da269598"
+        }
+      },
+      "max_completed_turns": 400,
+      "metadata": {
+        "experiment": "entity_attention_r30_fixed_value_arena_20261011",
+        "models": {
+          "candidate": {
+            "path": "runs/entity_attention_r30_fixed_value_arena_20261011/compositions/S02_P025_V30_vs_P4.pt",
+            "sha256": "a2a1b6cc502932504db6eefef401fcb99c1b578e01817d21f1ba0e350a1d95f6"
+          },
+          "opponent": {
+            "path": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+            "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+          },
+          "sources": {
+            "policy": {
+              "path": "runs/entity_attention_r30_value_weight_20261011/value025/checkpoints/final.pt",
+              "sha256": "3e870b839ca1c9dddc6853c7bc8fca14efea428afdebc6b425578a192ee475e9"
+            },
+            "value": {
+              "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-020/checkpoints/final.pt",
+              "sha256": "9fc258b211954cf32cd7b688d5d534a502441304ea7cc92a7a35e059a7c91b0f"
+            }
+          }
+        },
+        "panel": "S02_P025_V30_vs_P4",
+        "scope": "Fresh shared DEV openers for S01-S03; separate fresh direct-arena openers for S04; no training"
+      },
+      "policy_a": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r30_fixed_value_arena_20261011/compositions/S02_P025_V30_vs_P4.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "mcts_checkpoint",
+        "name": "S02_P025_V30_vs_P4",
+        "search_backend": "native",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 32730000,
+          "simulations": 1024
+        }
+      },
+      "policy_b": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "mcts_checkpoint",
+        "name": "P4V4",
+        "search_backend": "native",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 32730000,
+          "simulations": 1024
+        }
+      },
+      "policy_seed_base": 32710000,
+      "workers": 1
+    },
+    "draws": 3,
+    "elapsed_seconds_this_invocation": 1269.040417364995,
+    "engineering_truncations": 0,
+    "exceptions": 0,
+    "execution_stats": {
+      "checked_rule_seconds": 20.337377830168407,
+      "games": {
+        "_git_omitted_raw": {
+          "count": 400,
+          "json_path": "$.execution_stats.games",
+          "kind": "list",
+          "value_sha256": "0ddbc413122a0096dfde50b30b5c3911e657a4097afa6867b14308e40b3638c4"
+        }
+      },
+      "model_creation_seconds": 0.8418733119979152,
+      "models": {
+        "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec:1": {
+          "actual_candidate_positions": 221329542,
+          "batch_non_inference_seconds": 206.65910102738417,
+          "batch_wall_seconds": 530.1675100391585,
+          "decision_latency": {
+            "50": 4.82819746599489,
+            "90": 5.108835798800283,
+            "99": 5.785254484680036
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "1": 5139,
+              "10": 550,
+              "11": 713,
+              "12": 614,
+              "13": 607,
+              "14": 521,
+              "15": 732,
+              "16": 719,
+              "17": 748,
+              "18": 572,
+              "19": 519,
+              "2": 3117,
+              "20": 558,
+              "21": 1171,
+              "22": 895,
+              "23": 1019,
+              "24": 1030,
+              "25": 866,
+              "26": 954,
+              "27": 1067,
+              "28": 519,
+              "29": 558,
+              "3": 2553,
+              "30": 526,
+              "31": 181,
+              "32": 477,
+              "33": 707,
+              "34": 422,
+              "35": 335,
+              "36": 663,
+              "37": 727,
+              "38": 1757,
+              "39": 2108,
+              "4": 722,
+              "40": 2612,
+              "41": 3804,
+              "42": 6234,
+              "43": 9561,
+              "44": 9226,
+              "45": 10608,
+              "46": 14753,
+              "47": 19639,
+              "48": 17772,
+              "49": 19738,
+              "5": 362,
+              "50": 26789,
+              "51": 17402,
+              "52": 16573,
+              "53": 14288,
+              "54": 14046,
+              "55": 9467,
+              "56": 8246,
+              "57": 3708,
+              "58": 4549,
+              "59": 2371,
+              "6": 1101,
+              "60": 2076,
+              "61": 1687,
+              "62": 1042,
+              "63": 607,
+              "64": 572,
+              "7": 1439,
+              "8": 1806,
+              "9": 831
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 0.5406637589985621,
+                "policy_value:32": 1.078603182999359,
+                "policy_value:48": 1.093765665005776,
+                "policy_value:64": 1.3746873529962613
+              },
+              "compiled_calls": {
+                "policy_value:16": 3630,
+                "policy_value:32": 144851,
+                "policy_value:48": 124735,
+                "policy_value:64": 4059
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 3787,
+                "unique_graphs": 14
+              },
+              "eager_fallbacks": 0,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled",
+                "policy_value:64": "compiled"
+              }
+            },
+            "d2h_seconds": 10.725101571253617,
+            "feature_seconds": 0.0,
+            "forward_seconds": 274.64569238814147,
+            "h2d_seconds": 10.395744112393004,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 12456520,
+            "mean_batch_size": 44.924785862410964,
+            "physical_model_batches": 277275,
+            "wait_seconds": 27.741870939986256
+          },
+          "native_consume_seconds": 126.5608452072338,
+          "native_fill_seconds": 51.476280303351814,
+          "physical_candidate_positions": 497582512,
+          "policy_rows": 12456520,
+          "root_rows": 13050,
+          "root_start_seconds": 5.162864641613851,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 3630,
+            "32": 144851,
+            "48": 124735,
+            "64": 4059
+          },
+          "width_rows": {
+            "16": 5138,
+            "32": 6453706,
+            "48": 5804347,
+            "64": 193329
+          }
+        },
+        "a2a1b6cc502932504db6eefef401fcb99c1b578e01817d21f1ba0e350a1d95f6:0": {
+          "actual_candidate_positions": 216527016,
+          "batch_non_inference_seconds": 211.0851233960493,
+          "batch_wall_seconds": 682.3053864346512,
+          "decision_latency": {
+            "50": 4.8602493409998715,
+            "90": 5.123217884996848,
+            "99": 5.869895692596036
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "1": 4538,
+              "10": 1095,
+              "11": 1042,
+              "12": 426,
+              "13": 1108,
+              "14": 912,
+              "15": 641,
+              "16": 650,
+              "17": 444,
+              "18": 565,
+              "19": 604,
+              "2": 3471,
+              "20": 759,
+              "21": 742,
+              "22": 1139,
+              "23": 1014,
+              "24": 1584,
+              "25": 876,
+              "26": 636,
+              "27": 530,
+              "28": 356,
+              "29": 462,
+              "3": 2306,
+              "30": 363,
+              "31": 458,
+              "32": 431,
+              "33": 580,
+              "34": 354,
+              "35": 626,
+              "36": 780,
+              "37": 1203,
+              "38": 2009,
+              "39": 2978,
+              "4": 692,
+              "40": 3308,
+              "41": 3697,
+              "42": 5702,
+              "43": 4625,
+              "44": 9247,
+              "45": 10507,
+              "46": 15440,
+              "47": 15108,
+              "48": 17323,
+              "49": 18709,
+              "5": 799,
+              "50": 27367,
+              "51": 19948,
+              "52": 17182,
+              "53": 17995,
+              "54": 12532,
+              "55": 9125,
+              "56": 7562,
+              "57": 7990,
+              "58": 4617,
+              "59": 2625,
+              "6": 1211,
+              "60": 1754,
+              "61": 1299,
+              "62": 991,
+              "63": 300,
+              "64": 457,
+              "7": 940,
+              "8": 756,
+              "9": 1036
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 0.7577608430001419,
+                "policy_value:32": 2.525396817996807,
+                "policy_value:48": 1.8217639760041493,
+                "policy_value:64": 1.5190826580001158
+              },
+              "compiled_calls": {
+                "policy_value:16": 2589,
+                "policy_value:32": 141719,
+                "policy_value:48": 128248,
+                "policy_value:64": 3970
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 3787,
+                "unique_graphs": 14
+              },
+              "eager_fallbacks": 0,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled",
+                "policy_value:64": "compiled"
+              }
+            },
+            "d2h_seconds": 10.954036541988899,
+            "feature_seconds": 0.0,
+            "forward_seconds": 392.1100371338762,
+            "h2d_seconds": 10.313874114042846,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 12486227,
+            "mean_batch_size": 45.15389872923342,
+            "physical_model_batches": 276526,
+            "wait_seconds": 57.84231524869392
+          },
+          "native_consume_seconds": 158.63954249598464,
+          "native_fill_seconds": 51.91581360509008,
+          "physical_candidate_positions": 501031728,
+          "policy_rows": 12486227,
+          "root_rows": 13097,
+          "root_start_seconds": 5.45495156718971,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 2589,
+            "32": 141719,
+            "48": 128248,
+            "64": 3970
+          },
+          "width_rows": {
+            "16": 3968,
+            "32": 6321082,
+            "48": 5976357,
+            "64": 184820
+          }
+        }
+      },
+      "scope": "this invocation; mutually exclusive owner host intervals",
+      "sidecar_seconds": 3.7371891169023
+    },
+    "forced_skips": 0,
+    "game_log_root": "/home/lc/下载/splendor/artifacts/entity_attention_r30_fixed_value_arena_20261011/panels/S02_P025_V30_vs_P4.json.games",
+    "illegal_actions": 0,
+    "invariant_failures": 0,
+    "mean_completed_player_turns": 54.385,
+    "mean_decisions": 79.8575,
+    "median_completed_player_turns": 54.0,
+    "output": "/home/lc/下载/splendor/artifacts/entity_attention_r30_fixed_value_arena_20261011/panels/S02_P025_V30_vs_P4.json",
+    "paired_bootstrap": {
+      "confidence": 0.95,
+      "estimate": 0.65125,
+      "lower": 0.60375,
+      "pair_count": 200,
+      "resamples": 10000,
+      "seed": 32720000,
+      "upper": 0.7
+    },
+    "paired_bootstrap_unit": "one_paired_seed",
+    "pairs": {
+      "_git_omitted_raw": {
+        "count": 200,
+        "json_path": "$.pairs",
+        "kind": "list",
+        "value_sha256": "c48a6cdea5ec8d85dec253ed57a64da4606ad38514925a0187d3e5640f5a9e7d"
+      }
+    },
+    "passed": true,
+    "policy_a_stats": {
+      "changed_action_count": 4184,
+      "decisions": 15771,
+      "determinizations": 13097,
+      "expanded_nodes": 12473130,
+      "feature_seconds": 0.0,
+      "folded_actions": 2208024,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 12486227,
+      "searchable_decisions": 13097,
+      "simulations": 13411328,
+      "single_candidate_decisions": 2674,
+      "state_transitions": 14887410,
+      "terminal_hits": 938198,
+      "total_seconds": 59156.70993144833,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 69371871
+    },
+    "policy_b_stats": {
+      "changed_action_count": 5284,
+      "decisions": 16172,
+      "determinizations": 13050,
+      "expanded_nodes": 12443470,
+      "feature_seconds": 0.0,
+      "folded_actions": 2462424,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 12456520,
+      "searchable_decisions": 13050,
+      "simulations": 13363200,
+      "single_candidate_decisions": 3122,
+      "state_transitions": 15101851,
+      "terminal_hits": 919730,
+      "total_seconds": 58918.05640786398,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 64096443
+    },
+    "policy_cycle_draws": 0,
+    "protocol": "fixed-paired-evaluation-v1",
+    "runtime": {
+      "device": "cuda",
+      "workers": 1
+    },
+    "total_games": 400,
+    "total_pairs": 200,
+    "updated_at": "2026-10-11T16:17:35+0800",
+    "valid_games": 400,
+    "win_rate_score": 0.65125
+  },
+  "raw": {
+    "bytes": 1036093,
+    "path": "artifacts/entity_attention_r30_fixed_value_arena_20261011/panels/S02_P025_V30_vs_P4.json",
+    "sha256": "4c2f84c348babf307503b4d6c44aa990780ff30854d33c2c79f647cdcdec6a64"
+  },
+  "schema": "splendor-git-artifact-summary-v1",
+  "scope": "Mechanical projection; omitted fields are explicitly marked. Not a complete runtime input."
+}

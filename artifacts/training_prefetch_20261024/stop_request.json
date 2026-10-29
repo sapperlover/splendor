@@ -1,0 +1,42 @@
+{
+  "time_unix": 1792811864.122391,
+  "queue": {
+    "active_experiment": "entity_attention_128x2_opponent_policy_r21_r37_20261024",
+    "child_pid": 187537,
+    "command": [
+      "bash",
+      "scripts/run_attention128_policy104k_20261024.sh"
+    ],
+    "completed": [],
+    "jobs": [
+      "entity_attention_128x2_opponent_policy_r21_r37_20261024",
+      "entity_attention_128x2_continuation_r21_r37_20261024",
+      "entity_attention_128x2_shortterm_value_r21_r31_vs_r37_20261024"
+    ],
+    "pid": 130117,
+    "predecessor": "entity_attention_128x2_shortterm_value_r21_r37_20261023",
+    "predecessor_checks": [
+      {
+        "checkpoint_sha256": "c10557938107b83b13ba4807bdd8599994e47053e859fbd6518f0fd4019fb41b",
+        "experiment": "entity_attention_128x2_shortterm_value_r21_r37_20261023",
+        "panels": [
+          {
+            "pairs": 1000,
+            "panel": "greedy_vs_R37",
+            "sha256": "792ae875416489a188359223094c70aeb7b665f06ba72d777aa6c45c6856936f"
+          },
+          {
+            "pairs": 500,
+            "panel": "search_S1024N1_vs_R37",
+            "sha256": "e58ec65272cbec875cc00df5eb8ddbf8841fd9f83266a5688ddd1e43905ef0b1"
+          }
+        ],
+        "selected_step": 140221
+      }
+    ],
+    "started_unix": 1792773836.4712214,
+    "status": "running"
+  },
+  "signal": "SIGINT",
+  "command": "python -u artifacts/entity_attention_auxiliary_queue_20261024/serial_queue.py "
+}

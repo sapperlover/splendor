@@ -1,0 +1,88 @@
+{
+  "changed_source_files": [
+    "src/splendor/random_budget_iteration.py",
+    "src/splendor/six_round_holdout.py"
+  ],
+  "commands": {
+    "driver_check": "bash scripts/run_r31_10k_p60k_iteration_20261023.sh --check",
+    "driver_resume_existing_six_only": "bash scripts/run_r31_10k_p60k_iteration_20261023.sh --rounds 6",
+    "frozen_runtime_boundary": "HoldoutSchedule(config.six_round_holdout,run,cpu,six_rounds=True): for_iteration(6),for_iteration(7),for_iteration(12); assert changed cohort and local1-6 sources and identical block7-12 observer",
+    "prepare": "conda run -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/entity_attention_r31_10k_p60k_iteration_20261023/prepare_six_round_holdout.py",
+    "tests": "conda run --no-capture-output -n splendor env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q tests/test_random_budget_iteration.py tests/test_random_budget_pool_warmup.py --junitxml=artifacts/entity_attention_r31_10k_p60k_iteration_20261023/six_round_holdout_20261023/tests.xml"
+  },
+  "completed_at": "2026-10-23T08:02:15.762176+00:00",
+  "existing_result_files_unchanged": 84,
+  "exit_codes": {
+    "driver_check": 0,
+    "driver_resume_existing_six_only": 0,
+    "frozen_runtime_boundary": 0,
+    "prepare": 0,
+    "tests": 0
+  },
+  "files": {
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/prepare_six_round_holdout.py": "5d7415dac248116fc00c6ea02264764b11f977b3966ca4d3f0fdda443e65d06d",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/six_round_holdout_20261023/README.md": "274c531ecf139d1cb942c683897b8799b707474d992c2af4e8ea8ed4d2286fe3",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/six_round_holdout_20261023/next_block_manifest.json": "fbbf1fb83cfa9ceb039bc9d3286af0c4b11f0fde9e3f185bba6454a111945f18",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/six_round_holdout_20261023/runtime_source.json": "c90abd5e0a683d753c8d082e20d6d6aa375604b9d703e4bc19391edfc9d64a29",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/six_round_holdout_20261023/tests.xml": "ea8a2992e0f8fc3736dcba4a858b364ba36dc562cc871422ce8195e3ba54f5de",
+    "configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json": "d11bcce129d28c985b7e461fea5f93ed003b4dd27231f4006a15c73ceddc09b5",
+    "scripts/run_r31_10k_p60k_iteration_20261023.sh": "f5869534cc0d3cfed4c7158d1f418c2e8e36081f96c526085afa00f7e9ca475e"
+  },
+  "historical_R20_R31_backfill": "cancelled by user's latest instruction; checkpoint availability audited only; no forward evaluations launched",
+  "new_runtime_verified_files": 111,
+  "next_block": {
+    "evaluation_lineage_rounds": [
+      38,
+      39,
+      40,
+      41,
+      42,
+      43
+    ],
+    "games": 6092,
+    "local_evaluated": [
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "local_sources": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "manifest_digest": "451660179b80dd4a844a71fab43b029650d1d29afe2e662c24b3d97d3b3e8974",
+    "policy_positions": 101425,
+    "source_lineage_rounds": [
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ],
+    "state": "frozen; future models not trained or evaluated",
+    "value_positions": 485932
+  },
+  "only_configuration_change": "replace fixed_holdout with six_round_holdout, same initial manifest/batch_size plus block_rounds6",
+  "previous_runtime_unchanged_files": 110,
+  "production_games_launched": false,
+  "source_snapshots": {
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/six_round_holdout_20261023/source/random_budget_iteration.py": "2c39adbd18d11f865b13d1a8c5f8cd9e2f36093cc7b36b879a7e538489aaa979",
+    "artifacts/entity_attention_r31_10k_p60k_iteration_20261023/six_round_holdout_20261023/source/six_round_holdout.py": "46f83f81bccb9ead10d9f3d4b798ca71cb2ef65a923b7118e34f74eb7697f679"
+  },
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 24
+  },
+  "training_restarted": false,
+  "training_state_unchanged": true,
+  "unchanged_evaluator_sha256": "9f4bd280c354fd24a0d303a4039384e2f6ecb592ef51c08e5bd35c17262fa37b"
+}

@@ -1,0 +1,375 @@
+{
+  "omitted_fields": [
+    {
+      "count": 500,
+      "json_path": "$.config.game_seeds",
+      "kind": "list",
+      "value_sha256": "a8bb995159a0f0de4bf8726b0f2a52ecaacf09a945db2dde11d1ee26f29fcdc2"
+    },
+    {
+      "count": 1000,
+      "json_path": "$.execution_stats.games",
+      "kind": "list",
+      "value_sha256": "f6bb61a3998b68a64e3b4dcffc4f8005414ca147845fc55781a08f1d3242f588"
+    },
+    {
+      "count": 500,
+      "json_path": "$.pairs",
+      "kind": "list",
+      "value_sha256": "95f369bec26e27c5f7be82bf01113fb534c8b8a21acd8f2a20702d60c222a905"
+    }
+  ],
+  "preserved": {
+    "a_first": {
+      "draws": 4,
+      "games": 500,
+      "losses": 146,
+      "valid_games": 500,
+      "win_rate_score": 0.704,
+      "wins": 350
+    },
+    "a_losses": 313,
+    "a_second": {
+      "draws": 7,
+      "games": 500,
+      "losses": 167,
+      "valid_games": 500,
+      "win_rate_score": 0.659,
+      "wins": 326
+    },
+    "a_wins": 676,
+    "checkpoint_identity": {
+      "policy_a": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+        "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+      },
+      "policy_b": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+        "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+      }
+    },
+    "completed_games": 1000,
+    "completed_pairs": 500,
+    "config": {
+      "adjudicate_deterministic_policy_cycles": true,
+      "bootstrap_resamples": 10000,
+      "bootstrap_seed": 36320000,
+      "device": "cuda",
+      "execution": {
+        "active_games": 100,
+        "actor_projection": false,
+        "backend": "native_batched",
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "inference_mode": "compiled",
+        "max_batch_size": 64,
+        "max_batch_wait_ms": 0.0
+      },
+      "game_seeds": {
+        "_git_omitted_raw": {
+          "count": 500,
+          "json_path": "$.config.game_seeds",
+          "kind": "list",
+          "value_sha256": "a8bb995159a0f0de4bf8726b0f2a52ecaacf09a945db2dde11d1ee26f29fcdc2"
+        }
+      },
+      "max_completed_turns": 400,
+      "metadata": {
+        "absolute_round": 43,
+        "experiment": "entity_attention_r43_search_variants_arena_20261014",
+        "global_step": 72898,
+        "model": {
+          "path": "runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+          "sha256": "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14"
+        },
+        "panel": "S1024_chance_vs_greedy",
+        "scope": "Original R43 complete network on both sides; search versus greedy; shared seeds with previous S128/S256/S512 panels",
+        "search_variant": "随机节点 S1024"
+      },
+      "policy_a": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "mcts_checkpoint",
+        "name": "R43_S1024_chance_vs_greedy",
+        "search_backend": "native_chance",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 36330000,
+          "simulations": 1024
+        }
+      },
+      "policy_b": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r9_online_lr2e5_1000_forever_20261011/rounds/round-033/checkpoints/final.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "greedy_checkpoint",
+        "name": "R43_greedy"
+      },
+      "policy_seed_base": 36310000,
+      "workers": 1
+    },
+    "draws": 11,
+    "elapsed_seconds_this_invocation": 2535.8315635920007,
+    "engineering_truncations": 0,
+    "exceptions": 0,
+    "execution_stats": {
+      "checked_rule_seconds": 73.88558173859201,
+      "games": {
+        "_git_omitted_raw": {
+          "count": 1000,
+          "json_path": "$.execution_stats.games",
+          "kind": "list",
+          "value_sha256": "f6bb61a3998b68a64e3b4dcffc4f8005414ca147845fc55781a08f1d3242f588"
+        }
+      },
+      "greedy_decisions": 39908,
+      "greedy_seconds": 122.8940095811231,
+      "model_creation_seconds": 0.8446477520010376,
+      "models": {
+        "b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14:0": {
+          "actual_candidate_positions": 557688498,
+          "batch_non_inference_seconds": 1268.0938044558752,
+          "batch_wall_seconds": 2179.3753150536577,
+          "decision_latency": {
+            "50": 8.07298159399943,
+            "90": 8.402673701800087,
+            "99": 8.719463080718779
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "1": 1211,
+              "10": 427,
+              "11": 510,
+              "12": 121,
+              "13": 509,
+              "14": 722,
+              "15": 673,
+              "16": 820,
+              "17": 840,
+              "18": 1041,
+              "19": 1076,
+              "2": 3206,
+              "20": 269,
+              "21": 377,
+              "22": 607,
+              "23": 375,
+              "24": 1012,
+              "25": 1453,
+              "26": 667,
+              "27": 765,
+              "28": 197,
+              "29": 1208,
+              "3": 604,
+              "30": 1334,
+              "31": 1299,
+              "32": 383,
+              "33": 1089,
+              "34": 280,
+              "35": 8271,
+              "36": 296060,
+              "37": 322,
+              "38": 620,
+              "39": 1140,
+              "4": 941,
+              "40": 17,
+              "41": 1403,
+              "42": 49,
+              "43": 419,
+              "44": 172,
+              "45": 103,
+              "46": 255,
+              "47": 62,
+              "48": 324,
+              "49": 70,
+              "5": 893,
+              "50": 330,
+              "51": 182,
+              "52": 264,
+              "53": 183,
+              "54": 88,
+              "55": 177,
+              "56": 390,
+              "57": 64,
+              "58": 293,
+              "59": 173,
+              "6": 194,
+              "60": 710,
+              "61": 314,
+              "62": 308,
+              "63": 114,
+              "64": 312283,
+              "7": 363,
+              "8": 201,
+              "9": 409
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 1.422446412001591,
+                "policy_value:32": 2.1241898099997343,
+                "policy_value:48": 1.5753661939997983,
+                "policy_value:64": 1.4579528829999617
+              },
+              "compiled_calls": {
+                "policy_value:16": 669,
+                "policy_value:32": 405345,
+                "policy_value:48": 241151,
+                "policy_value:64": 4071
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 1337,
+                "unique_graphs": 7
+              },
+              "eager_fallbacks": 0,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled",
+                "policy_value:64": "compiled"
+              }
+            },
+            "d2h_seconds": 28.95084669411699,
+            "feature_seconds": 0.0,
+            "forward_seconds": 740.8469686367789,
+            "h2d_seconds": 34.09409375825817,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 31786043,
+            "mean_batch_size": 48.80879281857882,
+            "physical_model_batches": 651236,
+            "wait_seconds": 107.3896015086284
+          },
+          "native_consume_seconds": 1101.614044328604,
+          "native_fill_seconds": 153.0746935978368,
+          "physical_candidate_positions": 1250929808,
+          "policy_rows": 31786043,
+          "root_rows": 32244,
+          "root_start_seconds": 13.4909669663557,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 669,
+            "32": 405345,
+            "48": 241151,
+            "64": 4071
+          },
+          "width_rows": {
+            "16": 1159,
+            "32": 17408995,
+            "48": 14139592,
+            "64": 236297
+          }
+        }
+      },
+      "scope": "this invocation; mutually exclusive owner host intervals",
+      "sidecar_seconds": 7.604317823033853
+    },
+    "forced_skips": 0,
+    "game_log_root": "/home/lc/下载/splendor/artifacts/entity_attention_r43_search_variants_arena_20261014/panels/S1024_chance_vs_greedy.json.games",
+    "illegal_actions": 0,
+    "invariant_failures": 0,
+    "mean_completed_player_turns": 54.85,
+    "mean_decisions": 80.111,
+    "median_completed_player_turns": 54.0,
+    "output": "/home/lc/下载/splendor/artifacts/entity_attention_r43_search_variants_arena_20261014/panels/S1024_chance_vs_greedy.json",
+    "paired_bootstrap": {
+      "confidence": 0.95,
+      "estimate": 0.6815,
+      "lower": 0.6525,
+      "pair_count": 500,
+      "resamples": 10000,
+      "seed": 36320000,
+      "upper": 0.7105
+    },
+    "paired_bootstrap_unit": "one_paired_seed",
+    "pairs": {
+      "_git_omitted_raw": {
+        "count": 500,
+        "json_path": "$.pairs",
+        "kind": "list",
+        "value_sha256": "95f369bec26e27c5f7be82bf01113fb534c8b8a21acd8f2a20702d60c222a905"
+      }
+    },
+    "passed": true,
+    "policy_a_stats": {
+      "changed_action_count": 9497,
+      "decisions": 40203,
+      "determinizations": 32244,
+      "expanded_nodes": 31753799,
+      "feature_seconds": 0.0,
+      "folded_actions": 20104958,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 31786043,
+      "searchable_decisions": 32244,
+      "simulations": 33017856,
+      "single_candidate_decisions": 7959,
+      "state_transitions": 115615652,
+      "terminal_hits": 1264057,
+      "total_seconds": 246918.4226023035,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 95510694
+    },
+    "policy_b_stats": {},
+    "policy_cycle_draws": 0,
+    "protocol": "fixed-paired-evaluation-v1",
+    "runtime": {
+      "device": "cuda",
+      "workers": 1
+    },
+    "total_games": 1000,
+    "total_pairs": 500,
+    "updated_at": "2026-10-14T14:40:54+0800",
+    "valid_games": 1000,
+    "win_rate_score": 0.6815
+  },
+  "raw": {
+    "bytes": 1926570,
+    "path": "artifacts/entity_attention_r43_search_variants_arena_20261014/panels/S1024_chance_vs_greedy.json",
+    "sha256": "6bdaf5e0f4770e0151be6c5a255b80e96a5d75f03aee6dd64f2417ddb33b843f"
+  },
+  "schema": "splendor-git-artifact-summary-v1",
+  "scope": "Mechanical projection; omitted fields are explicitly marked. Not a complete runtime input."
+}

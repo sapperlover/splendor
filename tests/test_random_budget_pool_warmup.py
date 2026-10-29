@@ -137,13 +137,23 @@ def test_formal_r31_configuration_preserves_the_iteration_protocol():
     assert (config["new_games_per_round"], config["replay_max_games"], config["updates_per_round"]) == (10000, 60000, 3000)
     assert config["validation_steps"] == [0, 100, 250, 500, 1000, 2000, 3000]
     assert config["learner"]["learning_rate"] == 2e-5
+    assert config["learner"]["checkpoint_every_steps"] == 500
+    assert sorted({0, *range(500, 3001, 500), *config["validation_steps"]}) == [
+        0, 100, 250, 500, 1000, 1500, 2000, 2500, 3000]
     assert config["cache_bytes"] == 16 * 1024**3
     latest = read_json(root / "artifacts/collection_tuning_20261022/configs/full_attention_best_4000.json")["execution"]
     assert config["selfplay"]["execution"] == latest
-    assert config["search_evaluation"]["execution"] == dict(latest, pipeline_slots=1)
+    evaluation_a = read_json(root / "configs/entity_attention_v1/evaluation_search_a_r43.json")["execution"]
+    assert config["search_evaluation"]["execution"] == evaluation_a
+    from splendor.six_round_holdout import check_settings
+    holdout = check_settings(config.pop("six_round_holdout"))
+    assert holdout["lineage_rounds"] == [26, 27, 28, 29, 30, 31]
+    assert (holdout["games_count"], holdout["policy_positions"], holdout["value_positions"]) == (2412, 39845, 192218)
     config["selfplay"]["execution"] = base["selfplay"]["execution"]
     config["search_evaluation"]["execution"] = base["search_evaluation"]["execution"]
     base.pop("continuation_state")
+    base["learner"].pop("checkpoint_every_steps")
+    config["learner"].pop("checkpoint_every_steps")
     for key in ("run_id", "initial_checkpoint", "history_manifest", "first_round", "last_round",
                 "expected_games_per_round", "new_games_per_round", "replay_max_games", "updates_per_round",
                 "validation_steps", "cache_bytes"):

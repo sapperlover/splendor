@@ -11,7 +11,7 @@ import torch
 from .actor_critic import build_actor_critic, model_config_from_dict
 from .alphazero_recording import read_json, sha256, write_json
 from .alphazero_train import AlphazeroLearner, LearnerConfig
-from .offline_objectives import freeze_history_inputs, run as run_objectives
+from .offline_objectives import expected_round_game_counts, freeze_history_inputs, run as run_objectives
 from .rng import DeterministicRng
 from .value_auxiliary import ValueAuxiliaryConfig, add_auxiliary_heads
 
@@ -23,9 +23,10 @@ class ScratchOfflineConfig:
     model_config: dict
     first_round: int = 24
     last_round: int = 43
-    expected_games_per_round: int = 1000
+    expected_games_per_round: int | dict[str, int] = 1000
     draw_exposures: float = 12.0
     cache_mib: int = 8192
+    training_workers: int = 4
     initialization_seed: int = 36500000
     auxiliary_initialization_seed: int = 36100000
     sampling_seed: int = 34410000
@@ -38,10 +39,13 @@ class ScratchOfflineConfig:
         learning_rate=2e-5, checkpoint_every_steps=1000))
 
     def __post_init__(self):
-        if not 1 <= self.first_round <= self.last_round or self.expected_games_per_round <= 0:
+        if not 1 <= self.first_round <= self.last_round:
             raise ValueError("invalid absolute source generation range/count")
+        expected_round_game_counts(self.first_round, self.last_round, self.expected_games_per_round)
         if not math.isfinite(self.draw_exposures) or self.draw_exposures <= 0 or self.cache_mib <= 0:
             raise ValueError("exposures and cache must be positive")
+        if type(self.training_workers) is not int or self.training_workers < 0:
+            raise ValueError("training_workers must be a nonnegative integer")
         if not 0 < self.validation_positions <= 4096:
             raise ValueError("validation_positions must be in [1, 4096]")
         if self.learner.max_steps_per_round is not None:

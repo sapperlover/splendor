@@ -1,5 +1,7 @@
 # Entity attention：固定数据 policy / value 消融（2026-10-06）
 
+2026-10-23归档位置更新：本专题关联`runs/entity_attention_policy_value_ablation_20261006`中的4个抽样账本／逐步日志已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。
+
 本实验检查：同一模型在同一批自对弈标签上，去掉 value 更新、或阻断 value 向共享 trunk 的梯度，是否改善 policy 拟合及实际棋力。正式自迭代仍停在第 50 新轮 / 14500 步；本次没有采集新数据、恢复正式训练或改动正式 learner。
 
 三主分支各 500 步、17 个棋力面板 / **2700 局全部有效**。另做了 256 局面的小样本拟合、policy-only 同数据延长到 2000 步及组合模型数值复核。原始证据见 [fitting.json](fitting.json)、[analysis.json](analysis.json)；完整主协议见 [specification.json](specification.json)。

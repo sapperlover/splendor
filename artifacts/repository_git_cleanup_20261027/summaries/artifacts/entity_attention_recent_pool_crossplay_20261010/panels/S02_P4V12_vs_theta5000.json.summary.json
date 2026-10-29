@@ -1,0 +1,563 @@
+{
+  "omitted_fields": [
+    {
+      "count": 200,
+      "json_path": "$.config.game_seeds",
+      "kind": "list",
+      "value_sha256": "e5d592d78cab9e9f070ade14586bf25229b9e1e734089cdf5a61f56512419180"
+    },
+    {
+      "count": 400,
+      "json_path": "$.execution_stats.games",
+      "kind": "list",
+      "value_sha256": "275b55af45d14717372ec213032bce3d036e1d9708377eef25a5e9e1f962a640"
+    },
+    {
+      "count": 200,
+      "json_path": "$.pairs",
+      "kind": "list",
+      "value_sha256": "64037f3d486f8090f79e78c0f5c8d685f39cea1ab6a80399819411d121c81aa9"
+    }
+  ],
+  "preserved": {
+    "a_first": {
+      "draws": 2,
+      "games": 200,
+      "losses": 92,
+      "valid_games": 200,
+      "win_rate_score": 0.535,
+      "wins": 106
+    },
+    "a_losses": 167,
+    "a_second": {
+      "draws": 3,
+      "games": 200,
+      "losses": 75,
+      "valid_games": 200,
+      "win_rate_score": 0.6175,
+      "wins": 122
+    },
+    "a_wins": 228,
+    "checkpoint_identity": {
+      "policy_a": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_crossplay_20261010/compositions/P4V12.pt",
+        "sha256": "c7ad5334bb6840b76a91976a182cda16ae5d52b5e5c14bc19ffeb246795c7bd4"
+      },
+      "policy_b": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+        "sha256": "6fec2039cfe5fa7e8775ec5b5692a5defadfa3ab21bdb398e400696be17b08db"
+      }
+    },
+    "completed_games": 400,
+    "completed_pairs": 200,
+    "config": {
+      "adjudicate_deterministic_policy_cycles": true,
+      "bootstrap_resamples": 10000,
+      "bootstrap_seed": 14920000,
+      "device": "cuda",
+      "execution": {
+        "active_games": 100,
+        "actor_projection": false,
+        "backend": "native_batched",
+        "candidate_buckets": [
+          16,
+          32,
+          48,
+          64
+        ],
+        "inference_mode": "compiled",
+        "max_batch_size": 64,
+        "max_batch_wait_ms": 0.0
+      },
+      "game_seeds": {
+        "_git_omitted_raw": {
+          "count": 200,
+          "json_path": "$.config.game_seeds",
+          "kind": "list",
+          "value_sha256": "e5d592d78cab9e9f070ade14586bf25229b9e1e734089cdf5a61f56512419180"
+        }
+      },
+      "max_completed_turns": 400,
+      "metadata": {
+        "experiment": "entity_attention_recent_pool_crossplay_20261010",
+        "kind": "search",
+        "models": {
+          "policy_a": {
+            "checkpoint": "runs/entity_attention_recent_pool_crossplay_20261010/compositions/P4V12.pt",
+            "sha256": "c7ad5334bb6840b76a91976a182cda16ae5d52b5e5c14bc19ffeb246795c7bd4",
+            "sources": {
+              "policy": {
+                "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/step-000034398.pt",
+                "sha256": "94f4ce89d27f42ec0c39e72055b460405ae36b8f9931051cbe360ee145ace5ec"
+              },
+              "value": {
+                "checkpoint": "runs/entity_attention_recent_pool_20261009/checkpoints/final.pt",
+                "sha256": "9faa66af917c597fbc62b823eeffea14e8403391415ce552d7a4114481d2784a"
+              }
+            }
+          },
+          "policy_b": {
+            "checkpoint": "runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+            "sha256": "6fec2039cfe5fa7e8775ec5b5692a5defadfa3ab21bdb398e400696be17b08db"
+          }
+        },
+        "panel": "S02_P4V12_vs_theta5000",
+        "protocol": "recent-pool-crossplay-20261010-v1",
+        "seed_scope": "same DEV seeds as existing theta5000 search panels"
+      },
+      "policy_a": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_recent_pool_crossplay_20261010/compositions/P4V12.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "mcts_checkpoint",
+        "name": "P4V12",
+        "search_backend": "native",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 14930000,
+          "simulations": 1024
+        }
+      },
+      "policy_b": {
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_hybrid_static_graph_seed1/checkpoints/theta_5000.pt",
+        "inference": {
+          "actor_projection": false,
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "mode": "compiled",
+          "native_transport": "reused"
+        },
+        "kind": "mcts_checkpoint",
+        "name": "theta5000",
+        "search_backend": "native",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 1,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.0,
+          "seed": 14930000,
+          "simulations": 1024
+        }
+      },
+      "policy_seed_base": 14910000,
+      "workers": 1
+    },
+    "draws": 5,
+    "elapsed_seconds_this_invocation": 1245.3995030789997,
+    "engineering_truncations": 0,
+    "exceptions": 0,
+    "execution_stats": {
+      "checked_rule_seconds": 21.92456590499387,
+      "games": {
+        "_git_omitted_raw": {
+          "count": 400,
+          "json_path": "$.execution_stats.games",
+          "kind": "list",
+          "value_sha256": "275b55af45d14717372ec213032bce3d036e1d9708377eef25a5e9e1f962a640"
+        }
+      },
+      "model_creation_seconds": 0.8362479299998995,
+      "models": {
+        "6fec2039cfe5fa7e8775ec5b5692a5defadfa3ab21bdb398e400696be17b08db:1": {
+          "actual_candidate_positions": 222707402,
+          "batch_non_inference_seconds": 196.43750666302776,
+          "batch_wall_seconds": 509.2991581550209,
+          "decision_latency": {
+            "50": 4.5566082850000384,
+            "90": 5.026367119999941,
+            "99": 5.49364850156002
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "1": 2743,
+              "10": 929,
+              "11": 892,
+              "12": 1367,
+              "13": 1130,
+              "14": 787,
+              "15": 592,
+              "16": 653,
+              "17": 743,
+              "18": 883,
+              "19": 546,
+              "2": 3607,
+              "20": 525,
+              "21": 277,
+              "22": 628,
+              "23": 1067,
+              "24": 1156,
+              "25": 665,
+              "26": 730,
+              "27": 553,
+              "28": 562,
+              "29": 844,
+              "3": 3682,
+              "30": 799,
+              "31": 745,
+              "32": 817,
+              "33": 985,
+              "34": 692,
+              "35": 597,
+              "36": 2459,
+              "37": 2349,
+              "38": 1755,
+              "39": 3832,
+              "4": 1749,
+              "40": 6248,
+              "41": 6848,
+              "42": 11031,
+              "43": 9307,
+              "44": 13507,
+              "45": 18165,
+              "46": 15820,
+              "47": 14949,
+              "48": 16973,
+              "49": 18094,
+              "5": 1660,
+              "50": 20989,
+              "51": 12739,
+              "52": 13823,
+              "53": 12092,
+              "54": 10657,
+              "55": 6772,
+              "56": 4735,
+              "57": 7914,
+              "58": 4817,
+              "59": 1471,
+              "6": 1364,
+              "60": 1823,
+              "61": 513,
+              "62": 321,
+              "63": 55,
+              "64": 44,
+              "7": 1187,
+              "8": 388,
+              "9": 363
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 1.271764980000171,
+                "policy_value:32": 1.0638727509999626,
+                "policy_value:48": 1.231993913000224,
+                "policy_value:64": 1.4923473779999767
+              },
+              "compiled_calls": {
+                "policy_value:16": 2744,
+                "policy_value:32": 189966,
+                "policy_value:48": 83363,
+                "policy_value:64": 936
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 3787,
+                "unique_graphs": 14
+              },
+              "eager_fallbacks": 0,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled",
+                "policy_value:64": "compiled"
+              }
+            },
+            "d2h_seconds": 10.636252705043717,
+            "feature_seconds": 0.0,
+            "forward_seconds": 270.8561521790198,
+            "h2d_seconds": 10.154395347101854,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 12087077,
+            "mean_batch_size": 43.63423932074409,
+            "physical_model_batches": 277009,
+            "wait_seconds": 21.2148512608278
+          },
+          "native_consume_seconds": 114.64900305298806,
+          "native_fill_seconds": 48.80888194305362,
+          "physical_candidate_positions": 447236768,
+          "policy_rows": 12087077,
+          "root_rows": 12597,
+          "root_start_seconds": 5.9448460189869365,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 2744,
+            "32": 189966,
+            "48": 83363,
+            "64": 936
+          },
+          "width_rows": {
+            "16": 4495,
+            "32": 8344495,
+            "48": 3693535,
+            "64": 44552
+          }
+        },
+        "c7ad5334bb6840b76a91976a182cda16ae5d52b5e5c14bc19ffeb246795c7bd4:0": {
+          "actual_candidate_positions": 219582185,
+          "batch_non_inference_seconds": 206.3613076821871,
+          "batch_wall_seconds": 676.5912159250915,
+          "decision_latency": {
+            "50": 4.692151307000131,
+            "90": 5.055208520799988,
+            "99": 5.4988606208800554
+          },
+          "inference": {
+            "batch_size_histogram": {
+              "1": 3858,
+              "10": 912,
+              "11": 842,
+              "12": 624,
+              "13": 580,
+              "14": 587,
+              "15": 500,
+              "16": 734,
+              "17": 739,
+              "18": 898,
+              "19": 878,
+              "2": 3561,
+              "20": 1057,
+              "21": 835,
+              "22": 498,
+              "23": 288,
+              "24": 476,
+              "25": 763,
+              "26": 715,
+              "27": 1064,
+              "28": 742,
+              "29": 836,
+              "3": 2959,
+              "30": 730,
+              "31": 975,
+              "32": 1230,
+              "33": 1251,
+              "34": 851,
+              "35": 455,
+              "36": 578,
+              "37": 640,
+              "38": 876,
+              "39": 1200,
+              "4": 1287,
+              "40": 2456,
+              "41": 2377,
+              "42": 5919,
+              "43": 9117,
+              "44": 6244,
+              "45": 8280,
+              "46": 12120,
+              "47": 13935,
+              "48": 15310,
+              "49": 13364,
+              "5": 799,
+              "50": 21430,
+              "51": 18003,
+              "52": 16694,
+              "53": 13997,
+              "54": 14972,
+              "55": 16369,
+              "56": 11840,
+              "57": 8041,
+              "58": 9861,
+              "59": 5761,
+              "6": 1092,
+              "60": 5024,
+              "61": 2683,
+              "62": 792,
+              "63": 1387,
+              "64": 1357,
+              "7": 305,
+              "8": 1085,
+              "9": 919
+            },
+            "compile": {
+              "compile_failure_fallbacks": 0,
+              "compile_failures": [],
+              "compile_seconds": {
+                "policy_value:16": 0.855483065000044,
+                "policy_value:32": 2.4858673580001778,
+                "policy_value:48": 1.6784608309999385,
+                "policy_value:64": 1.5054936920000728
+              },
+              "compiled_calls": {
+                "policy_value:16": 3606,
+                "policy_value:32": 162639,
+                "policy_value:48": 108761,
+                "policy_value:64": 1546
+              },
+              "disabled_graphs": {},
+              "dynamo_delta": {
+                "calls_captured": 3787,
+                "unique_graphs": 14
+              },
+              "eager_fallbacks": 0,
+              "effective_mode": {
+                "policy_value:16": "compiled",
+                "policy_value:32": "compiled",
+                "policy_value:48": "compiled",
+                "policy_value:64": "compiled"
+              }
+            },
+            "d2h_seconds": 10.83130406392047,
+            "feature_seconds": 0.0,
+            "forward_seconds": 391.6312472549075,
+            "h2d_seconds": 10.132302450154384,
+            "inference": {
+              "actor_projection": false,
+              "candidate_buckets": [
+                16,
+                32,
+                48,
+                64
+              ],
+              "compile_failure_policy": "fail_fast",
+              "compile_mode": null,
+              "mode": "compiled",
+              "native_transport": "reused"
+            },
+            "logical_model_positions": 12758072,
+            "mean_batch_size": 46.13263328415633,
+            "physical_model_batches": 276552,
+            "wait_seconds": 57.63505447392208
+          },
+          "native_consume_seconds": 154.6626978958584,
+          "native_fill_seconds": 51.10313005491889,
+          "physical_candidate_positions": 493386064,
+          "policy_rows": 12758072,
+          "root_rows": 13321,
+          "root_start_seconds": 4.849865041999692,
+          "value_rows": 0,
+          "width_batches": {
+            "16": 3606,
+            "32": 162639,
+            "48": 108761,
+            "64": 1546
+          },
+          "width_rows": {
+            "16": 5711,
+            "32": 7504186,
+            "48": 5170154,
+            "64": 78021
+          }
+        }
+      },
+      "scope": "this invocation; mutually exclusive owner host intervals",
+      "sidecar_seconds": 5.425832270998853
+    },
+    "forced_skips": 0,
+    "game_log_root": "/home/lc/下载/splendor/artifacts/entity_attention_recent_pool_crossplay_20261010/panels/S02_P4V12_vs_theta5000.json.games",
+    "illegal_actions": 0,
+    "invariant_failures": 0,
+    "mean_completed_player_turns": 56.25,
+    "mean_decisions": 85.78,
+    "median_completed_player_turns": 56.0,
+    "output": "/home/lc/下载/splendor/artifacts/entity_attention_recent_pool_crossplay_20261010/panels/S02_P4V12_vs_theta5000.json",
+    "paired_bootstrap": {
+      "confidence": 0.95,
+      "estimate": 0.57625,
+      "lower": 0.525,
+      "pair_count": 200,
+      "resamples": 10000,
+      "seed": 14920000,
+      "upper": 0.62625
+    },
+    "paired_bootstrap_unit": "one_paired_seed",
+    "pairs": {
+      "_git_omitted_raw": {
+        "count": 200,
+        "json_path": "$.pairs",
+        "kind": "list",
+        "value_sha256": "64037f3d486f8090f79e78c0f5c8d685f39cea1ab6a80399819411d121c81aa9"
+      }
+    },
+    "passed": true,
+    "policy_a_stats": {
+      "changed_action_count": 6490,
+      "decisions": 16857,
+      "determinizations": 13321,
+      "expanded_nodes": 12744751,
+      "feature_seconds": 0.0,
+      "folded_actions": 2798899,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 12758072,
+      "searchable_decisions": 13321,
+      "simulations": 13640704,
+      "single_candidate_decisions": 3536,
+      "state_transitions": 15751808,
+      "terminal_hits": 895953,
+      "total_seconds": 59149.32859990103,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 62360541
+    },
+    "policy_b_stats": {
+      "changed_action_count": 5193,
+      "decisions": 17455,
+      "determinizations": 12597,
+      "expanded_nodes": 12074480,
+      "feature_seconds": 0.0,
+      "folded_actions": 3459363,
+      "inference_seconds": 0.0,
+      "model_batches": 0,
+      "model_positions": 12087077,
+      "searchable_decisions": 12597,
+      "simulations": 12899328,
+      "single_candidate_decisions": 4858,
+      "state_transitions": 15727974,
+      "terminal_hits": 824848,
+      "total_seconds": 55970.834364537026,
+      "transition_cap_hits": 0,
+      "tree_depth_sum": 53227303
+    },
+    "policy_cycle_draws": 0,
+    "protocol": "fixed-paired-evaluation-v1",
+    "runtime": {
+      "device": "cuda",
+      "workers": 1
+    },
+    "total_games": 400,
+    "total_pairs": 200,
+    "updated_at": "2026-10-10T04:19:36+0800",
+    "valid_games": 400,
+    "win_rate_score": 0.57625
+  },
+  "raw": {
+    "bytes": 1033370,
+    "path": "artifacts/entity_attention_recent_pool_crossplay_20261010/panels/S02_P4V12_vs_theta5000.json",
+    "sha256": "502c7907268b6c887c80e171defda75aa21e26c81af3797c70c2199cb7de79e6"
+  },
+  "schema": "splendor-git-artifact-summary-v1",
+  "scope": "Mechanical projection; omitted fields are explicitly marked. Not a complete runtime input."
+}

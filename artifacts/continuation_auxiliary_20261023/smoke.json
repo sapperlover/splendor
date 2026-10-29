@@ -1,0 +1,155 @@
+{
+  "base_checkpoint": "runs/entity_attention_r20_s256n4_noble12_iteration_20261022/rounds/round-030/checkpoints/final.pt",
+  "base_checkpoint_sha256": "c57a2a8a7721fe65de90dbc1336483f5d0358d10c4ff4d5c893986e88e588f6c",
+  "base_outputs_bitwise_preserved": true,
+  "base_parameters": 0,
+  "command_config": "configs/entity_attention_v1/offline_continuation_r21_r31_20261023.json",
+  "config": {
+    "auxiliary_initialization_seed": 36100000,
+    "cache_mib": 16384,
+    "continuation_auxiliary": {
+      "opponent_policy_weight": 0.15,
+      "protocol": "continuation-ema-h2-h6-h14-opponent-main-v1",
+      "shortterm_value_weight": 0.25
+    },
+    "draw_exposures": 12.0,
+    "early_stopping_increases": 3,
+    "expected_games_per_round": 4000,
+    "first_round": 64,
+    "initialization_seed": 43100000,
+    "last_round": 74,
+    "learner": {
+      "batch_size": 256,
+      "checkpoint_every_steps": 1000,
+      "device": "cuda",
+      "history_batch_size": 128,
+      "learning_rate": 0.0001,
+      "max_grad_norm": 1.0,
+      "max_steps_per_round": null,
+      "policy_loss_weight": 1.0,
+      "steps_per_new_position": 4.0,
+      "validation_batch_size": 256,
+      "value_loss_weight": 1.0,
+      "weight_decay": 0.0001
+    },
+    "manifest": "/home/lc/下载/splendor/runs/entity_attention_128x2_offline_r21_r31_20261022/inputs/pool_games.jsonl",
+    "manifest_sha256": "0f0719910740ba11e9f5ceab0ab7b9492eb5b5f56d850caca66494262514d106",
+    "model_config": {
+      "architecture": "entity_attention_v1",
+      "dropout": 0.0,
+      "ffn_hidden": 512,
+      "heads": 4,
+      "hidden": 128,
+      "layers": 2,
+      "market_relations": true,
+      "value_readout": "global_players_market"
+    },
+    "policy_surprise_weighting": null,
+    "sampling_protocol": "policy-high-value-all-v1",
+    "sampling_seed": 43110000,
+    "validation_percent_step": 5,
+    "validation_positions": 4096,
+    "validation_seed": 43120000,
+    "value_auxiliary": null
+  },
+  "config_sha256": "56bb67590b679484ec9559e61fc7bad94b6c543eac9a0c81cad2a75e15c1719b",
+  "games": [
+    {
+      "decisions": 77,
+      "main_actions": 54,
+      "opponent_weight": 22.0,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_r20_s256n4_noble12_iteration_20261022/rounds/round-030/selfplay/games/game-003997.npz",
+      "sha256": "56d047167f70f74503a8baf62400dab8f92cd9903d4baf5b5faf9dcd5d0c0303",
+      "shortterm_valid": 54
+    },
+    {
+      "decisions": 92,
+      "main_actions": 60,
+      "opponent_weight": 29.0,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_r20_s256n4_noble12_iteration_20261022/rounds/round-030/selfplay/games/game-003998.npz",
+      "sha256": "bedccda9a4bac80ee40e1ee18de6ed9024da1a8cf66057fc573484f27f579538",
+      "shortterm_valid": 23
+    },
+    {
+      "decisions": 88,
+      "main_actions": 60,
+      "opponent_weight": 21.0,
+      "path": "/home/lc/下载/splendor/runs/entity_attention_r20_s256n4_noble12_iteration_20261022/rounds/round-030/selfplay/games/game-003999.npz",
+      "sha256": "319fa817d3483b0b5f8afbdbba9aac3534e1e9904bdce9489a3e7e793ccf1299",
+      "shortterm_valid": 60
+    }
+  ],
+  "inference_auxiliary_calls": 0,
+  "native_searches": [
+    {
+      "seed": 902301,
+      "simulations": 8
+    },
+    {
+      "seed": 902302,
+      "simulations": 8
+    },
+    {
+      "seed": 902303,
+      "simulations": 8
+    }
+  ],
+  "one_cpu_update": {
+    "batch_size": 24,
+    "entropy_sum": 12.177746772766113,
+    "event": "train_step",
+    "grad_clipped": true,
+    "grad_norm": 21.271438598632812,
+    "learning_rate": 0.0001,
+    "opponent_action_ce": 1.4361740748087566,
+    "opponent_buy_ce": 1.4299394289652507,
+    "opponent_buy_mass": 1.4091796875,
+    "opponent_policy_loss": 3.025674521923065,
+    "opponent_positions": 3.0,
+    "opponent_reserve_ce": 0.15956101814905801,
+    "opponent_reserve_mass": 0.1689453125,
+    "policy_batch_size": 8,
+    "policy_ce_sum": 13.151152610778809,
+    "policy_entropy": 1.5222183465957642,
+    "policy_kl": 0.1668743913839732,
+    "policy_loss": 1.643894076347351,
+    "policy_positions": 8,
+    "policy_weight_sum": 8.0,
+    "round_index": 0,
+    "round_train_step": 1,
+    "shortterm_coverage": 0.7,
+    "shortterm_eligible_positions": 10.0,
+    "shortterm_h14_mse": 0.31392853600638254,
+    "shortterm_h2_mse": 0.26955814020974295,
+    "shortterm_h6_mse": 0.22878842694418772,
+    "shortterm_loss": 0.2707583677201044,
+    "shortterm_positions": 7.0,
+    "target_entropy": 1.4770196849633779,
+    "target_entropy_sum": 11.816157479707023,
+    "total_loss": 2.779921531677246,
+    "total_train_step": 1,
+    "training_mode": "joint_separate_batches",
+    "value_batch_size": 16,
+    "value_loss": 0.6144866347312927,
+    "value_positions": 16,
+    "value_sq_sum": 9.831786155700684,
+    "value_target_sq_sum": 16.0,
+    "value_target_sum": -6.0,
+    "value_weight_sum": 16.0,
+    "value_zero_mse": 1.0
+  },
+  "parameters": 851853,
+  "scope": "engineering verification only; no strength conclusion",
+  "source_sha256": {
+    "/home/lc/下载/splendor/scripts/validate_continuation_auxiliary.py": "959326a7b8d3a94bc60dafc6601865ba939195788ce51fb5ccf6d67c3b74d010",
+    "src/splendor/actor_critic.py": "8ffc9fe0c335c01cc97d93d913535331ace9bd3898ef6747dbe6f541b4ae5232",
+    "src/splendor/alphazero_train.py": "2c90bc6587ac36379b42b009b20e65af640499d1f12ef71989702e85242900bc",
+    "src/splendor/compact_game_cache.py": "d2f320dca4440b69e64bb52131b902c808a65ad0e707f86cec6d3de3855f2103",
+    "src/splendor/continuation_auxiliary.py": "99ba7c1cab3ecc56a3fe981cf235f0c27e89b2f29c85370e02796b600aef2d94",
+    "src/splendor/offline_continuation.py": "f193ddec16184745f3a1cce7ac9209f1afeef6d03d67952884a3e6e8035ce542",
+    "src/splendor/offline_objectives.py": "47daec8eac729673b30bc667d5680a1652d27bbc7c4389d4621d28e26b073343",
+    "src/splendor/opponent_policy.py": "0ee1da8ba6089f2fc04a78b12f393cfea6031e93449d1b2aeec9e1ec5c535e37"
+  },
+  "strict_reload": true,
+  "torch": "2.14.0+cu130"
+}

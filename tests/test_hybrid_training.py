@@ -45,6 +45,16 @@ def test_policy_surprise_config_roundtrip_and_old_config_unchanged():
         replace(weighted, online_only=False, policy_replay_max_games=None)
 
 
+def test_offline_worker_default_preserves_old_hybrid_identity_and_can_be_overridden():
+    raw = read_json(Path('configs/entity_attention_v1/hybrid_static_graph.json'))
+    config = HybridConfig.from_dict(raw)
+    assert config.offline.training_workers == 4
+    assert 'training_workers' not in config.to_dict()['offline']
+    serial = replace(config, offline=replace(config.offline, training_workers=0))
+    assert HybridConfig.from_dict(serial.to_dict()) == serial
+    assert hybrid_train._algorithm_config(serial.to_dict()) == hybrid_train._algorithm_config(config.to_dict())
+
+
 def test_formal_fork_configs_and_replacement_schedule():
     original = HybridConfig.from_dict(read_json(Path('configs/entity_attention_v1/hybrid_static_graph.json')))
     configs = []

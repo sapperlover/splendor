@@ -1,5 +1,7 @@
 # B → C → D 单种子趋势实验
 
+2026-10-23归档位置更新：本专题关联`runs/entity_attention_iteration_trend_seed1_20261008`中的14个抽样账本／逐步日志、400个旧NPZ已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。
+
 2026-10-08，按用户要求去掉seed2，只保留seed1。现已完成B/steps50前两轮和第2轮首次评测；C/D尚未运行。当前[配置](../../configs/entity_attention_v1/iteration_trend_20261008.json)和[完整流程及启动命令](../../docs/guides/entity_attention_iteration_suite_zh-CN.md)已同步。
 
 首次节点累计400新局/100更新、16500→16600步，对冻结起点102胜1和97负，得分51.25%（100pair，95%区间44.5%–58.0%），尚未确认净收益。200局原始JSONL复算一致且均自然终局；两轮各自当前留出policy KL与value MSE略上升，不能据两轮判定长期失败。详见[first_evaluation_review.json](first_evaluation_review.json)。分阶段搜索归因的独立新实验见[只搜后期／只搜前中期](../entity_attention_stage_search_20261008/README.md)。

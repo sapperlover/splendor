@@ -1,0 +1,45 @@
+{
+  "created_at": "2026-10-26T16:00:59.856399+08:00",
+  "scope": "Diagnostic-only change. All payment states retained. No new training/search/strength experiment.",
+  "git_head": "f9a8da3e582c2dd888db3424868eb58a318a4d24",
+  "tests": {
+    "tests": 61,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "real_games": 17,
+  "real_positions": 1356,
+  "payment_positions": 392.0,
+  "original_artifacts_unchanged": {
+    "resume_rng.xml": true,
+    "smoke.json": true,
+    "tests.xml": true
+  },
+  "training_labels_loss_functions_unchanged": {
+    "game_score_ownership_targets": "07b846e4538a1511e3ba861b2abb8beb624cf461841b05dc34c38e8a43c497ce",
+    "score_ownership_loss_sums": "99cbb1d80f8c2818ad5d2e978b72b2bc2cde2324a0d212b54f5b306b04ed7c33",
+    "score_ownership_loss": "79c88891594da54c213387951a9e782b0236e44ea1a63b51c29e2b7772afa651",
+    "score_ownership_gradient_tasks": "0adf85902273545f7527cbb74bf8f04b2df320be1344aec6ba9b4e7129bfeb53"
+  },
+  "bitwise_control": "Covered by test_four_worker_offline_updates_resume_state_transport_and_selection: diagnostics off serial vs diagnostics on four-worker resume; model/AdamW/sampling RNG/Torch RNG/original full-validation metrics identical.",
+  "source_sha256": {
+    "src/splendor/score_ownership.py": "8e579186b9b552fb03f4710dd6af15b328b31c30bcfee45357ba90f12ec3ba57",
+    "src/splendor/offline_objectives.py": "20271b4d8685661de356b4326fe3d52822fa766c52d7cbef21178757f0cf1385",
+    "tests/test_score_ownership.py": "7f6b17e3094c968091cffa18977dba3ef67c814d6d72da0d23f9feb6745679cb",
+    "docs/guides/score_ownership_zh-CN.md": "808b4361fb23f5b86414e994d8c3f9369beb4b601aa56e205513b1fc4010d476",
+    "artifacts/score_ownership_20261026/README.md": "754f1b51370437ad6ffdf65445f319afe70f60f6ff3bb0515a15e964c0402fb9",
+    "artifacts/score_ownership_20261026/diagnostics/validate.py": "923284c117b0d6eb659c72b2df19bbf2f1f35189bc419048a1e97a8b5a0ab281"
+  },
+  "results_sha256": {
+    "tests.xml": "e01d0758435a6e522a3d9bc9b8a4c196e7963b0516aa7557d7d4cdd236470274",
+    "real_validation.json": "5fe97c077011a01b43586d1c00d7596025f27948f86f7cad70775db30c19a780",
+    "baseline_identity.json": "d139a01ffda94b1e978515d214632f54bf1649e0f7e5c2af56119104be2b6e04",
+    "implementation.patch": "860d3a317d886e7503e55eb3e96c0d2183523fe046df2d21dc7e79a929fad800"
+  },
+  "limits": [
+    "CPU engineering validation; no CUDA training or strength evaluation",
+    "Best-constant baseline fits the fixed evaluated population, not train labels",
+    "Existing saved validation files and frozen releases are not backfilled"
+  ]
+}

@@ -1,5 +1,9 @@
 # R43 起点：S4096/N1，policy 2k、value 6k
 
+2026-10-23归档位置更新：本专题关联`runtime/entity_attention_r43_s4096_p2k_v6k_20261013`中的1个抽样账本／逐步日志已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。
+
+2026-10-23归档位置更新：本专题关联`runs/entity_attention_r43_s4096_p2k_v6k_20261013`中的20个抽样账本／逐步日志、4000个旧NPZ已按用户授权外置至[当日T7归档](../repository_archive_20261023/README.md)，原路径保留相对链接。复算这些原件前需解包；复训前将需写入的文件恢复为原位真实文件。历史指标、正式结果及来源身份不改写。
+
 用户于 2026-10-13 指定：value 保持最近 6000 局，policy 缩至最近 2000 局，其他训练参数不变。当前为单分支连续自迭代实验；运行状态见 `session-*.json`、[逐轮汇总](summary.json)，完成的训练与评测见自动生成的 `results.md`。尚无本分支棋力结论。
 
 起点固定原绝对 R43、72898 步，来自父 run 的本地第 34 轮 `round-033/checkpoints/final.pt`，SHA `b11f12c2ef1d48d86c8970eaae795f5139ae4c282476a52585a3fa5dff784f14`。完整继承模型、AdamW、采样 RNG、6k 在线窗口、整局 Train/validation 划分和固定诊断引用。原 run 保持原处，新输出为 `runs/entity_attention_r43_s4096_p2k_v6k_20261013/`。
