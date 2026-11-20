@@ -1,5 +1,7 @@
 # Attention128：原104k池无辅助目标离线实验
 
+2026-11-01归档位置更新：210个普通checkpoint和主`training_metrics.jsonl`已外置；initial/final、全部完整留出节点与122694最优点及原始验证曲线保留。 [本批范围与恢复](../repository_archive_20261101/README.md)。
+
 2026-10-27完成状态核对：训练、完整留出选点及原两组对战均已完成；210332步早停，选中122694步。原raw R37 greedy1000 pair得分51.075%，双方S1024N1（总1024）500 pair为57.500%，见[原结果](results.md)。同一候选的新版10000 pair greedy／S128N1结果见[大面板](../offline5_vs_r37_10k_20261027/README.md)。下方按日期保留首次准备、停训和恢复过程，不再代表当前进度。
 
 2026-10-26，用户要求在当前policy＋得分辅助脚本后串行执行。从零初始化基础`entity_attention_v1`，583682参数，新AdamW；不继承前一模型。只训练原主policy与终局value，权重各1；全部短期value、对手policy、得分归属及旧辅助头／派生标签／损失均关闭。

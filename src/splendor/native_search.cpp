@@ -11,6 +11,7 @@
 #include <memory>
 #include <map>
 #include <random>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -554,7 +555,7 @@ static py::dict encode(const State& s,const std::vector<Action>& acts,const Cata
 }
 struct Edge {
     int forced_playouts=0;
-    int visits=0,child=-1,terminal=-2;double value_sum=0;
+    int visits=0,inflight=0,child=-1,terminal=-2;double value_sum=0;
     std::vector<Action> branch;
     // Sampled outcomes aggregate into this decision edge's N/W, never maximize over chance.
     std::unique_ptr<std::unordered_map<std::string,int>> outcomes;
@@ -562,6 +563,7 @@ struct Edge {
 };
 struct Node {
     State state;std::vector<Action> actions;std::vector<double> prior;std::vector<Edge> edges;
+    double value=0; // network value from this node's actor, used only by FPU
     Node(State s,std::vector<Action> a,std::vector<double> p):state(std::move(s)),actions(std::move(a)),prior(std::move(p)),edges(actions.size()){}
 };
 struct Leaf {
@@ -571,11 +573,13 @@ struct Leaf {
     int transitions=0,simulation=0;bool cap=false;
     bool exported=false; // claimed by a batch row until that row is submitted
     std::string information_key;
+    std::vector<std::vector<std::pair<int,int>>> waiting_paths;
 };
 struct World {
-    int budget=0,completed=0;
+    int budget=0,completed=0,issued=0;
     std::vector<Node> nodes;
-    bool has_leaf=false;Leaf leaf;
+    std::map<int,Leaf> leaves;
+    std::unordered_map<std::string,int> pending_information;
     std::unordered_map<std::string,int> information_nodes;
 };
 
@@ -659,6 +663,8 @@ struct SearchConfig {
     int simulations=256,determinizations=2,max_transitions=512;
     double c_puct=1.5,root_noise_fraction=.25,dirichlet_alpha=.3,forced_playouts=0;
     bool fold=true,policy_target_pruning=false;
+    // Unset keeps the historical unvisited Q=0; set uses parent Q minus this reduction.
+    bool fpu=false;double fpu_reduction=0;
     SearchConfig(py::object config) {
         simulations=py::cast<int>(config.attr("simulations"));
         determinizations=py::cast<int>(config.attr("determinizations"));
@@ -669,6 +675,8 @@ struct SearchConfig {
         fold=py::cast<bool>(config.attr("fold_forced_phases"));
         forced_playouts=py::cast<double>(config.attr("forced_playouts"));
         policy_target_pruning=py::cast<bool>(config.attr("policy_target_pruning"));
+        py::object reduction=config.attr("fpu_reduction");
+        if(!reduction.is_none()){fpu=true;fpu_reduction=py::cast<double>(reduction);}
     }
 };
 class SearchJob {
@@ -678,11 +686,13 @@ class SearchJob {
     std::vector<Action> root_actions;
     std::vector<World> worlds;
     std::vector<double> network_prior,used_prior;
+    double root_value=0;
     uint64_t public_word,base_seed,sampling_seed;
     bool noise,root_pending=true,finished=false,root_exported=false;
     bool stochastic=false,root_only=false;
     double chance_pw_k=0,chance_pw_alpha=.5;
     int root_samples=0,chance_draws=0,information_hits=0;
+    int leaf_batch_size=1,leaf_collisions=0,peak_pending_simulations=0;
     int chance_pw_fresh=0,chance_pw_reused=0;
     double temperature;
     int max_depth=0,cap_hits=0,expanded=0,terminal_hits=0,transitions=0,folded=0,model_positions=0;
@@ -694,6 +704,10 @@ class SearchJob {
     std::vector<std::vector<int>> rows,target_rows,forced_rows;
     std::vector<std::vector<double>> value_rows;
     std::vector<int> counts,budgets;
+    // Opt-in pause/coverage used by interactive equal-world Q selection.
+    // Zero limit leaves the historical PUCT scheduling unchanged.
+    int root_search_limit=0,root_coverage_min=0;
+    std::vector<int> root_coverage_candidates;
     static std::vector<double> softmax(const std::vector<double>& logits) {
         if(logits.empty())throw std::invalid_argument("empty network logits");
         for(double v:logits)if(!std::isfinite(v))throw std::invalid_argument("nonfinite network logits");
@@ -706,13 +720,30 @@ class SearchJob {
         ++w.completed;tree_depth_sum+=path.size();max_depth=std::max(max_depth,int(path.size()));
     }
     int select(Node& n,int root_actor,bool is_root) const {
-        int total=0;for(auto& e:n.edges)total+=e.visits;
+        if(is_root && root_coverage_min>0) {
+            int candidate=-1;
+            for(int i:root_coverage_candidates) {
+                if(n.edges[i].visits>=root_coverage_min)continue;
+                if(candidate<0 || n.edges[i].visits<n.edges[candidate].visits ||
+                   (n.edges[i].visits==n.edges[candidate].visits && n.prior[i]>n.prior[candidate]))candidate=i;
+            }
+            if(candidate>=0)return candidate;
+        }
+        int total=0;for(auto& e:n.edges)total+=e.visits+e.inflight;
         int sign=n.state.actor==root_actor?1:-1;
         int best=0;double best_score=-1e300,best_prior=-1;
         double factor=cfg.c_puct*std::sqrt(1+total);
+        double unvisited_q=0;
+        if(cfg.fpu) {
+            // Parent Q from the node actor: its own network value plus committed child backups.
+            int visited=0;double sum=0;for(auto& e:n.edges){visited+=e.visits;sum+=e.value_sum;}
+            unvisited_q=(n.value+sign*sum)/(1+visited)-cfg.fpu_reduction;
+        }
         for(size_t i=0;i<n.edges.size();++i) {
-            const Edge& e=n.edges[i];double q=e.visits?e.value_sum/e.visits:0;
-            double s=sign*q+factor*n.prior[i]/(1+e.visits);
+            const Edge& e=n.edges[i];double q=e.visits?sign*e.value_sum/e.visits:unvisited_q;
+            // Unscored virtual visits spread pending simulations without
+            // fabricating rewards or changing committed N/W.
+            double s=q+factor*n.prior[i]/(1+e.visits+e.inflight);
             if(is_root && e.visits>0 && e.visits<std::sqrt(cfg.forced_playouts*n.prior[i]*total))
                 s=std::numeric_limits<double>::infinity();
             if(s>best_score || (s==best_score && n.prior[i]>best_prior)) {
@@ -726,7 +757,8 @@ class SearchJob {
         if(stochastic){advance_chance(index);return;}
         auto compute_start=std::chrono::steady_clock::now();
         World& w=worlds[index];int root_actor=w.nodes[0].state.actor;
-        while(w.completed<w.budget && !w.has_leaf) {
+        int limit=root_search_limit>0?root_search_limit:w.budget;
+        while(w.completed<limit && w.leaves.empty()) {
             current_world=index;current_simulation=w.completed;current_branch.clear();has_attempted=false;
             std::vector<std::pair<int,int>> path;
             int node_index=0;std::vector<Action> branch;
@@ -756,22 +788,25 @@ class SearchJob {
                     ++terminal_hits;backup(w,path,child.winner==root_actor?1:child.winner<0?0:-1);break;
                 }
                 bool cap=steps>=cfg.max_transitions;if(cap)++cap_hits;
-                w.leaf=Leaf{std::move(child),{},std::move(path),std::move(branch),steps,w.completed,cap};
-                if(!cap)w.leaf.actions=actions(w.leaf.state,catalog);
-                w.has_leaf=true;++model_positions;break;
+                Leaf leaf{std::move(child),{},std::move(path),std::move(branch),steps,w.completed,cap};
+                if(!cap)leaf.actions=actions(leaf.state,catalog);
+                w.leaves.emplace(w.completed,std::move(leaf));++model_positions;break;
             }
         }
-        if(!root_pending && std::all_of(worlds.begin(),worlds.end(),[](const World& x){return x.completed==x.budget && !x.has_leaf;})) finish();
+        if(root_search_limit==0 && !root_pending && std::all_of(worlds.begin(),worlds.end(),[](const World& x){return x.completed==x.budget && x.leaves.empty();})) finish();
         compute_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-compute_start).count();
     }
     void advance_chance(int index) {
         auto started=std::chrono::steady_clock::now();
         World& w=worlds[index];int root_actor=root_state.actor;
-        while(w.completed<w.budget && !w.has_leaf) {
-            current_world=index;current_simulation=w.completed;current_branch.clear();has_attempted=false;
-            State state=sample_hidden_root(root_state,catalog,derived_seed(public_word,base_seed,w.completed));
+        while(w.issued<w.budget && w.issued-w.completed<leaf_batch_size) {
+            // Seeds use the issued simulation ID, never the completed count:
+            // every in-flight rollout gets its own hidden/chance sample.
+            int simulation=w.issued++;
+            current_world=index;current_simulation=simulation;current_branch.clear();has_attempted=false;
+            State state=sample_hidden_root(root_state,catalog,derived_seed(public_word,base_seed,simulation));
             ++root_samples;
-            ChanceStream chance{derived_seed(public_word,base_seed^0x4348414E4345ULL,w.completed)};
+            ChanceStream chance{derived_seed(public_word,base_seed^0x4348414E4345ULL,simulation)};
             std::array<std::string,2> histories={information_signature(state,catalog,0),information_signature(state,catalog,1)};
             std::vector<std::pair<int,int>> path;std::vector<Action> branch;
             int node_index=0,steps=0;
@@ -809,12 +844,24 @@ class SearchJob {
                     if(w.nodes[node_index].actions!=next)throw std::logic_error("information set legal actions differ");
                     continue;
                 }
-                w.leaf=Leaf{std::move(state),cap?std::vector<Action>{}:std::move(next),std::move(path),
-                            std::move(branch),steps,w.completed,cap};
-                w.leaf.information_key=std::move(key);w.has_leaf=true;++model_positions;break;
+                for(auto [node,edge]:path)++w.nodes[node].edges[edge].inflight;
+                auto pending=w.pending_information.find(key);
+                if(!cap && pending!=w.pending_information.end()) {
+                    auto& leaf=w.leaves.at(pending->second);
+                    if(leaf.actions!=next)throw std::logic_error("pending information set legal actions differ");
+                    leaf.waiting_paths.push_back(std::move(path));++leaf_collisions;
+                } else {
+                    Leaf leaf{std::move(state),cap?std::vector<Action>{}:std::move(next),std::move(path),
+                              std::move(branch),steps,simulation,cap};
+                    leaf.information_key=std::move(key);
+                    if(!cap)w.pending_information.emplace(leaf.information_key,simulation);
+                    w.leaves.emplace(simulation,std::move(leaf));++model_positions;
+                }
+                peak_pending_simulations=std::max(peak_pending_simulations,w.issued-w.completed);
+                break;
             }
         }
-        if(!root_pending && w.completed==w.budget && !w.has_leaf)finish();
+        if(!root_pending && w.completed==w.budget && w.leaves.empty())finish();
         compute_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count();
     }
     void finish() {
@@ -867,9 +914,12 @@ class SearchJob {
     }
 public:
     SearchJob(const Catalog& catalog_,py::object request,py::object config,uint64_t word,uint64_t seed,bool noise_,double temp,bool stochastic_=false,
-              double chance_pw_k_=0,double chance_pw_alpha_=.5,bool root_only_=false):
+              double chance_pw_k_=0,double chance_pw_alpha_=.5,bool root_only_=false,int leaf_batch_size_=1):
         catalog(catalog_),cfg(config),public_word(word),base_seed(PyLong_AsUnsignedLongLongMask(config.attr("seed").ptr())),
         sampling_seed(seed),noise(noise_),stochastic(stochastic_),root_only(root_only_),chance_pw_k(chance_pw_k_),chance_pw_alpha(chance_pw_alpha_),temperature(temp) {
+        if(leaf_batch_size_<1 || (leaf_batch_size_!=1 && !stochastic))
+            throw std::invalid_argument("leaf batch size must be positive; batching requires sampled chance search");
+        leaf_batch_size=leaf_batch_size_;
         if(root_only && (noise || temperature!=0 || stochastic || chance_pw_k>0))
             throw std::invalid_argument("greedy root inference requires no noise, temperature or chance search");
         if(stochastic && cfg.determinizations!=1)throw std::invalid_argument("sampled chance search requires determinizations=1 (one shared statistics pool)");
@@ -886,8 +936,45 @@ public:
         ++model_positions;
     }
     bool done() const{return finished;}
+    void set_root_search_limit(int limit) {
+        if(!root_pending || !worlds.empty() || root_only || stochastic || noise || temperature!=0)
+            throw std::invalid_argument("root coverage requires a fresh deterministic independent-world search without noise");
+        if(limit<=0 || limit>=cfg.simulations/cfg.determinizations)
+            throw std::invalid_argument("initial root simulation limit must be positive and below each world's budget");
+        root_search_limit=limit;
+    }
+    bool root_phase_complete() const {
+        return root_search_limit>0 && !root_pending && !worlds.empty() &&
+            std::all_of(worlds.begin(),worlds.end(),[this](const World& w){return w.completed==root_search_limit && w.leaves.empty();});
+    }
+    py::dict root_statistics() const {
+        if(!root_phase_complete() && !finished)throw std::logic_error("root statistics require a completed initial phase or search");
+        std::vector<std::vector<int>> visits;
+        std::vector<std::vector<double>> sums;
+        for(const auto& w:worlds) {
+            std::vector<int> ns;std::vector<double> qs;
+            for(const auto& edge:w.nodes[0].edges){ns.push_back(edge.visits);qs.push_back(edge.value_sum);}
+            visits.push_back(std::move(ns));sums.push_back(std::move(qs));
+        }
+        py::dict out;out["visits"]=visits;out["value_sums"]=sums;out["prior"]=network_prior;
+        return out;
+    }
+    void resume_with_root_coverage(const std::vector<int>& candidates,int minimum) {
+        if(!root_phase_complete())throw std::logic_error("root coverage requires all worlds paused at the initial limit");
+        if(candidates.empty() || minimum<=0)throw std::invalid_argument("root coverage needs candidates and a positive minimum");
+        std::vector<int> unique=candidates;std::sort(unique.begin(),unique.end());
+        if(std::adjacent_find(unique.begin(),unique.end())!=unique.end() || unique.front()<0 || unique.back()>=int(root_actions.size()))
+            throw std::invalid_argument("root coverage candidate indices are invalid or duplicated");
+        for(const auto& w:worlds) {
+            long long needed=0;for(int i:candidates)needed+=std::max(0,minimum-w.nodes[0].edges[i].visits);
+            if(needed>w.budget-w.completed)throw std::invalid_argument("remaining world budget cannot cover the requested candidates");
+        }
+        root_coverage_candidates=candidates;root_coverage_min=minimum;root_search_limit=0;
+        py::gil_scoped_release release;
+        for(int i=0;i<int(worlds.size());++i)advance(i);
+    }
     bool is_root_pending() const{return root_pending && !finished;}
-    int pending_count() const {int n=root_pending?1:0;for(auto& w:worlds)n+=w.has_leaf;return n;}
+    int pending_count() const {int n=root_pending?1:0;for(auto& w:worlds)n+=int(w.leaves.size());return n;}
     py::list pending() {
         auto feature_start=std::chrono::steady_clock::now();
         py::list result;
@@ -898,8 +985,8 @@ public:
             feature_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-feature_start).count();
             return result;
         }
-        for(size_t i=0;i<worlds.size();++i)if(worlds[i].has_leaf){
-            auto& leaf=worlds[i].leaf;py::dict item;item["world"]=int(i);
+        for(size_t i=0;i<worlds.size();++i)for(auto& entry:worlds[i].leaves){
+            auto& leaf=entry.second;py::dict item;item["world"]=int(i);item["simulation"]=entry.first;
             item["kind"]=leaf.cap?"value_only":"policy_value";
             item["encoded"]=encode(leaf.state,leaf.actions,catalog,leaf.cap);
             result.append(item);
@@ -907,13 +994,16 @@ public:
         feature_seconds+=std::chrono::duration<double>(std::chrono::steady_clock::now()-feature_start).count();
         return result;
     }
-    void submit(int world,const std::vector<double>& logits,double value) {
+    void submit(int world,const std::vector<double>& logits,double value,int simulation=-1) {
+        submit_impl(world,logits,value,simulation,true);
+    }
+    void submit_impl(int world,const std::vector<double>& logits,double value,int simulation,bool advance_after) {
         if(!std::isfinite(value))throw std::invalid_argument("nonfinite network value");
         value=std::max(-1.0,std::min(1.0,value));
         if(world==-1) {
             if(!root_pending)throw std::logic_error("root request already resolved");
             if(logits.size()!=root_actions.size())throw std::invalid_argument("root logits width mismatch");
-            network_prior=softmax(logits);used_prior=network_prior;
+            network_prior=softmax(logits);used_prior=network_prior;root_value=value;
             if(root_only) {
                 chosen=int(std::max_element(logits.begin(),logits.end())-logits.begin());
                 counts.assign(logits.size(),0);target=network_prior;behavior.assign(logits.size(),0);
@@ -940,24 +1030,44 @@ public:
             return;
         }
         World& w=worlds.at(world);
-        if(!w.has_leaf)throw std::logic_error("world has no pending leaf");
-        if(!w.leaf.cap && logits.size()!=w.leaf.actions.size())throw std::invalid_argument("leaf logits width mismatch");
-        if(w.leaf.cap && !logits.empty())throw std::invalid_argument("value-only leaf cannot receive logits");
-        std::vector<double> prior;if(!w.leaf.cap)prior=softmax(logits);
-        Leaf leaf=std::move(w.leaf);w.has_leaf=false;
+        if(w.leaves.empty())throw std::logic_error("world has no pending leaf");
+        if(simulation<0){
+            if(w.leaves.size()!=1)throw std::invalid_argument("multiple pending leaves require a simulation ID");
+            simulation=w.leaves.begin()->first;
+        }
+        auto found=w.leaves.find(simulation);
+        if(found==w.leaves.end())throw std::logic_error("stale batch row for this world");
+        if(!found->second.cap && logits.size()!=found->second.actions.size())throw std::invalid_argument("leaf logits width mismatch");
+        if(found->second.cap && !logits.empty())throw std::invalid_argument("value-only leaf cannot receive logits");
+        std::vector<double> prior;if(!found->second.cap)prior=softmax(logits);
+        Leaf leaf=std::move(found->second);w.leaves.erase(found);
+        if(stochastic && !leaf.cap)w.pending_information.erase(leaf.information_key);
+        auto complete=[&](double v){
+            if(stochastic) {
+                auto release=[&](const auto& path){for(auto [node,edge]:path){
+                    auto& count=w.nodes[node].edges[edge].inflight;
+                    if(count<=0)throw std::logic_error("unbalanced virtual visits");
+                    --count;
+                }};
+                release(leaf.path);
+                for(auto& path:leaf.waiting_paths){release(path);backup(w,path,v);}
+            }
+            backup(w,leaf.path,v);
+        };
         if(!leaf.cap) {
             int child=int(w.nodes.size());w.nodes.emplace_back(std::move(leaf.state),std::move(leaf.actions),std::move(prior));
+            w.nodes[child].value=value;
             if(stochastic)w.information_nodes.emplace(std::move(leaf.information_key),child);
             else {auto [parent,edge]=leaf.path.back();w.nodes[parent].edges[edge].child=child;}
             ++expanded;
             int root_actor=w.nodes[0].state.actor;
             double v=w.nodes[child].state.actor==root_actor?value:-value;
-            backup(w,leaf.path,v);
+            complete(v);
         } else {
             int root_actor=w.nodes[0].state.actor;
-            backup(w,leaf.path,leaf.state.actor==root_actor?value:-value);
+            complete(leaf.state.actor==root_actor?value:-value);
         }
-        py::gil_scoped_release release;advance(world);
+        if(advance_after){py::gil_scoped_release release;advance(world);}
     }
     // -- batch export/import -------------------------------------------------
     // The batch interface exposes the pending leaves of one job so that several
@@ -969,19 +1079,20 @@ public:
     const State& root_state_ref() const{return root_state;}
     const std::vector<Action>& root_actions_ref() const{return root_actions;}
     int world_count() const{return int(worlds.size());}
-    bool world_has_leaf(int world) const{return worlds.at(world).has_leaf;}
-    bool world_leaf_exportable(int world) const{
-        const World& w=worlds.at(world);return w.has_leaf && !w.leaf.exported;
+    const Leaf& leaf_at(int world,int simulation) const{return worlds.at(world).leaves.at(simulation);}
+    std::vector<std::pair<int,int>> exportable_leaves(bool state_only) const {
+        std::vector<std::pair<int,int>> out;
+        for(int world=0;world<int(worlds.size());++world)
+            for(auto& entry:worlds[world].leaves)
+                if(!entry.second.exported && entry.second.cap==state_only)out.emplace_back(world,entry.first);
+        return out;
     }
-    void mark_leaf_exported(int world){worlds.at(world).leaf.exported=true;}
-    bool world_leaf_cap(int world) const{return worlds.at(world).leaf.cap;}
-    int world_leaf_simulation(int world) const{return worlds.at(world).leaf.simulation;}
-    const State& world_leaf_state(int world) const{return worlds.at(world).leaf.state;}
-    const std::vector<Action>& world_leaf_actions(int world) const{return worlds.at(world).leaf.actions;}
+    void mark_leaf_exported(int world,int simulation){worlds.at(world).leaves.at(simulation).exported=true;}
     int pending_rows(bool state_only) const {
         int count=0;
         if(!state_only && root_exportable())++count;
-        for(auto& w:worlds)if(w.has_leaf && !w.leaf.exported && w.leaf.cap==state_only)++count;
+        for(auto& w:worlds)for(auto& entry:w.leaves)
+            if(!entry.second.exported && entry.second.cap==state_only)++count;
         return count;
     }
     // Policy rows report their widest candidate list; value-only rows carry no
@@ -990,7 +1101,8 @@ public:
         if(state_only)return pending_rows(true)>0?1:0;
         int best=0;
         if(root_exportable())best=int(root_actions.size());
-        for(auto& w:worlds)if(w.has_leaf && !w.leaf.exported && !w.leaf.cap)best=std::max(best,int(w.leaf.actions.size()));
+        for(auto& w:worlds)for(auto& entry:w.leaves)
+            if(!entry.second.exported && !entry.second.cap)best=std::max(best,int(entry.second.actions.size()));
         return best;
     }
     // Rejects stale or duplicated rows for one exported (world, simulation) tag
@@ -1003,13 +1115,15 @@ public:
             if(!has_logits)throw std::invalid_argument("root request needs logits");
             count=int(root_actions.size());
         } else {
-            if(!world_has_leaf(world))throw std::logic_error("world has no pending leaf");
-            if(world_leaf_simulation(world)!=simulation)throw std::logic_error("stale batch row for this world");
-            if(!worlds.at(world).leaf.exported)throw std::logic_error("batch row was not exported by this buffer");
-            bool cap=world_leaf_cap(world);
+            auto& leaves=worlds.at(world).leaves;
+            auto found=leaves.find(simulation);
+            if(found==leaves.end())throw std::logic_error(leaves.empty()?"world has no pending leaf":"stale batch row for this world");
+            auto& leaf=found->second;
+            if(!leaf.exported)throw std::logic_error("batch row was not exported by this buffer");
+            bool cap=leaf.cap;
             if(cap && has_logits)throw std::invalid_argument("value-only leaf cannot receive logits");
             if(!cap && !has_logits)throw std::invalid_argument("policy leaf needs logits");
-            count=cap?0:int(world_leaf_actions(world).size());
+            count=cap?0:int(leaf.actions.size());
         }
         if(has_logits && width<count)throw std::invalid_argument("batch row is narrower than the leaf action list");
     }
@@ -1017,16 +1131,22 @@ public:
     void submit_exported(int world,int simulation,const float* logits,int width,double value) {
         verify_exported(world,simulation,logits!=nullptr,width);
         if(world<0)root_exported=false;
-        else worlds.at(world).leaf.exported=false;
+        else worlds.at(world).leaves.at(simulation).exported=false;
         int count=0;
         if(logits!=nullptr){
             count = world<0 ? int(root_actions.size())
-                            : (world_leaf_cap(world)?0:int(world_leaf_actions(world).size()));
+                            : (leaf_at(world,simulation).cap?0:int(leaf_at(world,simulation).actions.size()));
         }
         std::vector<double> copied;
         if(logits!=nullptr){copied.assign(logits,logits+count);}
-        submit(world,copied,value);
+        submit_impl(world,copied,value,simulation,leaf_batch_size==1);
     }
+    void resume_after_batch() {
+        if(stochastic && leaf_batch_size>1 && !worlds.empty()) {
+            py::gil_scoped_release release;advance(0);
+        }
+    }
+    bool needs_batch_resume() const{return stochastic && leaf_batch_size>1;}
     // Root worlds need an observation only at construction. Instantiate before returning
     // the first root evaluation; no Python object is retained in the search tree.
     void initialize_worlds(py::object request) {
@@ -1038,24 +1158,29 @@ public:
             State s=sampled_state(obs,catalog,derived_seed(public_word,base_seed,j));
             auto root=decide(s,catalog);
             if(root!=root_actions)throw std::invalid_argument("sampled world root candidates differ");
-            w.nodes.emplace_back(std::move(s),root,used_prior);
+            w.nodes.emplace_back(std::move(s),root,used_prior);w.nodes.back().value=root_value;
             if(stochastic)w.information_nodes.emplace(information_signature(root_state,catalog,root_state.actor),0);
         }
         py::gil_scoped_release release;
         for(int j=0;j<cfg.determinizations;++j)advance(j);
     }
-    py::dict failure_context(int requested_world) const {
+    py::dict failure_context(int requested_world,int simulation=-1) const {
         int world=requested_world;
-        if(world<0 || world>=int(worlds.size()) || !worlds[world].has_leaf)world=current_world;
+        if(world<0 || world>=int(worlds.size()) || worlds[world].leaves.empty())world=current_world;
+        const Leaf* leaf=nullptr;
+        if(world>=0 && !worlds[world].leaves.empty()) {
+            const auto& leaves=worlds[world].leaves;
+            leaf=simulation<0?&leaves.begin()->second:&leaves.at(simulation);
+        }
         py::dict out;out["world_index"]=world>=0?py::cast(world):py::none();
-        out["simulation_index"]=world>=0?py::cast(worlds[world].has_leaf?worlds[world].leaf.simulation:current_simulation):py::none();
+        out["simulation_index"]=world>=0?py::cast(leaf?leaf->simulation:current_simulation):py::none();
         if(stochastic) {
-            int simulation=world>=0?(worlds[world].has_leaf?worlds[world].leaf.simulation:current_simulation):0;
+            int simulation=world>=0?(leaf?leaf->simulation:current_simulation):0;
             out["hidden_sample_seed"]=derived_seed(public_word,base_seed,simulation);
             out["chance_seed"]=derived_seed(public_word,base_seed^0x4348414E4345ULL,simulation);
         }
         out["determinization_seed"]=world>=0?py::cast(derived_seed(public_word,base_seed,world)):py::none();
-        auto& branch=(world>=0 && worlds[world].has_leaf)?worlds[world].leaf.branch:current_branch;
+        auto& branch=leaf?leaf->branch:current_branch;
         py::list items;
         for(auto& a:branch)items.append(py::make_tuple(a.type,a.id,a.tier,a.tokens));
         out["branch_actions"]=items;
@@ -1089,6 +1214,12 @@ public:
     }
     py::dict chance_diagnostics() const {
         py::dict out;out["stochastic"]=stochastic;out["root_hidden_samples"]=root_samples;
+        out["leaf_batch_size"]=leaf_batch_size;out["leaf_collisions"]=leaf_collisions;
+        out["peak_pending_simulations"]=peak_pending_simulations;
+        int virtual_visits=0,pending_simulations=0;
+        for(auto& w:worlds){pending_simulations+=w.issued-w.completed;
+            for(auto& node:w.nodes)for(auto& edge:node.edges)virtual_visits+=edge.inflight;}
+        out["pending_simulations"]=stochastic?pending_simulations:0;out["virtual_visits"]=virtual_visits;
         out["chance_draws"]=chance_draws;out["information_set_hits"]=information_hits;
         out["decision_nodes"]=worlds.empty()?0:int(worlds[0].nodes.size());
         py::list outcomes;std::vector<double> values;
@@ -1117,9 +1248,14 @@ public:
         }
         return out;
     }
-    py::dict debug_leaf_state(int world) const {
-        if(!worlds.at(world).has_leaf)throw std::logic_error("no pending search leaf");
-        return state_snapshot(worlds.at(world).leaf.state);
+    py::dict debug_leaf_state(int world,int simulation=-1) const {
+        const auto& leaves=worlds.at(world).leaves;
+        if(leaves.empty())throw std::logic_error("no pending search leaf");
+        if(simulation<0){
+            if(leaves.size()!=1)throw std::invalid_argument("multiple pending leaves require a simulation ID");
+            simulation=leaves.begin()->first;
+        }
+        return state_snapshot(leaves.at(simulation).state);
     }
 };
 // One contiguous batch of encoded pending leaves.  Every float field lives in
@@ -1246,6 +1382,11 @@ class NativeBatch {
         for(int row=0;row<rows;++row)check_row(row,has_logits?logits_at(row):nullptr,value_at(row));
         for(int row=0;row<rows;++row)
             owners[row]->submit_exported(worlds[row],simulations[row],has_logits?logits_at(row):nullptr,width,value_at(row));
+        // Publish every ready evaluation before selecting the next wave. The
+        // serial reference still advances after each individual row.
+        std::set<SearchJob*> resumed;
+        for(auto& owner:owners)
+            if(owner->needs_batch_resume() && resumed.insert(owner.get()).second)owner->resume_after_batch();
         reset();
     }
 public:
@@ -1303,14 +1444,11 @@ public:
             job->mark_root_exported();
             append(job,-1,-1,0,int(job->root_actions_ref().size()),job->root_state_ref(),job->root_actions_ref());
         }
-        for(int world=0;world<job->world_count() && rows<capacity;++world){
-            if(!job->world_leaf_exportable(world))continue;
-            if(job->world_leaf_cap(world)!=state_only)continue;
-            int simulation=job->world_leaf_simulation(world);
-            bool cap=job->world_leaf_cap(world);
-            job->mark_leaf_exported(world);
-            append(job,world,simulation,cap?2:1,cap?0:int(job->world_leaf_actions(world).size()),
-                   job->world_leaf_state(world),job->world_leaf_actions(world));
+        for(auto [world,simulation]:job->exportable_leaves(state_only)){
+            if(rows>=capacity)break;
+            const auto& leaf=job->leaf_at(world,simulation);
+            job->mark_leaf_exported(world,simulation);
+            append(job,world,simulation,leaf.cap?2:1,leaf.cap?0:int(leaf.actions.size()),leaf.state,leaf.actions);
         }
         return rows-start;
     }
@@ -1524,21 +1662,25 @@ PYBIND11_MODULE(_native_search,m) {
         .def("submit",&NativeBatch::submit)
         .def("submit_fused",&NativeBatch::submit_fused);
     py::class_<SearchJob,std::shared_ptr<SearchJob>>(m,"SearchJob")
-        .def(py::init<const Catalog&,py::object,py::object,uint64_t,uint64_t,bool,double,bool,double,double,bool>(),
+        .def(py::init<const Catalog&,py::object,py::object,uint64_t,uint64_t,bool,double,bool,double,double,bool,int>(),
              py::arg("catalog"),py::arg("request"),py::arg("config"),py::arg("public_word"),
              py::arg("sampling_seed"),py::arg("add_root_noise"),py::arg("temperature"),py::arg("stochastic")=false,
-             py::arg("chance_pw_k")=0.,py::arg("chance_pw_alpha")=.5,py::arg("root_only")=false,
+             py::arg("chance_pw_k")=0.,py::arg("chance_pw_alpha")=.5,py::arg("root_only")=false,py::arg("leaf_batch_size")=1,
              py::keep_alive<1,2>())
         .def("done",&SearchJob::done)
+        .def("set_root_search_limit",&SearchJob::set_root_search_limit)
+        .def("root_phase_complete",&SearchJob::root_phase_complete)
+        .def("root_statistics",&SearchJob::root_statistics)
+        .def("resume_with_root_coverage",&SearchJob::resume_with_root_coverage)
         .def("pending",&SearchJob::pending)
         .def("pending_count",&SearchJob::pending_count)
-        .def("submit",&SearchJob::submit)
+        .def("submit",&SearchJob::submit,py::arg("world"),py::arg("logits"),py::arg("value"),py::arg("simulation")=-1)
         .def("initialize_worlds",&SearchJob::initialize_worlds)
         .def("result",&SearchJob::result)
         .def("stats",&SearchJob::stats)
         .def("chance_diagnostics",&SearchJob::chance_diagnostics)
-        .def("debug_leaf_state",&SearchJob::debug_leaf_state)
-        .def("failure_context",&SearchJob::failure_context)
+        .def("debug_leaf_state",&SearchJob::debug_leaf_state,py::arg("world"),py::arg("simulation")=-1)
+        .def("failure_context",&SearchJob::failure_context,py::arg("world"),py::arg("simulation")=-1)
         .def("pending_width",&SearchJob::pending_width)
         .def("pending_rows",&SearchJob::pending_rows)
         .def("root_pending_now",&SearchJob::root_pending_now);

@@ -282,16 +282,37 @@ class EntityAttentionAux(EntityAttention):
 
 @dataclass(frozen=True, slots=True)
 class EntityAttentionPolicyValueConfig:
-    """Inference-only composition of two unchanged entity_attention_v1 models."""
+    """Inference-only composition of two unchanged entity-attention models.
+
+    Omitted branch configs keep the original default entity_attention_v1
+    branches, so earlier composition checkpoints load unchanged.
+    """
 
     architecture: str = "entity_attention_policy_value_v1"
     feature_schema_version: str = FEATURE_SCHEMA_VERSION
+    policy_branch: dict | None = None
+    value_branch: dict | None = None
 
     def __post_init__(self):
         if self.architecture != "entity_attention_policy_value_v1":
             raise ValueError("invalid policy/value composition architecture")
         if self.feature_schema_version != FEATURE_SCHEMA_VERSION:
             raise ValueError("model feature schema mismatch")
+        for branch in (self.policy_branch, self.value_branch):
+            if branch is not None and branch.get("architecture") not in _COMPOSABLE_ARCHITECTURES:
+                raise ValueError("composition branches must be entity_attention_v1 or entity_attention_continuation_v1")
+
+
+# Continuation models inherit EntityAttention inference unchanged; their
+# auxiliary heads are carried in the weights but never evaluated here.
+_COMPOSABLE_ARCHITECTURES = ("entity_attention_v1", "entity_attention_continuation_v1")
+
+
+def _composition_branch(config):
+    if config is None:
+        return EntityAttention()
+    from .actor_critic import build_actor_critic
+    return build_actor_critic(config)
 
 
 class _SelectValue(nn.Module):
@@ -310,8 +331,8 @@ class EntityAttentionPolicyValue(ActorCritic):
     def __init__(self, config: EntityAttentionPolicyValueConfig | None = None):
         nn.Module.__init__(self)
         self.config = config or EntityAttentionPolicyValueConfig()
-        self.policy_model = EntityAttention()
-        self.value_model = EntityAttention()
+        self.policy_model = _composition_branch(self.config.policy_branch)
+        self.value_model = _composition_branch(self.config.value_branch)
         self.critic = _SelectValue()
 
     def encode_state(self, batch: TorchDecisionBatch | TorchStateBatch):

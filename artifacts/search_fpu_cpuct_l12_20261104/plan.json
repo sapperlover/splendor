@@ -1,0 +1,65 @@
+{
+  "catalog_fingerprint": "084574b026e41ad6e5c64dfe36d74fb84a7604f6a0b0eb0ab59227c32a7ff17b",
+  "checkpoint": {
+    "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-011/checkpoints/final.pt",
+    "sha256": "2a6304e3470cab3dad78ec0a2789ee892892e741f3731cafc2197cde9bd2d45d"
+  },
+  "experiment": "search_fpu_cpuct_l12_20261104",
+  "pairs_per_panel": 2000,
+  "runner": {
+    "path": "artifacts/search_fpu_cpuct_l12_20261104/run.py",
+    "sha256": "b582c971ce713643381d661588d54939c3e7bd11a1e3b017dace4f93ba7d1185"
+  },
+  "scope": "Search-only screening on one model (L12) against its own historical search; no training. 2a/2b select by point estimate and need the 2c confirmation on fresh seeds before any use in training.",
+  "seeds": {
+    "bootstrap_seed": 47450000,
+    "difference_bootstrap_seed": 47450001,
+    "game_seed_end": 47421999,
+    "game_seed_start": 47420000,
+    "policy_seed_base": 47430000,
+    "search_seed": 47440000
+  },
+  "stage_a": [
+    {
+      "c_puct": 1.5,
+      "config": {
+        "path": "artifacts/search_fpu_cpuct_l12_20261104/configs/01_2a_fpu0.1_c1.5.json",
+        "sha256": "23eaf47d94c08003d5bb68fe578c3440a0aaaee6f2730047369d9dafe5218ef8"
+      },
+      "fpu_reduction": 0.1,
+      "id": "01_2a_fpu0.1_c1.5",
+      "output": "artifacts/search_fpu_cpuct_l12_20261104/panels/01_2a_fpu0.1_c1.5.json",
+      "pairs": 2000,
+      "stage": "2a"
+    },
+    {
+      "c_puct": 1.5,
+      "config": {
+        "path": "artifacts/search_fpu_cpuct_l12_20261104/configs/02_2a_fpu0.2_c1.5.json",
+        "sha256": "b970c2f959a3c4656caa88ae05da367e9de90a6a8eeadf7ef3ac8246afe6d976"
+      },
+      "fpu_reduction": 0.2,
+      "id": "02_2a_fpu0.2_c1.5",
+      "output": "artifacts/search_fpu_cpuct_l12_20261104/panels/02_2a_fpu0.2_c1.5.json",
+      "pairs": 2000,
+      "stage": "2a"
+    },
+    {
+      "c_puct": 1.5,
+      "config": {
+        "path": "artifacts/search_fpu_cpuct_l12_20261104/configs/03_2a_fpu0.3_c1.5.json",
+        "sha256": "2bd2272a8d66f004b92c7734a09c537c166b32b91e0abfb67db73caed8767343"
+      },
+      "fpu_reduction": 0.3,
+      "id": "03_2a_fpu0.3_c1.5",
+      "output": "artifacts/search_fpu_cpuct_l12_20261104/panels/03_2a_fpu0.3_c1.5.json",
+      "pairs": 2000,
+      "stage": "2a"
+    }
+  ],
+  "stage_b_rule": "keep the 2a reduction with the highest score (ties: smaller r); c_puct in [1.0, 2.5]",
+  "template": {
+    "path": "artifacts/graft_policy_value_l0_l12_20261104/configs/01_search_L12_vs_R37.json",
+    "sha256": "654a70adaf1cd8b87a23f44fe8ce07c6e8f8c5193de552a933e3f9cd7619f5a5"
+  }
+}

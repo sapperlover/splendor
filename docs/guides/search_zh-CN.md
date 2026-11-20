@@ -29,6 +29,8 @@ policy_target[a] = (1/N) * sum_j n_j[a] / S_j
 sign * Q + c_puct * P * sqrt(1 + 节点边访问总数) / (1 + 边访问数)
 ```
 
+可选 `fpu_reduction=r`（默认 `None`，即上式的历史行为）把未访问边的 `sign*Q` 换成节点行动者视角的父节点 Q 减 `r`：父节点 Q =（该节点展开时的网络 value ＋ 各已访问子边按该节点视角的 W 之和）/（1 ＋ 已访问次数），不计未回传的虚拟访问。Python 参照与 native 独立世界／随机节点搜索共用同一定义；`None` 时三者与历史实现逐位一致，旧配置无需改动。是否采用见[FPU／c_puct 实验](../../artifacts/search_fpu_cpuct_l12_20261104/README.md)。
+
 平分先看更高先验，再看更小原候选索引。叶节点 value 先检查 finite、裁剪到 `[-1,1]`，再按叶行动者转换成根视角；同一根视角值沿路径各边回传一次。PAYMENT、RETURN_TOKENS、CHOOSE_NOBLE 等连续同玩家阶段按引擎当前行动者判断，绝不按搜索深度交替翻号。
 
 首次到达非终局新节点时只展开该节点，使用其 policy/value 回传并结束该 simulation；未来再访问才选择它的边。`fold_forced_phases=True` 在模拟引擎中连续执行单合法动作，不改变真实策略的单步输出。单候选根直接返回 target/behavior `[1]`、访问 `[0]`、`searchable=False`，不采样世界也不消耗 simulation。`max_simulation_transitions` 限制单次 simulation 中实际 `engine.apply()` 的次数，含折叠动作；到上限且未终局时用该非终局请求的 critic 截断估值，记录 cap 命中，不把它算作正式平局。
@@ -45,7 +47,7 @@ training_target = result.policy_target
 behavior = result.behavior_policy
 ```
 
-默认值：`simulations=256`、`determinizations=2`、`c_puct=1.5`、`seed=0`、`fold_forced_phases=True`、`max_simulation_transitions=512`、`root_noise_fraction=0.25`、`dirichlet_alpha=0.3`。`choose()` 总是确定性评测。显式启用根噪声时，每次搜索只采一个合法动作维度的 Dirichlet 向量，所有世界共享；内部节点不加噪声。世界 seed 只由可见请求、有效策略 seed 和世界编号稳定派生；噪声与温度采样用独立本地随机子流，`sampling_seed` 不改变世界采样。温度 0 以 `policy_target` 最大者行动，平分按无噪声根先验及候选索引；正温度仅把 target 按 `target**(1/temperature)` 变换成 `behavior_policy` 再抽样，训练标签仍是原 target。
+默认值：`simulations=256`、`determinizations=2`、`c_puct=1.5`、`seed=0`、`fold_forced_phases=True`、`max_simulation_transitions=512`、`root_noise_fraction=0.25`、`dirichlet_alpha=0.3`、`fpu_reduction=None`。`choose()` 总是确定性评测。显式启用根噪声时，每次搜索只采一个合法动作维度的 Dirichlet 向量，所有世界共享；内部节点不加噪声。世界 seed 只由可见请求、有效策略 seed 和世界编号稳定派生；噪声与温度采样用独立本地随机子流，`sampling_seed` 不改变世界采样。温度 0 以 `policy_target` 最大者行动，平分按无噪声根先验及候选索引；正温度仅把 target 按 `target**(1/temperature)` 变换成 `behavior_policy` 再抽样，训练标签仍是原 target。
 
 `MCTSSearchResult` 包含候选索引、是否可搜索、无噪声/实际根先验、各世界预算和根访问向量、汇总访问、`policy_target`、`behavior_policy`、实际 simulation 数、最大树深和 cap 命中；`to_dict()` 可序列化。`MCTSStats.to_dict()` 只输出可相加的计数与耗时，供评测器逐局累加。模型推理计时含从设备复制结果到 CPU 的同步；设备和 batch 形状会影响 FP32 舍入；逐位复现需要固定后端、模型与执行条件。
 

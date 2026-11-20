@@ -210,7 +210,7 @@ class FastSelfPlayConfig:
             raw.pop("budget_randomization")
         else:
             raw["budget_randomization"] = self.budget_randomization.to_dict()
-        for name, default in (("forced_playouts", 0.0), ("policy_target_pruning", False)):
+        for name, default in (("forced_playouts", 0.0), ("policy_target_pruning", False), ("fpu_reduction", None)):
             if raw["search_config"][name] == default:
                 raw["search_config"].pop(name)
         if not self.execution.batch_buckets:

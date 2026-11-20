@@ -1,0 +1,22 @@
+{
+  "experiment_id": "kirameki-budget-stability-20261030",
+  "games": [3, 4, 5, 6],
+  "main_decisions": 115,
+  "conditional_decisions": 53,
+  "conditional_decisions_with_choice": 31,
+  "budgets": [4096, 8192, 16384, 32768],
+  "search_backend": "native_chance",
+  "determinizations": 1,
+  "seed": 0,
+  "root_noise": false,
+  "chance_widening": false,
+  "workers": 8,
+  "threads_per_worker": 1,
+  "inference_batch_size": 1,
+  "checkpoint_sha256": "852cb0420e94d77c146bc2330600f48d52f638e4cca96a5c1578e9dfe54940ec",
+  "raw_location": "runtime/kirameki_budget_matrix_20261030",
+  "comparisons": ["adjacent budgets", "all budget pairs", "any checkpoint choice change", "closeness groups at the lower budget"],
+  "conditions": "followups hold the original main action fixed",
+  "validation": "all searching roots must reproduce original 8192 visit counts exactly and Q sums within 1e-5",
+  "scope": "saved advisor decisions only; no live website actions or playing-strength match"
+}

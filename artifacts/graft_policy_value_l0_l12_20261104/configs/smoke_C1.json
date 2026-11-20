@@ -1,0 +1,92 @@
+{
+  "adjudicate_deterministic_policy_cycles": true,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 47340000,
+  "device": "cuda",
+  "execution": {
+    "active_games_per_worker": 1,
+    "actor_projection": false,
+    "backend": "native_cuda_pool",
+    "batch_buckets": [
+      64,
+      128,
+      256,
+      500
+    ],
+    "batch_interface": "native",
+    "candidate_buckets": [
+      32,
+      48,
+      64
+    ],
+    "compile_failure_policy": "fail_fast",
+    "compile_mode": "native-cudagraph",
+    "engine_mode": "fast",
+    "inference_mode": "compiled",
+    "local_microbatch": 128,
+    "max_batch_size": 500,
+    "max_batch_wait_ms": 5,
+    "native_transport": "reused",
+    "pipeline_slots": 2,
+    "precision": "float32",
+    "search_workers": 12,
+    "shared_candidate_width": 256,
+    "shared_slots": 2,
+    "torch_threads": 1,
+    "total_active_games": 1000,
+    "workers": 1
+  },
+  "game_seeds": [
+    47270000,
+    47270001
+  ],
+  "max_completed_turns": 400,
+  "metadata": {
+    "candidate_sha256": "cc84493f191b7b62b22f61b17139796ee4c25dafbb6e3ea7072ef528c0d28f7f",
+    "catalog_fingerprint": "084574b026e41ad6e5c64dfe36d74fb84a7604f6a0b0eb0ab59227c32a7ff17b",
+    "experiment": "graft_policy_value_l0_l12_20261104",
+    "mode": "search",
+    "model": "C1_policyL12_valueL0",
+    "opponent_sha256": "611f4f4ed18f397b03c79bb3a2beae51e7a77a747883680d9189eed3052a1045",
+    "reference": "offline5_vs_r37_10k_20261027/08_search_policy_vs_R37: same template, first 2 of its opening seeds",
+    "search_budget": "both S128N1 = 128 per world * 1 world = total128"
+  },
+  "policy_a": {
+    "checkpoint": "/home/lc/下载/splendor/runs/graft_policy_value_l0_l12_20261104/compositions/C1_policyL12_valueL0.pt",
+    "kind": "mcts_checkpoint",
+    "name": "C1_policyL12_valueL0",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "forced_playouts": 0.0,
+      "max_simulation_transitions": 512,
+      "policy_target_pruning": false,
+      "root_noise_fraction": 0.0,
+      "seed": 47330000,
+      "simulations": 128
+    }
+  },
+  "policy_b": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r31_10k_p60k_iteration_20261023/rounds/round-005/checkpoints/final.pt",
+    "kind": "mcts_checkpoint",
+    "name": "raw_R37",
+    "search_backend": "native",
+    "search_config": {
+      "c_puct": 1.5,
+      "determinizations": 1,
+      "dirichlet_alpha": 0.3,
+      "fold_forced_phases": true,
+      "forced_playouts": 0.0,
+      "max_simulation_transitions": 512,
+      "policy_target_pruning": false,
+      "root_noise_fraction": 0.0,
+      "seed": 47330000,
+      "simulations": 128
+    }
+  },
+  "policy_seed_base": 47300000,
+  "workers": 1
+}

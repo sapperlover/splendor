@@ -77,6 +77,7 @@
 | 未完成的 B→C→D 趋势实验 | [套件流程](guides/entity_attention_iteration_suite_zh-CN.md)，B仅完成前两轮，C／D未运行 |
 | 棋力与快速诊断 | [配对评测及网页](guides/evaluation_zh-CN.md)、[固定256真实局面](guides/decision_probe_zh-CN.md) |
 | BGA 实时/离线只读推荐 | [本地权重推荐器](guides/bga_advisor_zh-CN.md)：已有 Chrome 自动识桌／任意轮次接入；双方行动及翻牌后模型估计；greedy／原生MCTS；用户自行执行 |
+| Kirameki 推荐／非排位自动对弈 | [网站盘面接入](guides/kirameki_advisor_zh-CN.md)：固定第9轮；只读／自动对弈入口保留，greedy、128/b1、1024/b1、8192/b8、131072/b64、8192/b1及追加独立世界S1024N1／S256N4八组各20局套件，全程共用一次调试连接，Random／不限时，旁路记录网站胜率及完整安全过程，支持恢复并生成曲线报告 |
 | 配置与运行工具 | [configs](../configs/README.md)、[scripts](../scripts/README.md) |
 
 ## 最近的实验结论与证据

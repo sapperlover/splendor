@@ -1,0 +1,248 @@
+{
+  "branches": [
+    {
+      "first": {
+        "__type__": "ReserveMarket",
+        "card_id": "046"
+      },
+      "label": "actual046",
+      "main_actions": [
+        {
+          "action": {
+            "__type__": "ReserveMarket",
+            "card_id": "077"
+          },
+          "actor": 0,
+          "turn": 26
+        },
+        {
+          "action": {
+            "__type__": "ReserveMarket",
+            "card_id": "081"
+          },
+          "actor": 1,
+          "turn": 26
+        },
+        {
+          "action": {
+            "__type__": "BuyReserved",
+            "card_id": "077"
+          },
+          "actor": 0,
+          "turn": 27
+        },
+        {
+          "action": {
+            "__type__": "BuyReserved",
+            "card_id": "055"
+          },
+          "actor": 1,
+          "turn": 27
+        }
+      ],
+      "raw": "runtime/web_game_seed100000_20261029/alternative_actual046.json",
+      "terminal": {
+        "__type__": "TerminalResult",
+        "completed_turns": [
+          27,
+          27
+        ],
+        "purchased_card_counts": [
+          11,
+          9
+        ],
+        "reason": "final_round",
+        "scores": [
+          15,
+          13
+        ],
+        "winner_ids": [
+          0
+        ]
+      }
+    },
+    {
+      "first": {
+        "__type__": "ReserveMarket",
+        "card_id": "077"
+      },
+      "label": "block077",
+      "main_actions": [
+        {
+          "action": {
+            "__type__": "BuyMarket",
+            "card_id": "054"
+          },
+          "actor": 0,
+          "turn": 26
+        },
+        {
+          "action": {
+            "__type__": "ReserveMarket",
+            "card_id": "020"
+          },
+          "actor": 1,
+          "turn": 26
+        },
+        {
+          "action": {
+            "__type__": "ReserveMarket",
+            "card_id": "046"
+          },
+          "actor": 0,
+          "turn": 27
+        },
+        {
+          "action": {
+            "__type__": "BuyReserved",
+            "card_id": "055"
+          },
+          "actor": 1,
+          "turn": 27
+        },
+        {
+          "action": {
+            "__type__": "BuyMarket",
+            "card_id": "018"
+          },
+          "actor": 0,
+          "turn": 28
+        },
+        {
+          "action": {
+            "__type__": "BuyMarket",
+            "card_id": "068"
+          },
+          "actor": 1,
+          "turn": 28
+        }
+      ],
+      "raw": "runtime/web_game_seed100000_20261029/alternative_block077.json",
+      "terminal": {
+        "__type__": "TerminalResult",
+        "completed_turns": [
+          28,
+          28
+        ],
+        "purchased_card_counts": [
+          12,
+          10
+        ],
+        "reason": "final_round",
+        "scores": [
+          15,
+          15
+        ],
+        "winner_ids": [
+          1
+        ]
+      }
+    }
+  ],
+  "device": "cpu",
+  "higher_root": {
+    "budget": "S4096N4, total16384",
+    "chosen": {
+      "__type__": "ReserveMarket",
+      "card_id": "081"
+    },
+    "top": [
+      {
+        "action": {
+          "__type__": "ReserveMarket",
+          "card_id": "081"
+        },
+        "prior": 0.49420247995687683,
+        "q": 0.4440234776964222,
+        "visits": 4209
+      },
+      {
+        "action": {
+          "__type__": "ReserveMarket",
+          "card_id": "077"
+        },
+        "prior": 0.1338482452947427,
+        "q": 0.5724605288853702,
+        "visits": 3829
+      },
+      {
+        "action": {
+          "__type__": "ReserveMarket",
+          "card_id": "046"
+        },
+        "prior": 0.0708221278905672,
+        "q": -0.04287126622634642,
+        "visits": 1946
+      },
+      {
+        "action": {
+          "__type__": "TakeDistinct",
+          "colors": [
+            "blue",
+            "green",
+            "red"
+          ]
+        },
+        "prior": 0.011725827172455863,
+        "q": -0.4751219861487054,
+        "visits": 1610
+      },
+      {
+        "action": {
+          "__type__": "BuyReserved",
+          "card_id": "055"
+        },
+        "prior": 0.08122773005850595,
+        "q": -0.5465173693886454,
+        "visits": 436
+      },
+      {
+        "action": {
+          "__type__": "ReserveMarket",
+          "card_id": "049"
+        },
+        "prior": 0.0473013676513828,
+        "q": -0.3683488740124435,
+        "visits": 428
+      },
+      {
+        "action": {
+          "__type__": "ReserveDeck",
+          "tier": 2
+        },
+        "prior": 0.009370294226419012,
+        "q": -0.4612919519517268,
+        "visits": 418
+      },
+      {
+        "action": {
+          "__type__": "TakeDistinct",
+          "colors": [
+            "white",
+            "green",
+            "red"
+          ]
+        },
+        "prior": 0.02444026217924628,
+        "q": -0.5589963597173874,
+        "visits": 390
+      }
+    ]
+  },
+  "scope": "Two finite deterministic continuations, both players use S1024N4 with their own private requests. Actual initial deck; not win rates or optimal-play proof.",
+  "script_sha256": "048fba84fb755934cdfea3905b2916714b093afaf57ff85310b884222a591dc4",
+  "search": {
+    "c_puct": 1.5,
+    "determinizations": 4,
+    "dirichlet_alpha": 0.3,
+    "fold_forced_phases": true,
+    "forced_playouts": 0.0,
+    "max_simulation_transitions": 512,
+    "policy_target_pruning": false,
+    "root_noise_fraction": 0.0,
+    "seed": 0,
+    "simulations": 4096
+  },
+  "seconds": 15.506054604000383,
+  "torch_threads": 1
+}

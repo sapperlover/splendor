@@ -137,6 +137,99 @@ def test_chance_backend_configuration_roundtrips_and_rejects_independent_world_b
         NativeChancePUCTSearchPolicy(ActorCritic(), config=MCTSConfig(simulations=8, determinizations=2))
 
 
+@pytest.mark.parametrize('batch_size', [1, 8, 32])
+def test_single_tree_batch_distinct_hidden_samples_and_exact_backup(batch_size):
+    catalog=load_default_catalog();nc=native.Catalog(catalog)
+    engine=GameEngine.new(42,first_player=0,mode='checked')
+    engine.apply(ReserveDeck(Tier.ONE));request=engine.decision()
+    config=MCTSConfig(simulations=67,determinizations=1,seed=17,max_simulation_transitions=1)
+    job=native.SearchJob(nc,request,config,_request_public_word(request),18,False,0.,True,
+                         leaf_batch_size=batch_size)
+    seen=set();ids=set();root_actor=0  # Native requests are normalized to the actor's seat.
+    while not job.done():
+        pending=job.pending()
+        assert pending and len(pending)<=batch_size
+        for item in pending:
+            if item['world']==-1:
+                job.submit(-1,[0.]*len(request.legal_actions),0.);job.initialize_worlds(request)
+                continue
+            simulation=item['simulation'];assert simulation not in ids;ids.add(simulation)
+            state=job.debug_leaf_state(0,simulation);conserve(state,catalog)
+            seen.add(state['players'][1]['reserved'][0][0])
+            value=(simulation%7-3)/4
+            # A one-transition horizon has exactly one root edge in its path.
+            before=list(job.chance_diagnostics()['root_value_sums'])
+            job.submit(0,(),value,simulation)
+            after=job.chance_diagnostics()['root_value_sums']
+            assert sum(after)-sum(before)==pytest.approx(value if state['actor']==root_actor else -value)
+    result=job.result();diag=job.chance_diagnostics()
+    assert ids==set(range(67)) and len(seen)>8
+    assert sum(result['root_visit_counts'])==diag['root_hidden_samples']==67
+    assert diag['virtual_visits']==diag['pending_simulations']==0
+    assert diag['peak_pending_simulations']==min(batch_size,67)
+
+
+@pytest.mark.parametrize('position', [0,1,2])
+def test_single_tree_multileaf_batch_transport_and_collision_accounting(position):
+    from splendor.search_inference import FixedValueSearchInference
+    request=fixed_requests()[position][1]
+    evaluator=FixedValueSearchInference()
+    policy=NativeChancePUCTSearchPolicy(None,evaluator=evaluator,
+        config=MCTSConfig(simulations=257,determinizations=1,seed=91),leaf_batch_size=16)
+    job=policy.start_job(request)
+    runner=NativeBatchRunner(evaluator,policy.catalog,capacity=7,buckets=(16,32,48,64))
+    while not job.done:assert runner.run([job])>0
+    diag=job.core.chance_diagnostics()
+    assert job.result.simulations==sum(job.result.root_visit_counts)==257
+    assert diag['root_hidden_samples']==257
+    assert diag['pending_simulations']==diag['virtual_visits']==0
+    assert diag['leaf_collisions']>=0
+    assert evaluator.stats.positions+diag['leaf_collisions']<=258
+    assert any(size>1 for size in evaluator.stats.batch_sizes)
+
+
+def test_chance_leaf_batch_validation():
+    with pytest.raises(ValueError,match='positive integer'):
+        NativeChancePUCTSearchPolicy(ActorCritic(),leaf_batch_size=0)
+    catalog=load_default_catalog();request=fixed_requests()[0][1]
+    with pytest.raises(ValueError,match='batching requires'):
+        native.SearchJob(native.Catalog(catalog),request,MCTSConfig(simulations=8,determinizations=1),
+                         123,0,False,0.,leaf_batch_size=8)
+
+
+def test_colliding_leaves_share_one_forward_but_backup_each_sample_once():
+    from splendor.actions import TakeDistinct
+    catalog=load_default_catalog();request=GameEngine.new(42,first_player=0).decision()
+    index=next(i for i,a in enumerate(request.legal_actions) if isinstance(a,TakeDistinct))
+    job=native.SearchJob(native.Catalog(catalog),request,
+        MCTSConfig(simulations=17,determinizations=1,seed=91),123,0,False,0.,True,leaf_batch_size=8)
+    logits=[-1000.]*len(request.legal_actions);logits[index]=1000.
+    job.submit(-1,logits,0.);job.initialize_worlds(request)
+    pending=job.pending();assert len(pending)==1
+    assert job.chance_diagnostics()['leaf_collisions']==7
+    row=pending[0];assert row['simulation']==0
+    assert job.debug_leaf_state(0,0)['actor']==1
+    job.submit(0,[0.]*len(row['encoded']['candidate_features']),-.5,0)
+    diag=job.chance_diagnostics()
+    assert job.stats()['simulations']==8
+    assert diag['root_value_sums'][index]==4.
+    while not job.done():
+        for row in job.pending():
+            job.submit(0,() if row['kind']=='value_only' else [0.]*len(row['encoded']['candidate_features']),
+                       0.,row['simulation'])
+    assert sum(job.result()['root_visit_counts'])==17
+    assert job.chance_diagnostics()['virtual_visits']==0
+
+
+def test_batched_chance_repeated_seed_is_deterministic():
+    from splendor.search_inference import FixedValueSearchInference
+    evaluator=FixedValueSearchInference()
+    policy=NativeChancePUCTSearchPolicy(None,evaluator=evaluator,
+        config=MCTSConfig(simulations=193,determinizations=1,seed=91),leaf_batch_size=16)
+    request=fixed_requests()[1][1]
+    assert asdict(policy.search(request))==asdict(policy.search(request))
+
+
 def run_one_draw(simulations, *, blind_opponent=False, alpha=0.5):
     catalog = load_default_catalog();nc = native.Catalog(catalog)
     engine = GameEngine.new(42, first_player=0, mode="checked")

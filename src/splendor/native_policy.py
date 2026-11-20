@@ -53,6 +53,7 @@ class NativePendingEvaluation:
     world_index: int
     model_version: str
     request: None = None
+    simulation: int = -1
 
 
 _JOB_IDS = count()
@@ -89,6 +90,8 @@ class NativeSearchJob:
         self.public_word = _request_public_word(request) if len(request.legal_actions) > 1 else 0
         widening = policy.chance_widening
         kwargs = {} if widening is None else {"chance_pw_k": widening.k, "chance_pw_alpha": widening.alpha}
+        if policy.stochastic:
+            kwargs["leaf_batch_size"] = policy.leaf_batch_size
         if policy.root_only:
             kwargs["root_only"] = True
         self._core = _extension().SearchJob(
@@ -120,14 +123,15 @@ class NativeSearchJob:
 
     def pending_requests(self) -> tuple[NativePendingEvaluation, ...]:
         if self._pending_dirty:
-            by_world = {} if self._pending is None else {
-                item.world_index: item for item in self._pending.values()
+            by_leaf = {} if self._pending is None else {
+                (item.world_index, item.simulation): item for item in self._pending.values()
             }
             pending = {}
             for item in self._core.pending():
                 world = item["world"]
-                if world in by_world:
-                    evaluation = by_world[world]
+                simulation = item.get("simulation", -1)
+                if (world, simulation) in by_leaf:
+                    evaluation = by_leaf[world, simulation]
                 else:
                     cls = EncodedState if item["kind"] == "value_only" else EncodedDecision
                     encoded = cls(**item["encoded"])
@@ -135,6 +139,7 @@ class NativeSearchJob:
                     self.sequence += 1
                     evaluation = NativePendingEvaluation(
                         request_id, item["kind"], encoded, world, self.policy.model_version,
+                        simulation=simulation,
                     )
                 pending[evaluation.request_id] = evaluation
             self._pending = pending
@@ -148,7 +153,8 @@ class NativeSearchJob:
         if prior_is_normalized:
             raise ValueError("native search expects raw logits")
         world = self._pending[request_id].world_index
-        self._core.submit(world, () if logits is None else logits, value)
+        self._core.submit(world, () if logits is None else logits, value,
+                          self._pending[request_id].simulation)
         if world == -1:
             self._core.initialize_worlds(self.request)
         del self._pending[request_id]
@@ -230,15 +236,17 @@ class NativeSearchJob:
     def failure_context(self, request_id: str | None = None) -> dict[str, Any]:
         world = (-1 if request_id is None or self._pending is None or request_id not in self._pending
                  else self._pending[request_id].world_index)
-        return self._failure_context(world, request_id)
+        simulation=(-1 if request_id is None or self._pending is None or request_id not in self._pending
+                    else self._pending[request_id].simulation)
+        return self._failure_context(world, request_id, simulation)
 
     def failure_context_for_world(self, world: int | None) -> dict[str, Any]:
         """Failure context for a batch row identified by world (no request ids)."""
 
         return self._failure_context(-1 if world is None else world, None)
 
-    def _failure_context(self, world: int, request_id: str | None) -> dict[str, Any]:
-        native = self._core.failure_context(world)
+    def _failure_context(self, world: int, request_id: str | None, simulation: int = -1) -> dict[str, Any]:
+        native = self._core.failure_context(world, simulation)
         protocol = ("sampled-chance-pw-puct-native-v1" if self.policy.chance_widening is not None else
                     "sampled-chance-puct-native-v1" if self.policy.stochastic else "determinized-puct-native-v1")
         return {
@@ -345,6 +353,21 @@ class NativeBatchRunner:
         return entry
 
     # -- scheduling --------------------------------------------------------
+
+    def warmup(self) -> float:
+        """Warm the same layouts and GPU buffers used by subsequent roots."""
+        if self.evaluator.config.mode != 'compiled':
+            return 0.0
+        started=time.perf_counter()
+        if self.evaluator.device.type=='cuda' and self.evaluator.config.native_transport=='reused':
+            for state_only,width in [(False,w) for w in self.buckets]+[(True,1)]:
+                buffer,transfer=self._buffer(0,state_only,width)
+                transfer.warmup(buffer)
+            import torch
+            torch.cuda.synchronize()
+        else:
+            self.evaluator.warmup_native(self.buckets,rows=self.capacity)
+        return time.perf_counter()-started
 
     def run(self, jobs: Sequence[NativeSearchJob], *,
             context: Mapping[NativeSearchJob, Any] | None = None) -> int:
@@ -591,9 +614,13 @@ class NativeChancePUCTSearchPolicy(NativePUCTSearchPolicy):
     stochastic = True
 
     def __init__(self, model, *, config: MCTSConfig | None = None,
-                 chance_widening: ChanceWideningConfig | None = None, **kwargs) -> None:
+                 chance_widening: ChanceWideningConfig | None = None,
+                 leaf_batch_size: int = 1, **kwargs) -> None:
         config = config or MCTSConfig(determinizations=1)
         if config.determinizations != 1:
             raise ValueError("sampled chance search requires determinizations=1 for shared statistics")
         self.chance_widening = chance_widening
+        if type(leaf_batch_size) is not int or leaf_batch_size < 1:
+            raise ValueError("leaf_batch_size must be a positive integer")
+        self.leaf_batch_size = leaf_batch_size
         super().__init__(model, config=config, **kwargs)

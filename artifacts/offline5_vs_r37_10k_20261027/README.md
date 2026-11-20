@@ -1,5 +1,7 @@
 # 五个离线best对raw R37：greedy与双方S128N1各10k pair
 
+2026-11-01归档位置更新：已完成十组10k pair的原始`panels/*.json`及相邻`.json.games/`已外置，紧凑summary、results、模型身份和配置保持。下述依赖原始面板的`status`、重建汇总或评测恢复命令需先恢复对应原始JSON及全部sidecar；原始文件暂不可读不代表实验未完成。 [本批范围与恢复](../repository_archive_20261101/README.md)。
+
 2026-10-27十组正式评测全部完成：5组greedy及5组双方S128N1各10000 pair，共100000 pair／200000局。五个模型均使用原R21–R37的104k池及原完整留出主KL＋终局MSE最低的完整checkpoint，没有重选点或拼接policy／value。完整区间见[results.md](results.md)，跨训练组汇总见[近期实验完成结果](../../docs/reports/auxiliary_offline_results_20261027_zh-CN.md)。
 
 | 原104k模型 | Greedy，10000 pair | 双方S128N1，10000 pair |

@@ -64,6 +64,17 @@ def test_compiled_forward_matches_eager_with_bucket_padding():
     assert stats["eager_fallbacks"] == 0
 
 
+def test_root_request_warmup_avoids_new_graphs_on_real_inputs():
+    evaluator=_evaluator(_model(),mode='compiled',candidate_buckets=(16,32,48),
+                         batch_buckets=(1,16),compile_failure_policy='fail_fast')
+    assert evaluator.warmup_requests((16,32,48))>=0
+    before=evaluator.compiled.stats.to_dict()['dynamo_delta']['unique_graphs']
+    for item in _requests():
+        evaluator.policy_value_encoded((item,))
+    assert evaluator.compiled.stats.to_dict()['dynamo_delta']['unique_graphs']==before
+    assert evaluator.compiled.stats.to_dict()['compile_failures']==[]
+
+
 def test_widths_beyond_the_last_bucket_fall_back_to_eager():
     encoded = _requests()
     model = _model()

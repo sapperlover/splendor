@@ -1,5 +1,7 @@
 # Attention128：104k池 policy＋得分归属辅助离线训练
 
+2026-11-01归档位置更新：192个普通checkpoint和主`training_metrics.jsonl`已外置；initial/final、全部完整留出节点与140221最优点及原始验证曲线保留。 [本批范围与恢复](../repository_archive_20261101/README.md)。
+
 2026-10-27完成状态核对：训练、完整留出选点及原两组对战均已完成；192804步早停，选中140221步。原raw R37 greedy1000 pair得分53.475%，双方S1024N1（总1024）500 pair为56.800%，见[原结果](results.md)。同一候选的新版10000 pair greedy／S128N1结果见[大面板](../offline5_vs_r37_10k_20261027/README.md)。下方按日期保留首次准备、停训和恢复过程，不再代表当前进度。
 
 2026-10-26，按用户要求准备独立脚本；正式训练和对战均未启动，不接入此前串行队列。复用已验证的训练→选点→greedy→搜索监督入口，每阶段失败或中断即停止，同一命令恢复。配置只比上次仅policy组的实际18GiB／4 worker配置增加`score_ownership_weight=0.25`，不继承任何训练checkpoint。

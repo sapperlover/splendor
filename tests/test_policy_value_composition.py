@@ -56,3 +56,39 @@ def test_frozen_branch_routing_and_compiled_tensor_core(tmp_path, initial_state,
     torch.save(payload, path)
     with pytest.raises(ValueError, match='rules version mismatch'):
         load_frozen_actor_critic_checkpoint(path)
+
+
+def test_configured_continuation_branches_route_exactly(tmp_path, initial_state, catalog):
+    from splendor.continuation_auxiliary import EntityAttentionContinuation, EntityAttentionContinuationConfig
+    from splendor.entity_attention import EntityAttentionConfig, EntityAttentionPolicyValueConfig
+    torch.set_num_threads(1)
+    request = DecisionRequest(build_observation(initial_state, 0, catalog), legal_actions(initial_state, catalog))
+    batch = tensorize_batch(collate_encoded_decisions([encode_decision(request)]))
+    shape = {'market_relations': True, 'value_readout': 'global_players_market'}
+    torch.manual_seed(31)
+    policy = EntityAttentionContinuation(EntityAttentionContinuationConfig(**shape, predict_opponent_policy=True)).eval()
+    torch.manual_seed(37)
+    value = EntityAttention(EntityAttentionConfig(**shape)).eval()
+    model = EntityAttentionPolicyValue(EntityAttentionPolicyValueConfig(
+        policy_branch=asdict(policy.config), value_branch=asdict(value.config))).eval()
+    model.policy_model.load_state_dict(policy.state_dict(), strict=True)
+    model.value_model.load_state_dict(value.state_dict(), strict=True)
+    path = tmp_path / 'configured.pt'
+    torch.save({'checkpoint_schema': 'splendor-frozen-actor-critic-v1',
+        'format_version': MODEL_WEIGHTS_FORMAT_VERSION, 'feature_schema_version': FEATURE_SCHEMA_VERSION,
+        'config': asdict(model.config), 'state_dict': model.state_dict(),
+        'metadata': {'rules_version': RULESET_ID}}, path)
+    model = load_frozen_actor_critic_checkpoint(path)
+    assert isinstance(model.policy_model, EntityAttentionContinuation)
+    assert type(model.value_model) is EntityAttention
+    core = CompiledForward(model, projection=None, buckets=(64,), compile_mode=None)
+    tensor_names = tuple(k for k in batch.__dataclass_fields__ if k != 'feature_schema_version')
+    with torch.inference_mode():
+        expected_policy, expected_value = policy(batch)[0], value(batch)[1]
+        torch.testing.assert_close(model(batch)[0], expected_policy, rtol=0, atol=0)
+        torch.testing.assert_close(model(batch)[1], expected_value, rtol=0, atol=0)
+        actual = core._policy_value_impl(64, *[getattr(batch, k) for k in tensor_names])
+        torch.testing.assert_close(actual[0], expected_policy, rtol=0, atol=0)
+        torch.testing.assert_close(actual[1], expected_value, rtol=0, atol=0)
+    with pytest.raises(ValueError, match='composition branches'):
+        EntityAttentionPolicyValueConfig(policy_branch={'architecture': 'entity_set_mlp_v1'})

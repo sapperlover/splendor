@@ -1,0 +1,115 @@
+{
+  "catalog_fingerprint": "084574b026e41ad6e5c64dfe36d74fb84a7604f6a0b0eb0ab59227c32a7ff17b",
+  "experiment": "graft_policy_value_l0_l12_20261104",
+  "opponent": {
+    "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r31_10k_p60k_iteration_20261023/rounds/round-005/checkpoints/final.pt",
+    "sha256": "611f4f4ed18f397b03c79bb3a2beae51e7a77a747883680d9189eed3052a1045"
+  },
+  "order": "L12, C1(policy L12 + value L0), C2(policy L0 + value L12); strictly serial",
+  "pairs_per_panel": 2000,
+  "panels": [
+    {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-011/checkpoints/final.pt",
+      "config": {
+        "path": "artifacts/graft_policy_value_l0_l12_20261104/configs/01_search_L12_vs_R37.json",
+        "sha256": "654a70adaf1cd8b87a23f44fe8ce07c6e8f8c5193de552a933e3f9cd7619f5a5"
+      },
+      "id": "01_search_L12_vs_R37",
+      "model": "L12",
+      "output": "artifacts/graft_policy_value_l0_l12_20261104/panels/01_search_L12_vs_R37.json",
+      "pairs": 2000,
+      "policy": "L12",
+      "sha256": "2a6304e3470cab3dad78ec0a2789ee892892e741f3731cafc2197cde9bd2d45d",
+      "sources": {
+        "full": {
+          "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-011/checkpoints/final.pt",
+          "sha256": "2a6304e3470cab3dad78ec0a2789ee892892e741f3731cafc2197cde9bd2d45d"
+        }
+      },
+      "value": "L12"
+    },
+    {
+      "checkpoint": "/home/lc/下载/splendor/runs/graft_policy_value_l0_l12_20261104/compositions/C1_policyL12_valueL0.pt",
+      "config": {
+        "path": "artifacts/graft_policy_value_l0_l12_20261104/configs/02_search_C1_policyL12_valueL0_vs_R37.json",
+        "sha256": "a0d7f84e6c97ec4ec90b9a73e28d7e51f61273b0df7f8c2dbcc855c1d86492fb"
+      },
+      "id": "02_search_C1_policyL12_valueL0_vs_R37",
+      "model": "C1_policyL12_valueL0",
+      "output": "artifacts/graft_policy_value_l0_l12_20261104/panels/02_search_C1_policyL12_valueL0_vs_R37.json",
+      "pairs": 2000,
+      "policy": "L12",
+      "sha256": "cc84493f191b7b62b22f61b17139796ee4c25dafbb6e3ea7072ef528c0d28f7f",
+      "sources": {
+        "policy": {
+          "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-011/checkpoints/final.pt",
+          "sha256": "2a6304e3470cab3dad78ec0a2789ee892892e741f3731cafc2197cde9bd2d45d"
+        },
+        "value": {
+          "path": "runs/entity_attention_128x2_opponent_policy_r21_r37_20261024/checkpoints/step-000140221.pt",
+          "sha256": "e4edeb20e8caa3c1abec0146d3757594dd6e0428bd833badd0cb3915c2299a9f"
+        }
+      },
+      "value": "L0"
+    },
+    {
+      "checkpoint": "/home/lc/下载/splendor/runs/graft_policy_value_l0_l12_20261104/compositions/C2_policyL0_valueL12.pt",
+      "config": {
+        "path": "artifacts/graft_policy_value_l0_l12_20261104/configs/03_search_C2_policyL0_valueL12_vs_R37.json",
+        "sha256": "894da4da1c0aa992153adddf8cc372449165dac577c389016f58e84c4b643f46"
+      },
+      "id": "03_search_C2_policyL0_valueL12_vs_R37",
+      "model": "C2_policyL0_valueL12",
+      "output": "artifacts/graft_policy_value_l0_l12_20261104/panels/03_search_C2_policyL0_valueL12_vs_R37.json",
+      "pairs": 2000,
+      "policy": "L0",
+      "sha256": "2b62ee41dbccadc36763bba1fd41c45b06641a0cd4e974208c0a100d7b79983e",
+      "sources": {
+        "policy": {
+          "path": "runs/entity_attention_128x2_opponent_policy_r21_r37_20261024/checkpoints/step-000140221.pt",
+          "sha256": "e4edeb20e8caa3c1abec0146d3757594dd6e0428bd833badd0cb3915c2299a9f"
+        },
+        "value": {
+          "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-011/checkpoints/final.pt",
+          "sha256": "2a6304e3470cab3dad78ec0a2789ee892892e741f3731cafc2197cde9bd2d45d"
+        }
+      },
+      "value": "L12"
+    }
+  ],
+  "reference_L0": {
+    "ci95": {
+      "confidence": 0.95,
+      "estimate": 0.570975,
+      "lower": 0.5641993750000001,
+      "pair_count": 10000,
+      "resamples": 10000,
+      "seed": 47340000,
+      "upper": 0.577825625
+    },
+    "config": {
+      "path": "artifacts/offline5_vs_r37_10k_20261027/configs/08_search_policy_vs_R37.json",
+      "sha256": "784629cf4541be724954664a6502a84bccedeb27695050880c8d9edd78af1692"
+    },
+    "pairs": 10000,
+    "panel": "08_search_policy_vs_R37",
+    "score": 0.570975,
+    "summary": {
+      "path": "artifacts/offline5_vs_r37_10k_20261027/summary.json",
+      "sha256": "35cf87bf3a3b6408ca0bbf720b30c8e72a27126d16a1f63cff838ad6c53b2ad3"
+    }
+  },
+  "runner": {
+    "path": "artifacts/graft_policy_value_l0_l12_20261104/run.py",
+    "sha256": "ec6f2516440ca7062a50769bc9970c36a23fb310b568dbf5eb90b41aefa6010b"
+  },
+  "scope": "Inference-only decomposition of the L0->L12 S128N1 gain into policy and value branches. No training. L0 is the existing 10k reference; differences against it are unpaired normal approximations.",
+  "seeds": {
+    "bootstrap_seed": 47340000,
+    "difference_bootstrap_seed": 47340001,
+    "game_seed_end": 47271999,
+    "game_seed_start": 47270000,
+    "policy_seed_base": 47300000,
+    "search_seed": 47330000
+  }
+}

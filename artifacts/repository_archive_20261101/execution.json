@@ -1,0 +1,11 @@
+{
+  "authorization": "用户2026-11-01明确同意按前一轮14.63GiB候选清单，沿用历史格式归档并流式压缩至/media/lc/T7/splendor，完善文档。",
+  "commands": [
+    "bash scripts/run_policy140221_r31_r37_p60k_iteration_20261025.sh --check",
+    "conda run --no-capture-output -n splendor env PYTHONPATH=src python -u artifacts/repository_archive_20261101/run.py plan",
+    "conda run --no-capture-output -n splendor env PYTHONPATH=src python -u artifacts/repository_archive_20261101/run.py finish"
+  ],
+  "target": "/media/lc/T7/splendor/archive-20261101.tar.zst",
+  "format": "GNU tar POSIX PAX preserving nanosecond mtime; zstd -T2 -3; full decompression verification before release; original paths replaced atomically by relative recovery links",
+  "excluded": "No cache cleanup, no old shared104k pool migration, no recent website games migration, no gitignore edits, no commits/push, no training/evaluation launched."
+}

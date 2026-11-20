@@ -1,0 +1,49 @@
+{
+  "batch_capacity": 64,
+  "batch_roots": 4,
+  "candidate_buckets": [
+    16,
+    32,
+    48,
+    64
+  ],
+  "checkpoint": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-008/checkpoints/final.pt",
+  "checkpoint_sha256": "852cb0420e94d77c146bc2330600f48d52f638e4cca96a5c1578e9dfe54940ec",
+  "command": [
+    "artifacts/bga_939469760_20261029/analyze_n16.py"
+  ],
+  "comparison": "Same checkpoint, safe requests, source, seed and per-world budget as S1024N4; 4x total budget. Not an equal-compute comparison.",
+  "device": "cpu",
+  "git_head": "babced69dcc237561bfeea6402d081165a472c8c",
+  "input_sha256": {
+    "artifacts/bga_939469760_20261029/analyze_n16.py": "9e6d761cbe9f4ab0b8a853597b202c019ac7dac99d04b377af10d90bd233a7b7",
+    "artifacts/bga_939469760_20261029/plan.json": "82c3cafb4dcc47cc8306003f2f789b89223f622806a7cb3489c017dbd5478f4c",
+    "runtime/bga_939469760_20261029/greedy.json": "b0a2e6418259723de7448a7293f25c0d3d982357fe24f75ccd65bc66f43c7486",
+    "runtime/bga_939469760_20261029/model_decisions.jsonl": "787ca38b29ce8fed385ebc21259c952b363096ade65b1372b1583c8e97d39194",
+    "runtime/bga_939469760_20261029/search.json": "deb7927b8e2a620b135ef6f7ef1db0465c60ec39eadb2f30757670e13baba4b1"
+  },
+  "label": "S1024N16: 1024 per world x 16; total 16384",
+  "pipeline_slots": 1,
+  "precision": "float32",
+  "python": "3.12.14 (main, Sep  2 2026, 23:27:36) [GCC 15.3.0]",
+  "root_noise": false,
+  "search": {
+    "c_puct": 1.5,
+    "determinizations": 16,
+    "dirichlet_alpha": 0.3,
+    "fold_forced_phases": true,
+    "forced_playouts": 0.0,
+    "max_simulation_transitions": 512,
+    "policy_target_pruning": false,
+    "root_noise_fraction": 0.0,
+    "seed": 0,
+    "simulations": 16384
+  },
+  "seed": 0,
+  "source_identity_reference": "artifacts/bga_939469760_20261029/plan.json",
+  "source_snapshot": "runtime/bga_939469760_20261029/source",
+  "table": 939469760,
+  "temperature": 0,
+  "torch": "2.14.0+cu130",
+  "torch_threads": 1
+}

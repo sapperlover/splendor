@@ -613,6 +613,21 @@ class NativePackedTransfer:
         self.evaluator.stats.native_graph_replays += 1
         return True
 
+    def warmup(self, buffer) -> None:
+        """Capture the actual persistent buffers before interactive decisions."""
+        self.float_dev.zero_()
+        self.mask_dev.fill_(True)
+        with torch.inference_mode():
+            for rows in self.evaluator.config.batch_buckets or (self.capacity,):
+                if rows > self.capacity:
+                    continue
+                prepared=self._prepared(self._layout_for(buffer),rows)
+                if not self._direct_graph(prepared,rows):
+                    if self.state_only:
+                        self.evaluator._forward_value(prepared)
+                    else:
+                        self.evaluator._forward(prepared)
+
     def _layout_for(self, buffer) -> Mapping[str, object]:
         layout = self._layout
         if layout is None:
@@ -835,6 +850,22 @@ class FrozenSearchInference:
             pending_card=zeros(29), pending_card_mask=masks(),
             candidate_features=zeros(width, 82), candidate_mask=masks(width),
         )
+
+    def warmup_requests(self, widths: Sequence[int]) -> float:
+        """Warm contiguous B1 root inputs used by the read-only advisor."""
+        if self.compiled is None:
+            return 0.0
+        started=time.perf_counter()
+        for width in widths:
+            # Exact-width inputs are normal tensors; padding inside forward
+            # creates inference tensors for candidates/masks. Warm both guards.
+            for candidates in (width,max(1,width-1)):
+                batch=self._synthetic_decisions(1,candidates,self.device)
+                with torch.inference_mode():
+                    self._forward(batch)
+        if self.device.type=='cuda':
+            torch.cuda.synchronize()
+        return time.perf_counter()-started
 
     def warmup_native(self, widths: Sequence[int], *, rows: int = 2) -> float:
         """Compile the configured policy buckets and the value-only graph.

@@ -47,6 +47,8 @@ def test_greedy_recommends_without_mutating_request_or_game(catalog):
     assert result['recommended_candidate_index'] == count-1
     assert len(result['candidates']) == 2
     assert result['value_actor_raw'] == .25
+    assert result['estimated_win_rate_actor'] == .625
+    assert result['win_rate_basis'] == 'value_actor_raw'
     assert result['submitted_action'] is False
     assert engine.current_state_digest == before
     assert result['decision_sha256'] == decision_identity(request)

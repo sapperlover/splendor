@@ -40,6 +40,8 @@ class MCTSConfig:
     dirichlet_alpha: float = 0.3
     forced_playouts: float = 0.0
     policy_target_pruning: bool = False
+    # None keeps unvisited edges at Q=0; a value r scores them at parent Q - r.
+    fpu_reduction: float | None = None
 
     def __post_init__(self) -> None:
         for name in ("simulations", "determinizations", "max_simulation_transitions"):
@@ -63,6 +65,11 @@ class MCTSConfig:
             raise ValueError("forced_playouts must be nonnegative and policy_target_pruning must be bool")
         if self.policy_target_pruning and self.forced_playouts == 0:
             raise ValueError("policy_target_pruning requires forced_playouts > 0")
+        if self.fpu_reduction is not None and (
+            isinstance(self.fpu_reduction, bool) or not isinstance(self.fpu_reduction, (int, float))
+            or not math.isfinite(self.fpu_reduction) or self.fpu_reduction < 0
+        ):
+            raise ValueError("fpu_reduction must be None or finite and nonnegative")
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +137,7 @@ class _Node:
     request: DecisionRequest
     prior: tuple[float, ...]
     edges: list[_Edge] = field(default_factory=list)
+    value: float = 0.0  # network value from this node's actor, used only by FPU
     state_version: int = field(init=False)
 
     def __post_init__(self) -> None:
@@ -223,13 +231,17 @@ class PUCTSearchPolicy:
     def _select(self, node: _Node, root_player: int, *, is_root: bool = False) -> int:
         total = sum(edge.visits for edge in node.edges)
         sign = 1 if node.engine.current_player == root_player else -1
+        unvisited_q = 0.0
+        if self.config.fpu_reduction is not None:
+            backed = sum(edge.value_sum for edge in node.edges)
+            unvisited_q = (node.value + sign * backed) / (1 + total) - self.config.fpu_reduction
         def score(index: int) -> tuple[float, float, int]:
             edge = node.edges[index]
-            q = edge.value_sum / edge.visits if edge.visits else 0.0
+            q = sign * edge.value_sum / edge.visits if edge.visits else unvisited_q
             u = self.config.c_puct * node.prior[index] * math.sqrt(1 + total) / (1 + edge.visits)
             forced = (is_root and edge.visits > 0 and edge.visits <
                       math.sqrt(self.config.forced_playouts * node.prior[index] * total))
-            return (math.inf if forced else sign * q + u, node.prior[index], -index)
+            return (math.inf if forced else q + u, node.prior[index], -index)
         index = max(range(len(node.edges)), key=score)
         if score(index)[0] == math.inf:
             node.edges[index].forced_playouts += 1
@@ -398,7 +410,7 @@ class MCTSSearchJob:
         self.policy.last_search_result = result
         self._worlds.clear()
 
-    def _start_worlds(self, network_prior: tuple[float, ...]) -> None:
+    def _start_worlds(self, network_prior: tuple[float, ...], root_value: float) -> None:
         self.network_prior = network_prior
         used = network_prior
         size = len(network_prior)
@@ -422,7 +434,7 @@ class MCTSSearchJob:
             seed = _seed_from_public_word(self.public_word, self.policy.config.seed, j)
             engine = determinize_request(self.request, seed=seed, catalog=self.policy.catalog,
                                          engine_mode=self.policy.engine_mode)
-            self._worlds.append(_WorldJob(_Node(engine, self.request, used), budget))
+            self._worlds.append(_WorldJob(_Node(engine, self.request, used, value=root_value), budget))
             self.policy.stats.determinizations += 1
         for j in range(n):
             self._advance_world(j)
@@ -530,12 +542,12 @@ class MCTSSearchJob:
         # _advance_world failures must instead describe the newly advancing branch.
         del self._pending[request_id]
         if leaf is None:
-            self._start_worlds(prior)
+            self._start_worlds(prior, critic)
             return
         root_player = self._worlds[leaf.world_index].root.engine.current_player
         edge = leaf.path[-1]
         if not leaf.cap:
-            edge.child = _Node(leaf.engine, leaf.request, prior)
+            edge.child = _Node(leaf.engine, leaf.request, prior, value=critic)
             self.policy.stats.expanded_nodes += 1
         value_for_root = critic if leaf.engine.current_player == root_player else -critic
         self._backup(leaf.world_index, leaf.path, leaf.depth, value_for_root)

@@ -58,7 +58,8 @@ class LocalAdvisor:
 
     def __init__(self, checkpoint: Path, *, device: str = 'cpu', mode: str = 'greedy',
                  simulations: int = DEFAULT_SIMULATIONS, determinizations: int = 1, seed: int = 0,
-                 catalog: Catalog | None = None):
+                 catalog: Catalog | None = None,
+                 inference_config: InferenceConfig | None = None):
         if mode not in ('greedy', 'mcts'):
             raise ValueError('mode must be greedy or mcts')
         self.checkpoint = checkpoint.resolve(strict=True)
@@ -67,7 +68,7 @@ class LocalAdvisor:
         self.mode = mode
         self.model = load_frozen_actor_critic_checkpoint(self.checkpoint, device=device)
         self.evaluator = FrozenSearchInference(self.model, device=device,
-                                              config=InferenceConfig(mode='eager',actor_projection=False))
+                                              config=inference_config or InferenceConfig())
         self.search_policy = None
         if mode == 'mcts':
             from .native_policy import NativePUCTSearchPolicy
@@ -95,7 +96,13 @@ class LocalAdvisor:
             chosen = ranking[0]
         else:
             chosen = result.chosen_candidate_index
-            ranking = sorted(range(len(logits)), key=lambda i:(-result.root_visit_counts[i],-result.root_network_prior[i],i))
+            eligible = set(getattr(result, 'eligible_root_candidates', ()))
+            if eligible:
+                ranking = sorted(range(len(logits)), key=lambda i:(i not in eligible,
+                    -result.world_mean_q[i] if i in eligible else 0.,
+                    -result.root_visit_counts[i],-result.root_network_prior[i],i))
+            else:
+                ranking = sorted(range(len(logits)), key=lambda i:(-result.root_visit_counts[i],-result.root_network_prior[i],i))
             assert ranking[0] == chosen
         candidates = []
         for i in ranking[:top_k]:
@@ -107,17 +114,50 @@ class LocalAdvisor:
                 row['visit_share'] = (row['visits']/result.simulations) if result.simulations else None
                 sums = result.per_world_root_value_sums
                 row['search_q_actor'] = (sum(world[i] for world in sums)/row['visits']) if sums and row['visits'] else None
+                if getattr(result, 'eligible_root_candidates', ()):
+                    row['world_mean_q_actor'] = result.world_mean_q[i]
+                    row['eligible_for_q_selection'] = i in eligible
+                    row['per_world_visits'] = tuple(world[i] for world in result.per_world_root_visit_counts)
+                    row['per_world_q_actor'] = tuple(values[i]/visits[i] if visits[i] else None
+                        for values,visits in zip(sums,result.per_world_root_visit_counts))
             candidates.append(row)
         assert identity == decision_identity(request)
-        return {'schema':'splendor-read-only-recommendation-v1','decision_sha256':identity,
+        win_rate_basis = 'value_actor_raw'
+        win_rate_value = float(value)
+        for field in ('world_mean_q_actor', 'search_q_actor'):
+            if candidates[0].get(field) is not None:
+                win_rate_basis = field
+                win_rate_value = candidates[0][field]
+                break
+        payload = {'schema':'splendor-read-only-recommendation-v1','decision_sha256':identity,
                 'phase':request.observation.phase.value,'mode':self.mode,
                 'checkpoint':str(self.checkpoint),'checkpoint_sha256':self.checkpoint_sha256,
                 'catalog_fingerprint':self.catalog.data_fingerprint,
                 'recommended_candidate_index':chosen,'recommended_action':to_primitive(request.legal_actions[chosen]),
                 'description':describe_action(request.legal_actions[chosen],self.catalog),
                 'value_actor_raw':float(value),'candidate_count':len(request.legal_actions),
+                'estimated_win_rate_actor':max(0.,min(1.,(win_rate_value+1.)/2.)),
+                'win_rate_basis':win_rate_basis,
                 'candidates':candidates,'simulations':0 if result is None else result.simulations,
                 'elapsed_seconds':time.perf_counter()-started,'submitted_action':False}
+        if result is not None and getattr(result, 'eligible_root_candidates', ()):
+            visit_choice=max(range(len(logits)),key=lambda i:(result.root_visit_counts[i],result.root_network_prior[i],-i))
+            payload.update(selection_rule='world_mean_q',
+                root_q_selection={'minimum_visits_per_world':result.root_q_min_visits,
+                    'coverage_candidates':result.coverage_candidates,
+                    'eligible_candidates':result.eligible_root_candidates,
+                    'visit_candidate_index':visit_choice,'changed_from_visit_choice':chosen!=visit_choice,
+                    'world_mean_q':result.world_mean_q,
+                    'precoverage_root_visit_counts':result.precoverage_root_visit_counts},
+                per_world_root_visit_counts=result.per_world_root_visit_counts,
+                per_world_root_value_sums=result.per_world_root_value_sums)
+        diagnostics=getattr(self.search_policy,'last_search_diagnostics',None)
+        if result is not None and diagnostics is not None:
+            payload.update(search_backend=diagnostics['search_backend'],selection_rule='visits',
+                search_diagnostics=diagnostics,
+                per_world_root_visit_counts=result.per_world_root_visit_counts,
+                per_world_root_value_sums=result.per_world_root_value_sums)
+        return payload
 
 
 def read_decision(path: Path, *, decision_index: int | None = None) -> DecisionRequest:

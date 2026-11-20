@@ -1,0 +1,164 @@
+{
+  "completed_pairs": 6000,
+  "decomposition": [
+    {
+      "estimate": 0.07452499999999995,
+      "lower": 0.0581070957940538,
+      "method": "candidate whole-pair bootstrap + 10k L0 CI, normal combination",
+      "name": "total: L12 - L0",
+      "upper": 0.09094290420594611
+    },
+    {
+      "estimate": 0.054524999999999935,
+      "lower": 0.03810709579405378,
+      "method": "candidate whole-pair bootstrap + 10k L0 CI, normal combination",
+      "name": "policy: C1 - L0",
+      "upper": 0.0709429042059461
+    },
+    {
+      "estimate": 0.04589999999999994,
+      "lower": 0.029765896452990437,
+      "method": "candidate whole-pair bootstrap + 10k L0 CI, normal combination",
+      "name": "value: C2 - L0",
+      "upper": 0.062034103547009445
+    },
+    {
+      "estimate": -0.025900000000000034,
+      "lower": -0.05078820159263474,
+      "method": "candidate whole-pair bootstrap + 10k L0 CI, normal combination",
+      "name": "interaction: L12 - C1 - C2 + L0",
+      "upper": -0.0010117984073653268
+    },
+    {
+      "estimate": 0.02,
+      "lower": -0.000125,
+      "method": "paired whole-pair bootstrap, shared seeds",
+      "name": "value given new policy: L12 - C1",
+      "upper": 0.03975
+    },
+    {
+      "estimate": 0.028625,
+      "lower": 0.009,
+      "method": "paired whole-pair bootstrap, shared seeds",
+      "name": "policy given new value: L12 - C2",
+      "upper": 0.04825
+    },
+    {
+      "estimate": 0.008625,
+      "lower": -0.012,
+      "method": "paired whole-pair bootstrap, shared seeds",
+      "name": "policy graft vs value graft: C1 - C2",
+      "upper": 0.029
+    }
+  ],
+  "panels": [
+    {
+      "a_losses": 1398,
+      "a_wins": 2562,
+      "ci95": {
+        "confidence": 0.95,
+        "estimate": 0.6455,
+        "lower": 0.630875,
+        "pair_count": 2000,
+        "resamples": 10000,
+        "seed": 47340000,
+        "upper": 0.66025
+      },
+      "completed_pairs": 2000,
+      "draws": 40,
+      "engineering_truncations": 0,
+      "exceptions": 0,
+      "id": "01_search_L12_vs_R37",
+      "illegal_actions": 0,
+      "invariant_failures": 0,
+      "model": "L12",
+      "policy_cycle_draws": 0,
+      "result": {
+        "path": "artifacts/graft_policy_value_l0_l12_20261104/panels/01_search_L12_vs_R37.json",
+        "sha256": "c524a46caed77ab5301e2fcbc709754899534c35f3567d57a7f79489fd07db25"
+      },
+      "score": 0.6455,
+      "status": "complete"
+    },
+    {
+      "a_losses": 1474,
+      "a_wins": 2478,
+      "ci95": {
+        "confidence": 0.95,
+        "estimate": 0.6255,
+        "lower": 0.610875,
+        "pair_count": 2000,
+        "resamples": 10000,
+        "seed": 47340000,
+        "upper": 0.64075
+      },
+      "completed_pairs": 2000,
+      "draws": 48,
+      "engineering_truncations": 0,
+      "exceptions": 0,
+      "id": "02_search_C1_policyL12_valueL0_vs_R37",
+      "illegal_actions": 0,
+      "invariant_failures": 0,
+      "model": "C1_policyL12_valueL0",
+      "policy_cycle_draws": 1,
+      "result": {
+        "path": "artifacts/graft_policy_value_l0_l12_20261104/panels/02_search_C1_policyL12_valueL0_vs_R37.json",
+        "sha256": "8d25eefd4ecd3047fed0a9a8aa637819317ed4f23632c7405b2d8a3fe7d13a70"
+      },
+      "score": 0.6255,
+      "status": "complete"
+    },
+    {
+      "a_losses": 1505,
+      "a_wins": 2440,
+      "ci95": {
+        "confidence": 0.95,
+        "estimate": 0.616875,
+        "lower": 0.60175,
+        "pair_count": 2000,
+        "resamples": 10000,
+        "seed": 47340000,
+        "upper": 0.631375
+      },
+      "completed_pairs": 2000,
+      "draws": 55,
+      "engineering_truncations": 0,
+      "exceptions": 0,
+      "id": "03_search_C2_policyL0_valueL12_vs_R37",
+      "illegal_actions": 0,
+      "invariant_failures": 0,
+      "model": "C2_policyL0_valueL12",
+      "policy_cycle_draws": 0,
+      "result": {
+        "path": "artifacts/graft_policy_value_l0_l12_20261104/panels/03_search_C2_policyL0_valueL12_vs_R37.json",
+        "sha256": "662904c1ac83ea4bc68fecf9cbbb71b6f0220e85c21be5e17c75a32aebd87a07"
+      },
+      "score": 0.616875,
+      "status": "complete"
+    }
+  ],
+  "planned_pairs": 6000,
+  "reference_L0": {
+    "ci95": {
+      "confidence": 0.95,
+      "estimate": 0.570975,
+      "lower": 0.5641993750000001,
+      "pair_count": 10000,
+      "resamples": 10000,
+      "seed": 47340000,
+      "upper": 0.577825625
+    },
+    "config": {
+      "path": "artifacts/offline5_vs_r37_10k_20261027/configs/08_search_policy_vs_R37.json",
+      "sha256": "784629cf4541be724954664a6502a84bccedeb27695050880c8d9edd78af1692"
+    },
+    "pairs": 10000,
+    "panel": "08_search_policy_vs_R37",
+    "score": 0.570975,
+    "summary": {
+      "path": "artifacts/offline5_vs_r37_10k_20261027/summary.json",
+      "sha256": "35cf87bf3a3b6408ca0bbf720b30c8e72a27126d16a1f63cff838ad6c53b2ad3"
+    }
+  },
+  "status": "complete"
+}

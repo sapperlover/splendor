@@ -1,0 +1,151 @@
+{
+  "checkpoint": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-008/checkpoints/final.pt",
+  "checkpoint_sha256": "852cb0420e94d77c146bc2330600f48d52f638e4cca96a5c1578e9dfe54940ec",
+  "device": "cpu",
+  "replay": "runtime/web_replays/6c2654de6ed04a1db9b77da7131cf2c3.json",
+  "replay_sha256": "902877efa6178f795eed21b88cf429062efdb9e278f246ed7fb5ff38da2ede78",
+  "rows": [
+    {
+      "actor": 0,
+      "actual": {
+        "__type__": "ReserveMarket",
+        "card_id": "077"
+      },
+      "chosen": {
+        "__type__": "ReserveMarket",
+        "card_id": "077"
+      },
+      "event": 70,
+      "reproduces_actual": true,
+      "top": [
+        {
+          "action": {
+            "__type__": "ReserveMarket",
+            "card_id": "077"
+          },
+          "prior": 0.10559237668405655,
+          "q": 0.8314611172048879,
+          "visits": 1865
+        },
+        {
+          "action": {
+            "__type__": "BuyMarket",
+            "card_id": "054"
+          },
+          "prior": 0.2657722900795589,
+          "q": 0.5048414844663762,
+          "visits": 1382
+        },
+        {
+          "action": {
+            "__type__": "ReserveMarket",
+            "card_id": "081"
+          },
+          "prior": 0.3148617221228586,
+          "q": -0.22446213734780882,
+          "visits": 222
+        },
+        {
+          "action": {
+            "__type__": "BuyMarket",
+            "card_id": "020"
+          },
+          "prior": 0.015904925142035935,
+          "q": -0.7646994353937251,
+          "visits": 98
+        },
+        {
+          "action": {
+            "__type__": "ReserveMarket",
+            "card_id": "068"
+          },
+          "prior": 0.015195588546655401,
+          "q": -0.769338398161581,
+          "visits": 59
+        }
+      ],
+      "turn": 26
+    },
+    {
+      "actor": 0,
+      "actual": {
+        "__type__": "BuyReserved",
+        "card_id": "077"
+      },
+      "chosen": {
+        "__type__": "BuyReserved",
+        "card_id": "077"
+      },
+      "event": 72,
+      "reproduces_actual": true,
+      "top": [
+        {
+          "action": {
+            "__type__": "BuyReserved",
+            "card_id": "077"
+          },
+          "prior": 0.6650479207629392,
+          "q": 0.9973939976250856,
+          "visits": 4084
+        },
+        {
+          "action": {
+            "__type__": "BuyMarket",
+            "card_id": "054"
+          },
+          "prior": 0.08338356434718869,
+          "q": -0.4655275121331215,
+          "visits": 8
+        },
+        {
+          "action": {
+            "__type__": "ReserveMarket",
+            "card_id": "082"
+          },
+          "prior": 0.06256426842881606,
+          "q": -0.6670804768800735,
+          "visits": 4
+        },
+        {
+          "action": {
+            "__type__": "ReserveDeck",
+            "tier": 3
+          },
+          "prior": 0.020151187906468325,
+          "q": 0.0,
+          "visits": 0
+        },
+        {
+          "action": {
+            "__type__": "TakeDistinct",
+            "colors": [
+              "white",
+              "blue",
+              "green"
+            ]
+          },
+          "prior": 0.01555279380966391,
+          "q": 0.0,
+          "visits": 0
+        }
+      ],
+      "turn": 27
+    }
+  ],
+  "script_sha256": "28d9c5f2b3ea0296a068984681aa400cace05afddc51a92b418d0e34e1e264f6",
+  "search": {
+    "c_puct": 1.5,
+    "determinizations": 4,
+    "dirichlet_alpha": 0.3,
+    "fold_forced_phases": true,
+    "forced_playouts": 0.0,
+    "max_simulation_transitions": 512,
+    "policy_target_pruning": false,
+    "root_noise_fraction": 0.0,
+    "seed": 0,
+    "simulations": 4096
+  },
+  "seconds": 1.8115966000004846,
+  "source_plan": "artifacts/web_blind_reservation_20261029/plan.json",
+  "torch_threads": 1
+}

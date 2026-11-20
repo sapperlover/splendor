@@ -1,0 +1,2220 @@
+{
+  "aggregate": {
+    "rates": {
+      "blind_bought_fraction": 0.5867838998167079,
+      "blind_per_game": 2.5012615384615384,
+      "blind_per_main": 0.04535371445085802,
+      "blind_per_reservation": 0.205620017415136,
+      "full_blind_per_main": 0.04848273204833672,
+      "games_with_blind": 0.8426384615384616,
+      "low_blind_per_main": 0.04430385405920741,
+      "main_facing_hidden": 0.24635470308160443,
+      "players_with_blind": 0.6588653846153847
+    },
+    "stats": {
+      "blind_bought": 190801,
+      "blind_unbought": 134363,
+      "counts": {
+        "BuyMarket": 1823528,
+        "BuyReserved": 1023931,
+        "ReserveDeck": 325164,
+        "ReserveMarket": 1256219,
+        "TakeDistinct": 2664873,
+        "TakePair": 75797
+      },
+      "full_blind": 87327,
+      "full_main": 1801198,
+      "full_reservations": 416178,
+      "game_blind_hist": {
+        "0": 20457,
+        "1": 28424,
+        "10": 360,
+        "11": 173,
+        "12": 55,
+        "13": 22,
+        "14": 7,
+        "15": 2,
+        "2": 25866,
+        "3": 20223,
+        "4": 14238,
+        "5": 9127,
+        "6": 5441,
+        "7": 3136,
+        "8": 1644,
+        "9": 825
+      },
+      "games": 130000,
+      "low_blind": 237837,
+      "low_main": 5368314,
+      "low_reservations": 1165205,
+      "main_facing_hidden": 1766243,
+      "player_blind_hist": {
+        "0": 88695,
+        "1": 79503,
+        "2": 50650,
+        "3": 26054,
+        "4": 10631,
+        "5": 3380,
+        "6": 864,
+        "7": 195,
+        "8": 26,
+        "9": 2
+      },
+      "players": 260000,
+      "stages": {
+        "1-10": {
+          "blind": 97095,
+          "main": 2600000,
+          "reservations": 703614
+        },
+        "11-20": {
+          "blind": 119785,
+          "main": 2600000,
+          "reservations": 495714
+        },
+        "21+": {
+          "blind": 108284,
+          "main": 1969512,
+          "reservations": 382055
+        }
+      },
+      "tiers": {
+        "1": 116192,
+        "2": 136133,
+        "3": 72839
+      }
+    }
+  },
+  "current_human_model_source_round": 9,
+  "rows": [
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_128x2_opponent_policy_r21_r37_20261024/checkpoints/step-000140221.pt",
+        "sha256": "e4edeb20e8caa3c1abec0146d3757594dd6e0428bd833badd0cb3915c2299a9f"
+      },
+      "collection_batch": 1,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_128x2_opponent_policy_r21_r37_20261024/checkpoints/step-000140221.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 80,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-000",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 5037688848200231346,
+        "split_seed": 9215989372258153567,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "375b06e0f277884f5f152777c73899e63308c0f6a9d72760c5a0691b57b8bf2d",
+      "metadata_stream_sha256": "8650cb1f7abebad3e2ba2bc1e261d6f6d18f8443182a936a22dc457211898c16",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-000/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5804256372185103,
+        "blind_per_game": 2.4246,
+        "blind_per_main": 0.043995006423423355,
+        "blind_per_reservation": 0.2027511811682067,
+        "full_blind_per_main": 0.04824339374303938,
+        "games_with_blind": 0.8351,
+        "low_blind_per_main": 0.04257200300365768,
+        "main_facing_hidden": 0.227222250448188,
+        "players_with_blind": 0.64385
+      },
+      "semantic_fingerprint": "25722b64719f9bb5044ddd04cf6f7865e95e8ae11527a6634236610e1c449fe6",
+      "source_model_online_round": 0,
+      "stats": {
+        "blind_bought": 14073,
+        "blind_unbought": 10173,
+        "counts": {
+          "BuyMarket": 141594,
+          "BuyReserved": 77464,
+          "ReserveDeck": 24246,
+          "ReserveMarket": 95339,
+          "TakeDistinct": 206252,
+          "TakePair": 6213
+        },
+        "full_blind": 6671,
+        "full_main": 138278,
+        "full_reservations": 31312,
+        "game_blind_hist": {
+          "0": 1649,
+          "1": 2250,
+          "10": 17,
+          "11": 15,
+          "12": 5,
+          "13": 1,
+          "14": 1,
+          "2": 2006,
+          "3": 1514,
+          "4": 1100,
+          "5": 667,
+          "6": 369,
+          "7": 230,
+          "8": 123,
+          "9": 53
+        },
+        "games": 10000,
+        "low_blind": 17575,
+        "low_main": 412830,
+        "low_reservations": 88273,
+        "main_facing_hidden": 125224,
+        "player_blind_hist": {
+          "0": 7123,
+          "1": 6022,
+          "2": 3846,
+          "3": 1905,
+          "4": 799,
+          "5": 225,
+          "6": 64,
+          "7": 16
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 6610,
+            "main": 200000,
+            "reservations": 51089
+          },
+          "11-20": {
+            "blind": 8843,
+            "main": 200000,
+            "reservations": 38141
+          },
+          "21+": {
+            "blind": 8793,
+            "main": 151108,
+            "reservations": 30355
+          }
+        },
+        "tiers": {
+          "1": 8047,
+          "2": 10844,
+          "3": 5355
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-000/checkpoints/final.pt",
+        "sha256": "747d47fc02954966f8365d7a9fd6ab89d4792a0ab7c43c8e59d11291d09fd337"
+      },
+      "collection_batch": 2,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-000/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 81,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-001",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 13094706165545438221,
+        "split_seed": 9995288627478853931,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "24567f7290bd8c59640073f13eb8b61e50548b68cc710119db457e71476b8a9f",
+      "metadata_stream_sha256": "917134b6c9365887b7175922b1904bbf662f4bb8cc4f382efbe532e852c92406",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-001/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5835366105759292,
+        "blind_per_game": 2.4187,
+        "blind_per_main": 0.04385969684276189,
+        "blind_per_reservation": 0.20239320530521734,
+        "full_blind_per_main": 0.04716729695660003,
+        "games_with_blind": 0.8389,
+        "low_blind_per_main": 0.04274691133632869,
+        "main_facing_hidden": 0.2376152162520423,
+        "players_with_blind": 0.64705
+      },
+      "semantic_fingerprint": "8339f4bd50035a98df39720c8f1fd6cc642329c1a49cd666f0735f3ec501d86a",
+      "source_model_online_round": 1,
+      "stats": {
+        "blind_bought": 14114,
+        "blind_unbought": 10073,
+        "counts": {
+          "BuyMarket": 145057,
+          "BuyReserved": 76804,
+          "ReserveDeck": 24187,
+          "ReserveMarket": 95318,
+          "TakeDistinct": 204332,
+          "TakePair": 5765
+        },
+        "full_blind": 6548,
+        "full_main": 138825,
+        "full_reservations": 32270,
+        "game_blind_hist": {
+          "0": 1611,
+          "1": 2305,
+          "10": 27,
+          "11": 11,
+          "12": 2,
+          "13": 1,
+          "14": 2,
+          "2": 2020,
+          "3": 1539,
+          "4": 1041,
+          "5": 643,
+          "6": 418,
+          "7": 213,
+          "8": 112,
+          "9": 55
+        },
+        "games": 10000,
+        "low_blind": 17639,
+        "low_main": 412638,
+        "low_reservations": 87235,
+        "main_facing_hidden": 131036,
+        "player_blind_hist": {
+          "0": 7059,
+          "1": 6121,
+          "2": 3846,
+          "3": 1933,
+          "4": 729,
+          "5": 234,
+          "6": 61,
+          "7": 13,
+          "8": 4
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7106,
+            "main": 200000,
+            "reservations": 52463
+          },
+          "11-20": {
+            "blind": 8850,
+            "main": 200000,
+            "reservations": 38089
+          },
+          "21+": {
+            "blind": 8231,
+            "main": 151463,
+            "reservations": 28953
+          }
+        },
+        "tiers": {
+          "1": 8696,
+          "2": 10142,
+          "3": 5349
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-001/checkpoints/final.pt",
+        "sha256": "208e5383befd982a1777ad771c17526cd11d9173e481af64de652ed080509c60"
+      },
+      "collection_batch": 3,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-001/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 82,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-002",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 12261594258665136395,
+        "split_seed": 8022651665393293662,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "9c86cd3f398284011f4907e45ae94034b84ea380b5126556217a5326002108d0",
+      "metadata_stream_sha256": "29533e9c8215f30d49753d8bd0670ab2ee21c59ed2b8df361dedeea0f24aeea1",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-002/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5848583604913512,
+        "blind_per_game": 2.3934,
+        "blind_per_main": 0.04335131336330408,
+        "blind_per_reservation": 0.19970628973849774,
+        "full_blind_per_main": 0.046189774727841054,
+        "games_with_blind": 0.8369,
+        "low_blind_per_main": 0.04239469739349864,
+        "main_facing_hidden": 0.2337120128094129,
+        "players_with_blind": 0.64595
+      },
+      "semantic_fingerprint": "6ff754412660bcf6b4b0078d443ecf4bf8aa25459be6f1d6994840e93ea6cae7",
+      "source_model_online_round": 2,
+      "stats": {
+        "blind_bought": 13998,
+        "blind_unbought": 9936,
+        "counts": {
+          "BuyMarket": 144862,
+          "BuyReserved": 76624,
+          "ReserveDeck": 23934,
+          "ReserveMarket": 95912,
+          "TakeDistinct": 204836,
+          "TakePair": 5926
+        },
+        "full_blind": 6428,
+        "full_main": 139165,
+        "full_reservations": 31752,
+        "game_blind_hist": {
+          "0": 1631,
+          "1": 2334,
+          "10": 26,
+          "11": 12,
+          "12": 5,
+          "13": 1,
+          "2": 1993,
+          "3": 1560,
+          "4": 1048,
+          "5": 642,
+          "6": 377,
+          "7": 211,
+          "8": 112,
+          "9": 48
+        },
+        "games": 10000,
+        "low_blind": 17506,
+        "low_main": 412929,
+        "low_reservations": 88094,
+        "main_facing_hidden": 129031,
+        "player_blind_hist": {
+          "0": 7081,
+          "1": 6219,
+          "2": 3797,
+          "3": 1866,
+          "4": 744,
+          "5": 228,
+          "6": 50,
+          "7": 13,
+          "8": 2
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 6990,
+            "main": 200000,
+            "reservations": 52250
+          },
+          "11-20": {
+            "blind": 8673,
+            "main": 200000,
+            "reservations": 37975
+          },
+          "21+": {
+            "blind": 8271,
+            "main": 152094,
+            "reservations": 29621
+          }
+        },
+        "tiers": {
+          "1": 8814,
+          "2": 9886,
+          "3": 5234
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-002/checkpoints/final.pt",
+        "sha256": "0928f46e32c45aeb8da9050033c32982aa48fbf58cb536a8679e44b95f9d5bb9"
+      },
+      "collection_batch": 4,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-002/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 83,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-003",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 7375496045743893957,
+        "split_seed": 14820797711054473737,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "b855f98b42c20900eb81523cf90145f5a246a3d6532cc8d252b8ecbac846e241",
+      "metadata_stream_sha256": "535ad125ef4d657637fc6fbc731cf429601b1d9fa175d2c988167a2e59c7a0a7",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-003/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.592738146091414,
+        "blind_per_game": 2.341,
+        "blind_per_main": 0.04245849369379827,
+        "blind_per_reservation": 0.19460492954819403,
+        "full_blind_per_main": 0.04619464794243604,
+        "games_with_blind": 0.8239,
+        "low_blind_per_main": 0.04121115059790642,
+        "main_facing_hidden": 0.22860117309499023,
+        "players_with_blind": 0.6352
+      },
+      "semantic_fingerprint": "d8edf0306651da87c348ddc97cc9173a12a6a79090dfeed1f3615b5a4762b7ed",
+      "source_model_online_round": 3,
+      "stats": {
+        "blind_bought": 13876,
+        "blind_unbought": 9534,
+        "counts": {
+          "BuyMarket": 143107,
+          "BuyReserved": 78256,
+          "ReserveDeck": 23410,
+          "ReserveMarket": 96885,
+          "TakeDistinct": 204192,
+          "TakePair": 5512
+        },
+        "full_blind": 6375,
+        "full_main": 138003,
+        "full_reservations": 31597,
+        "game_blind_hist": {
+          "0": 1761,
+          "1": 2266,
+          "10": 19,
+          "11": 13,
+          "12": 2,
+          "15": 1,
+          "2": 2055,
+          "3": 1544,
+          "4": 977,
+          "5": 641,
+          "6": 339,
+          "7": 227,
+          "8": 101,
+          "9": 54
+        },
+        "games": 10000,
+        "low_blind": 17035,
+        "low_main": 413359,
+        "low_reservations": 88698,
+        "main_facing_hidden": 126042,
+        "player_blind_hist": {
+          "0": 7296,
+          "1": 6210,
+          "2": 3659,
+          "3": 1813,
+          "4": 740,
+          "5": 225,
+          "6": 45,
+          "7": 9,
+          "8": 2,
+          "9": 1
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 6959,
+            "main": 200000,
+            "reservations": 53392
+          },
+          "11-20": {
+            "blind": 8437,
+            "main": 200000,
+            "reservations": 37660
+          },
+          "21+": {
+            "blind": 8014,
+            "main": 151362,
+            "reservations": 29243
+          }
+        },
+        "tiers": {
+          "1": 8814,
+          "2": 9410,
+          "3": 5186
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-003/checkpoints/final.pt",
+        "sha256": "e51ebf4cc0a1ff520b0af8374034e36b5fc5612aad45c1d5000bf5eda410f155"
+      },
+      "collection_batch": 5,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-003/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 84,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-004",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 15091310653534645789,
+        "split_seed": 7558306839479124700,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "1085ceb930ff70e07255c7855ffba8c1a4a9809cf6e6698322d83730fee7f724",
+      "metadata_stream_sha256": "9a3241361a5b75766862c9fd54b1b179541e8642a0100dcfab6de8447f32372f",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-004/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5911210216906547,
+        "blind_per_game": 2.4665,
+        "blind_per_main": 0.04477966914060798,
+        "blind_per_reservation": 0.20408416558412007,
+        "full_blind_per_main": 0.04809934659398578,
+        "games_with_blind": 0.8384,
+        "low_blind_per_main": 0.0436644894652719,
+        "main_facing_hidden": 0.2424075176831128,
+        "players_with_blind": 0.65735
+      },
+      "semantic_fingerprint": "f3f1d73983071c7cf84a9d8eeab7b24a2390bf1a05c1526b786121f060899e56",
+      "source_model_online_round": 4,
+      "stats": {
+        "blind_bought": 14580,
+        "blind_unbought": 10085,
+        "counts": {
+          "BuyMarket": 142159,
+          "BuyReserved": 77877,
+          "ReserveDeck": 24665,
+          "ReserveMarket": 96192,
+          "TakeDistinct": 203982,
+          "TakePair": 5933
+        },
+        "full_blind": 6662,
+        "full_main": 138505,
+        "full_reservations": 31877,
+        "game_blind_hist": {
+          "0": 1616,
+          "1": 2148,
+          "10": 22,
+          "11": 12,
+          "12": 3,
+          "13": 1,
+          "2": 2025,
+          "3": 1569,
+          "4": 1131,
+          "5": 674,
+          "6": 385,
+          "7": 222,
+          "8": 127,
+          "9": 65
+        },
+        "games": 10000,
+        "low_blind": 18003,
+        "low_main": 412303,
+        "low_reservations": 88980,
+        "main_facing_hidden": 133520,
+        "player_blind_hist": {
+          "0": 6853,
+          "1": 6177,
+          "2": 3938,
+          "3": 1909,
+          "4": 823,
+          "5": 223,
+          "6": 63,
+          "7": 12,
+          "8": 2
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7447,
+            "main": 200000,
+            "reservations": 53187
+          },
+          "11-20": {
+            "blind": 9098,
+            "main": 200000,
+            "reservations": 38489
+          },
+          "21+": {
+            "blind": 8120,
+            "main": 150808,
+            "reservations": 29181
+          }
+        },
+        "tiers": {
+          "1": 9029,
+          "2": 10150,
+          "3": 5486
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-004/checkpoints/final.pt",
+        "sha256": "98abd986c57a43f280dae9b7bbcc131c90eb16171f8ed5f053b0378c3cb02a80"
+      },
+      "collection_batch": 6,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-004/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 85,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-005",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 8593398135290384828,
+        "split_seed": 16759109805798374079,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "9d75b234b84588fb63dc0112be9218b8a6beefba0e84ffbcaca1ab294850b562",
+      "metadata_stream_sha256": "df5332b3dfe7db0e7290f7f179495149bae30042e884aeae6b38ca9f536dff70",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-005/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5839197955573029,
+        "blind_per_game": 2.5435,
+        "blind_per_main": 0.04614226366489487,
+        "blind_per_reservation": 0.20813898299536832,
+        "full_blind_per_main": 0.049109205359205356,
+        "games_with_blind": 0.8472,
+        "low_blind_per_main": 0.04514637680457085,
+        "main_facing_hidden": 0.2513161475246267,
+        "players_with_blind": 0.6665
+      },
+      "semantic_fingerprint": "07f27f0895d362f0b9dd325b68eec4eb24ffc433bf39ccddf592fadaa0fbd27f",
+      "source_model_online_round": 5,
+      "stats": {
+        "blind_bought": 14852,
+        "blind_unbought": 10583,
+        "counts": {
+          "BuyMarket": 138587,
+          "BuyReserved": 79288,
+          "ReserveDeck": 25435,
+          "ReserveMarket": 96767,
+          "TakeDistinct": 205515,
+          "TakePair": 5638
+        },
+        "full_blind": 6803,
+        "full_main": 138528,
+        "full_reservations": 32599,
+        "game_blind_hist": {
+          "0": 1528,
+          "1": 2143,
+          "10": 30,
+          "11": 17,
+          "12": 5,
+          "13": 2,
+          "2": 1969,
+          "3": 1584,
+          "4": 1140,
+          "5": 709,
+          "6": 437,
+          "7": 243,
+          "8": 136,
+          "9": 57
+        },
+        "games": 10000,
+        "low_blind": 18632,
+        "low_main": 412702,
+        "low_reservations": 89603,
+        "main_facing_hidden": 138533,
+        "player_blind_hist": {
+          "0": 6670,
+          "1": 6145,
+          "2": 3923,
+          "3": 2058,
+          "4": 851,
+          "5": 268,
+          "6": 70,
+          "7": 14,
+          "8": 1
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7573,
+            "main": 200000,
+            "reservations": 54942
+          },
+          "11-20": {
+            "blind": 9422,
+            "main": 200000,
+            "reservations": 38083
+          },
+          "21+": {
+            "blind": 8440,
+            "main": 151230,
+            "reservations": 29177
+          }
+        },
+        "tiers": {
+          "1": 9144,
+          "2": 10647,
+          "3": 5644
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-005/checkpoints/final.pt",
+        "sha256": "fa8ad45eaca5d653080c155a8d599b9558d5191fd05f3878a60749ccfdb66d1b"
+      },
+      "collection_batch": 7,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-005/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 86,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-006",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 6678822807607149343,
+        "split_seed": 9833530915729178990,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "3598c0de5457745df18590101f3fb03e2800e629e9879724ac40464e9e926726",
+      "metadata_stream_sha256": "ed9819d861e011f2ae95ffd8a131bdf050b323ae1cf62492f03e4610022b6629",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-006/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5984869165074289,
+        "blind_per_game": 2.5643,
+        "blind_per_main": 0.04643317591841465,
+        "blind_per_reservation": 0.21026435763718063,
+        "full_blind_per_main": 0.04963353200198909,
+        "games_with_blind": 0.8518,
+        "low_blind_per_main": 0.04535923907917552,
+        "main_facing_hidden": 0.25175099953644686,
+        "players_with_blind": 0.67025
+      },
+      "semantic_fingerprint": "acfbaf5b640aaeb435bed57aad95c6269c5e63807bf85acca74361f0015a810d",
+      "source_model_online_round": 6,
+      "stats": {
+        "blind_bought": 15347,
+        "blind_unbought": 10296,
+        "counts": {
+          "BuyMarket": 139012,
+          "BuyReserved": 78988,
+          "ReserveDeck": 25643,
+          "ReserveMarket": 96313,
+          "TakeDistinct": 206665,
+          "TakePair": 5635
+        },
+        "full_blind": 6887,
+        "full_main": 138757,
+        "full_reservations": 31893,
+        "game_blind_hist": {
+          "0": 1482,
+          "1": 2147,
+          "10": 35,
+          "11": 13,
+          "12": 4,
+          "13": 2,
+          "2": 1993,
+          "3": 1533,
+          "4": 1167,
+          "5": 751,
+          "6": 432,
+          "7": 256,
+          "8": 128,
+          "9": 57
+        },
+        "games": 10000,
+        "low_blind": 18756,
+        "low_main": 413499,
+        "low_reservations": 90063,
+        "main_facing_hidden": 139031,
+        "player_blind_hist": {
+          "0": 6595,
+          "1": 6096,
+          "2": 3993,
+          "3": 2155,
+          "4": 808,
+          "5": 273,
+          "6": 62,
+          "7": 17,
+          "8": 1
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7746,
+            "main": 200000,
+            "reservations": 53585
+          },
+          "11-20": {
+            "blind": 9552,
+            "main": 200000,
+            "reservations": 38730
+          },
+          "21+": {
+            "blind": 8345,
+            "main": 152256,
+            "reservations": 29641
+          }
+        },
+        "tiers": {
+          "1": 9234,
+          "2": 10896,
+          "3": 5513
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-006/checkpoints/final.pt",
+        "sha256": "cb43dc766156abe5b0ec3a7290d6b5efc1d5064264e22612b720e16bbe7bd95b"
+      },
+      "collection_batch": 8,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-006/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 87,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-007",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 6319139822025065812,
+        "split_seed": 6822370141251861475,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "422973d32aab27ebf74e48f4ce92961de0b870f3ce76f57e64ee7bc9f5ef79fb",
+      "metadata_stream_sha256": "e3cfb90a5a4de1a0d521be1f5c27eba73625b27d874a608279668a786d4212cf",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-007/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.578317412820808,
+        "blind_per_game": 2.6067,
+        "blind_per_main": 0.04729153589091397,
+        "blind_per_reservation": 0.21140604851463468,
+        "full_blind_per_main": 0.0506121446019976,
+        "games_with_blind": 0.8561,
+        "low_blind_per_main": 0.046178590806914194,
+        "main_facing_hidden": 0.2591790971665354,
+        "players_with_blind": 0.67645
+      },
+      "semantic_fingerprint": "5dbf944112ee58deaa4cc23831fb94ff4871faa32c63dbea0f642c9628294221",
+      "source_model_online_round": 7,
+      "stats": {
+        "blind_bought": 15075,
+        "blind_unbought": 10992,
+        "counts": {
+          "BuyMarket": 137487,
+          "BuyReserved": 80361,
+          "ReserveDeck": 26067,
+          "ReserveMarket": 97236,
+          "TakeDistinct": 204190,
+          "TakePair": 5857
+        },
+        "full_blind": 7003,
+        "full_main": 138366,
+        "full_reservations": 32559,
+        "game_blind_hist": {
+          "0": 1439,
+          "1": 2119,
+          "10": 29,
+          "11": 13,
+          "12": 3,
+          "13": 3,
+          "14": 1,
+          "2": 1978,
+          "3": 1613,
+          "4": 1123,
+          "5": 738,
+          "6": 450,
+          "7": 261,
+          "8": 148,
+          "9": 82
+        },
+        "games": 10000,
+        "low_blind": 19064,
+        "low_main": 412832,
+        "low_reservations": 90744,
+        "main_facing_hidden": 142859,
+        "player_blind_hist": {
+          "0": 6471,
+          "1": 6166,
+          "2": 3984,
+          "3": 2108,
+          "4": 883,
+          "5": 272,
+          "6": 97,
+          "7": 17,
+          "8": 2
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7755,
+            "main": 200000,
+            "reservations": 55769
+          },
+          "11-20": {
+            "blind": 9724,
+            "main": 200000,
+            "reservations": 38314
+          },
+          "21+": {
+            "blind": 8588,
+            "main": 151198,
+            "reservations": 29220
+          }
+        },
+        "tiers": {
+          "1": 9175,
+          "2": 10826,
+          "3": 6066
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-007/checkpoints/final.pt",
+        "sha256": "2558277da4ad7527514bfe0a1445dc84bf63bb7ab8e5dd8a49f3c860c6a47fb9"
+      },
+      "collection_batch": 9,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-007/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 88,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-008",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 2097111571097556367,
+        "split_seed": 10314334171165923971,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "927078e5910394cc079e6872b5249c6dd435e217729bbc2a749ad8017f20333b",
+      "metadata_stream_sha256": "aa2e678dc1ccb161341f07266b68acbf32052928d8b9062de97d2586487f7802",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-008/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5862337460094993,
+        "blind_per_game": 2.5686,
+        "blind_per_main": 0.04651963039297008,
+        "blind_per_reservation": 0.20625858206258582,
+        "full_blind_per_main": 0.049324158977385596,
+        "games_with_blind": 0.8503000000000001,
+        "low_blind_per_main": 0.04557664756446991,
+        "main_facing_hidden": 0.259040050420716,
+        "players_with_blind": 0.6718999999999999
+      },
+      "semantic_fingerprint": "bf36721513cda7ef918334bf80fb80ebb84ad9accb33889e36c24eb76845e1f5",
+      "source_model_online_round": 8,
+      "stats": {
+        "blind_bought": 15058,
+        "blind_unbought": 10628,
+        "counts": {
+          "BuyMarket": 134918,
+          "BuyReserved": 81199,
+          "ReserveDeck": 25686,
+          "ReserveMarket": 98847,
+          "TakeDistinct": 205423,
+          "TakePair": 6081
+        },
+        "full_blind": 6853,
+        "full_main": 138938,
+        "full_reservations": 32741,
+        "game_blind_hist": {
+          "0": 1497,
+          "1": 2126,
+          "10": 24,
+          "11": 13,
+          "12": 6,
+          "13": 1,
+          "2": 1969,
+          "3": 1589,
+          "4": 1108,
+          "5": 747,
+          "6": 477,
+          "7": 244,
+          "8": 141,
+          "9": 58
+        },
+        "games": 10000,
+        "low_blind": 18833,
+        "low_main": 413216,
+        "low_reservations": 91792,
+        "main_facing_hidden": 143030,
+        "player_blind_hist": {
+          "0": 6562,
+          "1": 6158,
+          "2": 3965,
+          "3": 2115,
+          "4": 850,
+          "5": 267,
+          "6": 65,
+          "7": 16,
+          "8": 2
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7944,
+            "main": 200000,
+            "reservations": 56685
+          },
+          "11-20": {
+            "blind": 9376,
+            "main": 200000,
+            "reservations": 38482
+          },
+          "21+": {
+            "blind": 8366,
+            "main": 152154,
+            "reservations": 29366
+          }
+        },
+        "tiers": {
+          "1": 9124,
+          "2": 10523,
+          "3": 6039
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-008/checkpoints/final.pt",
+        "sha256": "852cb0420e94d77c146bc2330600f48d52f638e4cca96a5c1578e9dfe54940ec"
+      },
+      "collection_batch": 10,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-008/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 89,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-009",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 17121602621559147122,
+        "split_seed": 1242140266553201084,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "392a946bb639c86d6249b159465670a1f86e3436325b01822183967fd0eeefe7",
+      "metadata_stream_sha256": "0868ea7958d8c9b7a7d797d787d5530c9ea218c89f4ca492d944fb9cb6176c07",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-009/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5841085739599694,
+        "blind_per_game": 2.4831,
+        "blind_per_main": 0.04499673818498116,
+        "blind_per_reservation": 0.20378334017234304,
+        "full_blind_per_main": 0.04765646967217251,
+        "games_with_blind": 0.8371,
+        "low_blind_per_main": 0.04410380041584067,
+        "main_facing_hidden": 0.24917186140910408,
+        "players_with_blind": 0.6556500000000001
+      },
+      "semantic_fingerprint": "ed407b2e5bab33dd2b6c356b97954918c5b714917ff68b52e36159878ac03378",
+      "source_model_online_round": 9,
+      "stats": {
+        "blind_bought": 14504,
+        "blind_unbought": 10327,
+        "counts": {
+          "BuyMarket": 140211,
+          "BuyReserved": 78903,
+          "ReserveDeck": 24831,
+          "ReserveMarket": 97019,
+          "TakeDistinct": 205130,
+          "TakePair": 5746
+        },
+        "full_blind": 6610,
+        "full_main": 138701,
+        "full_reservations": 31704,
+        "game_blind_hist": {
+          "0": 1629,
+          "1": 2127,
+          "10": 19,
+          "11": 12,
+          "12": 4,
+          "13": 2,
+          "14": 2,
+          "15": 1,
+          "2": 2045,
+          "3": 1543,
+          "4": 1050,
+          "5": 724,
+          "6": 419,
+          "7": 232,
+          "8": 131,
+          "9": 60
+        },
+        "games": 10000,
+        "low_blind": 18221,
+        "low_main": 413139,
+        "low_reservations": 90146,
+        "main_facing_hidden": 137503,
+        "player_blind_hist": {
+          "0": 6887,
+          "1": 6113,
+          "2": 3871,
+          "3": 1997,
+          "4": 780,
+          "5": 269,
+          "6": 64,
+          "7": 17,
+          "8": 1,
+          "9": 1
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7573,
+            "main": 200000,
+            "reservations": 54787
+          },
+          "11-20": {
+            "blind": 9098,
+            "main": 200000,
+            "reservations": 37692
+          },
+          "21+": {
+            "blind": 8160,
+            "main": 151840,
+            "reservations": 29371
+          }
+        },
+        "tiers": {
+          "1": 8734,
+          "2": 10399,
+          "3": 5698
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-009/checkpoints/final.pt",
+        "sha256": "0d824b0a52acaf72b1bef6531f0933b5a8222ca2f9ca7993059663d7e56ccc92"
+      },
+      "collection_batch": 11,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-009/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 90,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-010",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 10198353097797813023,
+        "split_seed": 1516632766086089785,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "b3e1cfe065ddf7dde8a090c126a7cff57effe02327a9911f48cf7d14c69f6edd",
+      "metadata_stream_sha256": "ee27d7bfa54df91069186dd3ef84cc9b49ca288ca752651358d5e101b922ac57",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-010/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5854689042448173,
+        "blind_per_game": 2.5325,
+        "blind_per_main": 0.04593154431555198,
+        "blind_per_reservation": 0.20558509558793683,
+        "full_blind_per_main": 0.048104524124567075,
+        "games_with_blind": 0.8419,
+        "low_blind_per_main": 0.04520397713654884,
+        "main_facing_hidden": 0.25155795445477036,
+        "players_with_blind": 0.6588
+      },
+      "semantic_fingerprint": "a5361187da3762c203f8709ea0d733f2e7fb917b5484c96fb76b0b6a5e516f26",
+      "source_model_online_round": 10,
+      "stats": {
+        "blind_bought": 14827,
+        "blind_unbought": 10498,
+        "counts": {
+          "BuyMarket": 137847,
+          "BuyReserved": 79618,
+          "ReserveDeck": 25325,
+          "ReserveMarket": 97860,
+          "TakeDistinct": 204568,
+          "TakePair": 6146
+        },
+        "full_blind": 6653,
+        "full_main": 138303,
+        "full_reservations": 32140,
+        "game_blind_hist": {
+          "0": 1581,
+          "1": 2219,
+          "10": 33,
+          "11": 13,
+          "12": 5,
+          "13": 3,
+          "2": 1922,
+          "3": 1503,
+          "4": 1075,
+          "5": 736,
+          "6": 450,
+          "7": 252,
+          "8": 135,
+          "9": 73
+        },
+        "games": 10000,
+        "low_blind": 18672,
+        "low_main": 413061,
+        "low_reservations": 91045,
+        "main_facing_hidden": 138700,
+        "player_blind_hist": {
+          "0": 6824,
+          "1": 6034,
+          "2": 3864,
+          "3": 2031,
+          "4": 870,
+          "5": 292,
+          "6": 66,
+          "7": 18,
+          "8": 1
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7746,
+            "main": 200000,
+            "reservations": 55719
+          },
+          "11-20": {
+            "blind": 9338,
+            "main": 200000,
+            "reservations": 38059
+          },
+          "21+": {
+            "blind": 8241,
+            "main": 151364,
+            "reservations": 29407
+          }
+        },
+        "tiers": {
+          "1": 9085,
+          "2": 10400,
+          "3": 5840
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-010/checkpoints/final.pt",
+        "sha256": "8be0c8e3204ec31bed894698d27cdea29316b9050739ec0134fbffb798f849f9"
+      },
+      "collection_batch": 12,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-010/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 91,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-011",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 9472825608388880016,
+        "split_seed": 11097447955558222281,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "84faf3a659d0b8a94b82c5e316ce6c6d011045da973f044f68f9931073cbfab6",
+      "metadata_stream_sha256": "53146c55045ec078fd71c9bfe715d3825cfe20319723f46c81662de7c9191ea9",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-011/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5921716685287206,
+        "blind_per_game": 2.5957,
+        "blind_per_main": 0.047080781166962016,
+        "blind_per_reservation": 0.21242624372918253,
+        "full_blind_per_main": 0.05011895206484876,
+        "games_with_blind": 0.8507,
+        "low_blind_per_main": 0.0460635583166682,
+        "main_facing_hidden": 0.25663986476314504,
+        "players_with_blind": 0.67085
+      },
+      "semantic_fingerprint": "516d941ba3bea6558f12db5c2d8ae5598468e1a7f30e78aaaf512736bfe67e10",
+      "source_model_online_round": 11,
+      "stats": {
+        "blind_bought": 15371,
+        "blind_unbought": 10586,
+        "counts": {
+          "BuyMarket": 139569,
+          "BuyReserved": 79294,
+          "ReserveDeck": 25957,
+          "ReserveMarket": 96236,
+          "TakeDistinct": 204622,
+          "TakePair": 5651
+        },
+        "full_blind": 6931,
+        "full_main": 138291,
+        "full_reservations": 31732,
+        "game_blind_hist": {
+          "0": 1493,
+          "1": 2144,
+          "10": 42,
+          "11": 12,
+          "12": 6,
+          "13": 5,
+          "14": 1,
+          "2": 1920,
+          "3": 1547,
+          "4": 1194,
+          "5": 713,
+          "6": 462,
+          "7": 256,
+          "8": 121,
+          "9": 84
+        },
+        "games": 10000,
+        "low_blind": 19026,
+        "low_main": 413038,
+        "low_reservations": 90461,
+        "main_facing_hidden": 141493,
+        "player_blind_hist": {
+          "0": 6583,
+          "1": 6054,
+          "2": 3999,
+          "3": 2094,
+          "4": 853,
+          "5": 320,
+          "6": 75,
+          "7": 15,
+          "8": 7
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7933,
+            "main": 200000,
+            "reservations": 55096
+          },
+          "11-20": {
+            "blind": 9754,
+            "main": 200000,
+            "reservations": 38112
+          },
+          "21+": {
+            "blind": 8270,
+            "main": 151329,
+            "reservations": 28985
+          }
+        },
+        "tiers": {
+          "1": 9302,
+          "2": 10855,
+          "3": 5800
+        }
+      }
+    },
+    {
+      "checkpoint": {
+        "path": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-011/checkpoints/final.pt",
+        "sha256": "2a6304e3470cab3dad78ec0a2789ee892892e741f3731cafc2197cde9bd2d45d"
+      },
+      "collection_batch": 13,
+      "config": {
+        "add_root_noise": true,
+        "budget_randomization": {
+          "low_determinizations": 1,
+          "low_probability": 0.75,
+          "low_simulations": 128
+        },
+        "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-011/checkpoints/final.pt",
+        "execution": {
+          "active_games_per_worker": 1,
+          "actor_projection": false,
+          "backend": "native_cuda_pool",
+          "batch_buckets": [
+            16,
+            32,
+            64,
+            128,
+            192,
+            256,
+            384,
+            500
+          ],
+          "batch_interface": "native",
+          "candidate_buckets": [
+            16,
+            32,
+            48,
+            64
+          ],
+          "compile_failure_policy": "fail_fast",
+          "compile_mode": "native-cudagraph",
+          "engine_mode": "fast",
+          "inference_mode": "compiled",
+          "local_microbatch": 128,
+          "max_batch_size": 500,
+          "max_batch_wait_ms": 5,
+          "native_transport": "reused",
+          "pipeline_slots": 2,
+          "precision": "float32",
+          "search_workers": 12,
+          "shared_candidate_width": 256,
+          "shared_slots": 2,
+          "torch_threads": 1,
+          "total_active_games": 2000,
+          "workers": 1
+        },
+        "max_completed_turns": 400,
+        "num_games": 10000,
+        "protocol": "mcts-selfplay-v2",
+        "round_index": 92,
+        "run_id": "entity_attention_policy140221_r31_r37_p60k_iteration_20261025-round-012",
+        "search_config": {
+          "c_puct": 1.5,
+          "determinizations": 4,
+          "dirichlet_alpha": 0.3,
+          "fold_forced_phases": true,
+          "max_simulation_transitions": 512,
+          "root_noise_fraction": 0.25,
+          "seed": 36930000,
+          "simulations": 1024
+        },
+        "seed": 1984690866864484093,
+        "split_seed": 9441613807924731840,
+        "temperature_schedule": {
+          "late_temperature": 0.0,
+          "opening_completed_turns": 10,
+          "opening_temperature": 1.0
+        },
+        "validation_fraction": 0.1
+      },
+      "manifest_sha256": "2756653a5d4534fc6a99ce5b7c4f6b8295eb4b023cd235663b412492b9b7eda6",
+      "metadata_stream_sha256": "9024d38a494675dea49baf7eea617cddba529ad3cd97626d53ff1c0a57b25ef6",
+      "path": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-012/selfplay",
+      "rates": {
+        "blind_bought_fraction": 0.5867794243153076,
+        "blind_per_game": 2.5778,
+        "blind_per_main": 0.046758061766060954,
+        "blind_per_reservation": 0.21116872690930835,
+        "full_blind_per_main": 0.049827484155971644,
+        "games_with_blind": 0.846,
+        "low_blind_per_main": 0.04572786650127917,
+        "main_facing_hidden": 0.2543796004396832,
+        "players_with_blind": 0.66545
+      },
+      "semantic_fingerprint": "72724e7292736c0ed44290d7f08177f0c09ed75ee4f38525dd4585eaf6306d28",
+      "source_model_online_round": 12,
+      "stats": {
+        "blind_bought": 15126,
+        "blind_unbought": 10652,
+        "counts": {
+          "BuyMarket": 139118,
+          "BuyReserved": 79255,
+          "ReserveDeck": 25778,
+          "ReserveMarket": 96295,
+          "TakeDistinct": 205166,
+          "TakePair": 5694
+        },
+        "full_blind": 6903,
+        "full_main": 138538,
+        "full_reservations": 32002,
+        "game_blind_hist": {
+          "0": 1540,
+          "1": 2096,
+          "10": 37,
+          "11": 17,
+          "12": 5,
+          "2": 1971,
+          "3": 1585,
+          "4": 1084,
+          "5": 742,
+          "6": 426,
+          "7": 289,
+          "8": 129,
+          "9": 79
+        },
+        "games": 10000,
+        "low_blind": 18875,
+        "low_main": 412768,
+        "low_reservations": 90071,
+        "main_facing_hidden": 140241,
+        "player_blind_hist": {
+          "0": 6691,
+          "1": 5988,
+          "2": 3965,
+          "3": 2070,
+          "4": 901,
+          "5": 284,
+          "6": 82,
+          "7": 18,
+          "8": 1
+        },
+        "players": 20000,
+        "stages": {
+          "1-10": {
+            "blind": 7713,
+            "main": 200000,
+            "reservations": 54650
+          },
+          "11-20": {
+            "blind": 9620,
+            "main": 200000,
+            "reservations": 37888
+          },
+          "21+": {
+            "blind": 8445,
+            "main": 151306,
+            "reservations": 29535
+          }
+        },
+        "tiers": {
+          "1": 8994,
+          "2": 11155,
+          "3": 5629
+        }
+      }
+    }
+  ],
+  "run": "runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025",
+  "scope": "All actual main actions in thirteen complete 10000-game batches. Includes self-play root noise and mixed budgets; not noise-free human-play behavior. Partial round013 excluded.",
+  "script_sha256": "b99adff6b881b1fb14ca48472d607ac0c5682e6b2a668513731104b3f54fe13d",
+  "seconds": 114.4400223040011
+}
