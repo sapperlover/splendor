@@ -538,6 +538,9 @@ def model_config_from_dict(config: dict[str, Any] | ActorCriticConfig):
     if architecture == "entity_attention_v1":
         from .entity_attention import EntityAttentionConfig
         return EntityAttentionConfig(**values)
+    if architecture == "entity_attention_wdl_v1":
+        from .value_outcome import EntityAttentionWDLConfig
+        return EntityAttentionWDLConfig(**values)
     if architecture == "entity_attention_aux_v1":
         from .entity_attention import EntityAttentionAuxConfig
         return EntityAttentionAuxConfig(**values)
@@ -558,6 +561,9 @@ def build_actor_critic(config: dict[str, Any] | ActorCriticConfig) -> ActorCriti
     parsed = model_config_from_dict(config)
     if isinstance(parsed, ActorCriticConfig):
         return ActorCritic(parsed)
+    from .value_outcome import EntityAttentionWDL, EntityAttentionWDLConfig
+    if isinstance(parsed, EntityAttentionWDLConfig):
+        return EntityAttentionWDL(parsed)
     from .continuation_auxiliary import EntityAttentionContinuation, EntityAttentionContinuationConfig
     if isinstance(parsed, EntityAttentionContinuationConfig):
         return EntityAttentionContinuation(parsed)

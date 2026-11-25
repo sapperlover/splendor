@@ -1,5 +1,7 @@
 # Entity attention v1 配置
 
+[`lambda161924_fpu_p60k_iteration_20261124.json`](lambda161924_fpu_p60k_iteration_20261124.json) 用近期 60k 局和 λ161924 起步，每轮 10k 新局及 10,000 步，学习率 `2e-5`，历史 policy 使用全部有效位置。采集使用 FPU `r=0.3, c_puct=1.0`，主 value 用归档搜索 λ=0.8。[在线配方与命令](../../docs/guides/value_outcome_zh-CN.md#在线混合预算自迭代)
+
 2026-10-27新增[`offline_r37_104k_lr1e4_20261027.json`](offline_r37_104k_lr1e4_20261027.json)与[`offline_r37_104k_lr2e5_20261027.json`](offline_r37_104k_lr2e5_20261027.json)：相同104k无辅助离线预设，仅增加原R37权重身份并设对应lr；新AdamW／原离线种子，18GiB／4 worker、350552步上限、5%主KL＋MSE早停选点保持。[命令与验证](../../artifacts/entity_attention_r37_104k_offline_lr_20261027/README.md)，未启动正式训练。
 
 2026-10-27完成状态：[六组原离线实验及五模型大面板](../../docs/reports/auxiliary_offline_results_20261027_zh-CN.md)均已完成，policy＋得分和无辅助不再是准备／等待状态；policy在线已提交13轮，第12轮搜索完成。下方按日期记录原配置发布过程；仅得分辅助的独立预设仍未执行正式训练。
@@ -101,3 +103,5 @@
 ## 2026-10-19：小模型辅助目标对照
 
 新增`offline_r24_r43_no_aux_20261019.json`与`offline_r24_r43_turns_only_20261019.json`，除`value_auxiliary`外逐字段沿用旧小模型双辅助配置：无辅助为null，仅剩余回合为score_loss_weight0／turns_loss_weight0.25。两组R43 warm start各22681步，串行训练及final对R43的1000pair greedy／200pair S1024见[专题入口](../../artifacts/entity_attention_r24_r43_aux_ablation_20261019/README.md)。默认旧双辅助行为保留；单回合模型配置`predict_score=false`且不注册分差头。
+
+2026-11-20：[近期60k主value对照](../../artifacts/value_outcome_60k_20261120/README.md)当前执行`outcome_60k_scalar_mc_20261120.json`与`outcome_60k_scalar_lambda_20261120.json`。第二组改为`outcome_lambda_source="archive_search"`，按每世界ΣW/ΣN后世界等权平均，一次生成同一玩家后续根值的λ=0.8标签与缺失mask，无模型教师、预热或周期刷新。统一从零、4 worker、10GiB共享缓存、12次value抽样曝光和真实终局留出；λ有效监督量单独报告。原WDL与WDL＋λ两份预设／脚本保留、暂时搁置，不计入当前执行计划。未启动正式训练。

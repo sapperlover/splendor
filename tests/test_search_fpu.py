@@ -128,3 +128,14 @@ def test_selfplay_config_omits_unset_fpu(tmp_path):
     raw = config(MCTSConfig(fpu_reduction=0.2)).to_dict()
     assert raw["search_config"]["fpu_reduction"] == 0.2
     assert FastSelfPlayConfig.from_dict(raw).search_config.fpu_reduction == 0.2
+
+
+def test_legacy_v3_search_training_matches_only_disabled_fpu():
+    from splendor.selfplay_data import same_search_training
+
+    legacy = {"search_config": {"c_puct": 1.5}, "add_root_noise": True, "budget_randomization": None}
+    disabled = {**legacy, "search_config": {"c_puct": 1.5, "fpu_reduction": None}}
+    enabled = {**legacy, "search_config": {"c_puct": 1.5, "fpu_reduction": 0.0}}
+    assert same_search_training(legacy, disabled)
+    assert not same_search_training(legacy, enabled)
+    assert not same_search_training(legacy, {**disabled, "add_root_noise": False})

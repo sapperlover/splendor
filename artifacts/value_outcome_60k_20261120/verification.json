@@ -1,0 +1,213 @@
+{
+  "active_arms": [
+    "scalar_mc",
+    "scalar_lambda"
+  ],
+  "archived_search_smoke": {
+    "counts": {
+      "eligible_main_positions": 658,
+      "eligible_positions": 965,
+      "main_positions": 664,
+      "positions": 972,
+      "root_positions": 663
+    },
+    "manifest_sha256": "1014247e20077ea6dc37e5ce18bc913e49d78a87e799e8aef6d90acbe7b6d39a",
+    "output": "/tmp/splendor_archive_lambda_smoke_cmb2delp",
+    "reused_without_regeneration": true,
+    "root_budget_counts": {
+      "1024": 169,
+      "128": 494
+    },
+    "root_coverage": 0.9984939759036144,
+    "sample_seed": 20261120,
+    "scope": "12 real Train archives, two per source round; CPU labels/masks only. No formal pool labels, models, optimizer or training.",
+    "source_sha256": {
+      "src/splendor/continuation_auxiliary.py": "644db4639f1fe6808a322974a404b6311febb582df76bf2dc0a9f863b3579f76",
+      "src/splendor/offline_outcome.py": "83a446dca7bbb8da29a6642eebae3dffa8d146ee3e37e05a63aca6be0ac6d7cb",
+      "src/splendor/value_outcome.py": "03c04ed617051f85f6fa60aa405a3d270e9f84242ced882f5ec5d9b0c5bde4c0"
+    },
+    "status": "passed",
+    "target_coverage": 0.992798353909465,
+    "torch_rng_preserved": true
+  },
+  "arms": [
+    {
+      "arm": "scalar_mc",
+      "dataset_digest": "0eaa53cb04d541a08a634bf514026cf3a65286ff6e2c6438f2eff332c6ec4f5c",
+      "lambda_target_policy": null,
+      "status": "prepared_not_started",
+      "steps_target": 202404,
+      "validation_nodes": 20
+    },
+    {
+      "arm": "scalar_lambda",
+      "dataset_digest": "0eaa53cb04d541a08a634bf514026cf3a65286ff6e2c6438f2eff332c6ec4f5c",
+      "lambda_target_policy": "generate once from archived search roots, then immutable reuse from student step zero",
+      "status": "prepared_not_started",
+      "steps_target": 202404,
+      "validation_nodes": 20
+    },
+    {
+      "arm": "wdl_mc",
+      "dataset_digest": "0eaa53cb04d541a08a634bf514026cf3a65286ff6e2c6438f2eff332c6ec4f5c",
+      "lambda_target_policy": null,
+      "status": "deferred",
+      "steps_target": 202404,
+      "validation_nodes": 20
+    },
+    {
+      "arm": "wdl_lambda",
+      "dataset_digest": "0eaa53cb04d541a08a634bf514026cf3a65286ff6e2c6438f2eff332c6ec4f5c",
+      "lambda_target_policy": "generate once with one fixed teacher, then immutable reuse from student step zero",
+      "status": "deferred",
+      "steps_target": 202404,
+      "validation_nodes": 20
+    }
+  ],
+  "cache": {
+    "archived_generation_temporary": "one raw game only; W/N never enter the shared training arena",
+    "arena_aligned_upper_bound_bytes": 9450265216,
+    "capacity_bytes": 10737418240,
+    "capacity_mib": 10240,
+    "capacity_note": "Capacity tightened to10GiB using the completed full-census byte bound; no repeat decoding required.",
+    "compact_source_sha256": "d2f320dca4440b69e64bb52131b902c808a65ad0e707f86cec6d3de3855f2103",
+    "fits": true,
+    "games": 53980,
+    "manifest_sha256": "1014247e20077ea6dc37e5ce18bc913e49d78a87e799e8aef6d90acbe7b6d39a",
+    "parent_archived_lambda_mask_bytes": 4317943,
+    "parent_archived_lambda_target_bytes": 17271772,
+    "parent_lambda_target_bytes": 51815316,
+    "payload_bytes": 9395031578,
+    "positions": 4317943,
+    "prefetch_source_sha256": "d88b7ad00c9613e888f50e9363e23e2c15afca1deffbc9c268e6b95c4a2f2dcf",
+    "scope": "All train archives decoded one at a time; exact dictionary/array byte census with per-array alignment upper bound. No arena allocation, model, optimizer or training.",
+    "seconds": 148.01586844399935,
+    "status": "complete",
+    "temporary_teacher_prediction_bytes": 51815316,
+    "workers": 4
+  },
+  "deferred_arms": [
+    "wdl_mc",
+    "wdl_lambda"
+  ],
+  "docs_links_checked": 15,
+  "execution_source_matches_verified_working_implementation": true,
+  "formal_evaluation_started": false,
+  "formal_outputs_contain_only_prepared_metadata": true,
+  "formal_training_started": false,
+  "frozen_source_files_verified": 138,
+  "full_pool_target_generation_started": false,
+  "git_diff_check_passed": true,
+  "pool": {
+    "games": 60000,
+    "local_online_rounds": [
+      8,
+      13
+    ],
+    "manifest": "/home/lc/下载/splendor/runtime/value_outcome_60k_20261120/pool_games.jsonl",
+    "manifest_sha256": "1014247e20077ea6dc37e5ce18bc913e49d78a87e799e8aef6d90acbe7b6d39a",
+    "source_rounds": [
+      87,
+      88,
+      89,
+      90,
+      91,
+      92
+    ],
+    "source_snapshot": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-012/replay_snapshot.json",
+    "source_snapshot_sha256": "13c1d92ca7ec1b6d238e1c5eeb587d94ea93e04a44e856eef3585ee93063ea5e",
+    "split_rule": "original game-level splits, no reshuffle; training targets never use held-out games",
+    "splits": {
+      "train": {
+        "games": 53980,
+        "policy_positions": 906335,
+        "positions": 4317943
+      },
+      "validation": {
+        "games": 6020,
+        "policy_positions": 101356,
+        "positions": 481516
+      }
+    },
+    "status": "frozen"
+  },
+  "previous_regression_tests": [
+    {
+      "errors": "0",
+      "failures": "0",
+      "hostname": "lcW",
+      "name": "pytest",
+      "skipped": "0",
+      "source": "archived_search_tests.xml",
+      "tests": "30",
+      "time": "26.634",
+      "timestamp": "2026-11-20T17:48:51.290143+08:00"
+    },
+    {
+      "errors": "0",
+      "failures": "0",
+      "hostname": "lcW",
+      "name": "pytest",
+      "skipped": "0",
+      "source": "archived_frozen_regression.xml",
+      "tests": "126",
+      "time": "33.950",
+      "timestamp": "2026-11-20T17:53:39.776296+08:00"
+    }
+  ],
+  "scope": "Synthetic CPU updates and native8 root regression; labels/masks for12 real Train games under /tmp only, no formal students or pool labels. CUDA Graph kernels and throughput not validated.",
+  "script_syntax_passed": true,
+  "status": "archived_search_lambda_prepared_not_started",
+  "target_policy": "Archived root sum(W)/sum(N) inside each world then equal world mean; same-player next-main lambda=0.8, terminal absorbing tail; missing dependencies masked; no network teacher or search rerun",
+  "terminal_recovery_fix": {
+    "active_arms_covered": [
+      "scalar_mc",
+      "scalar_lambda"
+    ],
+    "actual_frozen_source_updated": true,
+    "committed_validation_reused": true,
+    "crash_windows": [
+      "terminal checkpoint saved, before terminal validation",
+      "terminal validation committed, interrupted final.pt copy",
+      "final.pt published, before complete progress commit"
+    ],
+    "final_checkpoint_published_atomically": true,
+    "missing_terminal_validation_completed_without_training": true,
+    "module_sha256": "d99736c53b765ad0b550e113892237a6a969ab427246c18c7f603b9e16c183ca",
+    "new_regression_cases": 9,
+    "no_training_pool_or_labels_rebuilt_at_terminal_checkpoint": true,
+    "repeated_completed_run_verified": true,
+    "scope": "Synthetic8-step CPU fixtures only; no formal models, full-pool relabeling, training or arena.",
+    "selection_after_recovery_verified": true,
+    "status": "verified",
+    "target_generators_unchanged": true,
+    "terminal_model_optimizer_rng_preserved": true,
+    "tests_sha256": "45ee4b03cd96af42a4a3e89b737b9c2584c20982ca4567069504df03c8cdbd7e",
+    "validation_and_checkpoint_identity_checks_preserved": true
+  },
+  "tests": [
+    {
+      "errors": "0",
+      "failures": "0",
+      "hostname": "lcW",
+      "name": "pytest",
+      "skipped": "0",
+      "source": "terminal_recovery_suite.xml",
+      "tests": "26",
+      "time": "26.895",
+      "timestamp": "2026-11-20T19:19:42.957827+08:00"
+    },
+    {
+      "errors": "0",
+      "failures": "0",
+      "hostname": "lcW",
+      "name": "pytest",
+      "skipped": "0",
+      "source": "terminal_recovery_frozen_suite.xml",
+      "tests": "26",
+      "time": "25.950",
+      "timestamp": "2026-11-20T19:22:02.387520+08:00"
+    }
+  ],
+  "training_budget_comparison": "Same student updates and sampled value exposure; lambda effective supervision is lower at masked rows and is reported. No resampling. Validation keeps original true-terminal weights."
+}

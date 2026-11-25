@@ -1,0 +1,108 @@
+{
+  "catalog_fingerprint": "084574b026e41ad6e5c64dfe36d74fb84a7604f6a0b0eb0ab59227c32a7ff17b",
+  "experiment": "lambda161924_vs_l12_fpu2000_20261123",
+  "games_each": 4000,
+  "models": {
+    "l12": {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_policy140221_r31_r37_p60k_iteration_20261025/rounds/round-011/checkpoints/final.pt",
+      "model_config": {
+        "architecture": "entity_attention_continuation_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "predict_opponent_policy": true,
+        "predict_shortterm_value": false,
+        "value_readout": "global_players_market"
+      },
+      "sha256": "2a6304e3470cab3dad78ec0a2789ee892892e741f3731cafc2197cde9bd2d45d",
+      "total_train_step": 176221
+    },
+    "lambda": {
+      "checkpoint": "/home/lc/下载/splendor/runs/outcome_60k_scalar_lambda_20261120/checkpoints/step-000161924.pt",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "value_readout": "global_players_market"
+      },
+      "sha256": "561f055af56719ad7fbfa9779e93955ce139d5651b6a2b9b9dbc7e10b7182b3b",
+      "total_train_step": 161924
+    }
+  },
+  "no_fpu_search": {
+    "c_puct": 1.5,
+    "fpu_reduction": null
+  },
+  "opponent_search": {
+    "c_puct": 1.5,
+    "fpu_reduction": null
+  },
+  "pairs_each": 2000,
+  "panels": {
+    "fpu": {
+      "config": {
+        "path": "artifacts/lambda161924_vs_l12_fpu2000_20261123/configs/lambda161924_fpu_vs_L12_S128N1_2000pair.json",
+        "sha256": "1f156f31e93e738f60e3ad772d4c6cddfd36ebbefa3ba3d3b80a09ff53f681f3"
+      },
+      "id": "lambda161924_fpu_vs_L12_S128N1_2000pair",
+      "kind": "search",
+      "model": "lambda161924",
+      "output": "runtime/lambda161924_vs_l12_fpu2000_20261123/panels/lambda161924_fpu_vs_L12.json",
+      "pairs": 2000
+    },
+    "nofpu": {
+      "config": {
+        "path": "artifacts/lambda161924_vs_l12_fpu2000_20261123/configs/lambda161924_nofpu_vs_L12_S128N1_2000pair.json",
+        "sha256": "5134c147177cbfce8daa8836080b69d2af342cf43fc04df0e8e610793d20d7b2"
+      },
+      "id": "lambda161924_nofpu_vs_L12_S128N1_2000pair",
+      "kind": "search",
+      "model": "lambda161924",
+      "output": "runtime/lambda161924_vs_l12_fpu2000_20261123/panels/lambda161924_nofpu_vs_L12.json",
+      "pairs": 2000
+    }
+  },
+  "prior_best_fpu": {
+    "c_puct": 1.0,
+    "config": {
+      "path": "artifacts/search_fpu_cpuct_l12_20261104/configs/04_2b_fpu0.3_c1.json",
+      "sha256": "47b49ccfa239e2f00937a8ba7e4f79ba30528f3f84b75df29bf3e3ec68347929"
+    },
+    "fpu_reduction": 0.3,
+    "original_result": {
+      "path": "artifacts/search_fpu_cpuct_l12_20261104/panels/04_2b_fpu0.3_c1.json",
+      "sha256": "91cd8032a7734750dd7fe70196dd8c64bcee0d205493b7816da873e719d23519"
+    },
+    "panel": "04_2b_fpu0.3_c1",
+    "score": 0.5575,
+    "summary": {
+      "path": "artifacts/search_fpu_cpuct_l12_20261104/summary.json",
+      "sha256": "30e31fa453617b4bc3fbcecd1ff996baa94482de69d424d27428d8dd3023a496"
+    }
+  },
+  "runner": {
+    "path": "artifacts/lambda161924_vs_l12_fpu2000_20261123/run.py",
+    "sha256": "1ef58ab50d4ea2bd4f4cd337a3b426e8da6900ea679997975747bdeedba264f1"
+  },
+  "scope": "Two independent fixed-lambda161924 vs L12 search panels,2000pair each,bothS128N1. Candidate either prior best FPU0.3/c_puct1.0 recipe or original noFPU/c_puct1.5; L12 always original search. Whole-recipe comparison,not FPU-only attribution. No training/greedy/queue/model reselection.",
+  "seeds": {
+    "bootstrap_seed": 55330000,
+    "game_seed_end": 55301999,
+    "game_seed_start": 55300000,
+    "policy_seed_base": 55310000,
+    "search_seed": 55320000
+  },
+  "shared_runner": {
+    "path": "artifacts/offline5_vs_r37_10k_20261027/run.py",
+    "sha256": "9624c98539e54cec7fb7f8e198c2b669369e1829221c2fa63ebcbc1decc8db06"
+  }
+}

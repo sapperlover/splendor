@@ -137,6 +137,27 @@ def add_continuation_heads(base, *, predict_opponent_policy=False, predict_short
     return model
 
 
+def archived_root_values(arrays):
+    """Actor-relative roots: sum W/N inside each world, then equal world mean."""
+    if 'per_world_root_value_sums' not in arrays:
+        raise ValueError('root value requires v3 per_world_root_value_sums')
+    main = np.flatnonzero(arrays['global_features'][:, G.index('phase_main_action')] > .5)
+    values = np.zeros(len(arrays['player_id']), dtype=np.float64)
+    available = np.zeros(len(values), dtype=np.bool_)
+    for i in main:
+        start, end = arrays['candidate_offsets'][i:i+2]
+        worlds = int(arrays['valid_world_count'][i])
+        visits = arrays['per_world_root_visit_counts'][:worlds, start:end].sum(axis=1)
+        if worlds == 0 or not np.all(visits > 0):
+            continue
+        sums = arrays['per_world_root_value_sums'][:worlds, start:end].sum(axis=1)
+        root = float(np.mean(sums / visits))
+        if not math.isfinite(root) or abs(root) > 1 + 1e-9:
+            raise ValueError('root MCTS value is outside [-1, 1]')
+        values[i], available[i] = root, True
+    return values, available
+
+
 def game_shortterm_value_targets(arrays, metadata):
     """Exact finite KataGo EMA, with terminal payoff absorbing the remaining tail.
 
@@ -147,8 +168,7 @@ def game_shortterm_value_targets(arrays, metadata):
     """
     if metadata.get("status") != "natural_terminal":
         raise ValueError("shortterm value labels require a natural terminal")
-    if "per_world_root_value_sums" not in arrays:
-        raise ValueError("shortterm value requires v3 per_world_root_value_sums")
+    roots, root_available = archived_root_values(arrays)
     players = arrays["player_id"]
     turns = arrays["completed_player_turns"]
     main = np.flatnonzero(arrays["global_features"][:, G.index("phase_main_action")] > .5)
@@ -163,15 +183,9 @@ def game_shortterm_value_targets(arrays, metadata):
     available = True
     next_turn = terminal_turn
     for i in reversed(main):
-        start, end = arrays["candidate_offsets"][i:i + 2]
-        worlds = int(arrays["valid_world_count"][i])
-        visits = arrays["per_world_root_visit_counts"][:worlds, start:end].sum(axis=1)
-        available = available and turns[i] + 1 == next_turn and worlds > 0 and bool(np.all(visits > 0))
+        available = available and turns[i] + 1 == next_turn and bool(root_available[i])
         if available:
-            sums = arrays["per_world_root_value_sums"][:worlds, start:end].sum(axis=1)
-            root = float(np.mean(sums / visits)) * sign[i]
-            if not math.isfinite(root) or abs(root) > 1 + 1e-9:
-                raise ValueError("root MCTS value is outside [-1, 1]")
+            root = roots[i] * sign[i]
             tail = (1 - LAMBDAS) * root + LAMBDAS * tail
             labels[i] = tail * sign[i]
             mask[i] = True

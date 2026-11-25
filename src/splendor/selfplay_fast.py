@@ -33,7 +33,7 @@ from .search_training import SearchBudgetRandomization
 from .selfplay import TemperatureSchedule, derive_seed, label_terminal_values
 from .selfplay_data import (
     DATA_SCHEMA_V2, DATA_SCHEMA_V3, STATE_FIELDS, commit_game, game_path, load_game,
-    pack_game, validate_game_arrays,
+    pack_game, same_search_training, validate_game_arrays,
 )
 
 PROTOCOL = "mcts-selfplay-v2"
@@ -870,6 +870,7 @@ def _collect_group(
 
 def _scan_committed(root: Path, config: FastSelfPlayConfig, manifest: Mapping[str, Any]) -> dict[int, dict[str, Any]]:
     complete: dict[int, dict[str, Any]] = {}
+    search_training = config.search_training() if config.data_schema == DATA_SCHEMA_V3 else None
     for path in sorted((root / "games").glob("game-*.npz")):
         game_id = int(path.stem.removeprefix("game-"))
         if not 0 <= game_id < config.num_games or game_id in complete:
@@ -877,7 +878,7 @@ def _scan_committed(root: Path, config: FastSelfPlayConfig, manifest: Mapping[st
         with np.load(path, allow_pickle=False) as archive:
             metadata = json.loads(archive["metadata_json"].tobytes().decode("utf-8"))
         if (metadata.get("data_schema") != config.data_schema or
-                (config.data_schema == DATA_SCHEMA_V3 and metadata.get("search_training") != config.search_training()) or
+                (search_training is not None and not same_search_training(metadata.get("search_training"), search_training)) or
                 metadata.get("semantic_fingerprint") != manifest["semantic_fingerprint"] or
                 metadata.get("checkpoint_sha256") != manifest["checkpoint_identity"]["sha256"] or
                 metadata.get("game_id") != game_id or

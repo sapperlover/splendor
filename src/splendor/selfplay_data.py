@@ -138,6 +138,16 @@ def _probability(values: np.ndarray, *, name: str, game_id: int, index: int) -> 
         raise ValueError(f"game {game_id} sample {index}: invalid {name}")
 
 
+def same_search_training(recorded, expected):
+    """V3 archives before FPU omitted its disabled setting."""
+    if recorded == expected:
+        return True
+    if not isinstance(recorded, Mapping) or not isinstance(recorded.get("search_config"), Mapping):
+        return False
+    return ({**recorded, "search_config": {"fpu_reduction": None, **recorded["search_config"]}}
+            == {**expected, "search_config": {"fpu_reduction": None, **expected["search_config"]}})
+
+
 def validate_game_arrays(
     arrays: Mapping[str, np.ndarray], metadata: Mapping[str, Any],
     *, expected_game_id: int | None = None, fingerprint: str | None = None,
@@ -173,7 +183,7 @@ def validate_game_arrays(
         training = metadata.get("search_training")
         if not isinstance(training, dict) or set(training) != {"search_config", "budget_randomization", "add_root_noise"}:
             raise ValueError(f"game {game_id}: missing search training semantics")
-        if search_training is not None and training != search_training:
+        if search_training is not None and not same_search_training(training, search_training):
             raise ValueError(f"game {game_id}: search training semantics mismatch")
         cfg = MCTSConfig(**training["search_config"])
         if cfg.simulations != simulations or cfg.determinizations != worlds or type(training["add_root_noise"]) is not bool:

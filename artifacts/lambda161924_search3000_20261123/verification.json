@@ -1,0 +1,135 @@
+{
+  "both_sides_budget": "S128N1=128perworld*1world=total128each",
+  "client_date": "2026-11-23",
+  "commands": {
+    "cpu": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/lambda161924_search3000_20261123/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python artifacts/lambda161924_search3000_20261123/validate.py",
+    "mc": "bash scripts/run_lambda161924_vs_mc70842_s128n1_3000pair_20261123.sh",
+    "r37": "bash scripts/run_lambda161924_vs_r37_s128n1_3000pair_20261123.sh",
+    "tests": "conda run --no-capture-output -n splendor env PYTHONPATH=runtime/lambda161924_search3000_20261123/source/src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q -o pythonpath=runtime/lambda161924_search3000_20261123/source/src tests/test_lambda161924_search3000.py tests/test_offline5_evaluation.py --junitxml=runtime/lambda161924_search3000_20261123/tests.xml"
+  },
+  "cpu_checks": {
+    "CUDA_tested": false,
+    "complete_games": 0,
+    "native_roots": 3,
+    "real_models": 3,
+    "scalar_value_roots": 3,
+    "simulations_each": 128,
+    "strict_loading": true,
+    "total_simulations": 384
+  },
+  "evidence_hashes": {
+    "artifacts/lambda161924_search3000_20261123/README.md": "186af35134935a4394fb52d69c44b29f256e53c90532ee3ce3825966ee462581",
+    "artifacts/lambda161924_search3000_20261123/configs/lambda161924_vs_mc_S128N1_3000pair.json": "4cc18ede6a9137de3458fa2739d73d98b46e1532fcb91e3b5e6e581dfd85d4b9",
+    "artifacts/lambda161924_search3000_20261123/configs/lambda161924_vs_r37_S128N1_3000pair.json": "12c495fa586e7a48222d3dfc2ca0e0cb45ed2993894529e472a86f762b89b2ed",
+    "artifacts/lambda161924_search3000_20261123/plan.json": "70252c183156b4d0a5b4ef200eb48c6657b4af707b5173ed8f381f6c84f59740",
+    "artifacts/lambda161924_search3000_20261123/results_mc.md": "9c0e384592dd3b4f49e8c660d5a6b635e8c5e4a797675bde30d2b78305baa701",
+    "artifacts/lambda161924_search3000_20261123/results_r37.md": "5c2135aacae70482c24c13412e0d8530ef17271dba27d335bd90acc88aa41ccc",
+    "artifacts/lambda161924_search3000_20261123/run.py": "6c3d143b46714d153249cfee791926f8f693d609ec015c795ad2843cb0e8d545",
+    "artifacts/lambda161924_search3000_20261123/source.json": "363bd163fb885981e28537ff5f90e7e09c82d9361ee1095af959d3dc2a9f76aa",
+    "artifacts/lambda161924_search3000_20261123/summary_mc.json": "b0ecd140f4dbe116f4610d5c398ec115fab054003137deb6f3dab2a8ee52500b",
+    "artifacts/lambda161924_search3000_20261123/summary_r37.json": "994b271d030ba01c06c7d751055f7726d1c94170109dbd78639173ee165c3754",
+    "artifacts/lambda161924_search3000_20261123/template.json": "c17319e3fc8bc4b4d29308003f2a518fae4f6eb0104f063bb92d3d267058cc10",
+    "artifacts/lambda161924_search3000_20261123/validate.py": "07791b9c93ed2ef43e723f50dd1798efdfbd50b678be1ac583f713597a591da0",
+    "scripts/run_lambda161924_vs_mc70842_s128n1_3000pair_20261123.sh": "74784bf0fb8f7208ec0d721ab2d7d5600bbec23f0430a1f04daa51863cc2ab1d",
+    "scripts/run_lambda161924_vs_r37_s128n1_3000pair_20261123.sh": "1935623702fe56ad1ce96bfc3619a648df9d1a9d91ae6587742dcf78816dbfe3",
+    "tests/test_lambda161924_search3000.py": "717f62ce4672812bad94d3bd4f68f5ee32910ce98e522d93cbf76789aaa63bd3"
+  },
+  "execution": "Configuration A: CUDApool12searchworkers,active1000,B500,mb128,pipeline2,FP32/native-cudagraph; no noise,T0,FP/PTPoff",
+  "fixed_nodes_never_follow_new_progress": true,
+  "formal_executions_exist": false,
+  "games_each": 6000,
+  "local_cpu_record": {
+    "bytes": 1059,
+    "path": "runtime/lambda161924_search3000_20261123/cpu_validation.json",
+    "sha256": "3021e56275567443f06062968b5a9a2650fef4043062531d5f38a1fa648c3bfa",
+    "storage": "local, not versioned"
+  },
+  "local_test_record": {
+    "bytes": 2505,
+    "path": "runtime/lambda161924_search3000_20261123/tests.xml",
+    "sha256": "02115868f47858b94a58f8576b6ecab507edf72d21900129585092124c51c7d1",
+    "storage": "local, not versioned"
+  },
+  "models": {
+    "lambda": {
+      "checkpoint": "/home/lc/下载/splendor/runs/outcome_60k_scalar_lambda_20261120/checkpoints/step-000161924.pt",
+      "dataset_digest": "0eaa53cb04d541a08a634bf514026cf3a65286ff6e2c6438f2eff332c6ec4f5c",
+      "key": "lambda",
+      "manifest_sha256": "1014247e20077ea6dc37e5ce18bc913e49d78a87e799e8aef6d90acbe7b6d39a",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "value_readout": "global_players_market"
+      },
+      "outcome_objective": "scalar_lambda",
+      "policy_kl": 0.20926104089319655,
+      "selected_step": 161924,
+      "sha256": "561f055af56719ad7fbfa9779e93955ce139d5651b6a2b9b9dbc7e10b7182b3b",
+      "validation": {
+        "path": "runs/outcome_60k_scalar_lambda_20261120/full_validation/step-000161924.json",
+        "sha256": "a56fbb27edff14f3cb633939a85896e1d126fbc48948543b9e7d2c113dc83d86"
+      },
+      "value_mse": 0.7064370927509702
+    },
+    "mc": {
+      "checkpoint": "/home/lc/下载/splendor/runs/outcome_60k_scalar_mc_20261120/checkpoints/step-000070842.pt",
+      "dataset_digest": "0eaa53cb04d541a08a634bf514026cf3a65286ff6e2c6438f2eff332c6ec4f5c",
+      "key": "mc",
+      "manifest_sha256": "1014247e20077ea6dc37e5ce18bc913e49d78a87e799e8aef6d90acbe7b6d39a",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "value_readout": "global_players_market"
+      },
+      "outcome_objective": "scalar_mc",
+      "policy_kl": 0.24481705517859784,
+      "selected_step": 70842,
+      "sha256": "37cbd0bf0082e530bf303fe56e027b99af63b9f9a7afea15ccf4d236a9c69cec",
+      "validation": {
+        "path": "runs/outcome_60k_scalar_mc_20261120/full_validation/step-000070842.json",
+        "sha256": "3d3f7d0ba1bd8518c8b647aa9558adebb03dd5866d270c874cd7343b16275ef5"
+      },
+      "value_mse": 0.7371375063697798
+    },
+    "r37": {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r31_10k_p60k_iteration_20261023/rounds/round-005/checkpoints/final.pt",
+      "key": "r37",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "value_readout": "global_players_market"
+      },
+      "sha256": "611f4f4ed18f397b03c79bb3a2beae51e7a77a747883680d9189eed3052a1045"
+    }
+  },
+  "pairs_each": 3000,
+  "pool": "same recent60k source with matching manifest SHA and validation dataset digest, not the old104kpool",
+  "scope": "Two scripts and commands only; no formal search evaluations,training,targets generation or queues.",
+  "source_checkpoints_unchanged": true,
+  "source_snapshot_files_verified": 135,
+  "status": "prepared_not_started",
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 16
+  }
+}

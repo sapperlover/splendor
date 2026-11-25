@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import torch
 
-from splendor import random_budget_iteration as iteration
+from splendor import online_lambda, random_budget_iteration as iteration
 from splendor.alphazero_checkpoint import load_alphazero_checkpoint
 from splendor.alphazero_loop import LoopSeeds, SelfPlaySection
 from splendor.alphazero_recording import sha256
@@ -24,7 +24,7 @@ from splendor.six_round_holdout import HoldoutSchedule, check_settings
 from splendor.offline_train import _digest
 from splendor.offline_train import make_index
 from splendor.rng import DeterministicRng
-from splendor.selfplay_data import STATE_FIELDS, collate_selfplay_samples
+from splendor.selfplay_data import DATA_SCHEMA_V3, STATE_FIELDS, collate_selfplay_samples
 
 
 def test_policy_quotas_are_exact_cumulative_sixths():
@@ -57,7 +57,7 @@ def test_random_old_eviction_then_online_fifo_and_no_reentry():
     assert not keys & {iteration._key(g) for g in active}
 
 
-def archive(root, round_index, game_id, *, mixed=False):
+def archive(root, round_index, game_id, *, mixed=False, run_id=None, teacher_sha=None):
     """Synthetic training arrays, used with a mocked collector (no games played)."""
     path = root / f"game-{game_id:06}.npz"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -66,7 +66,7 @@ def archive(root, round_index, game_id, *, mixed=False):
     target = np.zeros(width * 4, dtype=np.float32)
     target[::width] = 1
     weights = np.array([1, 0, 0, 0] if mixed else [1, 1, 1, 1], dtype=np.float32)
-    metadata = {"run_id": f"test-{round_index}", "game_id": game_id, "round_index": round_index,
+    metadata = {"run_id": run_id or f"test-{round_index}", "game_id": game_id, "round_index": round_index,
                 "split": "train" if game_id == 0 else "validation", "terminal_result": {"winner_ids": [0]},
                 "feature_schema_version": FEATURE_SCHEMA_VERSION}
     arrays = {name: np.stack([getattr(encoded, name)] * 4) for name in STATE_FIELDS}
@@ -75,10 +75,16 @@ def archive(root, round_index, game_id, *, mixed=False):
         root_network_prior=np.tile(np.full(width, 1/width, dtype=np.float32), 4),
         value_target=np.ones(4, dtype=np.int8), policy_weight=weights, value_weight=np.ones(4, dtype=np.float32),
         decision_index=np.arange(4, dtype=np.int32), player_id=np.zeros(4, dtype=np.int8),
-        completed_player_turns=np.arange(4, dtype=np.int32),
-        metadata_json=np.frombuffer(json.dumps(metadata).encode(), dtype=np.uint8))
+        completed_player_turns=np.arange(4, dtype=np.int32))
     if mixed:
         arrays["low_budget"] = weights == 0
+    if teacher_sha is not None:
+        metadata.update(data_schema=DATA_SCHEMA_V3, status="natural_terminal", decision_count=4,
+            checkpoint_sha256=teacher_sha, search_training={"search_config": {"simulations": 16}})
+        visits = target[np.newaxis, :].astype(np.int32)
+        arrays.update(valid_world_count=np.ones(4, dtype=np.int8), per_world_root_visit_counts=visits,
+                      per_world_root_value_sums=visits * (-0.25 * (round_index + 1)))
+    arrays["metadata_json"] = np.frombuffer(json.dumps(metadata).encode(), dtype=np.uint8)
     np.savez_compressed(path, **arrays)
     stat = path.stat()
     return {**metadata, "decision_count": 4, "policy_samples": int(weights.sum()),
@@ -108,9 +114,10 @@ def test_fixed_policy_subset_sampling_and_unmodified_value_rng(tmp_path):
     assert rng.snapshot() == reference_rng.snapshot()
 
 
-def driver_case(tmp_path, monkeypatch):
+def driver_case(tmp_path, monkeypatch, *, outcome_lambda=None):
     torch.set_num_threads(1)
-    original = [archive(tmp_path / "old", 0, i) for i in range(2)]
+    history_teacher = "f" * 64 if outcome_lambda is not None else None
+    original = [archive(tmp_path / "old", 0, i, teacher_sha=history_teacher) for i in range(2)]
     manifest = tmp_path / "history.jsonl"
     manifest.write_text("".join(json.dumps(g)+'\n' for g in original))
     cfg0 = LearnerConfig(device="cpu", batch_size=4, history_batch_size=2, checkpoint_every_steps=1)
@@ -128,7 +135,7 @@ def driver_case(tmp_path, monkeypatch):
         selfplay=SelfPlaySection(search_config={"simulations":16,"determinizations":1},execution={"backend":"native_cpu"},
             add_root_noise=True,temperature_schedule={},validation_fraction=.5,max_completed_turns=400,
             budget_randomization={"low_simulations":4,"low_probability":.75}),
-        learner=replace(cfg0,learning_rate=2e-5),seeds=LoopSeeds(11,12,13))
+        learner=replace(cfg0,learning_rate=2e-5),seeds=LoopSeeds(11,12,13),outcome_lambda=outcome_lambda)
     generated = {}
     def collect(config, root, **kwargs):
         if str(root) in generated:
@@ -136,7 +143,9 @@ def driver_case(tmp_path, monkeypatch):
             return {"completed_games":2,"missing_games":0}
         root.mkdir(parents=True, exist_ok=True)
         (root/'manifest.json').write_text(json.dumps({'config':config.to_dict()}))
-        records = [archive(root/'games',config.round_index,i,mixed=True) for i in range(2)]
+        teacher_sha = sha256(Path(config.checkpoint)) if outcome_lambda is not None else None
+        records = [archive(root/'games',config.round_index,i,mixed=True,
+                           run_id=config.run_id,teacher_sha=teacher_sha) for i in range(2)]
         generated[str(root)] = records
         return {"completed_games":2,"missing_games":0}
     def build(runs, **kwargs):
@@ -155,6 +164,57 @@ def holdout_settings(tmp_path, records):
     path = tmp_path / "holdout.json"
     path.write_text(json.dumps(manifest))
     return {"manifest": {"path": str(path), "sha256": sha256(path)}, "batch_size": 3}
+
+
+def test_online_lambda_resumes_and_reuses_labels_from_each_collection(tmp_path, monkeypatch):
+    cfg = driver_case(tmp_path, monkeypatch, outcome_lambda=0.8)
+    assert iteration.Config.from_dict(cfg.to_dict()) == cfg
+    assert "outcome_lambda" not in replace(cfg, outcome_lambda=None).to_dict()
+    with pytest.raises(ValueError, match="in "):
+        replace(cfg, outcome_lambda=float("nan"))
+
+    generated = []
+    calculate = online_lambda.archived_search_lambda_targets
+
+    def record_generation(arrays, metadata, lam):
+        generated.append((metadata["round_index"], metadata["game_id"], metadata["checkpoint_sha256"]))
+        return calculate(arrays, metadata, lam)
+
+    monkeypatch.setattr(online_lambda, "archived_search_lambda_targets", record_generation)
+    interrupted = tmp_path / "interrupted"
+    stage = interrupted / "rounds/round-000"
+    iteration.run(cfg, interrupted, rounds=2, max_steps_this_session=1)
+    first = json.loads((stage / "lambda_targets.json").read_text())
+    first_teacher = cfg.initial_checkpoint["sha256"]
+    assert generated == [(0, 0, "f" * 64), (1, 0, first_teacher)]
+    assert first["target_coverage"] == 1
+    source_manifest = Path(first["sources"][-1]["path"])
+    labels = source_manifest.with_name("targets.npy")
+    np.testing.assert_allclose(np.load(labels), [0.268, 0.46, 0.7, 1.0])
+    expected_bytes = labels.read_bytes()
+    labels.write_bytes(expected_bytes[:-1] + bytes([expected_bytes[-1] ^ 1]))
+    with pytest.raises(ValueError, match="Frozen λ targets changed"):
+        iteration.run(cfg, interrupted, rounds=2)
+    labels.write_bytes(expected_bytes)
+
+    resumed = iteration.run(cfg, interrupted, rounds=2)
+    next_teacher = resumed["completed_rounds"][0]["checkpoint"]["sha256"]
+    assert generated == [(0, 0, "f" * 64), (1, 0, first_teacher), (2, 0, next_teacher)]
+    second = json.loads((interrupted / "rounds/round-001/lambda_targets.json").read_text())
+    assert second["sources"][0] == first["sources"][-1]
+    assert second["sources"][1]["checkpoint_sha256"] == next_teacher
+    assert not any(source["checkpoint_sha256"] == "f" * 64 for source in second["sources"])
+    rows = [json.loads(line) for line in (stage / "training_metrics.jsonl").read_text().splitlines()]
+    updates = [row for row in rows if row["event"] == "train_step"]
+    assert len(updates) == 2 and all(row["outcome_target_source"] == "archive_search" for row in updates)
+    assert any(row["lambda_train_mse"] != row["value_loss"] for row in updates)
+    assert "lambda_train_mse" not in rows[-1] and rows[-1]["event"] == "validation"
+
+    uninterrupted = iteration.run(cfg, tmp_path / "full", rounds=2)
+    a, b = [load_alphazero_checkpoint(s["latest_checkpoint"]["path"]) for s in (resumed, uninterrupted)]
+    assert a.sampling_rng_state == b.sampling_rng_state
+    assert all(torch.equal(a.model_state_dict[key], value) for key, value in b.model_state_dict.items())
+    assert a.replay_identity["outcome_targets_digest"] == _digest(second)
 
 
 def test_driver_releases_training_arrays_before_evaluation_and_next_collection(tmp_path, monkeypatch):

@@ -1,5 +1,11 @@
 # 运行与分析工具
 
+[`run_lambda_online_iteration_20261124.py`](run_lambda_online_iteration_20261124.py) 启动 λ161924＋FPU 在线训练。`--prepare` 冻结执行源码与配置，`--check` 只预检，`--rounds` 设绝对轮数上限。相同命令恢复时复用已冻结的回放标签。[命令与数据契约](../docs/guides/value_outcome_zh-CN.md#在线混合预算自迭代)
+
+[`run_lambda161924_fpu_vs_l12_s128n1_2000pair_20261123.sh`](run_lambda161924_fpu_vs_l12_s128n1_2000pair_20261123.sh)与[`run_lambda161924_nofpu_vs_l12_s128n1_2000pair_20261123.sh`](run_lambda161924_nofpu_vs_l12_s128n1_2000pair_20261123.sh)：[固定λ161924对L12，各2000pair双方S128N1](../artifacts/lambda161924_vs_l12_fpu2000_20261123/README.md)。第一组λ用原初筛最高配方r0.3／c_puct1.0，第二组λ用None／1.5；L12两组均None／1.5。配置A、共同新seed，同命令恢复，支持prepare／只读status；正式评测未启动。
+
+[`run_lambda161924_vs_mc70842_s128n1_3000pair_20261123.sh`](run_lambda161924_vs_mc70842_s128n1_3000pair_20261123.sh)与[`run_lambda161924_vs_r37_s128n1_3000pair_20261123.sh`](run_lambda161924_vs_r37_s128n1_3000pair_20261123.sh)：[当前60k归档搜索λ161924对同池MC70842／原R37](../artifacts/lambda161924_search3000_20261123/README.md)，各3000pair、双方S128N1（总128）、配置A，共同新种子。节点固定，两条命令独立、同命令恢复，支持prepare／只读status；未启动正式评测。
+
 [`export_running_web_game.py`](export_running_web_game.py)：一次性导出旧版人机网页仍在内存中的指定对局。需要允许GDB附加目标进程的权限；排入Python待执行任务后立即断开，由原服务原子保存完整状态与回放，不重启或改变棋盘。新启动的网页服务已默认自动保存，无需此工具。命令与恢复／校验方式见[本地人机网页指南](../docs/guides/evaluation_zh-CN.md#本地人机网页)。
 
 [`run_r37_lr2e5_step140221_vs_r37_10k_20261029.sh`](run_r37_lr2e5_step140221_vs_r37_10k_20261029.sh)：[固定R37初值／104k池／lr2e-5的140221步对raw R37](../artifacts/r37_lr2e5_step140221_vs_r37_10k_20261029/README.md)。先10000pair greedy，再10000pair双方S128N1（总128），CPU8／搜索配置A及原10k种子库；固定模型不追踪最新。默认run、prepare只准备、status只读，同命令恢复，失败／中断停止。未启动正式评测。

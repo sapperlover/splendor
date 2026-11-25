@@ -1,0 +1,120 @@
+{
+  "catalog_fingerprint": "084574b026e41ad6e5c64dfe36d74fb84a7604f6a0b0eb0ab59227c32a7ff17b",
+  "experiment": "lambda161924_search3000_20261123",
+  "games_each": 6000,
+  "models": {
+    "lambda": {
+      "checkpoint": "/home/lc/下载/splendor/runs/outcome_60k_scalar_lambda_20261120/checkpoints/step-000161924.pt",
+      "dataset_digest": "0eaa53cb04d541a08a634bf514026cf3a65286ff6e2c6438f2eff332c6ec4f5c",
+      "key": "lambda",
+      "manifest_sha256": "1014247e20077ea6dc37e5ce18bc913e49d78a87e799e8aef6d90acbe7b6d39a",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "value_readout": "global_players_market"
+      },
+      "outcome_objective": "scalar_lambda",
+      "policy_kl": 0.20926104089319655,
+      "selected_step": 161924,
+      "sha256": "561f055af56719ad7fbfa9779e93955ce139d5651b6a2b9b9dbc7e10b7182b3b",
+      "validation": {
+        "path": "runs/outcome_60k_scalar_lambda_20261120/full_validation/step-000161924.json",
+        "sha256": "a56fbb27edff14f3cb633939a85896e1d126fbc48948543b9e7d2c113dc83d86"
+      },
+      "value_mse": 0.7064370927509702
+    },
+    "mc": {
+      "checkpoint": "/home/lc/下载/splendor/runs/outcome_60k_scalar_mc_20261120/checkpoints/step-000070842.pt",
+      "dataset_digest": "0eaa53cb04d541a08a634bf514026cf3a65286ff6e2c6438f2eff332c6ec4f5c",
+      "key": "mc",
+      "manifest_sha256": "1014247e20077ea6dc37e5ce18bc913e49d78a87e799e8aef6d90acbe7b6d39a",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "value_readout": "global_players_market"
+      },
+      "outcome_objective": "scalar_mc",
+      "policy_kl": 0.24481705517859784,
+      "selected_step": 70842,
+      "sha256": "37cbd0bf0082e530bf303fe56e027b99af63b9f9a7afea15ccf4d236a9c69cec",
+      "validation": {
+        "path": "runs/outcome_60k_scalar_mc_20261120/full_validation/step-000070842.json",
+        "sha256": "3d3f7d0ba1bd8518c8b647aa9558adebb03dd5866d270c874cd7343b16275ef5"
+      },
+      "value_mse": 0.7371375063697798
+    },
+    "r37": {
+      "checkpoint": "/home/lc/下载/splendor/runs/entity_attention_r31_10k_p60k_iteration_20261023/rounds/round-005/checkpoints/final.pt",
+      "key": "r37",
+      "model_config": {
+        "architecture": "entity_attention_v1",
+        "dropout": 0.0,
+        "feature_schema_version": "splendor-observation-action-v1",
+        "ffn_hidden": 512,
+        "heads": 4,
+        "hidden": 128,
+        "layers": 2,
+        "market_relations": true,
+        "value_readout": "global_players_market"
+      },
+      "sha256": "611f4f4ed18f397b03c79bb3a2beae51e7a77a747883680d9189eed3052a1045"
+    }
+  },
+  "pairs_each": 3000,
+  "panels": {
+    "mc": {
+      "config": {
+        "path": "artifacts/lambda161924_search3000_20261123/configs/lambda161924_vs_mc_S128N1_3000pair.json",
+        "sha256": "4cc18ede6a9137de3458fa2739d73d98b46e1532fcb91e3b5e6e581dfd85d4b9"
+      },
+      "id": "lambda161924_vs_mc_S128N1_3000pair",
+      "kind": "search",
+      "model": "lambda161924",
+      "output": "runtime/lambda161924_search3000_20261123/panels/lambda161924_vs_mc.json",
+      "pairs": 3000
+    },
+    "r37": {
+      "config": {
+        "path": "artifacts/lambda161924_search3000_20261123/configs/lambda161924_vs_r37_S128N1_3000pair.json",
+        "sha256": "12c495fa586e7a48222d3dfc2ca0e0cb45ed2993894529e472a86f762b89b2ed"
+      },
+      "id": "lambda161924_vs_r37_S128N1_3000pair",
+      "kind": "search",
+      "model": "lambda161924",
+      "output": "runtime/lambda161924_search3000_20261123/panels/lambda161924_vs_r37.json",
+      "pairs": 3000
+    }
+  },
+  "pool_identity": {
+    "path": "artifacts/value_outcome_60k_20261120/pool_identity.json",
+    "sha256": "44730e648093ffca9a0c8145201f06953975bd40afb77409ba0547666a40c160"
+  },
+  "runner": {
+    "path": "artifacts/lambda161924_search3000_20261123/run.py",
+    "sha256": "6c3d143b46714d153249cfee791926f8f693d609ec015c795ad2843cb0e8d545"
+  },
+  "scope": "Two independent fixed-checkpoint both-S128N1 searches. Lambda161924 vs same60k-poolMC70842 or rawR37. No training, greedy, automatic model selection or queue. Full-pair resume.",
+  "seeds": {
+    "bootstrap_seed": 55260000,
+    "game_seed_end": 55232999,
+    "game_seed_start": 55230000,
+    "policy_seed_base": 55240000,
+    "search_seed": 55250000
+  },
+  "shared_runner": {
+    "path": "artifacts/offline5_vs_r37_10k_20261027/run.py",
+    "sha256": "9624c98539e54cec7fb7f8e198c2b669369e1829221c2fa63ebcbc1decc8db06"
+  }
+}

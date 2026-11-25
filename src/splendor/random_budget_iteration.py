@@ -25,10 +25,12 @@ from .fixed_holdout import check_disjoint, read_manifest
 from .six_round_holdout import HoldoutSchedule, check_settings
 from .hybrid_train import HybridReferenceWriter, _release_inference_memory
 from .offline_train import _digest, make_index
+from .online_lambda import prepare_round_targets
 from .pool_iteration import panel
 from .rng import DeterministicRng
 from .selfplay import derive_seed
 from .selfplay_fast import ExecutionConfig, FastSelfPlayConfig, generate
+from .value_outcome import OutcomeLearner
 
 PROTOCOL = "random-budget-iteration-v1"
 COLLECTION_TUNING_FIELDS = ("max_batch_size", "batch_buckets", "pipeline_slots")
@@ -65,6 +67,7 @@ class Config:
     initial_history_eviction: bool = False
     continuation_auxiliary: dict | None = None
     encoder_grad_norm_every_steps: int = 0
+    outcome_lambda: float | None = None
 
     def __post_init__(self):
         if self.fixed_holdout is not None and self.six_round_holdout is not None:
@@ -81,6 +84,11 @@ class Config:
             raise ValueError("encoder_grad_norm_every_steps must be a nonnegative integer")
         if self.encoder_grad_norm_every_steps and self.continuation_auxiliary is None:
             raise ValueError("encoder diagnostics require continuation auxiliary")
+        if self.outcome_lambda is not None:
+            if type(self.outcome_lambda) not in (int, float) or not 0 <= self.outcome_lambda <= 1:
+                raise ValueError("outcome_lambda must be null or in [0,1]")
+            if self.continuation_auxiliary is not None:
+                raise ValueError("online λ requires scalar value without continuation auxiliary")
         for name in ("new_games_per_round", "replay_max_games",
                      "updates_per_round", "cache_bytes", "validation_positions", "search_evaluation_every_rounds"):
             if type(getattr(self, name)) is not int or getattr(self, name) <= 0:
@@ -121,6 +129,8 @@ class Config:
             raw.pop("continuation_auxiliary")
         if not self.encoder_grad_norm_every_steps:
             raw.pop("encoder_grad_norm_every_steps")
+        if self.outcome_lambda is None:
+            raw.pop("outcome_lambda")
         return raw
 
 
@@ -214,6 +224,7 @@ def check(config):
         "historical_policy_fraction": config.historical_policy_fraction,
         "first_new_policy_fraction": first_new_policy_fraction,
         **({"first_evicted_history_games": first_evicted_history_games} if config.initial_history_eviction else {}),
+        **({"outcome_lambda": config.outcome_lambda} if config.outcome_lambda is not None else {}),
         **({"continuation_auxiliary": continuation_config_identity(ContinuationAuxiliaryConfig(**config.continuation_auxiliary))}
            if config.continuation_auxiliary is not None else {})}
 
@@ -304,9 +315,9 @@ def draw_batch(old_policy, new_policy, value, rng, batch_size, step, new_games, 
          "value_historical": value_old, "value_new": batch_size-value_old}, tuple(values))
 
 
-def start_learner(teacher, config, identity, data_round):
+def start_learner(teacher, config, identity, data_round, learner_type):
     payload = load_alphazero_checkpoint(teacher["path"])
-    learner = AlphazeroLearner.resume(teacher["path"], LearnerConfig(**payload.learner_config),
+    learner = learner_type.resume(teacher["path"], LearnerConfig(**payload.learner_config),
         replay_identity=payload.replay_identity, round_index=payload.round_index,
         round_steps_target=payload.round_steps_target)
     learner.config = config.learner
@@ -404,6 +415,7 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
     eligibility_cache = {}
     auxiliary = (ContinuationAuxiliaryConfig(**config.continuation_auxiliary)
                  if config.continuation_auxiliary is not None else None)
+    learner_type = OutcomeLearner if config.outcome_lambda is not None else AlphazeroLearner
     cache = CompactGameCache(config.cache_bytes, continuation_auxiliary=auxiliary)
     holdout_settings = config.six_round_holdout if config.six_round_holdout is not None else config.fixed_holdout
     holdout_schedule = (HoldoutSchedule(holdout_settings, output, config.learner.device,
@@ -495,14 +507,36 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
         if auxiliary is not None:
             identity.update(continuation_auxiliary=continuation_config_identity(auxiliary),
                 digest=_digest({"snapshot": snapshot["digest"], "continuation_auxiliary": continuation_config_identity(auxiliary)}))
+        if config.outcome_lambda is not None:
+            target_path = stage / "lambda_targets.json"
+            previous_sources = {}
+            previous_targets = state["completed_rounds"][-1].get("lambda_targets") if r else None
+            if previous_targets is not None:
+                previous_path = Path(previous_targets["path"])
+                if previous_path.parent.parent == stage.parent:
+                    if sha256(previous_path) != previous_targets["sha256"]:
+                        raise ValueError("Previous round λ manifest changed")
+                    previous_sources = {row["path"]: row["sha256"] for row in read_json(previous_path)["sources"]}
+            archive_targets, target_manifest = prepare_round_targets(output / "lambda_targets", target_path,
+                snapshot, lam=config.outcome_lambda, collection_round=data_round, previous_sources=previous_sources)
+            target_digest = _digest(target_manifest)
+            identity.update(outcome_targets_digest=target_digest,
+                digest=_digest({"snapshot": snapshot["digest"], "outcome_targets": target_digest}))
+            _emit("lambda_targets_ready", iteration=r+1, positions=target_manifest["positions"],
+                  eligible_positions=target_manifest["eligible_positions"],
+                  target_coverage=target_manifest["target_coverage"])
         checkpoints = stage / "checkpoints"
         saved = sorted(checkpoints.glob("step-*.pt"))
         if saved or (checkpoints / "initial.pt").exists():
-            learner = AlphazeroLearner.resume(saved[-1] if saved else checkpoints / "initial.pt", config.learner,
+            learner = learner_type.resume(saved[-1] if saved else checkpoints / "initial.pt", config.learner,
                 replay_identity=identity, round_index=data_round+1, round_steps_target=config.updates_per_round)
         else:
-            learner = start_learner(teacher, config, identity, data_round)
+            learner = start_learner(teacher, config, identity, data_round, learner_type)
             learner.save(checkpoints / "initial.pt")
+        if config.outcome_lambda is not None:
+            learner.outcome_targets, learner.outcome_offsets, learner.outcome_target_mask = archive_targets
+            learner.outcome_target_source = "archive_search"
+            del archive_targets
         validation = PositionPool(index.split_games("validation"), cache, "validation")
         validation_rng = DeterministicRng(derive_seed(config.validation_seed, data_round, 0, "validation_subset"))
         validation_draws = [validation.sample(validation_rng) for _ in range(min(config.validation_positions, len(validation)))]
@@ -576,6 +610,8 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
                     opponent_name=template["policy_b"]["name"]).summary
         completed = {"iteration": r+1, "checkpoint": {"path": str(final), "sha256": sha256(final)},
             "snapshot": {"path": str(snapshot_path), "sha256": sha256(snapshot_path)}, "evaluations": evaluations}
+        if config.outcome_lambda is not None:
+            completed["lambda_targets"] = {"path": str(target_path), "sha256": sha256(target_path)}
         state["completed_rounds"].append(completed)
         state["latest_checkpoint"] = completed["checkpoint"]
         write_json(state_path, state)
