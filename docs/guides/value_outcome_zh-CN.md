@@ -13,19 +13,21 @@
 
 ### λ161924 与 FPU 的 60k 分支
 
-启动器使用 [固定配置](../../configs/entity_attention_v1/lambda161924_fpu_p60k_iteration_20261124.json)，从 161924 步继承模型、AdamW 和 RNG。初始历史为近期 60k 局，每轮采 10k、回放容量 60k、训练 10,000 步，学习率 `2e-5`。`historical_policy_fraction=1.0` 让全部有效历史 policy 局面可抽样，首轮历史与新局配额仍按 50k 与 10k 的局数分配。在原轮内诊断节点之外，10,000 步也做轮末验证。采集使用 `r=0.3, c_puct=1.0`、75% S128N1（总 128）、25% S256N4（总 1024）。轮间双方评测使用相同搜索参数，每轮对原 R37 greedy 1000 pair，每三轮用配置 A 做双方 S1024N1（各总 1024）500 pair。
+启动器使用 [固定配置](../../configs/entity_attention_v1/lambda161924_fpu_p60k_iteration_20261124.json)，从 161924 步继承模型、AdamW 和 RNG。初始历史为近期 60k 局，每轮采 10k、回放容量 60k、学习率 `2e-5`、`historical_policy_fraction=1.0`。采集使用 `r=0.3, c_puct=1.0`、75% S128N1（总 128）、25% S256N4（总 1024）。
 
-从仓库根目录执行。`--prepare` 冻结源码、native 扩展、牌池和配置，`--check` 只做预检。正式执行可先设绝对轮数 `--rounds 1`，同一命令恢复。
+前三轮各训练 10,000 步，第 3 轮已完成原 S1024N1（各总 1024）500 pair 面板。从第 4 轮起每轮训练 **4,000 步**，并在 4,000 步做轮末留出。每轮对原 R37 先跑零搜索 greedy **1,000 pair**，再跑配置 A 的 **1,000 pair S128N1**（各总 128），双方均用 FPU `r=0.3, c_puct=1.0`。旧高预算面板在第 3 轮结束。
+
+从仓库根目录执行。`--prepare` 冻结源码、native 扩展、牌池和配置，`--check` 只读核验第 4 轮切换边界。同一命令恢复，省略 `--rounds` 持续执行，或用绝对上限 `--rounds 4` 只跑完第 4 轮。
 
 ```bash
 conda run --no-capture-output -n splendor env PYTHONPATH=src python scripts/run_lambda_online_iteration_20261124.py --prepare
 conda run --no-capture-output -n splendor env PYTHONPATH=src python scripts/run_lambda_online_iteration_20261124.py --check
-conda run --no-capture-output -n splendor env PYTHONPATH=src python scripts/run_lambda_online_iteration_20261124.py --rounds 1
+conda run --no-capture-output -n splendor env PYTHONPATH=src python scripts/run_lambda_online_iteration_20261124.py --rounds 4
 ```
 
-当前执行发布位于 `runtime/lambda161924_fpu_p60k_iteration_20261124/source_10000_steps/`，正式轮次及标签写入同名 `runs/` 目录。原 `source/` 对应 25% 历史 policy 和 3,000 步的准备版。
+当前执行发布位于 `runtime/lambda161924_fpu_p60k_iteration_20261124/source_4000_steps/`。第四轮仍使用已冻结的采集配置及第三轮教师。新启动器在第四轮训练开始前把更新写入运行目录的 `round_plan.json`。原 `config.json`、已提交轮的 checkpoint、评测及诊断仍按各自的冻结计划复核。
 
-正式配置预检通过。原发布的 native CPU 工程验证从 λ161924 起步，采集两轮共 8 局并更新 4 步，确认首轮中断恢复、次轮教师身份、回放淘汰后的标签复用以及旧 V3 归档读取。正式 GPU 采集与训练尚未启动。
+原发布的 native CPU 工程验证从 λ161924 起步，采集两轮共 8 局并更新 4 步，确认首轮中断恢复、次轮教师身份、回放淘汰后的标签复用以及旧 V3 归档读取。
 
 ## 离线标量对照
 

@@ -97,13 +97,20 @@ class HoldoutSchedule:
                     observer.observe(model, checkpoint, row["iteration"], step)
                 del model
 
+    def backfill_completed(self, completed, steps, revision=None):
+        if revision is not None:
+            first_updated_round, previous_steps = revision
+            self.backfill(completed[:first_updated_round-1], previous_steps)
+            completed = completed[first_updated_round-1:]
+        self.backfill(completed, steps)
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    from .random_budget_iteration import Config
+    from .random_budget_iteration import Config, _round_plan
     config = Config.from_dict(read_json(args.config))
     if config.six_round_holdout is None:
         parser.error("config must enable six_round_holdout")
@@ -111,8 +118,11 @@ def main():
     output = args.output.resolve()
     with (output / ".iteration.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        state = read_json(output / "state.json")
+        revision = (_round_plan(config, output, state, None, publish=False)
+                    if (output / "round_plan.json").is_file() else None)
         schedule = HoldoutSchedule(config.six_round_holdout, output, config.learner.device, six_rounds=True)
-        schedule.backfill(read_json(output / "state.json")["completed_rounds"], config.validation_steps)
+        schedule.backfill_completed(state["completed_rounds"], config.validation_steps, revision)
 
 
 if __name__ == "__main__":

@@ -34,6 +34,8 @@ from .value_outcome import OutcomeLearner
 
 PROTOCOL = "random-budget-iteration-v1"
 COLLECTION_TUNING_FIELDS = ("max_batch_size", "batch_buckets", "pipeline_slots")
+ROUND_PLAN_FIELDS = ("updates_per_round", "validation_steps", "search_evaluation",
+                     "search_evaluation_every_rounds")
 
 
 @dataclass(frozen=True)
@@ -387,21 +389,52 @@ def _collection_config(raw, stage):
     return actual
 
 
-def run(config, output, *, rounds=None, max_steps_this_session=None, config_path=None):
+def _round_plan(config, output, state, from_round, *, publish):
+    """Allow a declared training and search-panel change before that round's first checkpoint."""
+    frozen = output / "config.json"
+    original = read_json(frozen)
+    requested = config.to_dict()
+    path = output / "round_plan.json"
+    if path.exists():
+        plan = read_json(path)
+        if (plan["initial_config_sha256"] != sha256(frozen)
+                or (from_round is not None and plan["from_round"] != from_round)
+                or _algorithm_config(plan["config"]) != _algorithm_config(requested)):
+            raise ValueError("resume requires identical frozen round plan")
+        return plan["from_round"], tuple(original["validation_steps"])
+    previous, updated = _algorithm_config(original), _algorithm_config(requested)
+    if previous == updated:
+        return None
+    if from_round is None:
+        raise ValueError("resume requires identical frozen algorithm configuration")
+    for field in ROUND_PLAN_FIELDS:
+        previous.pop(field, None)
+        updated.pop(field, None)
+    if previous != updated or any(original.get(k) != requested.get(k) for k in ("fixed_holdout", "six_round_holdout")):
+        raise ValueError("the round plan may only change training steps, validation steps, and search evaluation")
+    if len(state["completed_rounds"]) + 1 != from_round:
+        raise ValueError("the round plan must start at the next uncommitted round")
+    stage = output / "rounds" / f"round-{from_round-1:03d}"
+    if any((stage / name).exists() for name in ("checkpoints", "training_metrics.jsonl", "search.json", "search.json.games")):
+        raise ValueError("the round plan cannot change after training for that round has started")
+    if publish:
+        write_json(path, {"from_round": from_round, "initial_config_sha256": sha256(frozen), "config": requested})
+    return from_round, tuple(original["validation_steps"])
+
+
+def run(config, output, *, rounds=None, max_steps_this_session=None, config_path=None, round_plan_from=None):
     original, preflight = check(config)
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
     with (output / ".iteration.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return _run(config, output, original, preflight, rounds, max_steps_this_session, config_path)
+        return _run(config, output, original, preflight, rounds, max_steps_this_session, config_path, round_plan_from)
 
 
-def _run(config, output, original, preflight, rounds, budget, config_path):
+def _run(config, output, original, preflight, rounds, budget, config_path, round_plan_from):
     torch.set_num_threads(1)
     frozen, state_path = output / "config.json", output / "state.json"
     if frozen.exists():
-        if _algorithm_config(read_json(frozen)) != _algorithm_config(config.to_dict()):
-            raise ValueError("resume requires identical frozen algorithm configuration")
         state = read_json(state_path)
     else:
         write_json(frozen, config.to_dict())
@@ -409,6 +442,7 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
         state = (read_json(Path(config.continuation_state["path"])) if config.continuation_state is not None
                  else {"completed_rounds": [], "latest_checkpoint": config.initial_checkpoint})
         write_json(state_path, state)
+    revision = _round_plan(config, output, state, round_plan_from, publish=True)
     session = uuid.uuid4().hex
     write_json(output / "source" / session / "identity.json", source_identity(Path.cwd(), output / "source" / session))
     original_keys = {_key(g) for g in original}
@@ -421,7 +455,7 @@ def _run(config, output, original, preflight, rounds, budget, config_path):
     holdout_schedule = (HoldoutSchedule(holdout_settings, output, config.learner.device,
                         six_rounds=config.six_round_holdout is not None) if holdout_settings is not None else None)
     if holdout_schedule is not None:
-        holdout_schedule.backfill(state["completed_rounds"], config.validation_steps)
+        holdout_schedule.backfill_completed(state["completed_rounds"], config.validation_steps, revision)
     while rounds is None or len(state["completed_rounds"]) < rounds:
         if budget is not None and budget <= 0:
             break
@@ -626,15 +660,23 @@ def main():
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--rounds", type=int, help="absolute completed-round target; omitted means continuous")
     parser.add_argument("--max-steps-this-session", type=int)
+    parser.add_argument("--round-plan-from", type=int, help="first round for an explicit training/search schedule change")
     args = parser.parse_args()
+    if args.round_plan_from is not None and args.round_plan_from <= 0:
+        parser.error("--round-plan-from must be positive")
     config = Config.from_dict(read_json(args.config))
     if args.check:
-        print(json.dumps(check(config)[1], ensure_ascii=False, indent=2))
+        info = check(config)[1]
+        if args.round_plan_from is not None and args.output is not None and (args.output / "config.json").is_file():
+            revision = _round_plan(config, args.output, read_json(args.output / "state.json"), args.round_plan_from, publish=False)
+            if revision is not None:
+                info["round_plan_from"] = revision[0]
+        print(json.dumps(info, ensure_ascii=False, indent=2))
         return
     if args.output is None or (args.rounds is not None and args.rounds <= 0) or (args.max_steps_this_session is not None and args.max_steps_this_session <= 0):
         parser.error("provide --output and positive optional round/step limits")
     run(config, args.output, rounds=args.rounds, max_steps_this_session=args.max_steps_this_session,
-        config_path=args.config.resolve())
+        config_path=args.config.resolve(), round_plan_from=args.round_plan_from)
 
 
 if __name__ == "__main__":

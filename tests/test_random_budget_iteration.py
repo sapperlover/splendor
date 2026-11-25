@@ -217,6 +217,75 @@ def test_online_lambda_resumes_and_reuses_labels_from_each_collection(tmp_path, 
     assert a.replay_identity["outcome_targets_digest"] == _digest(second)
 
 
+def test_round_plan_changes_after_collection_and_keeps_old_diagnostics(tmp_path, monkeypatch):
+    cfg = driver_case(tmp_path, monkeypatch, outcome_lambda=0.8)
+    history = [json.loads(line) for line in Path(cfg.history_manifest["path"]).read_text().splitlines()]
+    holdout = holdout_settings(tmp_path, [g for g in history if g["split"] == "validation"])
+    greedy = {"policy_a": {"kind": "greedy_checkpoint", "name": "candidate", "checkpoint": "generated"},
+              "policy_b": {"kind": "greedy_checkpoint", "name": "anchor", "checkpoint": cfg.initial_checkpoint["path"]},
+              "pairs": 3, "seed_start": 1, "device": "cpu", "workers": 1}
+    search = {**greedy, **{side: {**greedy[side], "kind": "mcts_checkpoint", "search_backend": "native",
+                                "search_config": {"simulations": 8, "determinizations": 1}}
+                          for side in ("policy_a", "policy_b")}}
+    cfg = replace(cfg, updates_per_round=3, validation_steps=(0, 1, 3), fixed_holdout=holdout,
+                  evaluation_anchor=cfg.initial_checkpoint, greedy_evaluation=greedy, search_evaluation=search)
+    panels = []
+
+    def panel(template, checkpoint, anchor, path, **kwargs):
+        panels.append((path.parent.name, path.stem, template))
+        return SimpleNamespace(summary={"pairs": template["pairs"]})
+
+    monkeypatch.setattr(iteration, "panel", panel)
+    root = tmp_path / "output"
+    state = iteration.run(cfg, root, rounds=1)
+    initial_config = (root / "config.json").read_bytes()
+    old_holdout = root / "rounds/round-000/fixed_holdout"
+    original_diagnostics = {p.name: sha256(p) for p in old_holdout.iterdir()}
+    generate = iteration.generate
+
+    def interrupt_collection(config, output, **kwargs):
+        generate(config, output, **kwargs)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(iteration, "generate", interrupt_collection)
+    with pytest.raises(KeyboardInterrupt):
+        iteration.run(cfg, root, rounds=2)
+    monkeypatch.setattr(iteration, "generate", generate)
+    collection = root / "rounds/round-001/selfplay/manifest.json"
+    old_collection = sha256(collection)
+    fpu = {**search, "pairs": 5, **{side: {**search[side], "search_config": {
+           "simulations": 4, "determinizations": 1, "fpu_reduction": 0.3, "c_puct": 1.0}}
+           for side in ("policy_a", "policy_b")}}
+    new = replace(cfg, updates_per_round=2, validation_steps=(0, 1, 2), search_evaluation=fpu,
+                  search_evaluation_every_rounds=1)
+    assert iteration._round_plan(new, root, state, 2, publish=False) == (2, (0, 1, 3))
+    assert not (root / "round_plan.json").exists()
+    with pytest.raises(ValueError, match="identical frozen algorithm"):
+        iteration.run(new, root, rounds=2)
+
+    iteration.run(new, root, rounds=3, max_steps_this_session=1, round_plan_from=2)
+    state = iteration.run(new, root, rounds=3, round_plan_from=2)
+    assert load_alphazero_checkpoint(state["latest_checkpoint"]["path"]).total_train_step == 8
+    assert (root / "config.json").read_bytes() == initial_config
+    assert sha256(collection) == old_collection
+    assert {p.name: sha256(p) for p in old_holdout.iterdir()} == original_diagnostics
+    assert [row[:2] for row in panels] == [("round-000", "greedy"), ("round-001", "greedy"),
+        ("round-001", "search"), ("round-002", "greedy"), ("round-002", "search")]
+    assert all(template == fpu for _, kind, template in panels if kind == "search")
+    with pytest.raises(ValueError, match="identical frozen round plan"):
+        iteration.run(cfg, root, rounds=3)
+
+
+def test_round_plan_cannot_change_after_training_starts(tmp_path, monkeypatch):
+    cfg = driver_case(tmp_path, monkeypatch)
+    root = tmp_path / "output"
+    iteration.run(cfg, root, rounds=1, max_steps_this_session=1)
+    adjusted = replace(cfg, updates_per_round=3, validation_steps=(0, 1, 3))
+    with pytest.raises(ValueError, match="after training for that round has started"):
+        iteration.run(adjusted, root, rounds=1, round_plan_from=1)
+    assert not (root / "round_plan.json").exists()
+
+
 def test_driver_releases_training_arrays_before_evaluation_and_next_collection(tmp_path, monkeypatch):
     cfg = driver_case(tmp_path, monkeypatch)
     caches, arrays, boundaries = [], [], []

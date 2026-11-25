@@ -13,7 +13,7 @@ from splendor.alphazero_recording import read_json, sha256, source_identity, wri
 ROOT = Path(__file__).resolve().parents[1]
 RUN = "lambda161924_fpu_p60k_iteration_20261124"
 CONFIG = Path("configs/entity_attention_v1") / f"{RUN}.json"
-SOURCE = ROOT / "runtime" / RUN / "source_10000_steps"
+SOURCE = ROOT / "runtime" / RUN / "source_4000_steps"
 
 
 def freeze_source():
@@ -64,7 +64,7 @@ def main():
     env = dict(os.environ, PYTHONPATH=str(root / "src"), OMP_NUM_THREADS="1",
                MKL_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1", TORCHINDUCTOR_COMPILE_THREADS="1")
     command = [sys.executable, "-u", "-m", "splendor.random_budget_iteration",
-               "--config", str(root / CONFIG), "--output", str(ROOT / "runs" / RUN)]
+               "--config", str(root / CONFIG), "--output", str(ROOT / "runs" / RUN), "--round-plan-from", "4"]
     if args.check:
         command.append("--check")
     if args.rounds is not None:

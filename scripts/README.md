@@ -1,6 +1,8 @@
 # 运行与分析工具
 
-[`run_lambda_online_iteration_20261124.py`](run_lambda_online_iteration_20261124.py) 启动 λ161924＋FPU 在线训练。`--prepare` 冻结执行源码与配置，`--check` 只预检，`--rounds` 设绝对轮数上限。相同命令恢复时复用已冻结的回放标签。[命令与数据契约](../docs/guides/value_outcome_zh-CN.md#在线混合预算自迭代)
+新增[λ在线第三轮三组独立评测脚本](../artifacts/lambda_online_r3_comparisons_20261125/README.md)：`run_lambda_r3_used_vs_lambda161924_fpu_s128n1_2000pair_20261125.sh`、`run_lambda_r3_used_vs_r1_used_fpu_s128n1_2000pair_20261125.sh`、`run_lambda_r3_used_vs_r3_step3000_fpu_s128n1_2000pair_20261125.sh`。固定第三轮实际使用10000步final，分别对原λ、第一轮实际final、同轮3000步；三组双方均FPU0.3／c_puct1.0、S128N1、2000pair。支持prepare／只读status及同命令恢复，正式评测未启动。
+
+[`run_lambda_online_iteration_20261124.py`](run_lambda_online_iteration_20261124.py) 从第四轮起以 4,000 步继续 λ161924＋FPU 在线训练，每轮做 greedy 和双方 FPU S128N1（各总 128）各 1,000 pair。`--prepare` 冻结新版执行源码与配置，`--check` 只读检查切换边界，`--rounds` 设绝对轮数上限。[命令与数据契约](../docs/guides/value_outcome_zh-CN.md#在线混合预算自迭代)
 
 [`run_lambda161924_fpu_vs_l12_s128n1_2000pair_20261123.sh`](run_lambda161924_fpu_vs_l12_s128n1_2000pair_20261123.sh)与[`run_lambda161924_nofpu_vs_l12_s128n1_2000pair_20261123.sh`](run_lambda161924_nofpu_vs_l12_s128n1_2000pair_20261123.sh)：[固定λ161924对L12，各2000pair双方S128N1](../artifacts/lambda161924_vs_l12_fpu2000_20261123/README.md)。第一组λ用原初筛最高配方r0.3／c_puct1.0，第二组λ用None／1.5；L12两组均None／1.5。配置A、共同新seed，同命令恢复，支持prepare／只读status；正式评测未启动。
 

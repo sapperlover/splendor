@@ -1,6 +1,6 @@
 # Entity attention v1 配置
 
-[`lambda161924_fpu_p60k_iteration_20261124.json`](lambda161924_fpu_p60k_iteration_20261124.json) 用近期 60k 局和 λ161924 起步，每轮 10k 新局及 10,000 步，学习率 `2e-5`，历史 policy 使用全部有效位置。采集使用 FPU `r=0.3, c_puct=1.0`，主 value 用归档搜索 λ=0.8。[在线配方与命令](../../docs/guides/value_outcome_zh-CN.md#在线混合预算自迭代)
+[`lambda161924_fpu_p60k_iteration_20261124.json`](lambda161924_fpu_p60k_iteration_20261124.json) 每轮 10k 新局，第四轮起训练 4,000 步，学习率 `2e-5`，主 value 用归档搜索 λ=0.8。每轮对原 R37 跑 1,000 pair greedy 和 1,000 pair 双方 FPU S128N1（各总 128）。此后的自迭代可复用[在线搜索预设](evaluation_online_search_a_fpu_r37.json)。[在线配方与命令](../../docs/guides/value_outcome_zh-CN.md#在线混合预算自迭代)
 
 2026-10-27新增[`offline_r37_104k_lr1e4_20261027.json`](offline_r37_104k_lr1e4_20261027.json)与[`offline_r37_104k_lr2e5_20261027.json`](offline_r37_104k_lr2e5_20261027.json)：相同104k无辅助离线预设，仅增加原R37权重身份并设对应lr；新AdamW／原离线种子，18GiB／4 worker、350552步上限、5%主KL＋MSE早停选点保持。[命令与验证](../../artifacts/entity_attention_r37_104k_offline_lr_20261027/README.md)，未启动正式训练。
 

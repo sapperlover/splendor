@@ -97,21 +97,22 @@
       "total_active_games": 1000,
       "workers": 1
     },
-    "pairs": 500,
+    "pairs": 1000,
     "policy_a": {
       "checkpoint": "generated-at-runtime",
       "kind": "mcts_checkpoint",
       "name": "lambda_fpu_online_candidate",
       "search_backend": "native",
       "search_config": {
-        "c_puct": 1.5,
+        "c_puct": 1.0,
         "determinizations": 1,
         "dirichlet_alpha": 0.3,
         "fold_forced_phases": true,
+        "fpu_reduction": 0.3,
         "max_simulation_transitions": 512,
         "root_noise_fraction": 0.0,
         "seed": 55428000,
-        "simulations": 1024
+        "simulations": 128
       }
     },
     "policy_b": {
@@ -120,21 +121,22 @@
       "name": "raw_R37",
       "search_backend": "native",
       "search_config": {
-        "c_puct": 1.5,
+        "c_puct": 1.0,
         "determinizations": 1,
         "dirichlet_alpha": 0.3,
         "fold_forced_phases": true,
+        "fpu_reduction": 0.3,
         "max_simulation_transitions": 512,
         "root_noise_fraction": 0.0,
         "seed": 55428000,
-        "simulations": 1024
+        "simulations": 128
       }
     },
     "policy_seed_base": 55422000,
     "seed_start": 55420000,
     "workers": 1
   },
-  "search_evaluation_every_rounds": 3,
+  "search_evaluation_every_rounds": 1,
   "seeds": {
     "collection": 55400000,
     "sampling": 55402000,
@@ -215,7 +217,7 @@
       "sha256": "8636d7a362a9105f0beadb3d00f4d7cc0d236d8d553f414405ca27b436add3d6"
     }
   },
-  "updates_per_round": 10000,
+  "updates_per_round": 4000,
   "validation_positions": 2048,
   "validation_seed": 55406000,
   "validation_steps": [
@@ -226,6 +228,6 @@
     1000,
     2000,
     3000,
-    10000
+    4000
   ]
 }

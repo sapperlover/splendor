@@ -1,5 +1,9 @@
 # 固定配对评测与结果解释
 
+2026-11-25 起，新自迭代轮末固定做两组各 1,000 pair。先跑 CPU8 的零搜索 greedy，再按配置 A 跑双方 FPU S128N1（每方总 128，`r=0.3`、`c_puct=1.0`）。固定对手由分支配置指定，当前 λ 分支用原 R37。后续配置可复用[在线搜索预设](../../configs/entity_attention_v1/evaluation_online_search_a_fpu_r37.json)，将 `search_evaluation_every_rounds` 设为 `1`。过去每三轮 500 pair 的高预算搜索属于旧在线协议。
+
+2026-11-25新增[λ第三轮实际使用final的三组模型对照](../../artifacts/lambda_online_r3_comparisons_20261125/README.md)：固定第三轮本段10000步final（累计191924），分别对原λ161924、第一轮实际使用final（累计171924）、第三轮3000步（累计184924）。每组2000pair，双方统一FPU0.3／c_puct1.0、S128N1（各总128）、配置A和共同新seed；独立完整pair恢复，正式评测未启动。
+
 2026-11-23已准备[λ161924的历史最强FPU配方／无FPU对原搜索L12](../../artifacts/lambda161924_vs_l12_fpu2000_20261123/README.md)，各2000pair、双方S128N1（总128）。FPU组λ用r0.3／c_puct1.0，无FPU组λ用None／1.5，L12始终None／1.5；共同新seed、配置A、独立完整pair恢复。正式评测未启动。
 
 2026-11-23新增[固定λ161924 vs同池MC70842／原R37](../../artifacts/lambda161924_search3000_20261123/README.md)两个独立脚本，各3000pair／6000局、双方S128N1（每世界128×1世界，总128）、配置A。共同新种子，固定模型SHA，不要求MC最终选点；同命令完整pair恢复，未启动正式评测。
@@ -36,13 +40,13 @@ Git保留评测入口、冻结配置、模型／对手SHA、规则指纹、预�
 
 | 场景 | 规模／节奏 | 策略与设备 | 配置入口 |
 | --- | --- | --- | --- |
-| 在线采集 | 每轮10000个完整对局 | 单教师自对弈；75% S128N1（总128），25% S256N4（总1024）；CUDA pool | [当前在线配置](../../configs/entity_attention_v1/random_budget_r31_10k_p60k_20261023.json)的`selfplay` |
+| 在线采集 | 当前 λ 分支每轮 10000 个完整对局 | 单教师自对弈，75% S128N1（总 128）、25% S256N4（总 1024）、CUDA pool | [λ 分支配置](../../configs/entity_attention_v1/lambda161924_fpu_p60k_iteration_20261124.json)的 `selfplay` |
 | 日常greedy | 默认1000 pair／2000局，按需独立执行 | 双方确定性greedy，零搜索，CPU8 worker | [greedy预设](../../configs/entity_attention_v1/evaluation_greedy_r43.json) |
 | 日常搜索 | 默认500 pair／1000局起步，按需独立执行 | 双方S1024N1（总1024），GPU执行配置A | [搜索A预设](../../configs/entity_attention_v1/evaluation_search_a_r43.json) |
-| 在线greedy | 每个本分支轮次结束后，1000 pair | 本轮final对固定R43，CPU8 worker，零搜索 | 当前在线配置的`greedy_evaluation` |
-| 在线搜索 | 本分支第3、6、9……轮结束后，500 pair | 本轮final对固定R43，双方S1024N1（总1024），配置A | 当前在线配置的`search_evaluation` |
+| 在线 greedy | 每轮结束后，1000 pair | 本轮 final 对固定对手，CPU8 worker，零搜索 | 分支配置的 `greedy_evaluation` |
+| 在线搜索 | 每轮 greedy 后，1000 pair | 本轮 final 对固定对手，双方 FPU S128N1（各总 128），配置 A | [在线搜索预设](../../configs/entity_attention_v1/evaluation_online_search_a_fpu_r37.json) |
 
-本分支局部第1轮对应谱系R32，第6轮对应R37；评测节奏按局部轮号计算。日常预设中的示例候选**固定为R37**，不自动追踪最新checkpoint；两个模板均以原主线R43为示例对手。换候选／对手时先复制到新配置文件，明确修改双方`checkpoint`和`name`，使用新的输出路径。原R43训练于10贵族时期，当前评测使用12贵族；共同对手得分不能直接归因于扩池或换学习率。
+旧 R31 分支的局部第 1 轮对应谱系 R32，第 6 轮对应 R37，旧评测节奏按局部轮号计算。日常预设中的示例候选**固定为 R37**，两个日常模板均以原主线 R43 为例。换候选或对手时先复制到新配置文件，明确修改双方 `checkpoint` 和 `name`，使用新的输出路径。原 R43 训练于 10 贵族时期，当前评测使用 12 贵族。
 
 ### 在线全量固定留出
 
@@ -97,13 +101,13 @@ conda run --no-capture-output -n splendor env \
 
 这里的两槽是owner流水线，独立于每worker共享请求槽`shared_slots=2`。GPU pool配置的外层`workers=1`不代表单搜索worker，实际并行度由`search_workers=12`控制。活跃上限还受待执行局数约束：500 pair最多1000局并发，不能把采集active2000的吞吐直接外推到该评测。纯greedy的CPU8 worker路径不使用这些GPU batch／槽数参数；两侧checkpoint均零次模拟。
 
-采集高预算根噪声比例0.25、Dirichlet alpha0.3；低预算关闭根噪声、不提供policy监督，value使用全部预算样本。前10个完成回合温度1，之后0；FP/PTP关闭。采集保留自身配置，不套用搜索A的活跃数或桶列表。当前在线训练保持60k池、3000更新／轮、lr2e-5、policy/value各B256、16GiB按需compact缓存；后者是缓存容量，不是进程RSS上限。
+采集高预算根噪声比例 0.25，Dirichlet alpha 0.3。低预算关闭根噪声，主 policy 使用高预算有效样本，value 使用全部预算样本。前 10 个完成回合温度 1，之后 0，FP/PTP 关闭。采集使用自身的活跃数和桶列表。当前 λ 分支使用 60k 池、从第 4 轮起 4,000 更新／轮、`lr=2e-5`、policy/value 各 B256 和 16 GiB 按需 compact 缓存。
 
 ### 评测协议与种子
 
-正式搜索双方全程S1024N1（每世界1024次、1世界，总1024），`c_puct=1.5`、强制阶段折叠开启、每次模拟最多512次状态转移、根噪声0、温度0、FP/PTP关闭。采集的低预算随机化、噪声和温度采样不进入评测。greedy使用根policy确定性argmax，不读取搜索结果作为动作。
+新在线正式搜索双方全程 **S128N1（每世界 128×1，总 128）**，`fpu_reduction=0.3`，`c_puct=1.0`。下表的日常搜索示例仍使用双方 S1024N1（各总 1024）及 `c_puct=1.5`。正式评测均开启强制阶段折叠，每次模拟最多 512 次状态转移，根噪声 0、温度 0、FP/PTP 关闭。greedy 使用根 policy 确定性 argmax。
 
-| 项目 | 日常／在线greedy | 日常／在线搜索 |
+| 项目 | 日常 greedy 示例 | 日常搜索示例 |
 | --- | --- | --- |
 | 默认开局seed | 37000000–37000999 | 37100000–37100499 |
 | `policy_seed_base` | 37010000 | 37110000 |
@@ -141,7 +145,9 @@ conda run --no-capture-output -n splendor env PYTHONPATH=src \
 
 结果`execution_stats`记录聚合与逐模型推理行数、物理batch/平均batch、编译/图捕获、GPU峰值显存、worker供给、owner等待/整理/流水线重叠、逐局模拟数等。rule/sidecar时间是多worker累计时间，不能直接除以墙钟当成独占占比。双模型分流仍会拆分供给，也多占图缓存显存；仅短验证通过不能宣称达到采集吞吐。
 
-持续迭代允许调整**搜索评测的pair数及推理执行参数**，不改变训练、采集和搜索协议。本次只更新外部源配置中的搜索`execution`；当前driver在下一轮边界重读它，随后新创建的面板使用A。正在进行的轮次已读入的模板、已有`search_config.json`／`greedy_config.json`继续使用各自冻结参数；不热改已准备面板。无需为这次执行参数更新重启进程，恢复仍用原脚本；`runs/.../config.json`、旧配置快照和结果保持历史身份。旧分支源JSON及历史200 pair面板不批量改写。
+旧分支的运行时更新允许调整**搜索评测的 pair 数及推理执行参数**。driver 在下一轮边界重读源配置，已有 `search_config.json` 和 `greedy_config.json` 的面板按各自冻结参数恢复。该机制用于执行配置和面板规模的调整。
+
+当前 λ 在线分支的 4,000 步和新搜索协议通过启动器声明从第 4 轮切换。启动器只在该轮首个训练 checkpoint 前接受这次变更，继续读取本轮原采集清单。前三轮诊断和评测继续绑定各轮的配置。具体命令见[λ 在线恢复](value_outcome_zh-CN.md#在线混合预算自迭代)。
 
 配置A来自[三组正式搜索评测](../../artifacts/eval_speed_20261023/README.md)中的已完成执行参数。80k候选实测500 pair约33.4分钟；旧42.3分钟面板含约526秒编译，本次对应约17秒，模型／桶／热状态亦不同，不能把墙钟差全部归因于A。GPU温度、时钟与合批等待影响实际耗时；不再以寻找最优配置为当前任务。60秒吞吐窗口用于独立性能筛选时，必须预热实际两个模型、保留相同并发和搜索预算，并单独报告编译与尾段。
 
